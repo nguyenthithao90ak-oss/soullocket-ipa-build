@@ -3,7 +3,12 @@ import 'dart:async';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:intl/intl.dart';
+import '../../utils/services/secret_vault_upload_identity.dart';
+import '../../utils/services/secret_vault_media_policy.dart' as vault_policy;
 import 'package:flutter/material.dart';
+import 'widgets/vault_gallery_layout.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +33,7 @@ import '../home/tabs/settings/security/security_otp_dialogs.dart';
 import '../ui_prefs.dart';
 import '../../widgets/sl_toast.dart';
 import '../../widgets/stable_future_builder.dart';
+import 'secret_vault/vault_access_surface.dart';
 
 part 'secret_vault/secret_vault_reset_flow.dart';
 part 'secret_vault/secret_vault_pending_upload_flow.dart';
@@ -35,17 +41,112 @@ part 'secret_vault/secret_vault_display_section.dart';
 part 'secret_vault/secret_vault_gallery_section.dart';
 
 // ── Bảng màu riêng cho Kho bí mật (dark violet theme) ──
-const Color _vaultBg = Color(0xFF1A1530);
-const Color _vaultBgAlt = Color(0xFF241B3D);
-const Color _vaultField = Color(0xFF2D2349);
-const Color _vaultBorder = Color(0xFF4A3D75);
-const Color _vaultBorderFocus = Color(0xFFB794F6);
-const Color _vaultTextPrimary = Color(0xFFF7FAFC);
-const Color _vaultTextSecondary = Color(0xFFB7B2C9);
-const Color _vaultTextHint = Color(0xFF7A7393);
-const Color _vaultAccent = Color(0xFFB794F6);
+const Color _vaultBg = Color(0xFF0B1220);
+const Color _vaultBgAlt = Color(0xFF111D33);
+const Color _vaultField = Color(0xFF172642);
+const Color _vaultBorder = Color(0xFF2B4166);
+const Color _vaultBorderFocus = Color(0xFF62D9FF);
+const Color _vaultTextPrimary = Color(0xFFF3F7FF);
+const Color _vaultTextSecondary = Color(0xFFAABBD4);
+const Color _vaultTextHint = Color(0xFF7184A2);
+const Color _vaultAccent = Color(0xFF62D9FF);
 const int _initialVisiblePhotoLimit = StorageService.secretVaultPageSize;
 const Duration _vaultPrepareTimeout = Duration(seconds: 15);
+
+/// Chờ Auth khôi phục lần đầu, nhưng không cho màn cũ nhận tài khoản mới.
+class SecretVaultSessionScope {
+  SecretVaultSessionScope({required this.houseId, String? initialUid})
+    : _uid = initialUid?.isNotEmpty == true ? initialUid : null;
+
+  final String houseId;
+  String? _uid;
+  bool _ended = false;
+
+  String? get uid => _uid;
+
+  bool observeAuthUser(String? uid) {
+    if (_ended) return false;
+    final nextUid = uid?.isNotEmpty == true ? uid : null;
+    if (_uid == null) {
+      _uid = nextUid;
+      return true;
+    }
+    if (nextUid == _uid) return true;
+    _ended = true;
+    return false;
+  }
+
+  bool canPrepare({
+    required String? currentUid,
+    required String currentHouseId,
+  }) =>
+      !_ended &&
+      currentHouseId == houseId &&
+      (_uid == null || currentUid == _uid);
+
+  bool isCurrent({
+    required String? currentUid,
+    required String currentHouseId,
+  }) =>
+      _uid != null &&
+      canPrepare(currentUid: currentUid, currentHouseId: currentHouseId);
+}
+
+// Cùng timestamp vẫn giữ thứ tự khóa RTDB để cursor không bỏ sót ảnh.
+int _compareVaultPhotos(Map<String, dynamic> a, Map<String, dynamic> b) {
+  final byTimestamp = (b['ts'] as num? ?? 0).compareTo(a['ts'] as num? ?? 0);
+  return byTimestamp != 0
+      ? byTimestamp
+      : (b['id']?.toString() ?? '').compareTo(a['id']?.toString() ?? '');
+}
+
+/// Chỉ thử lại thao tác đọc; hết hạn hoặc đổi phiên thì bỏ kết quả đang chờ.
+Future<T> readSecretVaultWithAuthRetry<T>({
+  required Future<void> Function(bool forceRefresh) prepareToken,
+  required Future<T> Function() read,
+  required bool Function() isCurrentSession,
+  Duration timeout = _vaultPrepareTimeout,
+  void Function(FirebaseException error)? onRetry,
+}) async {
+  final elapsed = Stopwatch()..start();
+
+  void checkSession() {
+    if (!isCurrentSession()) {
+      throw FirebaseAuthException(code: 'unauthenticated');
+    }
+  }
+
+  Future<R> runStage<R>(Future<R> Function() action) async {
+    checkSession();
+    final remaining = timeout - elapsed.elapsed;
+    if (remaining <= Duration.zero) {
+      throw TimeoutException('Secret vault read timed out', timeout);
+    }
+    final result = await action().timeout(remaining);
+    checkSession();
+    return result;
+  }
+
+  await runStage(() => prepareToken(false));
+  try {
+    return await runStage(read);
+  } on FirebaseException catch (error) {
+    final code = error.code.toLowerCase().replaceAll('_', '-');
+    if (error.plugin != 'firebase_database' ||
+        !const {
+          'permission-denied',
+          'unknown',
+          'unauthenticated',
+          'unavailable',
+        }.contains(code)) {
+      rethrow;
+    }
+    checkSession();
+    onRetry?.call(error);
+    await runStage(() => prepareToken(true));
+    return runStage(read);
+  }
+}
 
 class SecretVaultScreen extends StatefulWidget {
   final String houseId;
@@ -58,7 +159,23 @@ class SecretVaultScreen extends StatefulWidget {
 
 class SecretVaultScreenState extends State<SecretVaultScreen> {
   static const String _recoveryAction = '__use_recovery_code__';
-  static const String _pendingVaultUploadKeyPrefix = 'secret_vault_';
+  late final SecretVaultSessionScope _vaultSession;
+  String get _vaultUid => _vaultSession.uid ?? '';
+  late final String _vaultHouseId;
+  late final Future<VipAccessInfo> _vaultPlan;
+  StreamSubscription<User?>? _vaultAuthSub;
+  bool get _vaultScopeCanPrepare =>
+      mounted &&
+      _vaultSession.canPrepare(
+        currentUid: FirebaseAuth.instance.currentUser?.uid,
+        currentHouseId: widget.houseId,
+      );
+  bool get _vaultScopeIsCurrent =>
+      mounted &&
+      _vaultSession.isCurrent(
+        currentUid: FirebaseAuth.instance.currentUser?.uid,
+        currentHouseId: widget.houseId,
+      );
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final AuthService _authService = AuthService();
@@ -84,6 +201,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   bool _hasMorePhotos = false;
   bool _isLoadingMorePhotos = false;
   int? _oldestLoadedPhotoTs;
+  String? _oldestLoadedPhotoId;
   bool _didPromptPendingVaultUploadRetry = false;
 
   void _safeSetState(VoidCallback fn) {
@@ -93,7 +211,28 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   @override
   void initState() {
     super.initState();
-    _listenResetRequest();
+    _vaultHouseId = widget.houseId;
+    _vaultSession = SecretVaultSessionScope(
+      houseId: _vaultHouseId,
+      initialUid: FirebaseAuth.instance.currentUser?.uid,
+    );
+    _vaultPlan = PurchaseService().getVipAccessInfo();
+    _vaultAuthSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (_vaultSession.observeAuthUser(user?.uid)) {
+        if (_vaultScopeIsCurrent) unawaited(_prepareVault());
+        return;
+      }
+      _photosSub?.cancel();
+      _resetRequestSub?.cancel();
+      _enc.clearCache(_vaultHouseId);
+      _clearVaultMediaCache();
+      _safeSetState(() {
+        _encryptionReady = false;
+        _photos = [];
+        _pendingResetRequest = null;
+        _encStatusMsg = AppErrorMapper.authSyncMessage;
+      });
+    });
     _networkSub = ConnectivityService().isOnlineStream.listen((isOnline) {
       if (!isOnline && mounted) {
         _safeSetState(() {
@@ -102,6 +241,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           _photos = [];
           _hasMorePhotos = false;
           _isLoadingMorePhotos = false;
+          _oldestLoadedPhotoTs = null;
+          _oldestLoadedPhotoId = null;
         });
         _enc.clearCache(widget.houseId);
         _clearVaultMediaCache();
@@ -117,6 +258,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
   @override
   void dispose() {
+    _vaultAuthSub?.cancel();
     _networkSub?.cancel();
     _photosSub?.cancel();
     _resetRequestSub?.cancel();
@@ -130,6 +272,42 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     PaintingBinding.instance.imageCache
       ..clear()
       ..clearLiveImages();
+  }
+
+  Future<T> _readVaultWithAuthRetry<T>(
+    String operation,
+    Future<T> Function() read,
+  ) {
+    User? user = FirebaseAuth.instance.currentUser;
+    final generation = _vaultMediaGeneration;
+    final houseId = widget.houseId;
+    return readSecretVaultWithAuthRetry(
+      isCurrentSession: () =>
+          _vaultScopeCanPrepare &&
+          widget.houseId == houseId &&
+          _vaultMediaGeneration == generation,
+      prepareToken: (forceRefresh) async {
+        user ??= await FirebaseAuth.instance
+            .idTokenChanges()
+            .where((candidate) => candidate != null)
+            .cast<User>()
+            .first
+            .timeout(_vaultPrepareTimeout);
+        if (!_vaultScopeCanPrepare ||
+            !_vaultSession.observeAuthUser(user!.uid) ||
+            !_vaultScopeIsCurrent) {
+          throw FirebaseAuthException(code: 'unauthenticated');
+        }
+        final token = await user!.getIdToken(forceRefresh);
+        if (token == null || token.trim().isEmpty) {
+          throw FirebaseAuthException(code: 'unauthenticated');
+        }
+      },
+      read: read,
+      onRetry: (error) => debugPrint(
+        'Secret vault read retry: $operation/${error.plugin}/${error.code}',
+      ),
+    );
   }
 
   Future<String> _resolveVaultPhotoUrl(Map<String, dynamic> photo) async {
@@ -199,7 +377,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   String get _pendingVaultUploadKey =>
-      '$_pendingVaultUploadKeyPrefix${widget.houseId}';
+      SecretVaultUploadIdentity.scopeKey(_vaultUid, _vaultHouseId);
 
   Future<void> _savePendingVaultUpload({
     required List<String> imagePaths,
@@ -209,13 +387,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       pendingKey: _pendingVaultUploadKey,
       imagePaths: imagePaths,
       encryptedCaption: encryptedCaption,
-    );
-  }
-
-  Future<void> _removePendingVaultUploadedImage(String imagePath) {
-    return _removePendingVaultUploadedImageRecord(
-      pendingKey: _pendingVaultUploadKey,
-      imagePath: imagePath,
     );
   }
 
@@ -266,7 +437,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   Future<void> _prepareVault() async {
-    if (_isPreparingVault) return;
+    if (_isPreparingVault || !_vaultScopeCanPrepare) return;
+    final generation = _vaultMediaGeneration;
+    bool isCurrentPreparation() =>
+        _vaultScopeCanPrepare && generation == _vaultMediaGeneration;
     if (mounted) {
       _safeSetState(() => _isPreparingVault = true);
     } else {
@@ -288,14 +462,22 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     }
 
     try {
+      // Không đọc metadata/listener trước khi UID và token đã sẵn sàng.
+      await _readVaultWithAuthRetry('session', () async {});
+      if (!isCurrentPreparation()) return;
+      if (_resetRequestSub == null) _listenResetRequest();
+
       // 1. Thử khôi phục key từ bộ nhớ đệm (nếu app chưa bị đóng và chưa hết timeout)
       final restored = await _enc
           .tryRestoreKeyFromSecureStorage(widget.houseId)
           .timeout(_vaultPrepareTimeout);
+      if (!isCurrentPreparation()) return;
       if (restored && mounted) {
-        final hasRecoveryCode = await _enc
-            .hasRecoveryCode(widget.houseId)
-            .timeout(_vaultPrepareTimeout);
+        final hasRecoveryCode = await _readVaultWithAuthRetry(
+          'recovery-code',
+          () => _enc.hasRecoveryCode(widget.houseId),
+        );
+        if (!isCurrentPreparation()) return;
         _safeSetState(() {
           _encryptionReady = true;
           _encStatusMsg = context.tr('util_khomtangm_5f209b');
@@ -307,11 +489,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       }
 
       // 2. Chưa có key trong RAM hoặc đã hết hạn → yêu cầu nhập passphrase
-      final hasSetup = await _enc
-          .hasPassphraseSetup(widget.houseId)
-          .timeout(_vaultPrepareTimeout);
+      final hasSetup = await _readVaultWithAuthRetry(
+        'passphrase-setup',
+        () => _enc.hasPassphraseSetup(widget.houseId),
+      );
+      if (!isCurrentPreparation()) return;
       final passphrase = await _showPassphraseDialog(hasSetup: hasSetup);
-      if (!mounted) return;
+      if (!isCurrentPreparation()) return;
       if (passphrase == null) {
         if (mounted) {
           _safeSetState(() {
@@ -325,7 +509,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
       if (passphrase == _recoveryAction) {
         final recoveryCode = await _showRecoveryCodeInputDialog();
-        if (!mounted || recoveryCode == null) return;
+        if (!isCurrentPreparation() || recoveryCode == null) return;
         _safeSetState(() {
           _encryptionReady = false;
           _encStatusMsg = context.tr('util_angxcthcmk_ba443e');
@@ -333,7 +517,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         await _enc
             .unlockHouseKeyWithRecoveryCode(widget.houseId, recoveryCode)
             .timeout(_vaultPrepareTimeout);
-        if (!mounted) return;
+        if (!isCurrentPreparation()) return;
         _safeSetState(() {
           _encryptionReady = true;
           _encStatusMsg = context.tr('util_khomtmbngm_cd1d8d');
@@ -352,11 +536,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       await _enc
           .unlockHouseKey(widget.houseId, passphrase)
           .timeout(_vaultPrepareTimeout);
-      if (mounted) {
+      if (isCurrentPreparation()) {
         final recoveryCode = await _enc
             .createRecoveryCodeIfMissing(widget.houseId)
             .timeout(_vaultPrepareTimeout);
-        if (!mounted) return;
+        if (!isCurrentPreparation()) return;
         _safeSetState(() {
           _encryptionReady = true;
           _encStatusMsg = hasSetup
@@ -372,17 +556,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           );
         }
       }
+      if (!isCurrentPreparation()) return;
       _loadPhotos();
       unawaited(_promptPendingVaultUploadRetryIfNeeded());
     } on TimeoutException {
-      if (mounted) {
+      debugPrint('Secret vault prepare failed: timeout');
+      if (isCurrentPreparation()) {
         _safeSetState(() {
           _encryptionReady = false;
           _encStatusMsg = context.tr('util_thaotcmkho_721330');
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (e is FirebaseException) {
+        debugPrint('Secret vault prepare failed: ${e.plugin}/${e.code}');
+      } else {
+        // Không ghi mật khẩu, recovery code, key hoặc metadata vào log.
+        debugPrint('Secret vault prepare failed: ${e.runtimeType}');
+      }
+      if (isCurrentPreparation()) {
         _safeSetState(() {
           _encryptionReady = false;
           _encStatusMsg = AppErrorMapper.resolve(e).message;
@@ -398,6 +590,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   Future<void> _loadPhotos() async {
+    if (!_vaultScopeIsCurrent || !_encryptionReady) return;
     final legacyPasswordRequiredText = context.tr('util_cnnhpmtkhu_b5f391');
     final legacyMigrationText = context.tr('util_cnidungccn_44f5ff');
     final loadFailedText = context.tr('util_khngthtikh_150eff');
@@ -406,7 +599,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         .orderByChild('ts')
         .limitToLast(_initialVisiblePhotoLimit);
     try {
-      final event = await query.get();
+      final event = await _readVaultWithAuthRetry('photos', query.get);
+      if (!_vaultScopeIsCurrent || !_encryptionReady) return;
       final raw = event.value;
       if (raw is Map) {
         final data = Map<dynamic, dynamic>.from(raw);
@@ -442,20 +636,24 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           }),
         );
 
-        if (needsLegacyMigrationLocal && mounted) {
+        if (!mounted || !_vaultScopeIsCurrent || !_encryptionReady) return;
+
+        if (needsLegacyMigrationLocal) {
           _safeSetState(() => _encStatusMsg = legacyMigrationText);
         }
 
-        loaded.sort(
-          (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
-        );
+        loaded.sort(_compareVaultPhotos);
         if (mounted) {
           final oldestTs = loaded.isEmpty
               ? null
               : (loaded.last['ts'] as num?)?.toInt();
+          final oldestId = loaded.isEmpty
+              ? null
+              : loaded.last['id']?.toString();
           _safeSetState(() {
             _photos = loaded;
             _oldestLoadedPhotoTs = oldestTs;
+            _oldestLoadedPhotoId = oldestId;
             _hasMorePhotos = loaded.length >= _initialVisiblePhotoLimit;
             _isLoadingMorePhotos = false;
           });
@@ -465,6 +663,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           _safeSetState(() {
             _photos = [];
             _oldestLoadedPhotoTs = null;
+            _oldestLoadedPhotoId = null;
             _hasMorePhotos = false;
             _isLoadingMorePhotos = false;
           });
@@ -485,7 +684,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   void _loadMorePhotos() async {
-    if (_isLoadingMorePhotos || !_hasMorePhotos) {
+    if (!_vaultScopeIsCurrent ||
+        !_encryptionReady ||
+        _isLoadingMorePhotos ||
+        !_hasMorePhotos) {
       return;
     }
     final legacyPasswordRequiredText = context.tr('util_cnnhpmtkhu_b5f391');
@@ -493,6 +695,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       _isLoadingMorePhotos = true;
     });
     final oldestTs = _oldestLoadedPhotoTs;
+    final oldestId = _oldestLoadedPhotoId;
     if (oldestTs == null) {
       if (mounted) {
         _safeSetState(() => _isLoadingMorePhotos = false);
@@ -500,12 +703,16 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       return;
     }
     try {
-      final snapshot = await _dbRef
-          .child('houses/${widget.houseId}/private_secure')
-          .orderByChild('ts')
-          .endAt(oldestTs - 1)
-          .limitToLast(StorageService.secretVaultPageSize)
-          .get();
+      final snapshot = await _readVaultWithAuthRetry(
+        'photos-page',
+        () => _dbRef
+            .child('houses/${widget.houseId}/private_secure')
+            .orderByChild('ts')
+            .endBefore(oldestTs, key: oldestId)
+            .limitToLast(StorageService.secretVaultPageSize)
+            .get(),
+      );
+      if (!_vaultScopeIsCurrent || !_encryptionReady) return;
       if (!snapshot.exists || snapshot.value == null) {
         if (mounted) {
           _safeSetState(() {
@@ -555,10 +762,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           return item;
         }),
       );
-      loadedMore.sort(
-        (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
-      );
-      if (!mounted) {
+      loadedMore.sort(_compareVaultPhotos);
+      if (!mounted || !_vaultScopeIsCurrent || !_encryptionReady) {
         return;
       }
       if (needsLegacyMigrationLocal) {
@@ -572,9 +777,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       final nextOldestTs = nextPhotos.isEmpty
           ? null
           : (nextPhotos.last['ts'] as num?)?.toInt();
+      final nextOldestId = nextPhotos.isEmpty
+          ? null
+          : nextPhotos.last['id']?.toString();
       _safeSetState(() {
         _photos = nextPhotos;
         _oldestLoadedPhotoTs = nextOldestTs;
+        _oldestLoadedPhotoId = nextOldestId;
         _hasMorePhotos =
             loadedMore.length >= StorageService.secretVaultPageSize;
         _isLoadingMorePhotos = false;
@@ -591,89 +800,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     String? presetEncryptedCaption,
     bool skipCaptionPrompt = false,
   }) async {
+    if (!_vaultScopeIsCurrent || _isLoading) return;
     if (!_encryptionReady) {
       SLToast.warning(context, context.tr('util_vuilngmkha_19eeeb'));
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now().toLocal().toString().substring(0, 10);
-    final todayKey = 'secret_vault_up_$today';
-    final uploadedToday = prefs.getInt(todayKey) ?? 0;
-
-    final vipAccess = await PurchaseService().getVipAccessInfo();
-    final isPro = vipAccess.isVip;
-
-    final dailyLimit = isPro
-        ? StorageService.secretVaultDailyLimitVip
-        : StorageService.secretVaultDailyLimitFree;
-    const enforceLocalDailyLimit = true;
-
-    // Total cap check
-    final vaultCountSnap = await _dbRef
-        .child('houses/${widget.houseId}/vaultCount')
-        .get();
-    final currentTotal = vaultCountSnap.value is num
-        ? (vaultCountSnap.value as num).toInt()
-        : 0;
-    if (currentTotal >= StorageService.secretVaultTotalCap) {
-      if (mounted) {
-        SLToast.warning(
-          context,
-          L10nService().translate('vault_max_365_reached'),
-        );
-      }
-      return;
-    }
-
-    if (enforceLocalDailyLimit && uploadedToday >= dailyLimit) {
-      if (mounted) {
-        SLToast.error(
-          context,
-          L10nService().format('vault_daily_limit_reached', {
-            'limit': dailyLimit,
-          }),
-        );
-      }
-      return;
-    }
-
-    final remainingDailySlots = dailyLimit - uploadedToday;
-    final pickLimit = StorageService.clampImagePickLimit(
-      remainingDailySlots,
-      maxAllowed: StorageService.maxSecretVaultSelectionPerBatch,
-    );
-    if (pickLimit <= 0) {
+    final pendingKey = _pendingVaultUploadKey;
+    if (presetImages == null &&
+        await _hasPendingVaultUploadRecord(pendingKey)) {
+      if (_vaultScopeIsCurrent) await _retryPendingVaultUpload();
       return;
     }
     final images =
-        presetImages ?? await _storageService.pickImages(limit: pickLimit);
-    if (images.isEmpty) return;
-
-    if ((uploadedToday >= dailyLimit ||
-            uploadedToday + images.length > dailyLimit) &&
-        mounted) {
-      SLToast.warning(
-        context,
-        L10nService().format('vault_daily_uploaded', {
-          'uploaded': uploadedToday,
-          'limit': dailyLimit,
-        }),
-      );
-    }
-
-    if (enforceLocalDailyLimit && uploadedToday + images.length > dailyLimit) {
-      if (mounted) {
-        SLToast.warning(
-          context,
-          L10nService().format('vault_remaining_uploads', {
-            'remaining': dailyLimit - uploadedToday,
-            'count': images.length,
-          }),
+        presetImages ??
+        await _storageService.pickImages(
+          limit: StorageService.maxSecretVaultSelectionPerBatch,
         );
-      }
-      return;
-    }
+    if (images.isEmpty || !_vaultScopeIsCurrent) return;
 
     const skipDialogKey = 'secret_vault_skip_dialog_until';
     final skipUntil = prefs.getInt(skipDialogKey) ?? 0;
@@ -844,6 +989,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           captionPlain,
         );
       }
+      if (!_vaultScopeIsCurrent) return;
       await _savePendingVaultUpload(
         imagePaths: images.map((image) => image.path).toList(growable: false),
         encryptedCaption: encryptedCaption,
@@ -851,44 +997,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
 
       int successCount = 0;
       for (final image in images) {
-        if (!mounted) {
-          // Lưu pending cho lần sau
-          await _savePendingVaultUpload(
-            imagePaths: images.map((e) => e.path).toList(),
-            encryptedCaption: encryptedCaption,
-          );
-          return;
-        }
+        if (!_vaultScopeIsCurrent) return;
+        final requestId = await _pendingVaultRequestId(pendingKey, image.path);
+        if (!_vaultScopeIsCurrent) return;
         final upload = await _storageService.uploadSecretVaultImage(
           widget.houseId,
           image,
+          requestId: requestId,
+          encryptedCaption: encryptedCaption,
         );
-        final storagePath = upload?.storagePath.trim() ?? '';
-
-        if (storagePath.isNotEmpty) {
-          final mediaRef = _dbRef
-              .child('houses/${widget.houseId}/private_secure')
-              .push();
-          await mediaRef.set({
-            // Giữ trường URL để tương thích schema cũ nhưng không lưu URL công khai.
-            'url': '',
-            'storagePath': storagePath,
-            'uploadSessionId': upload?.sessionId,
-            'storageBackend': 'r2',
-            'storageAccess': 'signed',
-            'privateMedia': true,
-            'createdByUid': FirebaseAuth.instance.currentUser?.uid ?? '',
-            'ts': ServerValue.timestamp,
-            'caption': encryptedCaption,
-            'encrypted': true,
-            'encryptionVersion': 2,
-          });
+        if (!_vaultScopeIsCurrent) return;
+        if (upload?.mediaId?.isNotEmpty == true) {
           successCount++;
-          await _removePendingVaultUploadedImage(image.path);
+          await _removePendingVaultUploadedImageRecord(
+            pendingKey: pendingKey,
+            imagePath: image.path,
+          );
         }
       }
-
-      await prefs.setInt(todayKey, uploadedToday + successCount);
+      if (_vaultScopeIsCurrent) await _loadPhotos();
 
       if (mounted && successCount > 0) {
         SLToast.success(
@@ -901,7 +1028,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       if (mounted) {
         SLToast.error(
           context,
-          L10nService().format('vault_upload_error', {'error': '$e'}),
+          e is FirebaseFunctionsException && e.code == 'resource-exhausted'
+              ? context.tr('vault_storage_limit')
+              : L10nService().format('vault_upload_error', {
+                  'error': AppErrorMapper.resolve(e).message,
+                }),
         );
       }
     } finally {
@@ -917,58 +1048,42 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       return;
     }
 
-    final restorePayload = Map<String, dynamic>.from(photo)
-      ..remove('id')
-      ..remove('url');
-
-    await ActivityHistoryService.instance.add(
-      context.tr('util_xamtnhring_66ec90'),
-      houseId: widget.houseId,
-      title: context.tr('util_xanhringt_8778f3'),
-      subtitle: '',
-      action: 'delete',
-      module: 'secret_vault',
-      entityType: 'secret_photo',
-      entityId: id,
-      sourceLabel: context.tr('util_khobmt_e05057'),
-      previewUrl: '',
-      previewType: 'private',
-      restorePath: 'houses/${widget.houseId}/private_secure/$id',
-      restorePayload: restorePayload,
-    );
-
-    final url = photo['url']?.toString().trim() ?? '';
-    final storagePath = photo['storagePath']?.toString().trim() ?? '';
-
+    if (!_vaultScopeIsCurrent || _isLoading) return;
+    final deletedHistoryText = context.tr('util_xamtnhring_66ec90');
+    final deletedTitle = context.tr('util_xanhringt_8778f3');
+    final deletedSourceLabel = context.tr('util_khobmt_e05057');
+    final historyHouseId = _vaultHouseId;
+    _safeSetState(() => _isLoading = true);
     try {
-      var mediaDeleted = true;
-      if (storagePath.isNotEmpty) {
-        mediaDeleted = await _storageService.deleteSecretVaultFileByPath(
-          houseId: widget.houseId,
-          mediaId: id,
-          storagePath: storagePath,
-        );
-      } else if (url.isNotEmpty) {
-        // Nhánh tương thích cho ảnh Firebase/R2 rất cũ chưa lưu storagePath.
-        mediaDeleted = await _storageService.deleteImageByUrl(url);
-      }
-
-      if (!mediaDeleted) {
-        throw StateError('Secret Vault media deletion was rejected.');
-      }
-
-      await _dbRef
-          .child('houses/${widget.houseId}/private_secure/$id')
-          .remove();
-      await _dbRef
-          .child('houses/${widget.houseId}/vaultCount')
-          .set(ServerValue.increment(-1));
+      final mediaDeleted = await _storageService.deleteSecretVaultFileByPath(
+        houseId: widget.houseId,
+        mediaId: id,
+        storagePath: photo['storagePath']?.toString() ?? '',
+      );
+      if (!mediaDeleted) throw StateError('Secret Vault deletion failed');
+      if (!_vaultScopeIsCurrent) return;
       _clearVaultMediaCache();
-    } catch (error, stackTrace) {
-      debugPrint('Secret Vault delete failed: $error\n$stackTrace');
-      if (mounted) {
+      await _loadPhotos();
+      if (!_vaultScopeIsCurrent) return;
+      // Object đã xóa không có payload khôi phục; tuyệt đối không ghi caption_plain.
+      await ActivityHistoryService.instance.add(
+        deletedHistoryText,
+        houseId: historyHouseId,
+        title: deletedTitle,
+        subtitle: '',
+        action: 'delete',
+        module: 'secret_vault',
+        entityType: 'secret_photo',
+        entityId: id,
+        sourceLabel: deletedSourceLabel,
+        previewType: 'private',
+      );
+    } catch (error) {
+      if (mounted && _vaultScopeIsCurrent) {
         SLToast.error(context, AppErrorMapper.resolve(error).message);
       }
+    } finally {
+      if (mounted) _safeSetState(() => _isLoading = false);
     }
   }
 
@@ -1003,7 +1118,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
         ),
         child: StatefulBuilder(
-          builder: (ctx, setLocalState) => SLAlertDialog(
+          builder: (ctx, setLocalState) => VaultAccessSurface(
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 24,
               vertical: 16,
@@ -1026,49 +1141,43 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     hasSetup
                         ? context.tr('util_nhpmtkhukh_e4639a')
                         : context.tr('util_tomtkhukho_e3de4f'),
-                    style: SLTheme.quicksand(color: SLDialogStyle.secondary),
+                    style: SLTheme.quicksand(color: const Color(0xFF50627B)),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: passphraseCtrl,
                     obscureText: obscurePass,
                     style: const TextStyle(
-                      color: SLColors.ink,
+                      color: Color(0xFF172642),
                       fontWeight: FontWeight.w600,
                     ),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: SLDialogStyle.field,
+                      fillColor: const Color(0xFFEAF0F7),
                       hintText: context.tr('util_mtkhutithi_d4f304'),
-                      hintStyle: const TextStyle(
-                        color: SLDialogStyle.secondary,
-                      ),
+                      hintStyle: const TextStyle(color: Color(0xFF50627B)),
                       counterText: '',
                       suffixIcon: IconButton(
                         onPressed: () =>
                             setLocalState(() => obscurePass = !obscurePass),
                         icon: Icon(
                           obscurePass ? Icons.visibility : Icons.visibility_off,
-                          color: SLDialogStyle.secondary,
+                          color: const Color(0xFF50627B),
                         ),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: SLDialogStyle.border,
-                        ),
+                        borderSide: const BorderSide(color: Color(0xFFCBD6E6)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: SLDialogStyle.border,
-                        ),
+                        borderSide: const BorderSide(color: Color(0xFFCBD6E6)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: SLDialogStyle.primary,
+                          color: Color(0xFF2479A8),
                           width: 2,
                         ),
                       ),
@@ -1080,17 +1189,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       controller: confirmCtrl,
                       obscureText: obscureConfirm,
                       style: const TextStyle(
-                        color: SLColors.ink,
+                        color: Color(0xFF172642),
                         fontWeight: FontWeight.w600,
                       ),
                       maxLength: 32,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: SLDialogStyle.field,
+                        fillColor: const Color(0xFFEAF0F7),
                         hintText: context.tr('util_nhplimtkhu_eee7a7'),
-                        hintStyle: const TextStyle(
-                          color: SLDialogStyle.secondary,
-                        ),
+                        hintStyle: const TextStyle(color: Color(0xFF50627B)),
                         counterText: '',
                         suffixIcon: IconButton(
                           onPressed: () => setLocalState(
@@ -1100,25 +1207,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                             obscureConfirm
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                            color: SLDialogStyle.secondary,
+                            color: const Color(0xFF50627B),
                           ),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: SLDialogStyle.border,
+                            color: Color(0xFFCBD6E6),
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: SLDialogStyle.border,
+                            color: Color(0xFFCBD6E6),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: SLDialogStyle.primary,
+                            color: Color(0xFF2479A8),
                             width: 2,
                           ),
                         ),
@@ -1199,7 +1306,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ),
           ),
         ),
-        child: SLAlertDialog(
+        child: VaultAccessSurface(
           title: Text(context.tr('util_nhpmkhiphc_44a271')),
           content: TextField(
             controller: controller,
@@ -1387,7 +1494,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                                   label: Text(
                                     m == 0
                                         ? context.tr('home_tcth_3c4371')
-                                        : L10nScope.of(context).format('ui_utilities_value1_minutes_eba409', {'value1': m}),
+                                        : L10nScope.of(context).format(
+                                            'ui_utilities_value1_minutes_eba409',
+                                            {'value1': m},
+                                          ),
                                   ),
                                   selected: isSel,
                                   selectedColor: _vaultAccent,
@@ -1916,7 +2026,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             fontWeight: FontWeight.w800,
             fontSize: 18,
             letterSpacing: 1.1,
-            color: const Color(0xFF334155),
+            color: _vaultTextPrimary,
           ),
         ),
         centerTitle: true,
@@ -1925,13 +2035,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         flexibleSpace: ClipRect(
           child: FastBackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.white.withValues(alpha: 0.85)),
+            child: Container(color: _vaultBg.withValues(alpha: 0.92)),
           ),
         ),
         leading: IconButton(
+          tooltip: context.tr('p3_back'),
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: Color(0xFF334155),
+            color: _vaultTextSecondary,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -1939,7 +2051,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           IconButton(
             icon: const Icon(
               Icons.info_outline_rounded,
-              color: Color(0xFF334155),
+              color: _vaultTextSecondary,
               size: 22,
             ),
             tooltip: context.tr('help_security_title'),
@@ -1947,7 +2059,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
           if (_encryptionReady)
             IconButton(
-              icon: const Icon(Icons.settings, color: Color(0xFF334155)),
+              icon: const Icon(Icons.settings, color: _vaultTextSecondary),
               onPressed: () => _showSettingsModal(),
             ),
         ],
@@ -1955,19 +2067,21 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFF8FAFC), Colors.white],
+            colors: [_vaultBg, Color(0xFF101D33), _vaultBg],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildEncryptionBadge(),
-              _buildPendingResetBanner(),
-              _buildUploadHeader(),
-              Expanded(child: _buildPhotoGrid()),
-            ],
+          child: VaultGalleryLayout(
+            header: Column(
+              children: [
+                _buildEncryptionBadge(),
+                _buildPendingResetBanner(),
+                _buildUploadHeader(),
+              ],
+            ),
+            gallerySlivers: _buildPhotoSlivers(),
           ),
         ),
       ),

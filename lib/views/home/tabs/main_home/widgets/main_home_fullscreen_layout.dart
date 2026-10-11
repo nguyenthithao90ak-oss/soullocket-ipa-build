@@ -54,7 +54,7 @@ class _FullscreenHomeBody extends StatelessWidget {
         : context.tr('home_together_title');
     final bottomLabel = circleBottomLabel.trim().isNotEmpty
         ? circleBottomLabel.trim()
-        : context.tr('ngày yêu');
+        : context.tr('home_ngyyu_722b21');
     final quote = context.tr('home_together_subtitle');
 
     return Scaffold(
@@ -63,6 +63,7 @@ class _FullscreenHomeBody extends StatelessWidget {
       body: HomeCompanionScene(
         followScroll: true,
         calm: true,
+        guestVisits: true,
         enabled: uiState.homeCompanionEnabled,
         soundEnabled: uiState.homeCompanionSoundEnabled,
         maxVisibleCharacters: 2,
@@ -559,7 +560,9 @@ class _FullscreenLoveLetterhead extends StatelessWidget {
     final visibleHouseName = showHouseName && houseName.trim().isNotEmpty;
     final title = visibleHouseName
         ? houseName.trim()
-        : context.tr(isSingle ? 'home_diary_mine' : 'Nhật ký tình yêu');
+        : context.tr(
+            isSingle ? 'home_diary_mine' : 'home_nhtktnhyu_bd2683',
+          );
 
     return Semantics(
       header: true,
@@ -1020,7 +1023,13 @@ class _FullscreenAvatarItem extends StatelessWidget {
               ],
             ),
             child: Text(
-              name.isNotEmpty ? name : context.tr(isUser1 ? 'Bạn' : 'Người ấy'),
+              name.isNotEmpty
+                  ? name
+                  : context.tr(
+                      isUser1
+                          ? 'home_default_name_you'
+                          : 'home_default_name_partner',
+                    ),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 11.5,

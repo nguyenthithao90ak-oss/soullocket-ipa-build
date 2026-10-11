@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show debugPrint, debugPrintStack, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/core/sl_route.dart';
@@ -19,12 +20,11 @@ import 'diary_export_screen.dart';
 import 'drawing_studio_screen.dart';
 import 'finance_screen.dart';
 import 'friendly_chat_screen.dart';
-import 'giftcode_screen.dart';
 import 'habit_screen.dart';
 import 'health_screen.dart';
 import 'local_album_screen.dart';
 import 'love_card_screen.dart';
-import 'notebook_hub_screen.dart';
+import 'shared_notes_screen.dart';
 import 'reward_store_screen.dart';
 import 'secret_vault_screen.dart';
 import 'sleep_tracker_screen.dart';
@@ -47,16 +47,23 @@ abstract final class UtilityLauncher {
     required String relationshipMode,
     Future<bool> Function()? beforeOpen,
   }) {
-    return _openGate.run(
-      () => _openInternal(
-        context,
-        id: id,
-        houseId: houseId,
-        myName: myName,
-        relationshipMode: relationshipMode,
-        beforeOpen: beforeOpen,
-      ),
-    );
+    return _openGate.run(() async {
+      try {
+        await _openInternal(
+          context,
+          id: id,
+          houseId: houseId,
+          myName: myName,
+          relationshipMode: relationshipMode,
+          beforeOpen: beforeOpen,
+        );
+      } catch (error, stackTrace) {
+        // Callback tile không await Future này; luôn ghi nhận và nhả gate
+        // để một route lỗi không làm mọi tiện ích phía sau mất phản hồi.
+        debugPrint('[Utilities] Không mở được tiện ích $id: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    });
   }
 
   static Future<void> _openInternal(
@@ -82,10 +89,7 @@ abstract final class UtilityLauncher {
       return;
     }
     if (id == 'local_album') {
-      await Navigator.push(
-        context,
-        SLRoute(builder: (_) => const LocalAlbumScreen()),
-      );
+      await slPush<void>(context, const LocalAlbumScreen());
       return;
     }
     final resolvedHouseId = houseId?.trim() ?? '';
@@ -94,11 +98,9 @@ abstract final class UtilityLauncher {
       return;
     }
     if (id == 'couple_connect') {
-      await Navigator.push(
+      await slPush<void>(
         context,
-        SLRoute(
-          builder: (_) => SettingsLinksManagerScreen(houseId: resolvedHouseId),
-        ),
+        SettingsLinksManagerScreen(houseId: resolvedHouseId),
       );
       return;
     }
@@ -121,15 +123,20 @@ abstract final class UtilityLauncher {
     required String myName,
     required String relationshipMode,
   }) {
-    return _openGate.run(
-      () => _openScreenInternal(
-        context,
-        id: id,
-        houseId: houseId,
-        myName: myName,
-        relationshipMode: relationshipMode,
-      ),
-    );
+    return _openGate.run(() async {
+      try {
+        await _openScreenInternal(
+          context,
+          id: id,
+          houseId: houseId,
+          myName: myName,
+          relationshipMode: relationshipMode,
+        );
+      } catch (error, stackTrace) {
+        debugPrint('[Utilities] Không mở được tiện ích $id: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    });
   }
 
   static Future<void> _openScreenInternal(
@@ -143,7 +150,7 @@ abstract final class UtilityLauncher {
     Widget? screen;
     switch (id) {
       case 'note':
-        screen = NotebookHubScreen(houseId: houseId, myName: myName);
+        screen = SharedNotesScreen(houseId: houseId, myName: myName);
       case 'friendly_chat':
         screen = FriendlyChatScreen(houseId: houseId, myName: myName);
       case 'finance':
@@ -182,8 +189,6 @@ abstract final class UtilityLauncher {
         screen = uid == null
             ? null
             : LoveCardScreen(houseId: houseId, myUid: uid);
-      case 'giftcode':
-        screen = GiftcodeScreen(houseId: houseId, myName: myName);
       case 'diary_export':
         screen = DiaryExportScreen(houseId: houseId);
       case 'tarot':

@@ -84,7 +84,7 @@ class AdminTopBar extends StatelessWidget {
   final DateTime? lastUpdatedAt;
   final VoidCallback onRefresh;
   final VoidCallback onSignOut;
-  final String title;
+  final String? title;
 
   const AdminTopBar({
     super.key,
@@ -93,7 +93,7 @@ class AdminTopBar extends StatelessWidget {
     required this.lastUpdatedAt,
     required this.onRefresh,
     required this.onSignOut,
-    this.title = 'SoulLocket Admin',
+    this.title,
   });
 
   @override
@@ -111,7 +111,7 @@ class AdminTopBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title ?? context.tr('admin_app_title'),
                     style: SLTheme.quicksand(
                       color: Colors.white,
                       fontSize: 28,
@@ -120,7 +120,7 @@ class AdminTopBar extends StatelessWidget {
                   ),
                   SLSpacing.h8,
                   Text(
-                    '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : L10nService().format('ui_admin_update_value1_d36e06', {'value1': formatDateTime(lastUpdatedAt!)})}',
+                    '${user.email ?? context.tr('admin_role_admin_label')} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : L10nService().format('ui_admin_update_value1_d36e06', {'value1': formatDateTime(lastUpdatedAt!)})}',
                     style: SLTheme.quicksand(
                       color: SLColors.textMuted,
                       fontSize: 13,

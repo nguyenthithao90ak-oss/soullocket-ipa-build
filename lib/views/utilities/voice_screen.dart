@@ -4,7 +4,6 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:crypto/crypto.dart';
@@ -20,7 +19,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
@@ -29,7 +27,10 @@ import 'package:soullocket_app/utils/services/activity_history_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_signed_audio_upload.dart';
+import 'package:soullocket_app/utils/services/storage/voice_upload_scope.dart';
 import 'package:soullocket_app/utils/voice_storage_capacity.dart';
+import 'package:soullocket_app/utils/screen_activity_mixin.dart';
+import 'package:soullocket_app/views/utilities/widgets/voice_message_studio.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -48,19 +49,10 @@ class VoiceScreen extends StatefulWidget {
 }
 
 class _VoiceScreenState extends State<VoiceScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
-  Widget _buildInfoIcon(BuildContext context) {
-    return IconButton(
-      tooltip: context.tr('auth_guide_short'),
-      icon: const Icon(
-        Icons.info_outline_rounded,
-        color: Colors.white,
-        size: 22,
-      ),
-      onPressed: () => _showInfoDialog(context),
-    );
-  }
-
+    with
+        WidgetsBindingObserver,
+        SingleTickerProviderStateMixin,
+        ScreenActivityMixin {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -71,20 +63,19 @@ class _VoiceScreenState extends State<VoiceScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('vault_features_label'), style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
               Text(
-                context.tr('voice_help_features'),
+                context.tr('vault_features_label'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 4),
+              Text(context.tr('voice_help_features')),
+              const SizedBox(height: 12),
               Text(
                 context.tr('p3_help_how_to_label'),
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 4),
-              Text(
-                context.tr('voice_help_steps'),
-              ),
+              const SizedBox(height: 4),
+              Text(context.tr('voice_help_steps')),
             ],
           ),
         ),
@@ -125,13 +116,13 @@ class _VoiceScreenState extends State<VoiceScreen>
   static const int _maxPickedVoiceBytes = 6 * 1024 * 1024;
   late final String? _uploadOwnerUid;
   late final String _uploadHouseId;
+  late final VoiceUploadScope _uploadScope;
   String get _pendingUploadPrefsKey =>
       'voice_pending_upload_v2_${_uploadOwnerUid}_$_uploadHouseId';
-  bool get _uploadScopeIsCurrent =>
-      mounted &&
-      _uploadOwnerUid != null &&
-      FirebaseAuth.instance.currentUser?.uid == _uploadOwnerUid &&
-      widget.houseId.trim() == _uploadHouseId;
+  bool get _uploadScopeIsCurrent => _uploadScope.matches(
+    currentUid: FirebaseAuth.instance.currentUser?.uid,
+    currentHouseId: widget.houseId,
+  );
 
   void _requireUploadScope() {
     if (!_uploadScopeIsCurrent) {
@@ -170,10 +161,14 @@ class _VoiceScreenState extends State<VoiceScreen>
     super.initState();
     _uploadOwnerUid = FirebaseAuth.instance.currentUser?.uid;
     _uploadHouseId = widget.houseId.trim();
+    _uploadScope = VoiceUploadScope(
+      ownerUid: _uploadOwnerUid,
+      houseId: _uploadHouseId,
+    );
     _bounceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
+    );
     _voiceStream = _voiceRef.onValue.map(_rememberVoicesSnapshot);
     WidgetsBinding.instance.addObserver(this);
     _playbackStateSub = _player.onPlayerStateChanged.listen((state) {
@@ -213,6 +208,27 @@ class _VoiceScreenState extends State<VoiceScreen>
     if (state != AppLifecycleState.resumed &&
         state != AppLifecycleState.inactive) {
       _privateMediaUrlService.clear();
+    }
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) => _syncRecordingMotion();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncRecordingMotion();
+  }
+
+  void _syncRecordingMotion() {
+    if (isScreenActive &&
+        _isRecording &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      if (!_bounceController.isAnimating) {
+        _bounceController.repeat(reverse: true);
+      }
+    } else {
+      _bounceController.stop();
     }
   }
 
@@ -279,8 +295,12 @@ class _VoiceScreenState extends State<VoiceScreen>
         return;
       }
       if (durationMs > remainingMs) {
+        if (!mounted) return;
         _showMessage(
-          L10nScope.of(context).format('ui_utilities_the_recording_store_still_has_value1_so_c10203', {'value1': _formatDuration(remainingMs)}),
+          L10nScope.of(context).format(
+            'ui_utilities_the_recording_store_still_has_value1_so_c10203',
+            {'value1': _formatDuration(remainingMs)},
+          ),
         );
         return;
       }
@@ -395,9 +415,10 @@ class _VoiceScreenState extends State<VoiceScreen>
         _isRecording = true;
         _recordElapsed = Duration.zero;
       });
+      _syncRecordingMotion();
 
       _recordTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted || !_isRecording) return;
+        if (!isScreenActive || !_isRecording) return;
         final startedAt = _recordStartedAt;
         if (startedAt == null) return;
         final elapsed = DateTime.now().difference(startedAt);
@@ -417,6 +438,7 @@ class _VoiceScreenState extends State<VoiceScreen>
             _isRecording = false;
             _recordElapsed = Duration.zero;
           });
+          _syncRecordingMotion();
         }
         _showMessage(errNoCapacity);
         return;
@@ -476,6 +498,7 @@ class _VoiceScreenState extends State<VoiceScreen>
         // Bỏ khóa UI khi upload
         _recordElapsed = safeElapsed;
       });
+      _syncRecordingMotion();
     }
 
     String? recordPath;
@@ -633,7 +656,7 @@ class _VoiceScreenState extends State<VoiceScreen>
           await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
             'createVoiceUploadSession',
             payload: <String, dynamic>{
-              'houseId': widget.houseId.trim(),
+              'houseId': _uploadHouseId,
               'fileName': fileName.trim(),
               'contentType': contentType.trim(),
               // Server mới cấp phiên R2 riêng tư, khóa cứng kích thước + MD5;
@@ -672,7 +695,7 @@ class _VoiceScreenState extends State<VoiceScreen>
           await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
             'finalizeVoiceUpload',
             payload: <String, dynamic>{
-              'houseId': widget.houseId.trim(),
+              'houseId': _uploadHouseId,
               'sessionId': sessionId.trim(),
               'authorName': widget.myName.trim(),
               'fileName': fileName.trim(),
@@ -959,14 +982,17 @@ class _VoiceScreenState extends State<VoiceScreen>
       }),
     );
     if (!saved) throw StateError('Cannot persist pending voice upload');
-    _pendingRetryUpload = {
-      ...payload,
-      'ownerUid': _uploadOwnerUid,
-      'houseId': _uploadHouseId,
-    };
+    if (mounted && _uploadScopeIsCurrent) {
+      _pendingRetryUpload = {
+        ...payload,
+        'ownerUid': _uploadOwnerUid,
+        'houseId': _uploadHouseId,
+      };
+    }
   }
 
   Future<void> _clearPendingUpload({bool deleteLocalFile = false}) async {
+    if (!_uploadScopeIsCurrent) return;
     final prefs = await SharedPreferences.getInstance();
     if (!_uploadScopeIsCurrent) return;
     final raw = prefs.getString(_pendingUploadPrefsKey);
@@ -1015,7 +1041,7 @@ class _VoiceScreenState extends State<VoiceScreen>
           (localPath.isEmpty || !await File(localPath).exists())) {
         return;
       }
-      if (!_uploadScopeIsCurrent) {
+      if (!_uploadScopeIsCurrent || !mounted) {
         return;
       }
       setState(() {
@@ -1169,794 +1195,103 @@ class _VoiceScreenState extends State<VoiceScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(
-        context,
-        context.tr('util_ghimlinhn_7761df'),
-        actions: [_buildInfoIcon(context)],
-      ),
-      body: SLTheme.softCanvasBackdrop(
-        baseColor: SLColors.bgMain,
-        accentColor: const Color(0xFF00B4DB),
-        secondaryAccent: const Color(0xFF0083B0),
-        motif: SLCanvasBackdropMotif.sparkles,
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildRecordArea(),
-              Expanded(child: _buildVoiceList()),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecordArea() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      margin: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: SLRadius.xlAll,
-        border: Border.all(color: SLColors.borderLight),
-        boxShadow: SLShadow.subtle,
-      ),
-      child: Column(
-        children: [
-          // Walkie-Talkie Retro Layout
-          Container(
-            width: 200,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFECEFF1), // Retro plastic gray
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFCFD8DC), width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Antenna
-                Container(
-                  width: 12,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF455A64),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                SLSpacing.h8,
-                // Retro Screen
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _isRecording
-                        ? const Color(0xFFFFEBEE)
-                        : const Color(0xFFE0F2F1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _isRecording
-                          ? Colors.red.shade200
-                          : Colors.teal.shade200,
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        _isRecording ? context.tr('voice_recording_status') : context.tr('voice_ready_status'),
-                        style: SLTheme.quicksand(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: _isRecording
-                              ? Colors.red.shade900
-                              : Colors.teal.shade900,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                      SLSpacing.h4,
-                      if (_isRecording)
-                        Text(
-                          _formatDuration(_recordElapsed.inMilliseconds),
-                          style: TextStyle(
-                            fontFamily: 'Courier',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade900,
-                          ),
-                        )
-                      else
-                        Text(
-                          '00:00',
-                          style: TextStyle(
-                            fontFamily: 'Courier',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.teal.shade900.withValues(alpha: 0.4),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                SLSpacing.h16,
-                // Mic / PTT Button
-                GestureDetector(
-                  onTap: _isUploading ? null : _toggleRecordAndUpload,
-                  child: ScaleTransition(
-                    scale: _isRecording
-                        ? Tween<double>(begin: 0.94, end: 1.06).animate(
-                            CurvedAnimation(
-                              parent: _bounceController,
-                              curve: Curves.easeInOut,
-                            ),
-                          )
-                        : const AlwaysStoppedAnimation(1.0),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: _isRecording
-                            ? const LinearGradient(
-                                colors: [Color(0xFFFF5252), Color(0xFFFF1744)],
-                              )
-                            : const LinearGradient(
-                                colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
-                              ),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                (_isRecording
-                                        ? Colors.red
-                                        : const Color(0xFF00B4DB))
-                                    .withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                        border: Border.all(color: Colors.white, width: 3),
-                      ),
-                      child: Icon(
-                        _isRecording
-                            ? Icons.mic_rounded
-                            : Icons.mic_none_rounded,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                  ),
-                ),
-                SLSpacing.h6,
-                Text(
-                  _isRecording ? context.tr('voice_stop_action') : context.tr('voice_record_action'),
-                  style: SLTheme.quicksand(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textSecond,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SLSpacing.h12,
-          // Action controls
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: SLColors.borderLight),
-                    boxShadow: SLShadow.subtle,
-                  ),
-                  child: TextButton.icon(
-                    icon: const Icon(
-                      Icons.upload_file_rounded,
-                      color: SLColors.primary,
-                      size: 18,
-                    ),
-                    label: Text(
-                      context.tr('ui_utilities_upload_an_audio_file_4bc04e'),
-                      style: SLTheme.quicksand(
-                        color: SLColors.primary,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                      ),
-                    ),
-                    onPressed: (_isUploading || _isRecording)
-                        ? null
-                        : _pickAndUploadVoice,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (_isUploading) ...[
-            SLSpacing.h10,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: SLColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _isRestoringUpload
-                      ? context.tr('util_angkhiphcu_076cd4')
-                      : context.tr('util_angupload_7ded4c'),
-                  style: SLTheme.quicksand(
-                    color: SLColors.textSecond,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (_pendingRetryUpload != null && !_isUploading) ...[
-            SLSpacing.h10,
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: SLColors.dangerLight,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: SLColors.danger.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: SLColors.danger,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      context.tr('util_lnuploadgh_c94950'),
-                      style: SLTheme.quicksand(
-                        color: SLColors.danger,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: _retryPendingUpload,
-                    child: Text(
-                      context.tr('util_thli_4dffdf'),
-                      style: SLTheme.quicksand(
-                        color: SLColors.danger,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVoiceList() {
     return StreamBuilder(
       stream: _voiceStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            !snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final hasData =
-            snapshot.hasData && snapshot.data?.snapshot.value != null;
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              context.tr('util_khngticlin_a510e1'),
-              style: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-          return Center(
-            child: Text(
-              context.tr('util_chaclinhnt_9864b0'),
-              style: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          );
-        }
-
-        final rawValue = snapshot.data!.snapshot.value;
-        if (rawValue is! Map) {
-          return Center(
-            child: Text(
-              context.tr('util_dliulinhnt_f7fe04'),
-              style: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          );
-        }
-
-        final data = Map<dynamic, dynamic>.from(rawValue);
-        final items = data.entries
-            .map((e) {
-              final value = e.value;
-              if (value is! Map) {
-                return null;
-              }
-              return {
-                'key': e.key,
-                ...Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value)),
-              };
-            })
-            .whereType<Map<String, dynamic>>()
-            .toList();
-        items.sort(
-          (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
-        );
-
-        final totalDurationMs = VoiceStorageCapacity.storedDurationMs(rawValue);
-
-        return Stack(
-          children: [
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF00B4DB,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(
-                              0xFF00B4DB,
-                            ).withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Text(
-                          L10nService().translateRecordsCount(items.length),
-                          style: SLTheme.quicksand(
-                            color: const Color(0xFF00B4DB),
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: SLColors.borderLight),
-                        ),
-                        child: Text(
-                          '${_formatDuration(totalDurationMs)}/05:00',
-                          style: SLTheme.quicksand(
-                            color: SLColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 6,
+        final libraryState =
+            snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData
+            ? VoiceLibraryState.loading
+            : snapshot.hasError
+            ? VoiceLibraryState.error
+            : !snapshot.hasData || snapshot.data?.snapshot.value == null
+            ? VoiceLibraryState.empty
+            : snapshot.data!.snapshot.value is Map
+            ? VoiceLibraryState.ready
+            : VoiceLibraryState.invalid;
+        final rawValue = snapshot.data?.snapshot.value;
+        final rawMap = rawValue is Map
+            ? Map<dynamic, dynamic>.from(rawValue)
+            : <dynamic, dynamic>{};
+        final dataItems =
+            rawMap.entries
+                .map((e) {
+                  final value = e.value;
+                  if (value is! Map) return null;
+                  return {
+                    'key': e.key,
+                    ...Map<String, dynamic>.from(
+                      Map<dynamic, dynamic>.from(value),
                     ),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final key = item['key']?.toString() ?? '';
-                      final audioUrl = item['aud']?.toString() ?? '';
-                      final hasPlayableSource =
-                          audioUrl.isNotEmpty ||
-                          (item['storagePath']?.toString().isNotEmpty ?? false);
-                      final date = DateTime.fromMillisecondsSinceEpoch(
-                        item['ts'] as int? ?? 0,
-                      );
-                      final timeStr = LocaleDateFormat.dayMonthTime(date);
-                      final durationStr = _formatDuration(
-                        item['duration'] as int? ?? 0,
-                      );
-                      final isPlaying = _playingKey == key;
-                      final isLoading = _loadingKey == key;
+                  };
+                })
+                .whereType<Map<String, dynamic>>()
+                .toList()
+              ..sort(
+                (a, b) =>
+                    (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
+              );
+        final totalDurationMs = VoiceStorageCapacity.storedDurationMs(rawValue);
+        final remainingCapacity = VoiceStorageCapacity.capacityMs == 0
+            ? 0.0
+            : totalDurationMs / VoiceStorageCapacity.capacityMs;
 
-                      return _AnimatedPressButton(
-                        onTap: hasPlayableSource
-                            ? () => _togglePlay(item)
-                            : null,
-                        borderRadius: 18,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: isPlaying
-                                ? LinearGradient(
-                                    colors: [
-                                      const Color(
-                                        0xFF00B4DB,
-                                      ).withValues(alpha: 0.12),
-                                      const Color(
-                                        0xFF0083B0,
-                                      ).withValues(alpha: 0.06),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : LinearGradient(
-                                    colors: [
-                                      Colors.white.withValues(alpha: 0.85),
-                                      Colors.white.withValues(alpha: 0.55),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isPlaying
-                                  ? const Color(
-                                      0xFF00B4DB,
-                                    ).withValues(alpha: 0.5)
-                                  : SLColors.borderLight,
-                              width: isPlaying ? 1.5 : 1.0,
-                            ),
-                            boxShadow: SLShadow.subtle,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  gradient: isPlaying
-                                      ? const LinearGradient(
-                                          colors: [
-                                            Color(0xFF00B4DB),
-                                            Color(0xFF0083B0),
-                                          ],
-                                        )
-                                      : LinearGradient(
-                                          colors: [
-                                            SLColors.primaryLight,
-                                            SLColors.primaryLight.withValues(
-                                              alpha: 0.5,
-                                            ),
-                                          ],
-                                        ),
-                                  shape: BoxShape.circle,
-                                  boxShadow: isPlaying ? SLShadow.primary : [],
-                                ),
-                                child: Center(
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Icon(
-                                          isPlaying
-                                              ? Icons.pause_rounded
-                                              : Icons.play_arrow_rounded,
-                                          color: isPlaying
-                                              ? Colors.white
-                                              : SLColors.primary,
-                                          size: 26,
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      L10nService().translatePartnerMessage(
-                                        item['a']?.toString() ?? '',
-                                      ),
-                                      style: SLTheme.quicksand(
-                                        color: SLColors.textPrimary,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 14.5,
-                                      ),
-                                    ),
-                                    SLSpacing.h4,
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.access_time_rounded,
-                                          color: SLColors.textSecond,
-                                          size: 11,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '$timeStr  •  $durationStr',
-                                          style: SLTheme.quicksand(
-                                            color: SLColors.textSecond,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if ((item['name']?.toString() ?? '')
-                                        .isNotEmpty) ...[
-                                      SLSpacing.h4,
-                                      Text(
-                                        item['name'].toString(),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: SLTheme.quicksand(
-                                          color: SLColors.textSecond.withValues(
-                                            alpha: 0.6,
-                                          ),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 10.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              if (isPlaying) ...[
-                                const _VoiceVisualizer(),
-                                const SizedBox(width: 12),
-                              ],
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline_rounded,
-                                  color: SLColors.textSecond,
-                                  size: 20,
-                                ),
-                                onPressed: () =>
-                                    _deleteVoice(key, item['aud']?.toString()),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            if (snapshot.connectionState == ConnectionState.waiting && hasData)
-              const Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: LinearProgressIndicator(minHeight: 2),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _AnimatedPressButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  final double borderRadius;
-
-  const _AnimatedPressButton({
-    required this.child,
-    required this.onTap,
-    this.borderRadius = 0,
-  });
-
-  @override
-  State<_AnimatedPressButton> createState() => _AnimatedPressButtonState();
-}
-
-class _AnimatedPressButtonState extends State<_AnimatedPressButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _scaleAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-      reverseDuration: const Duration(milliseconds: 160),
-      lowerBound: 0.0,
-      upperBound: 1.0,
-    );
-    _scaleAnim = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails _) {
-    if (widget.onTap == null) return;
-    _ctrl.forward();
-    HapticFeedback.lightImpact();
-  }
-
-  void _onTapUp(TapUpDetails _) {
-    _ctrl.reverse();
-    widget.onTap?.call();
-  }
-
-  void _onTapCancel() {
-    _ctrl.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: AnimatedBuilder(
-        animation: _scaleAnim,
-        builder: (context, child) =>
-            Transform.scale(scale: _scaleAnim.value, child: child),
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-class _VoiceVisualizer extends StatefulWidget {
-  const _VoiceVisualizer();
-
-  @override
-  State<_VoiceVisualizer> createState() => _VoiceVisualizerState();
-}
-
-class _VoiceVisualizerState extends State<_VoiceVisualizer>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(4, (index) {
-            final double value =
-                math.sin((_controller.value * 2 * math.pi) + (index * 1.5)) *
-                    0.5 +
-                0.5;
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 1.5),
-              width: 3,
-              height: 4 + (value * 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00E676),
-                borderRadius: BorderRadius.circular(2),
-              ),
+        return VoiceStudioView(
+          messages: dataItems.map((item) {
+            final key = item['key']?.toString() ?? '';
+            final date = DateTime.fromMillisecondsSinceEpoch(
+              item['ts'] as int? ?? 0,
             );
-          }),
+            return VoiceMessagePresentation(
+              id: key,
+              title: L10nService().translatePartnerMessage(
+                item['a']?.toString() ?? '',
+              ),
+              dateLabel:
+                  '${LocaleDateFormat.dayMonthTime(date)}  •  ${_formatDuration(item['duration'] as int? ?? 0)}',
+              durationLabel: _formatDuration(item['duration'] as int? ?? 0),
+              fileName: item['name']?.toString() ?? '',
+              playable:
+                  item['aud']?.toString().isNotEmpty == true ||
+                  item['storagePath']?.toString().isNotEmpty == true,
+            );
+          }).toList(),
+          libraryState: libraryState,
+          elapsedLabel: _isRecording
+              ? _formatDuration(_recordElapsed.inMilliseconds)
+              : '00:00',
+          storedLabel: _formatDuration(totalDurationMs),
+          capacityLabel: _formatDuration(VoiceStorageCapacity.capacityMs),
+          capacityFraction: remainingCapacity,
+          recordingAnimation: _bounceController,
+          recording: _isRecording,
+          uploading: _isUploading,
+          restoringUpload: _isRestoringUpload,
+          pendingUpload: _pendingRetryUpload != null,
+          refreshing:
+              snapshot.connectionState == ConnectionState.waiting &&
+              snapshot.hasData,
+          playingId: _playingKey,
+          loadingId: _loadingKey,
+          onRecord: _toggleRecordAndUpload,
+          onUpload: _pickAndUploadVoice,
+          onPlay: (key) {
+            final item = dataItems.firstWhere(
+              (entry) => entry['key']?.toString() == key,
+            );
+            unawaited(_togglePlay(item));
+          },
+          onDelete: (key) {
+            final item = dataItems.firstWhere(
+              (entry) => entry['key']?.toString() == key,
+            );
+            unawaited(_deleteVoice(key, item['aud']?.toString()));
+          },
+          onBack: () => Navigator.of(context).maybePop(),
+          onInfo: () => _showInfoDialog(context),
+          onRetryUpload: _retryPendingUpload,
         );
       },
-    );
-  }
-}
-
-class _PulseIcon extends StatefulWidget {
-  final IconData icon;
-
-  const _PulseIcon({required this.icon});
-
-  @override
-  State<_PulseIcon> createState() => _PulseIconState();
-}
-
-class _PulseIconState extends State<_PulseIcon>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
-    _scaleAnimation = Tween<double>(
-      begin: 0.85,
-      end: 1.15,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: Icon(widget.icon, color: Colors.white, size: 18),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 /// Chỉ xem những URL đã có trong hội thoại, không truy vấn thêm lịch sử.
@@ -21,15 +22,15 @@ class SoulMergePhotoViewer extends StatefulWidget {
     ImageProvider Function(String)? imageProviderBuilder,
   }) {
     if (urls.isEmpty) return Future.value();
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => SoulMergePhotoViewer(
-          urls: urls,
-          initialIndex: initialIndex,
-          imageProviderBuilder: imageProviderBuilder,
-        ),
+    return slPush<void>(
+      context,
+      SoulMergePhotoViewer(
+        key: const ValueKey('soul-merge-photo-viewer'),
+        urls: urls,
+        initialIndex: initialIndex,
+        imageProviderBuilder: imageProviderBuilder,
       ),
+      fullscreenDialog: true,
     );
   }
 

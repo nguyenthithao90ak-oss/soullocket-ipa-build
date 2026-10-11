@@ -225,13 +225,19 @@ class KeepsakeOrnamentPainter extends CustomPainter {
     ].contains(styleKey);
     final glass = ['glass', 'crystal', 'deep_ocean'].contains(styleKey);
     final golden = ['pearl', 'vip', 'golden_sunset'].contains(styleKey);
-    // Hai cụm đối xứng lệch góc, không rải sticker ngẫu nhiên lên nội dung.
-    final locations = [point(.12), point(.62)];
+    // Đặt charm ở hai góc chéo thay vì giữa cạnh. Khoảng đệm này giữ phần
+    // giữa ảnh thoáng, còn charm chỉ nhô nhẹ ra khỏi khung nên không dính sát
+    // mép hoặc che khuôn mặt.
+    final cornerInset = side * (avatar ? .105 : .12);
+    final locations = [
+      Offset(cornerInset, size.height - cornerInset),
+      Offset(size.width - cornerInset, cornerInset),
+    ];
     for (var i = 0; i < locations.length; i++) {
       canvas.save();
       canvas.translate(locations[i].dx, locations[i].dy);
       canvas.rotate((i == 0 ? -.18 : .18) + math.sin(t + i * math.pi) * .055);
-      final s = side * (avatar ? .115 : .078);
+      final s = side * (avatar ? .09 : .078);
       if (floral) {
         _flower(canvas, s, palette);
       } else if (lunar && i == 0) {

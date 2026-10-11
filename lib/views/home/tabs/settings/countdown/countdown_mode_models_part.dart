@@ -102,23 +102,22 @@ class _CountdownSpaceAddResult {
 
 extension _SettingsTabCountdownModeScreen on _SettingsTabState {
   Future<void> _openCountdownMode() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => CountdownSpaceScreen(
-          currentHouseId: _houseId,
-          isVipActive: _isVipActive,
-          loveDate: _loveDate,
-          birthDate: _dobU1,
-          relationshipMode: _relationshipMode,
-          fallbackTopLabel: _autoReplyCtrl.text.trim(),
-          fallbackBottomLabel: _loveUnitCtrl.text.trim(),
-          nameU1: _nameU1.trim(),
-          nameU2: _nameU2.trim(),
-          avatarUrl1: _avatarUrl1.trim(),
-          avatarUrl2: _avatarUrl2.trim(),
-        ),
+    await slPush<void>(
+      context,
+      CountdownSpaceScreen(
+        currentHouseId: _houseId,
+        isVipActive: _isVipActive,
+        loveDate: _loveDate,
+        birthDate: _dobU1,
+        relationshipMode: _relationshipMode,
+        fallbackTopLabel: _autoReplyCtrl.text.trim(),
+        fallbackBottomLabel: _loveUnitCtrl.text.trim(),
+        nameU1: _nameU1.trim(),
+        nameU2: _nameU2.trim(),
+        avatarUrl1: _avatarUrl1.trim(),
+        avatarUrl2: _avatarUrl2.trim(),
       ),
+      fullscreenDialog: true,
     );
   }
 }

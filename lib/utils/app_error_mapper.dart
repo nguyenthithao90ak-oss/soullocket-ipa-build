@@ -36,7 +36,9 @@ class AppErrorMapper {
       return AppErrorInfo(
         kind: _looksLikeNetwork(original)
             ? AppErrorKind.network
-            : _looksLikeUser(original) ? AppErrorKind.user : AppErrorKind.server,
+            : _looksLikeUser(original)
+            ? AppErrorKind.user
+            : AppErrorKind.server,
         message: error.message,
       );
     }
@@ -120,6 +122,10 @@ class AppErrorMapper {
     firebase_auth.FirebaseAuthException error,
   ) {
     switch (error.code) {
+      case 'unauthenticated':
+      case 'user-token-expired':
+      case 'invalid-user-token':
+        return AppErrorInfo(kind: AppErrorKind.user, message: authSyncMessage);
       case 'network-request-failed':
         return AppErrorInfo(
           kind: AppErrorKind.network,
@@ -282,6 +288,7 @@ class AppErrorMapper {
   static bool _looksLikeNetwork(String message) {
     final normalized = message.toLowerCase();
     return normalized.contains('network-request-failed') ||
+        normalized.contains('client is offline') ||
         normalized.contains('network error') ||
         normalized.contains('network_error') ||
         normalized.contains('failed host lookup') ||
@@ -423,6 +430,9 @@ class AppErrorMapper {
 
   static String _normalizeNetworkMessage(String message) {
     final normalized = message.toLowerCase();
+    if (normalized.contains('client is offline')) {
+      return defaultNetworkMessage;
+    }
     if (normalized.contains('quá thời gian') ||
         normalized.contains('timeout') ||
         normalized.contains('timed out')) {

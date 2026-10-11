@@ -1,10 +1,10 @@
 import 'package:soullocket_app/utils/locale_date_format.dart';
+import 'package:soullocket_app/utils/activity_history_restore_policy.dart';
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'connectivity_service.dart';
@@ -17,7 +17,6 @@ import 'l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/core/service_locator.dart';
 import 'notebook/notebook_d1_client.dart';
-import 'house_lists/house_list_d1_client.dart';
 import 'core/rtdb_settled_read.dart';
 
 class ActivityHistoryEntry {
@@ -210,7 +209,9 @@ class ActivityHistoryEntry {
     }
 
     final moduleKey = module.trim().toLowerCase();
-    if (moduleKey == 'secret_vault') {
+    // Các danh sách đã gỡ khỏi app chỉ giữ lịch sử đọc, không tạo lại dữ liệu.
+    if (moduleKey == 'secret_vault' ||
+        isRetiredListRestore(module, restorePath)) {
       return false;
     }
     if (moduleKey == 'diary_memory') {
@@ -239,9 +240,28 @@ class ActivityHistoryService {
   static const _max = maxItems;
   static const int restoreWindowMs = 3 * 24 * 60 * 60 * 1000;
 
-  final FirebaseDatabase _db = FirebaseDatabase.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final HouseService _houseService = HouseService();
+  // Khởi tạo lazy để đọc cache cục bộ không cần chờ Firebase App.
+  // Điều này giúp màn lịch sử dựng dữ liệu tức thì ngay cả khi bootstrap mạng
+  // vẫn đang chạy ở nền.
+  late final FirebaseDatabase _db = FirebaseDatabase.instance;
+  late final FirebaseAuth _auth = FirebaseAuth.instance;
+  late final HouseService _houseService = HouseService();
+
+  /// Đọc bản sao cục bộ mà không chờ Auth, RTDB hay đồng bộ nền.
+  ///
+  /// Màn lịch sử dùng bước này trước khi gọi [_loadRemote] để nội dung gần
+  /// nhất xuất hiện ngay khi người dùng mở màn hình.
+  Future<List<ActivityHistoryEntry>> loadCached({String? houseId}) async {
+    final resolvedHouseId = houseId?.trim() ?? '';
+    if (resolvedHouseId.isEmpty) {
+      return _loadLegacyLocalEntries();
+    }
+    final cached = await _loadCache(resolvedHouseId);
+    if (cached.isNotEmpty) return cached;
+    // Cache cũ không có scope không được hiện ở House khác khi mở màn hình.
+    final legacy = await _loadLegacyLocalEntries();
+    return legacy.where((entry) => entry.houseId == resolvedHouseId).toList();
+  }
 
   Future<List<ActivityHistoryEntry>> loadAll({String? houseId}) async {
     final resolvedHouseId = await _resolveHouseId(houseId);
@@ -259,10 +279,10 @@ class ActivityHistoryService {
           ...remote,
           ...cache.where((entry) => entry.syncStatus != 'synced'),
         ]);
-        if (merged.isNotEmpty) {
-          await _saveCache(resolvedHouseId, merged);
-          return merged;
-        }
+        // Kết quả rỗng hợp lệ cũng thay cache: lịch sử có thể đã được xóa
+        // từ máy kia. Chỉ giữ bản cũ khi đọc remote thất bại hoặc offline.
+        await _saveCache(resolvedHouseId, merged);
+        return merged;
       }
     } catch (e) {
       debugPrint(
@@ -486,15 +506,11 @@ class ActivityHistoryService {
       return false;
     }
 
-    final d1ListKind = _d1ListKinds[entry.module.trim().toLowerCase()];
     if (entry.module.trim().toLowerCase() == 'shared_notes' &&
         payload['backend'] == 'd1') {
       // Sổ tay đã chuyển sang D1: khôi phục qua API (kiểm tra revision và cửa sổ 3 ngày),
       // không ghi lại cây RTDB mà rules đã chặn.
       if (!await _restoreD1Note(entry, payload)) return false;
-    } else if (d1ListKind != null && payload['backend'] == 'd1') {
-      // Danh sách của nhà trên D1 (mốc E): cùng cách khôi phục qua API như Sổ tay.
-      if (!await _restoreD1ListItem(entry, payload, d1ListKind)) return false;
     } else {
       await _db.ref(entry.restorePath).set(payload);
     }
@@ -544,44 +560,6 @@ class ActivityHistoryService {
           .set(DateTime.now().millisecondsSinceEpoch);
     } catch (_) {
       /* Ghi chú đã khôi phục; máy kia thấy ở lần tải sau. */
-    }
-    return true;
-  }
-
-  /// Module lịch sử → loại danh sách D1 (trùng tên node RTDB và cờ dataBackends).
-  static const Map<String, String> _d1ListKinds = {
-    'bucket_list': 'bucket',
-    'wishlist': 'wishlist',
-  };
-
-  Future<bool> _restoreD1ListItem(
-    ActivityHistoryEntry entry,
-    Map<String, dynamic> payload,
-    String kind,
-  ) async {
-    final revision = (payload['restoreRevision'] as num?)?.toInt() ?? 0;
-    if (entry.houseId.isEmpty || entry.entityId.isEmpty || revision <= 0) {
-      return false;
-    }
-    try {
-      await locator<HouseListD1Client>().restore(
-        houseId: entry.houseId,
-        kind: kind,
-        itemId: entry.entityId,
-        expectedRevision: revision,
-      );
-    } catch (e) {
-      debugPrint(
-        'ActivityHistory $kind restore failed: ${AppErrorMapper.resolve(e).kind.name}',
-      );
-      return false;
-    }
-    try {
-      await _db
-          .ref('houses/${entry.houseId}/metadata/last_updated_$kind')
-          .set(DateTime.now().millisecondsSinceEpoch);
-    } catch (_) {
-      /* Mục đã khôi phục; máy kia thấy ở lần tải sau. */
     }
     return true;
   }
@@ -678,9 +656,9 @@ class ActivityHistoryService {
   String exportAsTxt(List<ActivityHistoryEntry> list) {
     final lines = list.asMap().entries.map((e) {
       final idx = (e.key + 1).toString().padLeft(3, '0');
-      final time = DateFormat(
-        'dd/MM/yyyy HH:mm',
-      ).format(DateTime.fromMillisecondsSinceEpoch(e.value.ts));
+      final time = LocaleDateFormat.dateTime(
+        DateTime.fromMillisecondsSinceEpoch(e.value.ts),
+      );
       return '$idx. $time • ${e.value.displayLine}';
     }).toList();
     return lines.join('\n');
@@ -692,22 +670,24 @@ class ActivityHistoryService {
         .entries
         .map((e) {
           final idx = (e.key + 1).toString().padLeft(3, '0');
-          final time = DateFormat(
-            'dd/MM/yyyy HH:mm',
-          ).format(DateTime.fromMillisecondsSinceEpoch(e.value.ts));
+          final time = LocaleDateFormat.dateTime(
+            DateTime.fromMillisecondsSinceEpoch(e.value.ts),
+          );
           final line = '$idx. $time • ${e.value.displayLine}';
           return '<div class="row">$line</div>';
         })
         .join('');
 
-    return '''<!doctype html><html lang="vi"><head><meta charset="utf-8">
-<title>Lịch sử hoạt động</title>
+    final locale = L10nService().localeCode;
+    final title = L10nService().translate('util_lchshotng_de1bcb');
+    return '''<!doctype html><html lang="$locale"><head><meta charset="utf-8">
+<title>$title</title>
 <style>
   body{font-family:Arial,sans-serif;padding:16px;background:#fff}
   h1{font-size:18px;margin-bottom:10px}
   .row{padding:6px 0;border-bottom:1px dashed #eee;font-size:13px;line-height:1.5}
 </style></head><body>
-<h1>Lịch sử hoạt động</h1>
+<h1>$title</h1>
 <div class="meta">${LocaleDateFormat.dateTime(DateTime.now())} • ${list.length}/$_max</div>
 $rows
 </body></html>''';
@@ -888,10 +868,7 @@ $rows
     }
   }
 
-  Future<void> _trimRemote(
-    String houseId, {
-    Map<dynamic, dynamic>? raw,
-  }) async {
+  Future<void> _trimRemote(String houseId, {Map<dynamic, dynamic>? raw}) async {
     try {
       final source = raw ?? await _readRemoteRaw(houseId);
       if (source == null) return;

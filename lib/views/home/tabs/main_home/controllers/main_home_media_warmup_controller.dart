@@ -54,29 +54,9 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
       for (final asset in HomeImagePolicy.bundledAssets) AssetImage(asset),
     ];
 
-    final safeAvatarUrl1 = avatarUrl1.trim();
-    final safeAvatarUrl2 = avatarUrl2.trim();
-    if (safeAvatarUrl1.isNotEmpty) {
-      if (HomeStartupMediaCache.getFile(safeAvatarUrl1) == null) {
-        providers.add(
-          CachedNetworkImageProvider(
-            safeAvatarUrl1,
-            maxWidth: HomeImagePolicy.avatarPixels,
-            maxHeight: HomeImagePolicy.avatarPixels,
-          ),
-        );
-      }
-    }
-    if (safeAvatarUrl2.isNotEmpty) {
-      if (HomeStartupMediaCache.getFile(safeAvatarUrl2) == null) {
-        providers.add(
-          CachedNetworkImageProvider(
-            safeAvatarUrl2,
-            maxWidth: HomeImagePolicy.avatarPixels,
-            maxHeight: HomeImagePolicy.avatarPixels,
-          ),
-        );
-      }
+    // Cùng provider với khối avatar (_homeAvatarProvider) để dùng lại bản giải mã.
+    for (final url in {avatarUrl1.trim(), avatarUrl2.trim()}) {
+      if (url.isNotEmpty) providers.add(_homeAvatarProvider(url));
     }
     final safeBackgroundUrl = backgroundUrl.trim();
     if (safeBackgroundUrl.isNotEmpty) {

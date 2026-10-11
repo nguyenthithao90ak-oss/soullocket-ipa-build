@@ -98,11 +98,20 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     List<Color>? iconGradient,
     required Widget child,
   }) {
-    return AppearanceSectionCard(
-      icon: icon,
-      title: title,
-      description: subtitle,
-      child: child,
+    // Các ô chỉnh sửa dùng bề mặt giấy sáng, độc lập với màu bản xem trước.
+    return Theme(
+      data: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: SLSettingsColors.accentStrong,
+          brightness: Brightness.light,
+        ),
+      ),
+      child: AppearanceSectionCard(
+        icon: icon,
+        title: title,
+        description: subtitle,
+        child: child,
+      ),
     );
   }
 

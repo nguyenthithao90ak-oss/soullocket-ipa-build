@@ -4,6 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 
 import 'utilities_hub_tile.dart';
+import 'utilities_scrapbook_design.dart';
 
 String utilityCategoryTitleKey(UtilityCategory category) {
   switch (category) {
@@ -29,7 +30,6 @@ const Map<String, String> _kUtilityDescriptionKeys = <String, String>{
   'vault': 'utilities_desc_vault',
   'diary_export': 'utilities_desc_diary_export',
   'store': 'utilities_desc_store',
-  'giftcode': 'utilities_desc_giftcode',
 };
 
 String? _descriptionFor(BuildContext context, UtilityApp app) {
@@ -44,6 +44,7 @@ class _CategoryPalette {
     required this.pillText,
     required this.muted,
     this.innerSurface = SLColors.paper,
+    this.ink = SLColors.textPrimary,
   });
 
   final Color surface;
@@ -51,9 +52,10 @@ class _CategoryPalette {
   final Color pillText;
   final Color muted;
   final Color innerSurface;
+  final Color ink;
 }
 
-_CategoryPalette _paletteFor(UtilityCategory category) {
+_CategoryPalette _lightPaletteFor(UtilityCategory category) {
   switch (category) {
     case UtilityCategory.memories:
       return const _CategoryPalette(
@@ -94,6 +96,21 @@ _CategoryPalette _paletteFor(UtilityCategory category) {
   }
 }
 
+_CategoryPalette _paletteFor(BuildContext context, UtilityCategory category) {
+  final base = _lightPaletteFor(category);
+  final colors = UtilitiesScrapbookColors.of(context);
+  return _CategoryPalette(
+    surface: colors.dark
+        ? Color.lerp(base.surface, colors.paper, .9)!
+        : base.surface,
+    pill: colors.dark ? Color.lerp(base.pill, colors.paper, .8)! : base.pill,
+    pillText: colors.dark ? colors.ink : base.pillText,
+    muted: colors.muted,
+    innerSurface: colors.paper,
+    ink: colors.ink,
+  );
+}
+
 /// Một nhóm tiện ích; mỗi nhóm có kiểu bố cục riêng để trang không đơn điệu.
 class UtilitiesCategorySection extends StatelessWidget {
   const UtilitiesCategorySection({
@@ -113,14 +130,15 @@ class UtilitiesCategorySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = _paletteFor(category);
+    final palette = _paletteFor(context, category);
+    if (apps.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader(
+        UtilitiesScrapbookHeading(
           title: context.tr(utilityCategoryTitleKey(category)),
           count: apps.length,
-          palette: palette,
+          badgeColor: palette.pill,
         ),
         const SizedBox(height: 10),
         _buildBody(palette),
@@ -190,59 +208,6 @@ class UtilitiesCategorySection extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.count,
-    required this.palette,
-  });
-
-  final String title;
-  final int count;
-  final _CategoryPalette palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Flexible(
-          child: Semantics(
-            header: true,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: SLColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        ExcludeSemantics(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: palette.pill,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              '$count',
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: palette.pillText,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Lưới sticker trên nền màu của nhóm.
 class _GridDrawer extends StatelessWidget {
   const _GridDrawer({
@@ -267,20 +232,21 @@ class _GridDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return UtilitiesScrapbookPaper(
       color: palette.surface,
-      borderRadius: BorderRadius.circular(26),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
-        child: _TileWrap(
-          apps: apps,
-          baseColumns: baseColumns,
-          stickerSize: stickerSize,
-          labelFontSize: labelFontSize,
-          pinnedIds: pinnedIds,
-          onTap: onTap,
-          onLongPress: onLongPress,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 6),
+          child: _TileWrap(
+            apps: apps,
+            baseColumns: baseColumns,
+            stickerSize: stickerSize,
+            labelFontSize: labelFontSize,
+            pinnedIds: pinnedIds,
+            onTap: onTap,
+            onLongPress: onLongPress,
+          ),
         ),
       ),
     );
@@ -310,8 +276,13 @@ class _TileWrap extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
         final columns = constraints.maxWidth >= 560
-            ? baseColumns + 2
+            ? (textScale > 1.3 ? baseColumns : baseColumns + 2)
+            : textScale > 1.6
+            ? 2
+            : constraints.maxWidth < 300 || textScale > 1.15
+            ? (baseColumns > 3 ? 3 : baseColumns)
             : baseColumns;
         final itemWidth = constraints.maxWidth / columns;
         return Wrap(
@@ -320,13 +291,16 @@ class _TileWrap extends StatelessWidget {
             for (final app in apps)
               SizedBox(
                 width: itemWidth,
-                child: UtilitiesHubTile(
-                  app: app,
-                  stickerSize: stickerSize,
-                  labelFontSize: labelFontSize,
-                  isPinned: pinnedIds.contains(app.id),
-                  onTap: () => onTap(app),
-                  onLongPress: () => onLongPress(app),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: UtilitiesHubTile(
+                    app: app,
+                    stickerSize: stickerSize,
+                    labelFontSize: labelFontSize,
+                    isPinned: pinnedIds.contains(app.id),
+                    onTap: () => onTap(app),
+                    onLongPress: () => onLongPress(app),
+                  ),
                 ),
               ),
           ],
@@ -365,6 +339,18 @@ class _BentoDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.sizeOf(context).width < 360 ||
+        MediaQuery.textScalerOf(context).scale(12) / 12 > 1.25) {
+      return _GridDrawer(
+        apps: apps,
+        palette: palette,
+        baseColumns: 3,
+        stickerSize: 56,
+        pinnedIds: pinnedIds,
+        onTap: onTap,
+        onLongPress: onLongPress,
+      );
+    }
     final feature = apps.first;
     final small = apps.skip(1).take(4).toList(growable: false);
     final extras = apps.skip(5).toList(growable: false);
@@ -464,7 +450,10 @@ class _FeatureTile extends StatelessWidget {
       button: true,
       label: utilityHubSemanticLabel(context, app, isPinned),
       excludeSemantics: true,
+      onTap: onTap,
+      onLongPress: onLongPress,
       child: Material(
+        key: ValueKey('utilities-tile-${app.id}'),
         color: palette.innerSurface,
         borderRadius: BorderRadius.circular(20),
         clipBehavior: Clip.antiAlias,
@@ -494,7 +483,7 @@ class _FeatureTile extends StatelessWidget {
                       style: SLTheme.quicksand(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: SLColors.textPrimary,
+                        color: palette.ink,
                       ),
                     ),
                     if (description != null) ...[
@@ -532,8 +521,6 @@ class _CardGrid extends StatelessWidget {
     required this.onLongPress,
   });
 
-  static const int _columns = 3;
-
   final List<UtilityApp> apps;
   final _CategoryPalette palette;
   final Set<String> pinnedIds;
@@ -542,43 +529,53 @@ class _CardGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = <List<UtilityApp>>[
-      for (var start = 0; start < apps.length; start += _columns)
-        apps.sublist(
-          start,
-          start + _columns > apps.length ? apps.length : start + _columns,
-        ),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) ...[
-          if (rowIndex > 0) const SizedBox(height: 10),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var column = 0; column < _columns; column++) ...[
-                  if (column > 0) const SizedBox(width: 10),
-                  Expanded(
-                    child: column < rows[rowIndex].length
-                        ? _InfoCard(
-                            app: rows[rowIndex][column],
-                            palette: palette,
-                            isPinned: pinnedIds.contains(
-                              rows[rowIndex][column].id,
-                            ),
-                            onTap: onTap,
-                            onLongPress: onLongPress,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final columns = textScale > 1.8 && constraints.maxWidth < 330
+            ? 1
+            : constraints.maxWidth < 330 || textScale > 1.3
+            ? 2
+            : 3;
+        final rows = <List<UtilityApp>>[
+          for (var start = 0; start < apps.length; start += columns)
+            apps.sublist(
+              start,
+              start + columns > apps.length ? apps.length : start + columns,
             ),
-          ),
-        ],
-      ],
+        ];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) ...[
+              if (rowIndex > 0) const SizedBox(height: 10),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var column = 0; column < columns; column++) ...[
+                      if (column > 0) const SizedBox(width: 10),
+                      Expanded(
+                        child: column < rows[rowIndex].length
+                            ? _InfoCard(
+                                app: rows[rowIndex][column],
+                                palette: palette,
+                                isPinned: pinnedIds.contains(
+                                  rows[rowIndex][column].id,
+                                ),
+                                onTap: onTap,
+                                onLongPress: onLongPress,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -605,7 +602,10 @@ class _InfoCard extends StatelessWidget {
       button: true,
       label: utilityHubSemanticLabel(context, app, isPinned),
       excludeSemantics: true,
+      onTap: () => onTap(app),
+      onLongPress: () => onLongPress(app),
       child: Material(
+        key: ValueKey('utilities-tile-${app.id}'),
         color: palette.surface,
         borderRadius: BorderRadius.circular(22),
         clipBehavior: Clip.antiAlias,
@@ -636,7 +636,7 @@ class _InfoCard extends StatelessWidget {
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: SLColors.textPrimary,
+                        color: palette.ink,
                       ),
                     ),
                     if (description != null) ...[
@@ -692,7 +692,7 @@ class _ListCard extends StatelessWidget {
           for (var index = 0; index < apps.length; index++) ...[
             if (index > 0)
               Padding(
-                padding: const EdgeInsets.only(left: 68),
+                padding: const EdgeInsetsDirectional.only(start: 68),
                 child: Container(height: 1, color: SLColors.borderLight),
               ),
             _ListRow(
@@ -731,7 +731,10 @@ class _ListRow extends StatelessWidget {
       button: true,
       label: utilityHubSemanticLabel(context, app, isPinned),
       excludeSemantics: true,
+      onTap: () => onTap(app),
+      onLongPress: () => onLongPress(app),
       child: InkWell(
+        key: ValueKey('utilities-tile-${app.id}'),
         onTap: () => onTap(app),
         onLongPress: () => onLongPress(app),
         child: ConstrainedBox(
@@ -758,7 +761,7 @@ class _ListRow extends StatelessWidget {
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: SLColors.textPrimary,
+                          color: palette.ink,
                         ),
                       ),
                       if (description != null) ...[

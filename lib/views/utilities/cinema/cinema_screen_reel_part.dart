@@ -20,9 +20,13 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
 
     return _CinemaDailyReel(
       dateKey: _dateKey(today),
-      title: L10nScope.of(context).format('ui_utilities_video_value1_2bd944', {'value1': badge.label}),
-      subtitle:
-          L10nScope.of(context).format('ui_utilities_automatically_build_from_value1_random_photos_in_128960', {'value1': selected.length, 'value2': badge.label}),
+      title: L10nScope.of(
+        context,
+      ).format('ui_utilities_video_value1_2bd944', {'value1': badge.label}),
+      subtitle: L10nScope.of(context).format(
+        'ui_utilities_automatically_build_from_value1_random_photos_in_128960',
+        {'value1': selected.length, 'value2': badge.label},
+      ),
       accentValue: badge.accent.toARGB32(),
       createdAt: now,
       expiresAt: DateTime(now.year, now.month, now.day, 23, 59, 59, 999),
@@ -37,7 +41,8 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
     final candidates = List<_CinemaMemoryRecord>.from(records)
       ..sort((a, b) => a.id.compareTo(b.id));
     candidates.shuffle(
-        math.Random(_stableSeed('${widget.houseId}_${_dateKey(day)}')));
+      math.Random(_stableSeed('${widget.houseId}_${_dateKey(day)}')),
+    );
     final limit = math.min(_kCinemaReelFrameLimit, candidates.length);
     return candidates.take(limit).toList(growable: false);
   }
@@ -82,14 +87,15 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
       return const <LoveInsightTimelineEntry>[];
     }
 
-    final entries = _loveInsightService
-        .buildMilestoneTimeline(
-          startDate: _normalizeDate(startDate),
-          isSingle: false,
-        )
-        .where((entry) => entry.type == 'milestone')
-        .toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    final entries =
+        _loveInsightService
+            .buildMilestoneTimeline(
+              startDate: _normalizeDate(startDate),
+              isSingle: false,
+            )
+            .where((entry) => entry.type == 'milestone')
+            .toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
 
     final deduped = <String, LoveInsightTimelineEntry>{};
     for (final entry in entries) {
@@ -138,10 +144,7 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
     return null;
   }
 
-  int _resolvePreviewIndex(
-    _CinemaDailyReel? reel,
-    String? previousItemId,
-  ) {
+  int _resolvePreviewIndex(_CinemaDailyReel? reel, String? previousItemId) {
     if (reel == null || reel.items.isEmpty) {
       return 0;
     }
@@ -157,9 +160,19 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
 
   void _startPreviewTimer() {
     _previewTimer?.cancel();
+    _previewTimer = null;
+    final reel = _activeReel;
+    if (!isScreenActive ||
+        MediaQuery.disableAnimationsOf(context) ||
+        reel == null ||
+        reel.items.length < 2) {
+      return;
+    }
     _previewTimer = Timer.periodic(_kCinemaFrameDuration, (_) {
       final reel = _activeReel;
-      if (!mounted || reel == null || reel.items.length < 2) {
+      if (!isScreenActive || reel == null || reel.items.length < 2) {
+        _previewTimer?.cancel();
+        _previewTimer = null;
         return;
       }
       _setPreviewIndex((_previewIndex + 1) % reel.items.length);
@@ -190,7 +203,8 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
       return;
     }
     _setPreviewIndex(
-        (_previewIndex - 1 + reel.items.length) % reel.items.length);
+      (_previewIndex - 1 + reel.items.length) % reel.items.length,
+    );
   }
 
   void _showNextPreview() {
@@ -207,19 +221,19 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _CinemaReelPlayerScreen(
-          reel: reel,
-          initialIndex: _previewIndex.clamp(0, reel.items.length - 1),
-        ),
+    await slPush<void>(
+      context,
+      _CinemaReelPlayerScreen(
+        houseId: widget.houseId,
+        reel: reel,
+        initialIndex: _previewIndex.clamp(0, reel.items.length - 1),
       ),
     );
   }
 
   void _scheduleFilmstripAlignment({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_filmstripController.hasClients) {
+      if (!isScreenActive || !_filmstripController.hasClients) {
         return;
       }
       unawaited(_scrollFilmstripToPreview(animate: animate));
@@ -248,7 +262,8 @@ extension _CinemaScreenStateReelPart on _CinemaScreenState {
       return;
     }
 
-    final target = (_previewIndex *
+    final target =
+        (_previewIndex *
             (_kCinemaFilmstripCardWidth + _kCinemaFilmstripSpacing)) -
         ((position.viewportDimension - _kCinemaFilmstripCardWidth) / 2);
     final clampedTarget = target.clamp(0.0, position.maxScrollExtent);

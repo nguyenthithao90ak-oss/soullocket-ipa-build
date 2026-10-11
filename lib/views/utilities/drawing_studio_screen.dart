@@ -4,30 +4,39 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
+import 'widgets/keepsake_design.dart';
 import '../../utils/services/drawing_studio_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 part 'drawing_studio/models/drawing_models.dart';
 part 'drawing_studio/painters/drawing_painters.dart';
+part 'drawing_studio/widgets/sticker_studio_design.dart';
+part 'drawing_studio/widgets/sticker_studio_workspace.dart';
 
 class DrawingStudioScreen extends StatefulWidget {
   final String houseId;
   final String myName;
+  @visibleForTesting
+  final DrawingStudioService? drawingService;
 
   const DrawingStudioScreen({
     super.key,
     required this.houseId,
     required this.myName,
+    this.drawingService,
   });
 
   @override
@@ -41,30 +50,38 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   final _CanvasRepaintNotifier _canvasRepaintNotifier =
       _CanvasRepaintNotifier();
   final List<_DrawStroke> _strokes = [];
-  final DrawingStudioService _drawingService = DrawingStudioService();
+  final List<_DrawStroke> _redoStrokes = [];
+  ui.Image? _studioAtlas;
+  bool _isEraser = false;
+  late final DrawingStudioService _drawingService =
+      widget.drawingService ?? DrawingStudioService();
   String _mode = 'frame';
 
-  String _backgroundId = 'paper_grid';
+  String _backgroundId = 'blank_paper';
   String _aspectRatioId = '4_5';
-  Color _currentColor = const Color(0xFFFF3B4D);
+  Color _currentColor = const Color(0xFFFF526C);
   double _strokeWidth = 8;
   bool _isSaving = false;
   bool _isSavingToDevice = false;
   bool _isSavingSticker = false;
   bool _isDrawing = false;
-  bool _isCanvasLocked = false;
+  bool _isScrollMode = false;
+  bool _isFocusMode = false;
+  int? _activeCanvasPointer;
   bool _isGalleryLoading = true;
+  bool _galleryLoadFailed = false;
+  int _galleryLoadGeneration = 0;
   String? _activeGalleryActionId;
   List<DrawingStudioGalleryItem> _gallery = [];
 
   static const List<Color> _palette = [
-    Color(0xFFFF3B4D),
-    Color(0xFFE91E63),
-    Color(0xFF9C27B0),
-    Color(0xFF2196F3),
-    Color(0xFF4CAF50),
-    Color(0xFFFFB300),
-    Color(0xFF000000),
+    Color(0xFFFF526C),
+    Color(0xFFFF80BB),
+    Color(0xFFA467DF),
+    Color(0xFF43B5F5),
+    Color(0xFF82CB91),
+    Color(0xFFFFC638),
+    Color(0xFF262A30),
   ];
 
   static const List<_CanvasRatioPreset> _ratioPresets = [
@@ -79,19 +96,43 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   void initState() {
     super.initState();
     unawaited(_loadGallery());
+    unawaited(_loadStudioAtlas());
   }
 
   @override
   void dispose() {
     _canvasRepaintNotifier.dispose();
+    _studioAtlas?.dispose();
     super.dispose();
   }
 
   List<_DrawStroke> get _allVisibleStrokes => _strokes;
 
-  bool get _hasAnyStroke => _strokes.isNotEmpty;
+  bool get _hasAnyStroke => _strokes.any((stroke) => !stroke.isEraser);
 
-  bool get _hasOwnStroke => _hasAnyStroke;
+  bool get _isExporting => _isSaving || _isSavingSticker || _isSavingToDevice;
+
+  void _updateStudio(VoidCallback update) {
+    if (mounted) setState(update);
+  }
+
+  Future<void> _loadStudioAtlas() async {
+    try {
+      final data = await rootBundle.load(_StudioStyle.atlasAsset);
+      final codec = await ui.instantiateImageCodec(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+      final frame = await codec.getNextFrame();
+      codec.dispose();
+      if (!mounted) {
+        frame.image.dispose();
+        return;
+      }
+      setState(() => _studioAtlas = frame.image);
+    } catch (error) {
+      debugPrint('[DrawingStudio] Artwork load failed: ${error.runtimeType}');
+    }
+  }
 
   _CanvasRatioPreset get _selectedRatio => _ratioPresets.firstWhere(
     (preset) => preset.id == _aspectRatioId,
@@ -99,14 +140,31 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   );
 
   Future<void> _loadGallery() async {
-    final items = await _drawingService.loadGallery(widget.houseId);
-    if (!mounted) {
-      return;
+    final generation = ++_galleryLoadGeneration;
+    if (mounted) {
+      setState(() {
+        _isGalleryLoading = true;
+        _galleryLoadFailed = false;
+      });
     }
-    setState(() {
-      _gallery = items;
-      _isGalleryLoading = false;
-    });
+    try {
+      final items = await _drawingService
+          .loadGallery(widget.houseId)
+          .timeout(const Duration(seconds: 12));
+      if (!mounted || generation != _galleryLoadGeneration) return;
+      setState(() {
+        _gallery = items;
+        _galleryLoadFailed = false;
+      });
+    } catch (error) {
+      debugPrint('[DrawingStudio] Gallery load failed: $error');
+      if (!mounted || generation != _galleryLoadGeneration) return;
+      setState(() => _galleryLoadFailed = true);
+    } finally {
+      if (mounted && generation == _galleryLoadGeneration) {
+        setState(() => _isGalleryLoading = false);
+      }
+    }
   }
 
   void _showSnack(String message) {
@@ -132,13 +190,15 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
     final local = renderObject.globalToLocal(globalPosition);
     final size = renderObject.size;
+    if (size.isEmpty) return null;
     return Offset(
-      local.dx.clamp(0.0, size.width).toDouble(),
-      local.dy.clamp(0.0, size.height).toDouble(),
+      (local.dx / size.width).clamp(0.0, 1.0).toDouble(),
+      (local.dy / size.height).clamp(0.0, 1.0).toDouble(),
     );
   }
 
   void _startStroke(DragStartDetails details) {
+    if (_isExporting) return;
     final point = _toCanvasPoint(details.globalPosition);
     if (point == null) {
       return;
@@ -147,12 +207,14 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     final strokeId = 'local_${DateTime.now().microsecondsSinceEpoch}';
     setState(() {
       _isDrawing = true;
+      _redoStrokes.clear();
       _strokes.add(
         _DrawStroke(
           id: strokeId,
           color: _currentColor,
           width: _strokeWidth,
           points: [point],
+          isEraser: _isEraser,
         ),
       );
     });
@@ -160,14 +222,14 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
   void _appendStrokePoint(DragUpdateDetails details) {
     final point = _toCanvasPoint(details.globalPosition);
-    if (point == null || _strokes.isEmpty) {
+    if (!_isDrawing || point == null || _strokes.isEmpty) {
       return;
     }
 
     final lastStroke = _strokes.last;
     if (lastStroke.points.isNotEmpty) {
       final lastPoint = lastStroke.points.last;
-      if ((lastPoint - point).distance < 1.5) {
+      if ((lastPoint - point).distance < 0.003) {
         return;
       }
     }
@@ -186,35 +248,75 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     _canvasRepaintNotifier.repaint();
   }
 
-  void _endStroke([DragEndDetails? _]) {
+  void _endStroke() {
     if (!_isDrawing) return;
     setState(() => _isDrawing = false);
   }
 
   void _clearDrawing() {
-    if (!_hasAnyStroke) return;
+    if (_strokes.isEmpty || _isExporting) return;
     setState(() {
       _strokes.clear();
+      _redoStrokes.clear();
       _isDrawing = false;
     });
   }
 
-  void _toggleCanvasLock() {
-    setState(() {
-      _isCanvasLocked = !_isCanvasLocked;
-    });
-    _showSnack(
-      _isCanvasLocked
-          ? context.tr('util_khacunbnvt_fa926d')
-          : context.tr('util_mkhabncthc_151b79'),
-    );
+  void _setScrollMode(bool value) {
+    if (_isDrawing || _isExporting || _isScrollMode == value) return;
+    setState(() => _isScrollMode = value);
+  }
+
+  void _setFocusMode(bool value) {
+    if (_isDrawing || _isExporting || _isFocusMode == value) return;
+    setState(() => _isFocusMode = value);
+  }
+
+  void _canvasPointerDown(PointerDownEvent event) {
+    if (_isScrollMode || _isExporting || _activeCanvasPointer != null) return;
+    _activeCanvasPointer = event.pointer;
+    _startStroke(DragStartDetails(globalPosition: event.position));
+  }
+
+  void _canvasPointerMove(PointerMoveEvent event) {
+    if (event.pointer != _activeCanvasPointer) return;
+    _appendStrokePoint(DragUpdateDetails(globalPosition: event.position));
+  }
+
+  void _canvasPointerUp(PointerEvent event) {
+    if (event.pointer != _activeCanvasPointer) return;
+    _activeCanvasPointer = null;
+    _endStroke();
   }
 
   void _undoStroke() {
-    if (_strokes.isEmpty) return;
+    if (_strokes.isEmpty || _isExporting || _isDrawing) return;
     setState(() {
-      _strokes.removeLast();
+      _redoStrokes.add(_strokes.removeLast());
       _isDrawing = false;
+    });
+  }
+
+  void _redoStroke() {
+    if (_redoStrokes.isEmpty || _isExporting || _isDrawing) return;
+    setState(() => _strokes.add(_redoStrokes.removeLast()));
+  }
+
+  void _addQuickSticker(int index) {
+    if (_isExporting || _isDrawing || _studioAtlas == null) return;
+    final shift =
+        (_strokes.where((s) => s.stickerIndex != null).length % 3) - 1;
+    setState(() {
+      _redoStrokes.clear();
+      _strokes.add(
+        _DrawStroke(
+          id: 'sticker_${DateTime.now().microsecondsSinceEpoch}',
+          color: _currentColor,
+          width: 84,
+          points: [Offset(0.5 + shift * 0.12, 0.5 + shift * 0.08)],
+          stickerIndex: index,
+        ),
+      );
     });
   }
 
@@ -278,15 +380,20 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       math.max(96, crop.height).toDouble(),
     );
 
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder, Offset.zero & outputSize);
-    canvas.translate(-crop.left, -crop.top);
-    _StickerPainter(strokes: strokes).paint(canvas, canvasSize);
-    final picture = recorder.endRecording();
     final pixelRatio = math.min(
       MediaQuery.devicePixelRatioOf(context) * 2,
       4.0,
     );
+    final recorder = ui.PictureRecorder();
+    // toImage chỉ cấp kích thước pixel; phải scale lệnh vẽ để ảnh phủ đủ khung.
+    final canvas = Canvas(recorder)
+      ..scale(pixelRatio)
+      ..translate(-crop.left, -crop.top);
+    _StickerPainter(
+      strokes: strokes,
+      atlas: _studioAtlas,
+    ).paint(canvas, canvasSize);
+    final picture = recorder.endRecording();
     final image = await picture.toImage(
       (outputSize.width * pixelRatio).ceil(),
       (outputSize.height * pixelRatio).ceil(),
@@ -306,12 +413,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     double? right;
     double? bottom;
     for (final stroke in strokes) {
+      if (stroke.isEraser) continue;
       final points = stroke.points;
       for (final point in points) {
-        left = left == null ? point.dx : math.min(left, point.dx);
-        top = top == null ? point.dy : math.min(top, point.dy);
-        right = right == null ? point.dx : math.max(right, point.dx);
-        bottom = bottom == null ? point.dy : math.max(bottom, point.dy);
+        final x = point.dx * canvasSize.width;
+        final y = point.dy * canvasSize.height;
+        final radius = stroke.width / 2;
+        left = left == null ? x - radius : math.min(left, x - radius);
+        top = top == null ? y - radius : math.min(top, y - radius);
+        right = right == null ? x + radius : math.max(right, x + radius);
+        bottom = bottom == null ? y + radius : math.max(bottom, y + radius);
       }
     }
     if (left == null || top == null || right == null || bottom == null) {
@@ -411,7 +522,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         );
       },
     );
-    if (selected != null) {
+    if (selected != null && mounted && !_isExporting) {
       _selectBackground(selected);
     }
   }
@@ -431,7 +542,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _saveDrawing() async {
-    if (!_hasAnyStroke || _isSaving) {
+    if (!_hasAnyStroke || _isExporting || _isDrawing) {
       return;
     }
 
@@ -462,7 +573,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _saveStickerToGallery() async {
-    if (!_hasAnyStroke || _isSavingSticker) {
+    if (!_hasAnyStroke || _isExporting || _isDrawing) {
       return;
     }
 
@@ -493,7 +604,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _saveStickerToDevice() async {
-    if (!_hasAnyStroke || _isSavingToDevice || kIsWeb) {
+    if (!_hasAnyStroke || _isExporting || _isDrawing || kIsWeb) {
       return;
     }
 
@@ -522,7 +633,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _saveCurrentCanvasToDevice() async {
-    if (_strokes.isEmpty || _isSavingToDevice) {
+    if (!_hasAnyStroke || _isExporting || _isDrawing || kIsWeb) {
       return;
     }
 
@@ -606,17 +717,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   Future<void> _showGalleryPreview(DrawingStudioGalleryItem item) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => _DrawingStudioPreviewScreen(
-          item: item,
-          canSaveToDevice: !kIsWeb,
-          formattedDate: _formatGalleryDate(item.createdAtMs),
-          heroTag: _heroTagFor(item),
-          imageBuilder: _buildGalleryImage,
-          onDelete: _deleteGalleryItem,
-          onSaveToDevice: _saveGalleryItemToDevice,
-        ),
+    await slPush<void>(
+      context,
+      _DrawingStudioPreviewScreen(
+        item: item,
+        canSaveToDevice: !kIsWeb,
+        formattedDate: _formatGalleryDate(item.createdAtMs),
+        heroTag: _heroTagFor(item),
+        imageBuilder: _buildGalleryImage,
+        onDelete: _deleteGalleryItem,
+        onSaveToDevice: _saveGalleryItemToDevice,
       ),
     );
   }
@@ -738,521 +848,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFF7FB),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFFD81B60),
-        title: Text(
-          context.tr('util_xngv_5f1f18'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFFD81B60),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.info_outline_rounded,
-              color: Color(0xFFD81B60),
-              size: 22,
-            ),
-            onPressed: () => _showInfoDialog(context),
-            tooltip: context.tr('p8_drawing_info_tooltip'),
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFF8FC), Color(0xFFFDFDFF), Color(0xFFFFF1F6)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWideLayout = constraints.maxWidth >= 860;
-
-              return SingleChildScrollView(
-                physics: (_isDrawing || _isCanvasLocked)
-                    ? const NeverScrollableScrollPhysics()
-                    : const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1120),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (isWideLayout)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(width: 300, child: _buildToolPanel()),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildCanvasPanel()),
-                            ],
-                          )
-                        else ...[
-                          _buildToolPanel(),
-                          SLSpacing.h12,
-                          _buildCanvasPanel(),
-                        ],
-                        SLSpacing.gapH(14),
-                        _buildGallerySection(),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToolPanel() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFF2F7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF7D3E1)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.tr('util_drawing_local_only_hint'),
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF7A5C69),
-              height: 1.5,
-            ),
-          ),
-          SLSpacing.gapH(14),
-          Row(
-            children: [
-              Expanded(
-                child: _buildModeChip(
-                  label: context.tr('util_vkhung_cc3a36'),
-                  icon: Icons.crop_square_rounded,
-                  value: 'frame',
-                ),
-              ),
-              SLSpacing.w8,
-              Expanded(
-                child: _buildModeChip(
-                  label: context.tr('util_vtranh_d96af9'),
-                  icon: Icons.brush_rounded,
-                  value: 'pic',
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h16,
-          Text(
-            context.tr('util_tlkhungv_873220'),
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
-          SLSpacing.h8,
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _ratioPresets.map(_buildRatioChip).toList(),
-          ),
-          SLSpacing.h16,
-          Text(
-            context.tr('util_bngmu_5abdcd'),
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
-          SLSpacing.h8,
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: _palette.map(_buildColorButton).toList(),
-          ),
-          SLSpacing.h16,
-          Row(
-            children: [
-              Text(
-                context.tr('util_dynt_e5cd93'),
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_strokeWidth.toStringAsFixed(1)}px',
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF8A5B76),
-                ),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
-            ),
-            child: Slider(
-              value: _strokeWidth,
-              min: 2,
-              max: 18,
-              activeColor: const Color(0xFFD81B60),
-              inactiveColor: const Color(0xFFEED7E2),
-              onChanged: (value) => setState(() => _strokeWidth = value),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCanvasPanel() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final canvasWidth = constraints.maxWidth;
-        final ratio = _selectedRatio.ratio;
-        final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-        final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
-        final minHeight = shortestSide < 380 ? 340.0 : 390.0;
-        final desiredHeight = canvasWidth / ratio;
-        final canvasHeight = desiredHeight
-            .clamp(minHeight, maxHeight)
-            .toDouble();
-
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFF0D5E1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius: SLRadius.xlAll,
-                child: Stack(
-                  children: [
-                    RepaintBoundary(
-                      key: _canvasKey,
-                      child: Semantics(
-                        label: context.tr('p8_drawing_canvas_label'),
-                        hint: context.tr('p8_drawing_canvas_hint'),
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onDoubleTap: _toggleCanvasLock,
-                          onPanStart: _isCanvasLocked ? null : _startStroke,
-                          onPanUpdate: _isCanvasLocked
-                              ? null
-                              : _appendStrokePoint,
-                          onPanEnd: _isCanvasLocked ? null : _endStroke,
-                          onPanCancel: _isCanvasLocked
-                              ? null
-                              : () => _endStroke(),
-                          child: SizedBox(
-                            height: canvasHeight,
-                            width: double.infinity,
-                            child: CustomPaint(
-                              painter: _DrawingCanvasPainter(
-                                backgroundId: _backgroundId,
-                                strokes: _allVisibleStrokes,
-                                repaint: _canvasRepaintNotifier,
-                              ),
-                              child: const SizedBox.expand(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Semantics(
-                        button: true,
-                        label: _isCanvasLocked
-                            ? context.tr('p8_drawing_unlock_canvas')
-                            : context.tr('p8_drawing_lock_canvas'),
-                        child: Tooltip(
-                          message: _isCanvasLocked
-                              ? context.tr('p8_drawing_unlock_canvas')
-                              : context.tr('p8_drawing_lock_canvas'),
-                          child: Material(
-                            color: Colors.white.withValues(alpha: 0.94),
-                            borderRadius: BorderRadius.circular(16),
-                            child: IconButton(
-                              onPressed: _toggleCanvasLock,
-                              icon: Icon(
-                                _isCanvasLocked
-                                    ? Icons.lock_rounded
-                                    : Icons.lock_open_rounded,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SLSpacing.h12,
-              _buildCanvasStatusBar(),
-              SLSpacing.h12,
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _hasOwnStroke ? _undoStroke : null,
-                      icon: const Icon(Icons.undo_rounded),
-                      label: _compactButtonLabel(
-                        context.tr('util_hontc_96ce27'),
-                      ),
-                      style: _secondaryButtonStyle(),
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _showBackgroundPicker,
-                      icon: const Icon(Icons.wallpaper_rounded),
-                      label: _compactButtonLabel(context.tr('util_inn_2c444b')),
-                      style: _secondaryButtonStyle(),
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _hasAnyStroke ? _clearDrawing : null,
-                      icon: const Icon(Icons.restart_alt_rounded),
-                      label: _compactButtonLabel(
-                        context.tr('util_xantv_68c9be'),
-                      ),
-                      style: _secondaryButtonStyle(),
-                    ),
-                  ),
-                ],
-              ),
-              SLSpacing.h8,
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: !_hasAnyStroke || _isSaving
-                          ? null
-                          : _saveDrawing,
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.collections_bookmark_rounded),
-                      label: _compactButtonLabel(
-                        _isSaving
-                            ? context.tr('util_anglu_4d30b6')
-                            : context.tr('util_luvokhov_68fefe'),
-                      ),
-                      style: _primaryButtonStyle(),
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: !_hasAnyStroke || _isSavingToDevice || kIsWeb
-                          ? null
-                          : _saveCurrentCanvasToDevice,
-                      icon: _isSavingToDevice
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.download_rounded),
-                      label: _compactButtonLabel(
-                        kIsWeb
-                            ? context.tr('util_lumychahtr_7b4bcf')
-                            : _isSavingToDevice
-                            ? context.tr('util_anglu_4d30b6')
-                            : context.tr('util_luvmy_4ac0a6'),
-                      ),
-                      style: _secondaryFilledButtonStyle(),
-                    ),
-                  ),
-                ],
-              ),
-              SLSpacing.h8,
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: !_hasAnyStroke || _isSavingSticker
-                          ? null
-                          : _saveStickerToGallery,
-                      icon: _isSavingSticker
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.auto_awesome_rounded),
-                      label: _compactButtonLabel(
-                        _isSavingSticker
-                            ? context.tr('util_angct_b959fb')
-                            : context.tr('util_ctvinstick_30f8c2'),
-                      ),
-                      style: _primaryButtonStyle(),
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: !_hasAnyStroke || _isSavingToDevice || kIsWeb
-                          ? null
-                          : _saveStickerToDevice,
-                      icon: const Icon(Icons.cut_rounded),
-                      label: _compactButtonLabel(
-                        context.tr('util_lusticker_ddf743'),
-                      ),
-                      style: _secondaryButtonStyle(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCanvasStatusBar() {
-    final statusText = context.tr('util_drawing_local_only_hint');
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: _isCanvasLocked
-            ? const Color(0xFFFFF2F7)
-            : const Color(0xFFFFFAFC),
-        borderRadius: SLRadius.lgAll,
-        border: Border.all(color: const Color(0xFFF3D8E3)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            _isCanvasLocked ? Icons.lock_rounded : Icons.draw_rounded,
-            size: 18,
-            color: const Color(0xFFD81B60),
-          ),
-          SLSpacing.w8,
-          Expanded(
-            child: Text(
-              _isCanvasLocked
-                  ? L10nService().format('util_drawing_canvas_locked_status', {
-                      'status': statusText,
-                    })
-                  : statusText,
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF8A5B76),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  ButtonStyle _primaryButtonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFD81B60),
-      disabledBackgroundColor: const Color(0xFFE9A6C0),
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-    );
-  }
-
-  ButtonStyle _secondaryFilledButtonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF8A5B76),
-      disabledBackgroundColor: const Color(0xFFD7C4CC),
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-    );
-  }
-
-  ButtonStyle _secondaryButtonStyle() {
-    return OutlinedButton.styleFrom(
-      foregroundColor: const Color(0xFF7A5C69),
-      disabledForegroundColor: const Color(0xFFBCA9B2),
-      side: const BorderSide(color: Color(0xFFF0D5E1)),
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
-    );
-  }
-
-  Widget _compactButtonLabel(String label) {
-    return Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.center,
-    );
-  }
+  Widget build(BuildContext context) => _buildStickerStudio();
 
   Widget _buildGallerySection() {
     return Container(
@@ -1320,6 +916,36 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             const SizedBox(
               height: 92,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            )
+          else if (_galleryLoadFailed)
+            Container(
+              height: 92,
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                children: [
+                  Icon(
+                    Icons.cloud_off_outlined,
+                    color: KeepsakeStyle.muted(context),
+                    size: 20,
+                  ),
+                  Text(
+                    context.tr('runtime_error_retry'),
+                    style: KeepsakeStyle.text(
+                      context,
+                      size: 12,
+                      color: KeepsakeStyle.muted(context),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _loadGallery,
+                    child: Text(context.tr('retry')),
+                  ),
+                ],
+              ),
             )
           else if (_gallery.isEmpty)
             Container(
@@ -1535,173 +1161,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildColorButton(Color color) {
-    final selected = _currentColor == color;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: context.tr('p8_drawing_select_color'),
-      child: Tooltip(
-        message: context.tr('p8_drawing_select_color'),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          child: InkWell(
-            onTap: () => setState(() => _currentColor = color),
-            customBorder: const CircleBorder(),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  width: selected ? 40 : 36,
-                  height: selected ? 40 : 36,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: selected ? const Color(0xFFD81B60) : Colors.white,
-                      width: selected ? 3 : 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.35),
-                        blurRadius: selected ? 14 : 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRatioChip(_CanvasRatioPreset preset) {
-    final selected = _aspectRatioId == preset.id;
-    final semanticLabel = L10nService().format('p8_drawing_select_ratio', {
-      'ratio': preset.label,
-    });
-
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: semanticLabel,
-      child: Tooltip(
-        message: semanticLabel,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: SLRadius.pillAll,
-          child: InkWell(
-            onTap: () => setState(() => _aspectRatioId = preset.id),
-            borderRadius: SLRadius.pillAll,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              constraints: const BoxConstraints(minHeight: 44),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                gradient: selected
-                    ? const LinearGradient(
-                        colors: [Color(0xFFFF7AAE), Color(0xFFD81B60)],
-                      )
-                    : null,
-                color: selected ? null : Colors.white,
-                borderRadius: SLRadius.pillAll,
-                border: Border.all(
-                  color: selected
-                      ? Colors.transparent
-                      : const Color(0xFFF0D5E1),
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                preset.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: selected ? Colors.white : const Color(0xFFD81B60),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModeChip({
-    required String label,
-    required IconData icon,
-    required String value,
-  }) {
-    final selected = _mode == value;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: Tooltip(
-        message: label,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: SLRadius.lgAll,
-          child: InkWell(
-            onTap: () => setState(() => _mode = value),
-            borderRadius: SLRadius.lgAll,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                gradient: selected
-                    ? const LinearGradient(
-                        colors: [Color(0xFFFF7AAE), Color(0xFFD81B60)],
-                      )
-                    : null,
-                color: selected ? null : Colors.white,
-                borderRadius: SLRadius.lgAll,
-                border: Border.all(
-                  color: selected
-                      ? Colors.transparent
-                      : const Color(0xFFF0D5E1),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    icon,
-                    size: 18,
-                    color: selected ? Colors.white : const Color(0xFFD81B60),
-                  ),
-                  SLSpacing.w8,
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        color: selected
-                            ? Colors.white
-                            : const Color(0xFFD81B60),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

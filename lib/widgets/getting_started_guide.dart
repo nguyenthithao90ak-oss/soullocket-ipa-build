@@ -477,6 +477,12 @@ class MemoryPlanLimits extends StatelessWidget {
     required IconData icon,
     required VipAccessInfo access,
   }) {
+    final titleKey = switch (key) {
+      'starter_memory_plan_free' => 'starter_memory_plan_free_title',
+      'starter_memory_plan_vip' => 'starter_memory_plan_vip_title',
+      'starter_memory_plan_lifetime' => 'starter_memory_plan_lifetime_title',
+      _ => key,
+    };
     final photos = L10nScope.of(context).format('starter_memory_plan_photos', {
       'daily': formatSize(context, _mb(access.dailyImageUploadLimitBytes)),
       'total': formatSize(context, access.totalMemoryStorageCapMb.toDouble()),
@@ -512,7 +518,7 @@ class MemoryPlanLimits extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  context.tr(key),
+                  context.tr(titleKey),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,

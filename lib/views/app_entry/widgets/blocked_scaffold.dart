@@ -8,6 +8,7 @@ class BlockedScaffold extends StatelessWidget {
   final String message;
   final VoidCallback? onSignOut;
   final VoidCallback? onAppeal;
+  final VoidCallback? onRetry;
   final bool showActions;
 
   const BlockedScaffold({
@@ -16,6 +17,7 @@ class BlockedScaffold extends StatelessWidget {
     required this.message,
     this.onSignOut,
     this.onAppeal,
+    this.onRetry,
     this.showActions = true,
   });
 
@@ -95,8 +97,14 @@ class BlockedScaffold extends StatelessWidget {
                           if (onAppeal != null)
                             ElevatedButton(
                               onPressed: onAppeal,
-                              child:
-                                  Text(context.tr('app_entry_khngngh_ac8a56')),
+                              child: Text(
+                                context.tr('app_entry_khngngh_ac8a56'),
+                              ),
+                            ),
+                          if (onRetry != null)
+                            ElevatedButton(
+                              onPressed: onRetry,
+                              child: Text(context.tr('core_retry')),
                             ),
                         ],
                       ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../../utils/screen_activity_mixin.dart';
 
 /// Nét vẽ và nhịp riêng từng chủ đề; cùng catalog với WidgetThemeBackground Android.
 abstract final class WidgetThemeDesign {
@@ -46,6 +47,58 @@ abstract final class WidgetThemeDesign {
     'cosmic': [Color(0xFF17142F), Color(0xFF322952), Color(0xFF514563)],
   };
   static String normalize(String key) => keys.contains(key) ? key : 'pink';
+
+  /// Palette dùng chung cho nền, chữ và các điểm nhấn của mọi mẫu widget.
+  ///
+  /// Widget đôi và các widget tiện ích phải lấy màu từ cùng catalog này để
+  /// đổi theme trong Cài đặt luôn được phản ánh ở toàn bộ preview/native.
+  static List<Color> palette(String key) => palettes[normalize(key)]!;
+
+  static bool isDark(String key) => switch (normalize(key)) {
+    'dark' || 'red' || 'premium' || 'cosmic' => true,
+    _ => false,
+  };
+
+  static Color ink(String key) => switch (normalize(key)) {
+    'dark' => Colors.white,
+    'red' => const Color(0xFFFFF0DC),
+    'premium' => Colors.white,
+    'cosmic' => const Color(0xFFFFF0BD),
+    'blue' => const Color(0xFF0D47A1),
+    'orange' => const Color(0xFFE65100),
+    'purple' => const Color(0xFF6A1B9A),
+    'green' => const Color(0xFF1B5E20),
+    _ => const Color(0xFF333333),
+  };
+
+  /// Điểm nhấn số ngày/vòng tiến trình, khớp màu đếm ngày của widget đôi.
+  static Color accent(String key) => switch (normalize(key)) {
+    'white' => const Color(0xFF9B335E),
+    'blue' => const Color(0xFF0F52BA),
+    'orange' => const Color(0xFFF97316),
+    'purple' => const Color(0xFF8B5CF6),
+    'green' => const Color(0xFF16A34A),
+    'red' => const Color(0xFFFFE1AB),
+    'dark' || 'premium' => Colors.white,
+    'cosmic' => const Color(0xFFFFE396),
+    _ => const Color(0xFFFF4D73),
+  };
+
+  static Color cardColor(String key) => isDark(key)
+      ? Colors.black.withValues(alpha: .22)
+      : Colors.white.withValues(alpha: .48);
+
+  static Color avatarColor(String key) => isDark(key)
+      ? Colors.white.withValues(alpha: .14)
+      : Color.lerp(palette(key).first, Colors.white, .52)!;
+
+  static Color progressTrack(String key) =>
+      Color.lerp(accent(key), Colors.white, isDark(key) ? .52 : .72)!;
+
+  /// Màu số đếm: theo theme như widget đôi, pha nhẹ màu riêng (vd. màu sự kiện)
+  /// với cùng tỷ lệ mà widget đôi pha màu tim, nên luôn đọc rõ trên nền tối.
+  static Color daysColor(String key, Color tint) =>
+      Color.lerp(accent(key), tint, isDark(key) ? .28 : .36)!;
 }
 
 /// Một đường clip duy nhất cho nền, hình vẽ, hiệu ứng và nội dung: không ló mép.
@@ -73,25 +126,33 @@ class WidgetThemeSurface extends StatefulWidget {
   State<WidgetThemeSurface> createState() => _WidgetThemeSurfaceState();
 }
 
-class _WidgetThemeSurfaceState extends State<WidgetThemeSurface> {
+class _WidgetThemeSurfaceState extends State<WidgetThemeSurface>
+    with ScreenActivityMixin {
   Timer? _timer;
   bool _alternate = false;
   bool _motion = false;
 
   void _syncMotion() {
     _timer?.cancel();
+    _timer = null;
     _alternate = false;
-    _motion = widget.animated && !MediaQuery.disableAnimationsOf(context);
+    _motion =
+        isScreenActive &&
+        widget.animated &&
+        !MediaQuery.disableAnimationsOf(context);
     if (_motion) {
       final key = WidgetThemeDesign.normalize(widget.themeKey);
       _timer = Timer.periodic(
         Duration(milliseconds: WidgetThemeDesign.intervals[key]!),
         (_) {
-          if (mounted) setState(() => _alternate = !_alternate);
+          if (isScreenActive) setState(() => _alternate = !_alternate);
         },
       );
     }
   }
+
+  @override
+  void onScreenActivityChanged(bool active) => _syncMotion();
 
   @override
   void didChangeDependencies() {

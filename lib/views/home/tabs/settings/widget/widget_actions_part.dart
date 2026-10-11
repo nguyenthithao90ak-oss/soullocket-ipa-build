@@ -50,7 +50,13 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _handleWidgetPanelTabChanged(String value) async {
-    final normalizedStyle = WidgetService.normalizeWidgetStyleKey(value);
+    final template = WidgetStudioTemplate.fromId(value);
+    // Utility có provider riêng; chỉ đổi preview, giữ style widget đôi đã lưu.
+    if (template.sampleKind != null) {
+      setState(() => _widgetPanelTabKey = template.id);
+      return;
+    }
+    final normalizedStyle = WidgetService.normalizeWidgetStyleKey(template.id);
     await _updateWidgetAppearanceDraft(() {
       _widgetPanelTabKey = normalizedStyle;
       _widgetStyleKey = normalizedStyle;

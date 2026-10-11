@@ -189,6 +189,77 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
     }
   }
 
+  /// Chỉ cuộn khi target thực sự nằm ngoài vùng đang nhìn thấy.
+  ///
+  /// Trước đây mỗi bước đều dùng `alignment: .35`, nên ngay cả hai mục nằm
+  /// cạnh nhau (ví dụ hai ô thao tác nhanh trong Cài đặt) cũng bị kéo về cùng
+  /// một vị trí mới. Việc đó tạo cảm giác tour nhảy qua lại. Giữ nguyên
+  /// viewport khi target đã thấy; nếu target ở trên/dưới thì chỉ cuộn đủ để
+  /// đưa nó vào mép tương ứng.
+  ScrollPositionAlignmentPolicy? _targetScrollPolicy(
+    BuildContext targetContext,
+  ) {
+    final render = targetContext.findRenderObject();
+    final overlay = _overlayKey.currentContext?.findRenderObject();
+    if (render is! RenderBox ||
+        overlay is! RenderBox ||
+        !render.attached ||
+        !render.hasSize ||
+        render.size.isEmpty ||
+        !overlay.hasSize) {
+      return ScrollPositionAlignmentPolicy.explicit;
+    }
+
+    final media = MediaQuery.of(context);
+    final safeViewport = Rect.fromLTRB(
+      0,
+      media.padding.top,
+      overlay.size.width,
+      math.max(
+        media.padding.top,
+        overlay.size.height - media.padding.bottom - media.viewInsets.bottom,
+      ),
+    );
+    final candidate = MatrixUtils.transformRect(
+      render.getTransformTo(overlay),
+      Offset.zero & render.size,
+    );
+
+    // Tính cả các viewport/clip lồng nhau để không coi một target đang bị
+    // cắt bởi ListView con là "đã thấy" chỉ vì nó vẫn nằm trong màn hình.
+    var clip = safeViewport;
+    RenderObject? ancestor = render.parent;
+    while (ancestor != null) {
+      if (ancestor is RenderBox &&
+          (ancestor is RenderAbstractViewport ||
+              ancestor is RenderClipRect ||
+              ancestor is RenderClipRRect)) {
+        clip = clip.intersect(
+          MatrixUtils.transformRect(
+            ancestor.getTransformTo(overlay),
+            Offset.zero & ancestor.size,
+          ),
+        );
+      }
+      ancestor = ancestor.parent;
+    }
+
+    if (clip.isEmpty) {
+      return ScrollPositionAlignmentPolicy.explicit;
+    }
+    if (clip.contains(candidate.topLeft) &&
+        clip.contains(candidate.bottomRight)) {
+      return null;
+    }
+    if (candidate.top < clip.top) {
+      return ScrollPositionAlignmentPolicy.keepVisibleAtStart;
+    }
+    if (candidate.bottom > clip.bottom) {
+      return ScrollPositionAlignmentPolicy.keepVisibleAtEnd;
+    }
+    return ScrollPositionAlignmentPolicy.explicit;
+  }
+
   FirstSetupSpotlightStep? get _step {
     if (widget.steps.isEmpty || _index >= widget.steps.length) return null;
     return widget.steps[_index];
@@ -222,11 +293,15 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
       });
       _bindTargetScroll(hidden ? null : targetContext);
       if (targetContext != null && !hidden && (scroll || _targetRect == null)) {
-        await Scrollable.ensureVisible(
-          targetContext,
-          alignment: .35,
-          duration: Duration.zero,
-        );
+        final policy = _targetScrollPolicy(targetContext);
+        if (policy != null) {
+          await Scrollable.ensureVisible(
+            targetContext,
+            alignment: .35,
+            alignmentPolicy: policy,
+            duration: Duration.zero,
+          );
+        }
         await WidgetsBinding.instance.endOfFrame;
       }
       if (!mounted || _closing || generation != _generation) return;

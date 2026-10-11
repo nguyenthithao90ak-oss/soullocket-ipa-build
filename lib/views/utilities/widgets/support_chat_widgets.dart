@@ -3,9 +3,23 @@ import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/sl_detail_widgets.dart';
-import '../support_ticket_shared.dart';
 
 enum SupportSender { user, assistant, team }
+
+/// Nút hành động đi kèm một tin nhắn (ví dụ: hỏi lại AI, gửi cho đội ngũ).
+class SupportChatAction {
+  const SupportChatAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.primary = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool primary;
+}
 
 class SupportChatItem {
   const SupportChatItem({
@@ -13,14 +27,18 @@ class SupportChatItem {
     required this.text,
     required this.sender,
     required this.time,
-    this.welcome = false,
+    this.failed = false,
+    this.actions = const [],
   });
 
   final String id;
   final String text;
   final SupportSender sender;
   final String time;
-  final bool welcome;
+
+  /// Tin báo lỗi (AI không trả lời được) hiển thị khác màu để người dùng nhận ra ngay.
+  final bool failed;
+  final List<SupportChatAction> actions;
 }
 
 TextStyle _supportText(
@@ -34,18 +52,6 @@ TextStyle _supportText(
   color: color ?? SLDetailStyle.text(context),
   height: 1.45,
 );
-
-IconData supportTopicIcon(String id) => switch (id) {
-  '1' => Icons.key_outlined,
-  '2' => Icons.link_rounded,
-  '3' => Icons.photo_library_outlined,
-  '4' => Icons.verified_user_outlined,
-  '5' => Icons.phonelink_ring_outlined,
-  '6' => Icons.bug_report_outlined,
-  '7' => Icons.favorite_border_rounded,
-  '8' => Icons.manage_accounts_outlined,
-  _ => Icons.support_agent_rounded,
-};
 
 String supportTopicLabel(BuildContext context, String id) => context
     .tr(switch (id) {
@@ -61,6 +67,16 @@ String supportTopicLabel(BuildContext context, String id) => context
     })
     .replaceAll(RegExp(r'[🔑🔗📸💳📱🐞💖🗑️]', unicode: true), '')
     .trim();
+
+bool supportStatusIsTeam(String status) => const [
+  'waiting_for_admin',
+  'pending',
+  'replied',
+  'in_progress',
+].contains(status);
+
+bool supportStatusIsClosed(String status) =>
+    status == 'resolved' || status == 'closed';
 
 class SupportAvatar extends StatelessWidget {
   const SupportAvatar({super.key, this.team = false, this.size = 36});
@@ -98,18 +114,18 @@ class SupportChatView extends StatelessWidget {
     required this.controller,
     required this.scrollController,
     required this.status,
-    required this.messageCount,
     required this.hasTicket,
     required this.sending,
     required this.onSend,
     required this.onBack,
-    required this.onGuide,
-    required this.onFaq,
-    required this.onTopics,
-    required this.onTopic,
-    this.selectedTopicId,
+    required this.onContactTeam,
+    this.focusNode,
+    this.guide,
+    this.aiMode = true,
+    this.thinking = false,
     this.notice,
     this.entryNotice,
+    this.onEntryAction,
     this.onRetry,
     this.onReopen,
     this.loadingHistory = false,
@@ -119,290 +135,253 @@ class SupportChatView extends StatelessWidget {
   final TextEditingController controller;
   final ScrollController scrollController;
   final String status;
-  final int messageCount;
   final bool hasTicket;
   final bool sending;
   final VoidCallback onSend;
   final VoidCallback onBack;
-  final VoidCallback onGuide;
-  final VoidCallback onFaq;
-  final VoidCallback onTopics;
-  final ValueChanged<String> onTopic;
-  final String? selectedTopicId;
+  final VoidCallback onContactTeam;
+  final FocusNode? focusNode;
+
+  /// Khung hướng dẫn theo danh mục, đặt trước lịch sử trò chuyện.
+  final Widget? guide;
+
+  /// true: ô nhập hỏi trợ lý AI; false: nhắn trực tiếp cho đội ngũ hỗ trợ.
+  final bool aiMode;
+  final bool thinking;
   final String? notice;
   final String? entryNotice;
+
+  /// Nút gửi lại tin chưa được xác nhận cho đội ngũ, hiện dưới [entryNotice].
+  final VoidCallback? onEntryAction;
   final VoidCallback? onRetry;
   final VoidCallback? onReopen;
   final bool loadingHistory;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: SLDetailStyle.background(context),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 10, 8, 10),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: onBack,
-                      tooltip: MaterialLocalizations.of(
-                        context,
-                      ).backButtonTooltip,
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      icon: const BackButtonIcon(),
-                      color: SLDetailStyle.text(context),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('util_htrsoulloc_ed0178'),
-                            style: _supportText(
-                              context,
-                              size: 17,
-                              weight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            context.tr('support_ui_subtitle'),
-                            style: _supportText(
-                              context,
-                              size: 11,
-                              color: SLDetailStyle.muted(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: onFaq,
-                      tooltip: context.tr('util_cuhithnggp_65b83c'),
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      icon: const Icon(Icons.help_outline_rounded, size: 22),
-                      color: SLDetailStyle.muted(context),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  key: const Key('support-conversation'),
-                  controller: scrollController,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
-                  itemCount: messages.length + 3,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: SupportStatusCard(
-                          status: status,
-                          count: messageCount,
-                          onGuide: onGuide,
+  Widget build(BuildContext context) {
+    final closed = supportStatusIsClosed(status);
+    final showStatus = closed || supportStatusIsTeam(status);
+    return Scaffold(
+      backgroundColor: SLDetailStyle.background(context),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 10, 8, 10),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: onBack,
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).backButtonTooltip,
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
                         ),
-                      );
-                    }
-                    if (index == 1) {
-                      return Column(
-                        children: [
-                          if (notice != null) SupportNotice(text: notice!),
-                          if (notice != null && onRetry != null)
-                            TextButton.icon(
-                              onPressed: onRetry,
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(48, 48),
-                              ),
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: Text(context.tr('dialog_retry')),
-                            ),
-                          if (entryNotice != null)
-                            SupportNotice(text: entryNotice!, warning: false),
-                        ],
-                      );
-                    }
-                    if (index == 2) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                        icon: const BackButtonIcon(),
+                        color: SLDetailStyle.text(context),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for (final id in ['1', '2', '3'])
-                              SupportTopicButton(
-                                id: id,
-                                selected: selectedTopicId == id,
-                                onTap: hasTicket && !sending
-                                    && status != 'resolved' && status != 'closed'
-                                    ? () => onTopic(id)
-                                    : null,
-                              ),
-                            TextButton.icon(
-                              onPressed: onTopics,
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(48, 48),
-                                foregroundColor: SLDetailStyle.muted(context),
-                              ),
-                              icon: const Icon(
-                                Icons.grid_view_rounded,
+                            Text(
+                              context.tr('util_htrsoulloc_ed0178'),
+                              style: _supportText(
+                                context,
                                 size: 17,
+                                weight: FontWeight.w700,
                               ),
-                              label: Text(
-                                context.tr('support_ui_topics'),
-                                style: _supportText(context, size: 12),
+                            ),
+                            Text(
+                              context.tr('support_ui_guide_subtitle'),
+                              style: _supportText(
+                                context,
+                                size: 11,
+                                color: SLDetailStyle.muted(context),
                               ),
                             ),
                           ],
                         ),
-                      );
-                    }
-                    final message = messages[index - 3];
-                    return message.welcome
-                        ? const SupportWelcomeCard()
-                        : SupportMessageBubble(
-                            key: ValueKey(message.id),
-                            message: message,
-                          );
-                  },
-                ),
-              ),
-              if (loadingHistory) const LinearProgressIndicator(minHeight: 2),
-              if (sending) const SupportTypingIndicator(),
-              if ((status == 'resolved' || status == 'closed') && onReopen != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: FilledButton.icon(
-                    onPressed: hasTicket && !sending ? onReopen : null,
-                    style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
-                    icon: const Icon(Icons.forum_outlined),
-                    label: Text(context.tr('support_ui_reopen')),
+                      ),
+                      IconButton(
+                        onPressed: hasTicket ? onContactTeam : null,
+                        tooltip: context.tr('support_ui_contact_team'),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: const Icon(Icons.support_agent_rounded, size: 22),
+                        color: SLDetailStyle.muted(context),
+                      ),
+                    ],
                   ),
                 ),
-              if (status != 'resolved' && status != 'closed')
-                SupportComposer(
-                  controller: controller,
-                  enabled: hasTicket && !sending,
-                  sending: sending,
-                  hasTicket: hasTicket,
-                  onSend: onSend,
-                  onGuide: onGuide,
+                Expanded(
+                  child: ListView.builder(
+                    key: const Key('support-conversation'),
+                    controller: scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+                    itemCount: messages.length + 3,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return showStatus
+                            ? Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: SupportStatusCard(status: status),
+                              )
+                            : const SizedBox.shrink();
+                      }
+                      if (index == 1) {
+                        return Column(
+                          children: [
+                            if (notice != null) SupportNotice(text: notice!),
+                            if (notice != null && onRetry != null)
+                              TextButton.icon(
+                                onPressed: onRetry,
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(48, 48),
+                                ),
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: Text(context.tr('dialog_retry')),
+                              ),
+                            if (entryNotice != null)
+                              SupportNotice(text: entryNotice!, warning: false),
+                            if (entryNotice != null && onEntryAction != null)
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: TextButton.icon(
+                                  key: const Key('support-pending-resend'),
+                                  onPressed: onEntryAction,
+                                  style: TextButton.styleFrom(
+                                    minimumSize: const Size(48, 48),
+                                  ),
+                                  icon: const Icon(Icons.support_agent_rounded),
+                                  label: Text(context.tr('support_ui_contact_team')),
+                                ),
+                              ),
+                          ],
+                        );
+                      }
+                      if (index == 2) {
+                        return guide == null
+                            ? const SizedBox.shrink()
+                            : Padding(
+                                padding: const EdgeInsets.only(bottom: 20),
+                                child: guide,
+                              );
+                      }
+                      final message = messages[index - 3];
+                      return SupportMessageBubble(
+                        key: ValueKey(message.id),
+                        message: message,
+                      );
+                    },
+                  ),
                 ),
-            ],
+                if (loadingHistory) const LinearProgressIndicator(minHeight: 2),
+                if (thinking)
+                  SupportTypingIndicator(
+                    text: context.tr('support_ui_ai_thinking'),
+                  )
+                else if (sending)
+                  SupportTypingIndicator(
+                    text: context.tr('support_ui_preparing'),
+                    team: true,
+                  ),
+                if (closed && onReopen != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: FilledButton.icon(
+                      onPressed: hasTicket && !sending ? onReopen : null,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(Icons.forum_outlined),
+                      label: Text(context.tr('support_ui_reopen')),
+                    ),
+                  ),
+                if (!closed)
+                  SupportComposer(
+                    controller: controller,
+                    focusNode: focusNode,
+                    enabled: !sending && !thinking && (aiMode || hasTicket),
+                    sending: sending || thinking,
+                    hintText: context.tr(
+                      aiMode ? 'support_ui_ai_input' : 'support_ui_team_input',
+                    ),
+                    onSend: onSend,
+                    onContactTeam: hasTicket ? onContactTeam : null,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
+/// Trạng thái yêu cầu đã chuyển cho đội ngũ (chờ, đã phản hồi, đã đóng).
 class SupportStatusCard extends StatelessWidget {
-  const SupportStatusCard({
-    super.key,
-    required this.status,
-    required this.count,
-    required this.onGuide,
-  });
+  const SupportStatusCard({super.key, required this.status});
   final String status;
-  final int count;
-  final VoidCallback onGuide;
 
   @override
   Widget build(BuildContext context) {
-    final waiting = status == 'waiting_for_admin' || status == 'pending';
     final replied = status == 'replied' || status == 'in_progress';
-    final closed = status == 'resolved' || status == 'closed';
+    final closed = supportStatusIsClosed(status);
+    final team = supportStatusIsTeam(status);
     final titleKey = closed
         ? 'support_ui_closed'
         : replied
         ? 'support_ui_replied'
-        : waiting
+        : team
         ? 'support_ui_waiting'
         : 'support_ui_assistant';
     final detailKey = closed
         ? 'support_ui_closed_desc'
         : replied
         ? 'support_ui_replied_desc'
-        : waiting
-        ? 'support_ui_waiting_desc'
+        : team
+        ? 'support_ui_team_waiting_desc'
         : 'support_ui_assistant_desc';
     return SLDetailCard(
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SupportAvatar(team: waiting || replied || closed),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr(titleKey),
-                      style: _supportText(
-                        context,
-                        size: 14,
-                        weight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.tr(detailKey),
-                      style: _supportText(
-                        context,
-                        size: 12,
-                        color: SLDetailStyle.muted(context),
-                      ),
-                    ),
-                  ],
+          SupportAvatar(team: team || closed),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr(titleKey),
+                  style: _supportText(context, size: 14, weight: FontWeight.w700),
                 ),
-              ),
-              IconButton(
-                onPressed: onGuide,
-                tooltip: context.tr('util_hngdngihtr_9c6550'),
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                icon: const Icon(Icons.info_outline_rounded, size: 20),
-                color: SLDetailStyle.muted(context),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  context.tr(detailKey),
+                  style: _supportText(
+                    context,
+                    size: 12,
+                    color: SLDetailStyle.muted(context),
+                  ),
+                ),
+              ],
+            ),
           ),
-          if (!waiting && !replied && !closed) ...[
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: count.clamp(0, 5) / 5,
-                minHeight: 3,
-                backgroundColor: SLDetailStyle.outline(context),
-                color: SLDetailStyle.accent(context, SLDetailStyle.sage),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              L10nService().format('support_ui_progress', {
-                'count': count.clamp(0, 5),
-              }),
-              style: _supportText(
-                context,
-                size: 11,
-                color: SLDetailStyle.muted(context),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -443,77 +422,6 @@ class SupportNotice extends StatelessWidget {
   );
 }
 
-class SupportWelcomeCard extends StatelessWidget {
-  const SupportWelcomeCard({super.key});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SupportAvatar(team: true, size: 56),
-        const SizedBox(height: 18),
-        Text(
-          context.tr('support_ui_welcome'),
-          style: _supportText(context, size: 24, weight: FontWeight.w700),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          context.tr('support_ui_welcome_desc'),
-          style: _supportText(
-            context,
-            size: 14,
-            color: SLDetailStyle.muted(context),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class SupportTopicButton extends StatelessWidget {
-  const SupportTopicButton({
-    super.key,
-    required this.id,
-    required this.onTap,
-    this.selected = false,
-  });
-  final String id;
-  final VoidCallback? onTap;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    selected: selected,
-    child: OutlinedButton.icon(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: SLDetailStyle.text(context),
-        backgroundColor: selected
-            ? SLDetailStyle.accent(
-                context,
-                SLDetailStyle.sage,
-              ).withValues(alpha: 0.12)
-            : SLDetailStyle.card(context),
-        minimumSize: const Size(48, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        side: BorderSide(
-          color: selected
-              ? SLDetailStyle.accent(context, SLDetailStyle.sage)
-              : SLDetailStyle.outline(context),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      icon: Icon(supportTopicIcon(id), size: 17),
-      label: Text(
-        supportTopicLabel(context, id),
-        style: _supportText(context, size: 12, weight: FontWeight.w600),
-      ),
-    ),
-  );
-}
-
 class SupportMessageBubble extends StatelessWidget {
   const SupportMessageBubble({super.key, required this.message});
   final SupportChatItem message;
@@ -522,6 +430,7 @@ class SupportMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final mine = message.sender == SupportSender.user;
     final team = message.sender == SupportSender.team;
+    final warning = SLDetailStyle.accent(context, SLDetailStyle.warning);
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: LayoutBuilder(
@@ -565,10 +474,16 @@ class SupportMessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: mine
                         ? SLDetailStyle.primary
+                        : message.failed
+                        ? warning.withValues(alpha: 0.10)
                         : SLDetailStyle.card(context),
                     border: mine
                         ? null
-                        : Border.all(color: SLDetailStyle.outline(context)),
+                        : Border.all(
+                            color: message.failed
+                                ? warning.withValues(alpha: 0.45)
+                                : SLDetailStyle.outline(context),
+                          ),
                     borderRadius: BorderRadiusDirectional.only(
                       topStart: const Radius.circular(20),
                       topEnd: const Radius.circular(20),
@@ -576,15 +491,58 @@ class SupportMessageBubble extends StatelessWidget {
                       bottomEnd: Radius.circular(mine ? 6 : 20),
                     ),
                   ),
-                  child: SelectableText(
-                    message.text,
-                    style: _supportText(
-                      context,
-                      size: 14,
-                      color: mine ? Colors.white : SLDetailStyle.text(context),
-                    ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (message.failed) ...[
+                        Icon(Icons.error_outline_rounded, size: 18, color: warning),
+                        const SizedBox(width: 8),
+                      ],
+                      Flexible(
+                        child: SelectableText(
+                          message.text,
+                          style: _supportText(
+                            context,
+                            size: 14,
+                            color: mine ? Colors.white : SLDetailStyle.text(context),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                if (message.actions.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final action in message.actions)
+                        action.primary
+                            ? FilledButton.tonalIcon(
+                                onPressed: action.onTap,
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(48, 44),
+                                ),
+                                icon: Icon(action.icon, size: 18),
+                                label: Text(action.label),
+                              )
+                            : OutlinedButton.icon(
+                                onPressed: action.onTap,
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(48, 44),
+                                  foregroundColor: SLDetailStyle.text(context),
+                                  side: BorderSide(
+                                    color: SLDetailStyle.outline(context),
+                                  ),
+                                ),
+                                icon: Icon(action.icon, size: 18),
+                                label: Text(action.label),
+                              ),
+                    ],
+                  ),
+                ],
                 if (message.time.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
@@ -606,7 +564,14 @@ class SupportMessageBubble extends StatelessWidget {
 }
 
 class SupportTypingIndicator extends StatelessWidget {
-  const SupportTypingIndicator({super.key});
+  const SupportTypingIndicator({
+    super.key,
+    required this.text,
+    this.team = false,
+  });
+
+  final String text;
+  final bool team;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -615,17 +580,22 @@ class SupportTypingIndicator extends StatelessWidget {
       liveRegion: true,
       child: Row(
         children: [
-          const SupportAvatar(size: 24),
+          SupportAvatar(size: 24, team: team),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              context.tr('support_ui_preparing'),
+              text,
               style: _supportText(
                 context,
                 size: 12,
                 color: SLDetailStyle.muted(context),
               ),
             ),
+          ),
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ],
       ),
@@ -639,17 +609,19 @@ class SupportComposer extends StatelessWidget {
     required this.controller,
     required this.enabled,
     required this.sending,
-    required this.hasTicket,
+    required this.hintText,
     required this.onSend,
-    required this.onGuide,
+    this.onContactTeam,
+    this.focusNode,
   });
 
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool enabled;
   final bool sending;
-  final bool hasTicket;
+  final String hintText;
   final VoidCallback onSend;
-  final VoidCallback onGuide;
+  final VoidCallback? onContactTeam;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -662,15 +634,16 @@ class SupportComposer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         IconButton(
-          onPressed: onGuide,
-          tooltip: context.tr('util_hngdngihtr_9c6550'),
+          onPressed: onContactTeam,
+          tooltip: context.tr('support_ui_contact_team'),
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          icon: const Icon(Icons.assignment_outlined, size: 21),
+          icon: const Icon(Icons.support_agent_rounded, size: 21),
           color: SLDetailStyle.muted(context),
         ),
         Expanded(
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             enabled: enabled,
             minLines: 1,
             maxLines: 4,
@@ -690,9 +663,7 @@ class SupportComposer extends StatelessWidget {
                 : null,
             style: _supportText(context, size: 14),
             decoration: InputDecoration(
-              hintText: context.tr(
-                hasTicket ? 'support_ui_input' : 'util_ngnhpnhn_b4a68d',
-              ),
+              hintText: hintText,
               hintStyle: _supportText(
                 context,
                 size: 13,
@@ -761,191 +732,66 @@ class SupportSheet extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    child: Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-        maxWidth: 720,
-      ),
-      decoration: BoxDecoration(
-        color: SLDetailStyle.card(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 10),
-          Container(
-            width: 32,
-            height: 4,
-            decoration: BoxDecoration(
-              color: SLDetailStyle.outline(context),
-              borderRadius: BorderRadius.circular(4),
+  Widget build(BuildContext context) => Padding(
+    // Đẩy sheet lên trên bàn phím khi nhập nội dung gửi đội ngũ.
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    child: SafeArea(
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+          maxWidth: 720,
+        ),
+        decoration: BoxDecoration(
+          color: SLDetailStyle.card(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 32,
+              height: 4,
+              decoration: BoxDecoration(
+                color: SLDetailStyle.outline(context),
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 8, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: _supportText(
-                      context,
-                      size: 18,
-                      weight: FontWeight.w700,
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: _supportText(
+                        context,
+                        size: 18,
+                        weight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                  constraints: const BoxConstraints(
-                    minWidth: 48,
-                    minHeight: 48,
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                    icon: const Icon(Icons.close_rounded, size: 20),
                   ),
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-              child: child,
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                child: child,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
-  );
-}
-
-class SupportTopicsContent extends StatelessWidget {
-  const SupportTopicsContent({
-    super.key,
-    required this.onTopic,
-    this.selectedId,
-    this.enabled = true,
-  });
-  final ValueChanged<String> onTopic;
-  final String? selectedId;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final columns =
-          constraints.maxWidth >= 340 &&
-              MediaQuery.textScalerOf(context).scale(14) <= 18
-          ? 2
-          : 1;
-      final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
-      return Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          for (final topic in supportTopicCatalog)
-            SizedBox(
-              width: width,
-              child: SupportTopicButton(
-                id: topic.id,
-                selected: topic.id == selectedId,
-                onTap: enabled ? () => onTopic(topic.id) : null,
-              ),
-            ),
-        ],
-      );
-    },
-  );
-}
-
-class SupportIntakeContent extends StatelessWidget {
-  const SupportIntakeContent({
-    super.key,
-    required this.checklist,
-    required this.badges,
-    this.topic,
-  });
-  final List<String> checklist;
-  final List<String> badges;
-  final SupportTopicDefinition? topic;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        topic == null
-            ? context.tr('support_ui_intake_desc')
-            : supportTopicLabel(context, topic!.id),
-        style: _supportText(context, size: 14, weight: FontWeight.w600),
-      ),
-      const SizedBox(height: 14),
-      for (var index = 0; index < checklist.length; index++)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SLDetailIcon(
-                icon: Icons.check_rounded,
-                color: SLDetailStyle.sage,
-                size: 26,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(checklist[index], style: _supportText(context)),
-              ),
-            ],
-          ),
-        ),
-      const SizedBox(height: 8),
-      SupportNotice(text: context.tr('support_ui_safety')),
-      if (badges.isNotEmpty) ...[
-        const Divider(height: 24),
-        Text(
-          context.tr('util_thngtintnh_78ed0b'),
-          style: _supportText(context, size: 12, weight: FontWeight.w700),
-        ),
-        const SizedBox(height: 8),
-        for (final badge in badges)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              badge,
-              style: _supportText(
-                context,
-                size: 12,
-                color: SLDetailStyle.muted(context),
-              ),
-            ),
-          ),
-      ],
-    ],
-  );
-}
-
-class SupportFaqContent extends StatelessWidget {
-  const SupportFaqContent({super.key});
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      for (final item in [
-        ('util_qunmtkhu_a9a074', 'util_citbomtimt_83d047'),
-        ('util_appbli_92e3fa', 'util_thtthonton_f1e6df'),
-        ('util_kimtraquyn_4de2fd', 'util_mcittikhon_4429d3'),
-        ('util_xatikhon_348215', 'util_citxatikho_9cdf64'),
-      ])
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: SLDetailDisclosure(
-            icon: Icons.help_outline_rounded,
-            title: context.tr(item.$1),
-            child: Text(context.tr(item.$2), style: _supportText(context)),
-          ),
-        ),
-    ],
   );
 }

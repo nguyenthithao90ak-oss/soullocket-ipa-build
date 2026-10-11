@@ -264,9 +264,7 @@ class AuthSignInService {
                   : UiCopy.text('copy_41d2b7f35096'));
       }
       if (!allowFallbackOnFailure) {
-        throw message.isNotEmpty
-            ? message
-            : UiCopy.text('copy_f0a4328a17b2');
+        throw message.isNotEmpty ? message : UiCopy.text('copy_f0a4328a17b2');
       }
       if (kDebugMode) {
         debugPrint(
@@ -326,8 +324,7 @@ class AuthSignInService {
           )
           .timeout(
             const Duration(seconds: 12),
-            onTimeout: () =>
-                throw UiCopy.text('copy_b8239b73176f'),
+            onTimeout: () => throw UiCopy.text('copy_b8239b73176f'),
           );
 
       if (accountExistsHint == false) {
@@ -588,8 +585,7 @@ class AuthSignInService {
       levelKey: (payload['riskLevel'] as String?) ?? 'block',
       code: (payload['error'] as String?) ?? 'play_integrity_blocked',
       message:
-          (payload['message'] as String?) ??
-          UiCopy.text('copy_8226b13bc362'),
+          (payload['message'] as String?) ?? UiCopy.text('copy_8226b13bc362'),
       payload: payload,
       ttl: const Duration(minutes: 5),
     );
@@ -603,8 +599,7 @@ class AuthSignInService {
   WebAuthenticationOptions _buildAppleWebAuthenticationOptions() {
     final clientId = AppConfig.appleSignInServiceId.trim();
     if (clientId.isEmpty) {
-      throw UiCopy.text('copy_06bad51d391c') +
-          UiCopy.text('copy_08115ce9ee91');
+      throw UiCopy.text('copy_06bad51d391c') + UiCopy.text('copy_08115ce9ee91');
     }
 
     final redirectUrl = AppConfig.appleSignInRedirectUrl.trim();
@@ -614,8 +609,7 @@ class AuthSignInService {
         !redirectUri.isAbsolute ||
         redirectUri.scheme.toLowerCase() != 'https' ||
         redirectUri.host.trim().isEmpty) {
-      throw UiCopy.text('copy_3a48f98fe29d') +
-          UiCopy.text('copy_1d4156a3883e');
+      throw UiCopy.text('copy_3a48f98fe29d') + UiCopy.text('copy_1d4156a3883e');
     }
 
     return WebAuthenticationOptions(
@@ -630,8 +624,7 @@ class AuthSignInService {
   ) {
     final identityToken = credential.identityToken?.trim() ?? '';
     if (identityToken.isEmpty) {
-      throw UiCopy.text('copy_5893c1507f48') +
-          UiCopy.text('copy_e2f409eebfcc');
+      throw UiCopy.text('copy_5893c1507f48') + UiCopy.text('copy_e2f409eebfcc');
     }
 
     final givenName = credential.givenName?.trim();
@@ -731,8 +724,7 @@ class AuthSignInService {
       throw UiCopy.text('copy_22ce6a6ffa09', {'value1': error.code}) +
           UiCopy.text('copy_80190e2b9375');
     } on SignInWithAppleNotSupportedException {
-      throw UiCopy.text('copy_96bfe5a00337') +
-          UiCopy.text('copy_4bd0996be5a9');
+      throw UiCopy.text('copy_96bfe5a00337') + UiCopy.text('copy_4bd0996be5a9');
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'account-exists-with-different-credential':
@@ -790,8 +782,7 @@ class AuthSignInService {
               });
           await initCompleter.future.timeout(
             const Duration(seconds: 15),
-            onTimeout: () =>
-                throw UiCopy.text('copy_90ca8dbde435'),
+            onTimeout: () => throw UiCopy.text('copy_90ca8dbde435'),
           );
           _isGoogleSignInInitialized = true;
         }
@@ -819,8 +810,7 @@ class AuthSignInService {
 
         final googleUser = await authCompleter.future.timeout(
           const Duration(seconds: 20),
-          onTimeout: () =>
-              throw UiCopy.text('copy_fe32cbfef9b5'),
+          onTimeout: () => throw UiCopy.text('copy_fe32cbfef9b5'),
         );
         if (googleUser == null) return null;
         final googleAuth = await googleUser.authentication;
@@ -1824,11 +1814,13 @@ class AuthSignInService {
             ? _asStringDynamicMap(settingsSnap.value)
             : null;
         if (settings != null) {
-          final customBackgroundUrl =
-              (settings['customBackgroundUrl'] ??
-                      settings['customHomeBackground'] ??
-                      '')
-                  .toString();
+          final primaryBackgroundUrl =
+              settings['customBackgroundUrl']?.toString().trim() ?? '';
+          final legacyBackgroundUrl =
+              settings['customHomeBackground']?.toString().trim() ?? '';
+          final customBackgroundUrl = primaryBackgroundUrl.isNotEmpty
+              ? primaryBackgroundUrl
+              : legacyBackgroundUrl;
           if (customBackgroundUrl.isNotEmpty) {
             await UiPrefs.ensureLoaded();
             _requireCurrentSession(user.uid);

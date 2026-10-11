@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/services/auth_service.dart';
 import '../core/service_locator.dart';
+import '../core/sl_route.dart';
 import '../utils/services/app_referral_service.dart';
 import '../utils/services/deeplink_service.dart';
 import '../utils/services/house_service.dart';
@@ -32,6 +33,7 @@ import 'app_entry/app_entry_deeplink_handler.dart';
 import 'app_entry/widgets/blocked_scaffold.dart';
 import 'app_entry/widgets/locked_scaffold.dart';
 import 'app_entry/widgets/loading_scaffold.dart';
+import 'app_entry/widgets/session_cleanup_gate.dart';
 import 'auth/auth_action_screen.dart';
 import 'auth/lock_appeal_screen.dart';
 import 'consent/consent_gate.dart';
@@ -598,100 +600,111 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           _hasTriggeredInitialAppOpenAd = false;
           _initialAccessState = null;
           _accessStateFuture = null;
-          return FutureBuilder<void>(
-            future: _signedOutCleanup,
-            builder: (context, cleanup) {
-              if (cleanup.connectionState != ConnectionState.done) {
+          return SessionCleanupGate(
+            cleanup: _signedOutCleanup!,
+            onRetry: _appEntryController.handleSignedOutSession,
+            onReady: (_) => const ConsentGate(child: LoginScreen()),
+          );
+        }
+
+        Widget buildSignedInContent(BuildContext context) {
+          _signedOutCleanup = null;
+
+          if (_accessStateFuture == null || _lastUserId != user.uid) {
+            _lastUserId = user.uid;
+            _configureAccessResolution(user);
+          }
+
+          return FutureBuilder<AppEntryAccessState>(
+            key: ValueKey(user.uid),
+            initialData: _initialAccessState,
+            future: _accessStateFuture,
+            builder: (context, accessSnap) {
+              final accessState = accessSnap.data;
+
+              if (accessSnap.connectionState == ConnectionState.waiting) {
+                final cachedHouseId = accessState?.houseId;
+                if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
+                  return _buildSignedInHouseContent(
+                    context,
+                    cachedHouseId,
+                    user.uid,
+                  );
+                }
                 return const LoadingScaffold();
               }
-              return const ConsentGate(child: LoginScreen());
+
+              if (accessSnap.hasError) {
+                return BlockedScaffold(
+                  title: context.tr('ui_app_system_error_b3af2f'),
+                  message: L10nScope.of(context).format(
+                    'ui_app_unable_to_load_account_information_value1_4c7679',
+                    {
+                      'value1': AppErrorMapper.resolve(
+                        accessSnap.error,
+                      ).message,
+                    },
+                  ),
+                  onSignOut: () async {
+                    await _authService.signOut();
+                  },
+                );
+              }
+
+              if (accessState?.isMaintenance == true) {
+                return BlockedScaffold(
+                  title: context.tr('under_maintenance'),
+                  message: context.tr('app_maintenance_message'),
+                  showActions: false,
+                );
+              }
+
+              if (accessState?.blockReason != null) {
+                return BlockedScaffold(
+                  title: context.tr('ui_app_account_locked_c71d15'),
+                  message: accessState!.blockReason!,
+                  onSignOut: () async {
+                    await _authService.signOut();
+                  },
+                  onAppeal: () {
+                    slPush<void>(context, const LockAppealScreen());
+                  },
+                );
+              }
+
+              final houseId = accessState?.houseId;
+              if (houseId == null || houseId.isEmpty) {
+                unawaited(_appEntryController.handleMissingHouseSession());
+                _hasTriggeredInitialAppOpenAd = false;
+                return ConsentGate(
+                  onReady: () async {
+                    await _appEntryController.requestStartupPermissionsIfNeeded(
+                      context,
+                    );
+                  },
+                  child: HouseChoiceScreen(
+                    key: ValueKey(user.uid),
+                    onHouseCreated: _refreshCurrentUserAccess,
+                    onSignedOut: _refreshCurrentUserAccess,
+                  ),
+                );
+              }
+
+              return _buildSignedInHouseContent(context, houseId, user.uid);
             },
           );
         }
-        _signedOutCleanup = null;
 
-        if (_accessStateFuture == null || _lastUserId != user.uid) {
-          _lastUserId = user.uid;
-          _configureAccessResolution(user);
+        if (_appEntryController.pendingSignedOutCleanup != null) {
+          return SessionCleanupGate(
+            key: ValueKey('signed-in-cleanup-${user.uid}'),
+            cleanup: _signedOutCleanup ??= _appEntryController
+                .waitForSignedOutCleanup(),
+            onRetry: _appEntryController.waitForSignedOutCleanup,
+            onReady: buildSignedInContent,
+          );
         }
-
-        return FutureBuilder<AppEntryAccessState>(
-          key: ValueKey(user.uid),
-          initialData: _initialAccessState,
-          future: _accessStateFuture,
-          builder: (context, accessSnap) {
-            final accessState = accessSnap.data;
-
-            if (accessSnap.connectionState == ConnectionState.waiting) {
-              final cachedHouseId = accessState?.houseId;
-              if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
-                return _buildSignedInHouseContent(
-                  context,
-                  cachedHouseId,
-                  user.uid,
-                );
-              }
-              return const LoadingScaffold();
-            }
-
-            if (accessSnap.hasError) {
-              return BlockedScaffold(
-                title: context.tr('ui_app_system_error_b3af2f'),
-                message: L10nScope.of(context).format(
-                  'ui_app_unable_to_load_account_information_value1_4c7679',
-                  {'value1': AppErrorMapper.resolve(accessSnap.error).message},
-                ),
-                onSignOut: () async {
-                  await _authService.signOut();
-                },
-              );
-            }
-
-            if (accessState?.isMaintenance == true) {
-              return BlockedScaffold(
-                title: context.tr('under_maintenance'),
-                message: context.tr('app_maintenance_message'),
-                showActions: false,
-              );
-            }
-
-            if (accessState?.blockReason != null) {
-              return BlockedScaffold(
-                title: context.tr('ui_app_account_locked_c71d15'),
-                message: accessState!.blockReason!,
-                onSignOut: () async {
-                  await _authService.signOut();
-                },
-                onAppeal: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LockAppealScreen()),
-                  );
-                },
-              );
-            }
-
-            final houseId = accessState?.houseId;
-            if (houseId == null || houseId.isEmpty) {
-              unawaited(_appEntryController.handleMissingHouseSession());
-              _hasTriggeredInitialAppOpenAd = false;
-              return ConsentGate(
-                onReady: () async {
-                  await _appEntryController.requestStartupPermissionsIfNeeded(
-                    context,
-                  );
-                },
-                child: HouseChoiceScreen(
-                  key: ValueKey(user.uid),
-                  onHouseCreated: _refreshCurrentUserAccess,
-                  onSignedOut: _refreshCurrentUserAccess,
-                ),
-              );
-            }
-
-            return _buildSignedInHouseContent(context, houseId, user.uid);
-          },
-        );
+        return buildSignedInContent(context);
       },
     );
   }

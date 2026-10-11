@@ -415,121 +415,294 @@ class DiarySelectionBottomBar extends StatelessWidget {
     required this.onDelete,
   });
 
+  /// Chừa đúng chiều cao thanh chọn khi nhãn dài hoặc người dùng tăng cỡ chữ.
+  static double heightFor(BuildContext context, double width, int count) {
+    final layout = _DiarySelectionLayout.forWidth(context, width, count);
+    final rows = 4 ~/ layout.columns;
+    return 26 +
+        layout.headerHeight +
+        12 +
+        rows * layout.buttonHeight +
+        (rows - 1) * 8;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.97),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.92),
-          width: 1.1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 18,
-            spreadRadius: -8,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    color: SLColors.textPrimary,
-                  ),
-                  iconSize: 22,
-                  onPressed: onExit,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 40,
-                    height: 40,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    L10nService().format('diary_selected_photos_count', {
-                      'count': selectedCount,
-                    }),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      color: SLColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final ink = dark ? const Color(0xFFF5ECE9) : DiaryAlbumStyle.ink;
+    final rose = dark ? const Color(0xFFE5A9B8) : DiaryAlbumStyle.rose;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final layout = _DiarySelectionLayout.forWidth(
+          context,
+          constraints.maxWidth,
+          selectedCount,
+        );
+        return Container(
+          key: const ValueKey('diary-selection-surface'),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: dark ? const Color(0xFF292326) : DiaryAlbumStyle.paper,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: dark ? const Color(0xFF4C3B41) : const Color(0xFFEADDE0),
             ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.select_all_rounded,
-                  color: Color(0xFF38A169),
-                ),
-                tooltip: context.tr('util_chnttc_2969f7'),
-                iconSize: 22,
-                onPressed: onSelectAll,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 40,
-                  height: 40,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(
-                  Icons.download_rounded,
-                  color: SLColors.primary,
-                ),
-                iconSize: 22,
-                onPressed: onSave,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 40,
-                  height: 40,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.link_rounded, color: Color(0xFF5C71D8)),
-                tooltip: context.tr('home_tolinkt_af40c0'),
-                iconSize: 22,
-                onPressed: onShare,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 40,
-                  height: 40,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.delete_rounded, color: Colors.red),
-                iconSize: 22,
-                onPressed: onDelete,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 40,
-                  height: 40,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(
+                  0xFF633443,
+                ).withValues(alpha: dark ? .2 : .14),
+                blurRadius: 28,
+                spreadRadius: -6,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: layout.headerHeight,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: rose.withValues(alpha: .12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.check_rounded, color: rose, size: 22),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        L10nService().format('diary_selected_photos_count', {
+                          'count': selectedCount,
+                        }),
+                        style: _DiarySelectionLayout.headerStyle().copyWith(
+                          color: ink,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      key: const ValueKey('diary-selection-exit'),
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).closeButtonTooltip,
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      onPressed: onExit,
+                      style: IconButton.styleFrom(
+                        backgroundColor: ink.withValues(alpha: .04),
+                        foregroundColor: ink.withValues(alpha: .72),
+                      ),
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _DiarySelectionAction(
+                    actionKey: 'diary-selection-all',
+                    icon: Icons.select_all_rounded,
+                    label: context.tr(_diarySelectionLabelKeys[0]),
+                    foreground: dark
+                        ? const Color(0xFFB6CBBB)
+                        : const Color(0xFF587364),
+                    background: dark
+                        ? const Color(0xFF344139)
+                        : const Color(0xFFEEF3EE),
+                    layout: layout,
+                    onPressed: onSelectAll,
+                  ),
+                  _DiarySelectionAction(
+                    actionKey: 'diary-selection-save',
+                    icon: Icons.file_download_outlined,
+                    label: context.tr(_diarySelectionLabelKeys[1]),
+                    foreground: dark ? const Color(0xFF30232A) : Colors.white,
+                    background: rose,
+                    layout: layout,
+                    onPressed: onSave,
+                  ),
+                  _DiarySelectionAction(
+                    actionKey: 'diary-selection-share',
+                    icon: Icons.link_rounded,
+                    label: context.tr(_diarySelectionLabelKeys[2]),
+                    foreground: dark
+                        ? const Color(0xFFC6B9DF)
+                        : const Color(0xFF79638B),
+                    background: dark
+                        ? const Color(0xFF3A3045)
+                        : const Color(0xFFF2EDF7),
+                    layout: layout,
+                    onPressed: onShare,
+                  ),
+                  _DiarySelectionAction(
+                    actionKey: 'diary-selection-delete',
+                    icon: Icons.delete_outline_rounded,
+                    label: context.tr(_diarySelectionLabelKeys[3]),
+                    foreground: dark
+                        ? const Color(0xFFF2B3AD)
+                        : const Color(0xFFA74950),
+                    background: dark
+                        ? const Color(0xFF483035)
+                        : const Color(0xFFFBEFEE),
+                    layout: layout,
+                    onPressed: onDelete,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
+}
+
+const _diarySelectionLabelKeys = [
+  'util_chnttc_2969f7',
+  'ui_utilities_save_to_device_2562f6',
+  'home_tolinkt_af40c0',
+  'p3_delete',
+];
+
+class _DiarySelectionLayout {
+  const _DiarySelectionLayout({
+    required this.columns,
+    required this.buttonWidth,
+    required this.buttonHeight,
+    required this.headerHeight,
+  });
+  final int columns;
+  final double buttonWidth, buttonHeight, headerHeight;
+
+  static TextStyle labelStyle() => SLTheme.quicksand(
+    fontSize: 11.5,
+    fontWeight: FontWeight.w700,
+    height: 1.35,
+    letterSpacing: 0,
+  );
+
+  static TextStyle headerStyle() => SLTheme.quicksand(
+    fontSize: 14,
+    fontWeight: FontWeight.w800,
+    height: 1.35,
+    letterSpacing: 0,
+  );
+
+  factory _DiarySelectionLayout.forWidth(
+    BuildContext context,
+    double width,
+    int count,
+  ) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final innerWidth = (width - 26).clamp(1.0, double.infinity);
+    final fourColumnWidth = (innerWidth - 24) / 4;
+    var columns = fourColumnWidth < 64 ? 2 : 4;
+    final labels = _diarySelectionLabelKeys.map(context.tr).toList();
+    if (columns == 4) {
+      for (final label in labels) {
+        final painter = TextPainter(
+          text: TextSpan(text: label, style: labelStyle()),
+          textDirection: direction,
+          textScaler: textScaler,
+          maxLines: 2,
+        )..layout(maxWidth: fourColumnWidth - 12);
+        final tooLong = painter.didExceedMaxLines;
+        painter.dispose();
+        if (tooLong) {
+          columns = 2;
+          break;
+        }
+      }
+    }
+    final buttonWidth = (innerWidth - (columns - 1) * 8) / columns;
+    var labelHeight = 0.0;
+    for (final label in labels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: labelStyle()),
+        textDirection: direction,
+        textScaler: textScaler,
+      )..layout(maxWidth: (buttonWidth - 12).clamp(1.0, double.infinity));
+      if (painter.height > labelHeight) labelHeight = painter.height;
+      painter.dispose();
+    }
+    final header = TextPainter(
+      text: TextSpan(
+        text: L10nService().format('diary_selected_photos_count', {
+          'count': count,
+        }),
+        style: headerStyle(),
+      ),
+      textDirection: direction,
+      textScaler: textScaler,
+    )..layout(maxWidth: (innerWidth - 102).clamp(1.0, double.infinity));
+    final headerHeight = header.height < 48 ? 48.0 : header.height;
+    header.dispose();
+    return _DiarySelectionLayout(
+      columns: columns,
+      buttonWidth: buttonWidth,
+      buttonHeight: (labelHeight + 50).clamp(72.0, double.infinity),
+      headerHeight: headerHeight,
+    );
+  }
+}
+
+class _DiarySelectionAction extends StatelessWidget {
+  const _DiarySelectionAction({
+    required this.actionKey,
+    required this.icon,
+    required this.label,
+    required this.foreground,
+    required this.background,
+    required this.layout,
+    required this.onPressed,
+  });
+  final String actionKey, label;
+  final IconData icon;
+  final Color foreground, background;
+  final _DiarySelectionLayout layout;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: layout.buttonWidth,
+    height: layout.buttonHeight,
+    child: TextButton(
+      key: ValueKey(actionKey),
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        minimumSize: const Size(48, 48),
+        foregroundColor: foreground,
+        backgroundColor: background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        visualDensity: VisualDensity.standard,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: _DiarySelectionLayout.labelStyle().copyWith(
+              color: foreground,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

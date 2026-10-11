@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/sl_settings_kit.dart';
@@ -768,12 +769,23 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         FirebaseAuth.instance.currentUser?.uid == ownerUid;
     setState(() => _uploadingRole = role);
     try {
-      final xFile = await StoragePickerService().pickImage();
+      var xFile = await StoragePickerService().pickImage(preserveOriginal: true);
+      if (xFile == null || !mounted || !isCurrent()) return;
+      xFile = await cropAndConfirmImage(
+        context: context,
+        image: xFile,
+        aspectRatio: 1,
+        circular: true,
+        maxOutputSize: const Size(1080, 1080),
+        titleKey: 'home_chnhavatar_d974c0',
+        isScopeCurrent: isCurrent,
+      );
       if (xFile == null || !isCurrent()) return;
       final currentHouseId = await HouseService().getCurrentHouseId(
         preferFresh: true,
       );
       if (!isCurrent() || currentHouseId != houseId) return;
+      final oldAvatarUrl = (role == 'user1' ? _avatarU1 : _avatarU2)?.trim() ?? '';
       final upload = await StorageService.instance.uploadPublicImage(
         houseId,
         'home_avatar',
@@ -786,13 +798,12 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       if (!mounted || !isCurrent()) return;
       final url = upload?.downloadUrl.trim() ?? '';
       if (url.isEmpty) throw StateError('Avatar finalize not confirmed');
-      setState(() {
-        if (role == 'user1') {
-          _avatarU1 = url;
-        } else {
-          _avatarU2 = url;
-        }
-      });
+      await discardConfirmedCropImage(xFile);
+      if (!isCurrent()) return;
+      if (oldAvatarUrl.isNotEmpty && oldAvatarUrl != url) {
+        await StorageService.instance.deletePublicImageByUrl(houseId, oldAvatarUrl);
+      }
+      if (!mounted || !isCurrent()) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(

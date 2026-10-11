@@ -126,13 +126,13 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: _encryptionReady
-            ? SLColors.success.withValues(alpha: 0.15)
-            : SLColors.warning.withValues(alpha: 0.15),
+            ? const Color(0xFF123C43)
+            : const Color(0xFF3D2E18),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: _encryptionReady
-              ? SLColors.success.withValues(alpha: 0.4)
-              : SLColors.warning.withValues(alpha: 0.4),
+              ? const Color(0xFF2E9EAA)
+              : const Color(0xFFB8873C),
         ),
       ),
       child: Row(

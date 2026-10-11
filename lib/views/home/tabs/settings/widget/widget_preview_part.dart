@@ -3,26 +3,14 @@ part of '../../settings_tab.dart';
 extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   ({List<Color> colors, Color textColor, Color borderColor, bool premium})
   _widgetPreviewThemeSpec(String themeKey) {
-    final colors =
-        WidgetThemeDesign.palettes[WidgetThemeDesign.normalize(themeKey)]!;
-    final textColor = switch (themeKey) {
-      'pink' => const Color(0xFF333333),
-      'white' => const Color(0xFF333333),
-      'dark' => const Color(0xFFFFFFFF),
-      'blue' => const Color(0xFF0D47A1),
-      'orange' => const Color(0xFFE65100),
-      'purple' => const Color(0xFF6A1B9A),
-      'green' => const Color(0xFF1B5E20),
-      'red' => const Color(0xFFFFF0DC),
-      'cosmic' => const Color(0xFFFFF0BD),
-      'premium' => Colors.white,
-      _ => const Color(0xFF333333),
-    };
+    final normalized = WidgetThemeDesign.normalize(themeKey);
+    final colors = WidgetThemeDesign.palette(normalized);
+    final textColor = WidgetThemeDesign.ink(normalized);
     return (
       colors: colors,
       textColor: textColor,
       borderColor: Colors.white.withValues(alpha: .8),
-      premium: themeKey == 'premium',
+      premium: normalized == 'premium',
     );
   }
 
@@ -363,23 +351,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         final accentColor = seasonKey == 'none'
             ? heartPalette.first
             : seasonPalette.first;
-        final dark = const [
-          'dark',
-          'premium',
-          'cosmic',
-          'red',
-        ].contains(themeKey);
-        final daysBase = switch (themeKey) {
-          'white' => const Color(0xFF9B335E),
-          'blue' => const Color(0xFF0F52BA),
-          'orange' => const Color(0xFFF97316),
-          'purple' => const Color(0xFF8B5CF6),
-          'green' => const Color(0xFF16A34A),
-          'red' => const Color(0xFFFFE1AB),
-          'dark' || 'premium' => Colors.white,
-          'cosmic' => const Color(0xFFFFE396),
-          _ => const Color(0xFFFF4D73),
-        };
+        final dark = WidgetThemeDesign.isDark(themeKey);
+        final daysBase = WidgetThemeDesign.accent(themeKey);
         final softAccent = seasonKey == 'none'
             ? Color.lerp(heartPalette[1], Colors.white, .38)!
             : seasonPalette[1];

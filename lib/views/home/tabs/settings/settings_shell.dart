@@ -68,38 +68,64 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
-    if (_isBootstrappingSettings) {
+    final uid = _settingsOwnerUid;
+    final houseId = _houseId;
+    final route = ModalRoute.of(context);
+    bool valid() =>
+        mounted &&
+        uid != null &&
+        _auth.currentUser?.uid == uid &&
+        _houseId == houseId &&
+        (route?.isCurrent ?? true);
+    if (!valid()) return;
+    if (_settingsIdentityLoadFailed && !_isBootstrappingSettings) {
+      _settingsPanelNavigation.restartBootstrap();
+      setState(() {
+        _settingsIdentityLoadFailed = false;
+        _isBootstrappingSettings = true;
+      });
+      unawaited(_fetchSettingsData());
+    }
+    final result = await _settingsPanelNavigation.open(
+      isStillValid: valid,
+      onWaitingChanged: (waiting) {
+        if (mounted) setState(() => _isWaitingForSettingsPanel = waiting);
+      },
+      onOpen: () async {
+        if (_shouldShowPendingDeviceGate(sectionId)) {
+          if (!await _ensureCanModifySecurityInfo(showToast: false)) return;
+        }
+        if (!mounted || !valid()) return;
+        if (sectionId == 'countdownMode') {
+          await _openCountdownMode();
+          return;
+        }
+        final shouldAnimateWidgetPreview = sectionId == 'widget';
+        _hasActiveStandalonePanel = true;
+        if (shouldAnimateWidgetPreview) {
+          _startWidgetPreviewTicker();
+        }
+        if (sectionId == 'dataHealth') {
+          unawaited(_refreshSettingsBackupStatus());
+        }
+        try {
+          await slPush(context, _buildStandalonePanelPage(sectionId));
+        } finally {
+          if (mounted && shouldAnimateWidgetPreview) {
+            _stopWidgetPreviewTicker();
+          }
+          _hasActiveStandalonePanel = false;
+          if (mounted) setState(() {});
+        }
+      },
+    );
+    if (!valid()) return;
+    if (result == SettingsPanelOpenResult.loadFailed ||
+        result == SettingsPanelOpenResult.timedOut) {
       _showToast(
-        L10nService().translate('settings_loading_data'),
+        L10nService().translate('settings_initial_load_error'),
         success: false,
       );
-      return;
-    }
-    if (_shouldShowPendingDeviceGate(sectionId)) {
-      if (!await _ensureCanModifySecurityInfo(showToast: false)) {
-        return;
-      }
-      if (!mounted) return;
-    }
-    if (sectionId == 'countdownMode') {
-      await _openCountdownMode();
-      return;
-    }
-    final shouldAnimateWidgetPreview = sectionId == 'widget';
-    _hasActiveStandalonePanel = true;
-    if (shouldAnimateWidgetPreview) {
-      _startWidgetPreviewTicker();
-    }
-    if (sectionId == 'dataHealth') {
-      unawaited(_refreshSettingsBackupStatus());
-    }
-    try {
-      await slPush(context, _buildStandalonePanelPage(sectionId));
-    } finally {
-      if (shouldAnimateWidgetPreview) {
-        _stopWidgetPreviewTicker();
-      }
-      _hasActiveStandalonePanel = false;
     }
   }
 
@@ -193,11 +219,9 @@ extension _SettingsTabShell on _SettingsTabState {
     }
 
     ids.addAll({
-      'bucket',
       'note',
       'friendly_chat',
       'finance',
-      'wish',
       'habit',
       'drawing',
       'voice',
@@ -207,7 +231,6 @@ extension _SettingsTabShell on _SettingsTabState {
       'wheel',
       'vault',
       'surprise_maker',
-      'giftcode',
       'diary_export',
       'tarot',
       'collage',
@@ -242,11 +265,6 @@ extension _SettingsTabShell on _SettingsTabState {
       case 'store':
         screen = const RewardStoreScreen();
         break;
-      case 'bucket':
-        screen = houseId.isEmpty
-            ? null
-            : BucketListScreen(houseId: houseId, myName: myName);
-        break;
       case 'note':
         screen = houseId.isEmpty
             ? null
@@ -261,11 +279,6 @@ extension _SettingsTabShell on _SettingsTabState {
         screen = houseId.isEmpty
             ? null
             : FinanceScreen(houseId: houseId, myName: myName);
-        break;
-      case 'wish':
-        screen = houseId.isEmpty
-            ? null
-            : WishlistScreen(houseId: houseId, myName: myName);
         break;
       case 'habit':
         screen = houseId.isEmpty
@@ -310,11 +323,6 @@ extension _SettingsTabShell on _SettingsTabState {
         screen = houseId.isEmpty
             ? null
             : LoveCardScreen(houseId: houseId, myUid: currentUid ?? '');
-        break;
-      case 'giftcode':
-        screen = houseId.isEmpty
-            ? null
-            : GiftcodeScreen(houseId: houseId, myName: myName);
         break;
       case 'history':
         screen = houseId.isEmpty ? null : HistoryScreen(houseId: houseId);
@@ -406,6 +414,7 @@ extension _SettingsTabShell on _SettingsTabState {
                               ),
                               retryLabel: context.tr('core_retry'),
                               onRetry: () {
+                                _settingsPanelNavigation.restartBootstrap();
                                 setState(() {
                                   _settingsIdentityLoadFailed = false;
                                   _isBootstrappingSettings = true;
@@ -477,6 +486,15 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsSyncBanner() {
+    if (_isWaitingForSettingsPanel) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+        child: SLSettingsNotice(
+          tone: SLSettingsTone.info,
+          message: context.tr('settings_loading_data'),
+        ),
+      );
+    }
     return const SizedBox(height: 14);
   }
 
@@ -550,18 +568,14 @@ extension _SettingsTabShell on _SettingsTabState {
                 houseId: _houseId,
                 isDark: isDark,
                 onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PairingDashboardScreen(),
-                    ),
-                  );
+                  await slPush<void>(context, const PairingDashboardScreen());
                   if (!mounted) return;
                   // Người nhập mã có thể vừa chuyển nhà; cập nhật nguồn của ô này.
                   final houseId = await _houseService.getCurrentHouseId(
                     preferFresh: true,
                   );
                   if (!mounted || _houseId == houseId) return;
+                  _settingsPanelNavigation.restartBootstrap();
                   setState(() {
                     _houseId = houseId;
                     _settingsIdentityReady = false;
@@ -615,6 +629,32 @@ extension _SettingsTabShell on _SettingsTabState {
         title: title,
         isDark: isDark,
         onTap: onTap,
+      ),
+    );
+  }
+
+  Future<void> _openGiftcodeSettings() async {
+    if (!GiftcodeScreen.isAvailable) return;
+    final houseId = (_houseId ?? '').trim();
+    if (houseId.isEmpty) {
+      return;
+    }
+    final isDark = SLSettingsPalette.isNightTheme;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: SLSettingsPalette.resolve(isDark).canvas,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(SLSettingsRadius.sheet),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      builder: (_) => GiftcodeScreen(
+        houseId: houseId,
+        myName: _resolveSettingsMyName(),
+        isDark: isDark,
       ),
     );
   }
@@ -685,6 +725,8 @@ extension _SettingsTabShell on _SettingsTabState {
           iconBgColor: SLSettingsColors.rose,
           title: context.tr('util_chatthnthi_c39699'),
           subtitle: L10nService().translate('settings_menu_chat_desc'),
+          // Nhãn VIP: tài khoản thường mở ra sẽ thấy lời mời nâng cấp.
+          trailing: const UtilityVipBadge(),
           isDark: isDark,
           onTap: () {
             final houseId = (_houseId ?? '').trim();
@@ -747,6 +789,17 @@ extension _SettingsTabShell on _SettingsTabState {
       ], isDark),
       _buildSectionTitle(context.tr('settings_menu_support_group')),
       _buildiOSSectionCard([
+        if (GiftcodeScreen.isAvailable) ...[
+          _buildiOSRow(
+            icon: Icons.card_giftcard_rounded,
+            iconBgColor: SLSettingsColors.premium,
+            title: context.tr('utility_title_giftcode'),
+            subtitle: context.tr('util_nhnccuicbi_da7259'),
+            isDark: isDark,
+            onTap: _openGiftcodeSettings,
+          ),
+          _buildDivider(isDark),
+        ],
         _buildiOSRow(
           icon: Icons.history_rounded,
           iconBgColor: SLSettingsColors.slate,

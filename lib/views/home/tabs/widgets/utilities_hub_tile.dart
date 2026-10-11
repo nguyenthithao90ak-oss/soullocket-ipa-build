@@ -5,6 +5,8 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/widgets/lossless_sticker_assets.dart';
+import 'package:soullocket_app/widgets/utility_vip_badge.dart';
+import 'utilities_scrapbook_design.dart';
 
 /// Một số tiện ích dùng chung ảnh sticker với tiện ích khác.
 const Map<String, String> _kHubStickerAliases = <String, String>{
@@ -72,13 +74,26 @@ class UtilityHubSticker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return UtilityStickerImage(
+    final sticker = UtilityStickerImage(
       stickerId: app.id,
       size: size,
       fallbackIcon: app.icon,
       fallbackColor: app.colors.isNotEmpty
           ? app.colors.first
           : SLColors.primary,
+    );
+    if (!UtilityService.isProOnly(app.id)) return sticker;
+    // Tiện ích dành cho Pro vẫn hiện với mọi người, kèm nhãn VIP ở chân sticker.
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        sticker,
+        Positioned(
+          bottom: -size * 0.1,
+          child: UtilityVipBadge(compact: size < 48),
+        ),
+      ],
     );
   }
 }
@@ -128,9 +143,9 @@ class UtilityHubStickerWithBadge extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         sticker,
-        Positioned(
+        PositionedDirectional(
           top: -2,
-          right: -4,
+          end: -4,
           child: UtilitiesPinBadge(size: size >= 48 ? 20 : 17),
         ),
       ],
@@ -168,38 +183,56 @@ class UtilitiesHubTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = UtilitiesScrapbookColors.of(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(12) / 12 > 1.3;
     return Semantics(
       button: true,
       label: utilityHubSemanticLabel(context, app, isPinned),
       excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              UtilityHubStickerWithBadge(
-                app: app,
-                size: stickerSize,
-                isPinned: isPinned,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                app.localizedTitle,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontSize: labelFontSize,
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textPrimary,
-                  height: 1.25,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Material(
+        key: ValueKey('utilities-tile-${app.id}'),
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: colors.paper.withValues(alpha: .8),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: colors.line.withValues(alpha: .65),
+                    ),
+                  ),
+                  child: UtilityHubStickerWithBadge(
+                    app: app,
+                    size: stickerSize,
+                    isPinned: isPinned,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  app.localizedTitle,
+                  textAlign: TextAlign.center,
+                  maxLines: largeText ? 3 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: labelFontSize,
+                    fontWeight: FontWeight.w700,
+                    color: colors.ink,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

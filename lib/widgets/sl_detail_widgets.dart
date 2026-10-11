@@ -12,9 +12,9 @@ class SLDetailStyle {
   static const ink = SLSettingsColors.ink;
   static const secondary = SLSettingsColors.inkSecondary;
   static const primary = SLSettingsColors.accentStrong;
-  static const sage = SLSettingsColors.sage;
+  static const sage = SLSettingsColors.success;
   static const rose = SLSettingsColors.rose;
-  static const blue = SLSettingsColors.sky;
+  static const blue = SLSettingsColors.info;
   static const warning = SLSettingsColors.warning;
 
   static bool isDark(BuildContext context) =>
@@ -240,6 +240,7 @@ class SLDetailToggle extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: SLSettingsText.title(palette.ink)),

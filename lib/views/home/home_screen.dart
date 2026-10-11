@@ -422,8 +422,11 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _appUpdateTimer;
   Timer? _inactivityTimer;
   bool _isShowingInactivityDialog = false;
+  bool _isCheckingScheduleNotifs = false;
+  DateTime? _lastScheduleNotifsCheckAt;
   static const Duration _inactivityTimeout = Duration(minutes: 45);
   static const int _inactivityCountdownSeconds = 5;
+  static const Duration _scheduleNotifsCooldown = Duration(seconds: 30);
   String _prewarmedBackgroundUrl = '';
   bool _isPrewarmingShellMedia = false;
   bool _allowStartupAnimations = false;
@@ -798,7 +801,10 @@ class _HomeScreenState extends State<HomeScreen>
   void _syncVipThemeRotateTimer() {
     final shouldRotate =
         UiPrefs.notifier.value.themeKey.trim() == 'theme-vip-rotate';
-    if (!shouldRotate) {
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    final isAppResumed =
+        lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
+    if (!shouldRotate || !isAppResumed) {
       _vipThemeRotateTimer?.cancel();
       _vipThemeRotateTimer = null;
       return;
@@ -1043,6 +1049,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _setActiveTabIndex(int index) {
     if (_activeTabIndexNotifier.value == index) return;
+    // Tab mới không kế thừa trạng thái ẩn do cuộn của tab trước.
+    _isBottomNavVisibleNotifier.value = true;
     _activeTabIndexNotifier.value = index;
   }
 
@@ -1113,10 +1121,9 @@ class _HomeScreenState extends State<HomeScreen>
       case WidgetLaunchAction.sleep:
         final sleepHouse = await _houseService.getCurrentHouseId();
         if (!mounted || sleepHouse == null || sleepHouse.isEmpty) return;
-        await Navigator.of(context).push(
-          SLRoute(
-            builder: (_) => SleepTrackerScreen(houseId: sleepHouse, myName: ''),
-          ),
+        await slPush<void>(
+          context,
+          SleepTrackerScreen(houseId: sleepHouse, myName: ''),
         );
         return;
       case WidgetLaunchAction.soul_events:
@@ -1136,9 +1143,7 @@ class _HomeScreenState extends State<HomeScreen>
     await _switchToTab(0);
     if (!mounted) return;
 
-    await Navigator.of(
-      context,
-    ).push(SLRoute(builder: (_) => const SoulEventsScreen()));
+    await slPush<void>(context, const SoulEventsScreen());
   }
 
   Future<void> _openHealthScreenFromWidget() async {
@@ -1152,9 +1157,7 @@ class _HomeScreenState extends State<HomeScreen>
     await _switchToTab(0);
     if (!mounted) return;
 
-    await Navigator.of(
-      context,
-    ).push(SLRoute(builder: (_) => HealthScreen(houseId: houseId)));
+    await slPush<void>(context, HealthScreen(houseId: houseId));
   }
 
   Future<void> _openLoveScreenFromWidget() async {
@@ -1174,17 +1177,16 @@ class _HomeScreenState extends State<HomeScreen>
     await _switchToTab(0);
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      SLRoute(
-        builder: (_) => LoveInsightsScreen(
-          houseId: houseId,
-          nameU1: settings.nameU1,
-          nameU2: settings.nameU2,
-          avatarU1: settings.avtUser1,
-          avatarU2: settings.avtUser2,
-          loveDays: _calculateWidgetLoveDays(settings.startDate),
-          relationshipMode: settings.relationshipMode,
-        ),
+    await slPush<void>(
+      context,
+      LoveInsightsScreen(
+        houseId: houseId,
+        nameU1: settings.displayNameU1,
+        nameU2: settings.displayNameU2,
+        avatarU1: settings.avtUser1,
+        avatarU2: settings.avtUser2,
+        loveDays: _calculateWidgetLoveDays(settings.startDate),
+        relationshipMode: settings.relationshipMode,
       ),
     );
   }
@@ -1216,11 +1218,9 @@ class _HomeScreenState extends State<HomeScreen>
         .replaceAll(context.tr('home_bn_1fd75b'), context.tr('home_bn_1fd75b'));
 
     if (!mounted) return;
-    await Navigator.of(context).push(
-      SLRoute(
-        builder: (_) =>
-            CalendarScreen(houseId: houseId, myName: resolvedMyName),
-      ),
+    await slPush<void>(
+      context,
+      CalendarScreen(houseId: houseId, myName: resolvedMyName),
     );
   }
 
@@ -1248,12 +1248,14 @@ class _HomeScreenState extends State<HomeScreen>
       }
       // Tạm dừng inactivity timer khi app vào background
       _inactivityTimer?.cancel();
+      _syncVipThemeRotateTimer();
       unawaited(_syncLiveActivity());
     } else if (state == AppLifecycleState.resumed) {
       unawaited(LocationService().onAppResumed());
       unawaited(_syncNotificationBadgeListener(forceRestart: true));
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());
       _syncMusicAnimationState();
+      _syncVipThemeRotateTimer();
       _checkScheduleNotifs();
       unawaited(_maybeShowBreakupEntryNotice());
       // Khởi động lại inactivity timer khi app resume
@@ -1269,7 +1271,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (settings == null) return;
 
       final days = _calculateWidgetLoveDays(settings.startDate);
-      final title = '${settings.nameU1} 💖 ${settings.nameU2}';
+      final title = '${settings.displayNameU1} 💖 ${settings.displayNameU2}';
 
       await LiveActivityService().startOrUpdateActivity(
         avatar1: settings.avtUser1,
@@ -1328,10 +1330,7 @@ class _HomeScreenState extends State<HomeScreen>
     final prefs = await OfflineCacheService.getPrefs();
     if (prefs.getBool(_countdownPinnedLaunchPrefsKey) != true) return;
     if (!mounted) return;
-    await Navigator.push(
-      context,
-      SLRoute(builder: (_) => const SettingsTab(autoOpenCountdownMode: true)),
-    );
+    await slPush<void>(context, const SettingsTab(autoOpenCountdownMode: true));
   }
 
   void _handlePageChanged(int index) {

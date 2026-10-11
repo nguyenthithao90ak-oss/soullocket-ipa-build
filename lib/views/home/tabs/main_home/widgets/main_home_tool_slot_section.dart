@@ -191,8 +191,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
 
     final myName = _resolveMyName();
     switch (toolId) {
-      case 'bucket':
-        return BucketListScreen(houseId: houseId, myName: myName);
       case 'note':
         return SharedNotesScreen(houseId: houseId, myName: myName);
       case 'friendly_chat':
@@ -203,8 +201,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         );
       case 'finance':
         return FinanceScreen(houseId: houseId, myName: myName);
-      case 'wish':
-        return WishlistScreen(houseId: houseId, myName: myName);
       case 'habit':
         return HabitScreen(houseId: houseId, myName: myName);
       case 'drawing':
@@ -229,8 +225,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
           houseId: houseId,
           myUid: FirebaseAuth.instance.currentUser?.uid ?? '',
         );
-      case 'giftcode':
-        return GiftcodeScreen(houseId: houseId, myName: myName);
       case 'history':
         return HistoryScreen(houseId: houseId, embedded: true);
       case 'diary_export':

@@ -23,6 +23,7 @@ class PairingCreateCodeSheet extends StatefulWidget {
 }
 
 class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
+  static const _requestTimeout = Duration(seconds: 15);
   bool _isLoading = false;
   String? _pairingCode;
   int _durationMinutes = 15;
@@ -52,9 +53,9 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
       });
     }
     try {
-      final active = await PairingService.instance.getActivePairingCode(
-        widget.myHouseId,
-      );
+      final active = await PairingService.instance
+          .getActivePairingCode(widget.myHouseId)
+          .timeout(_requestTimeout);
       if (!mounted || active == null) {
         return;
       }
@@ -89,9 +90,9 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
       _errorMsg = null;
     });
     try {
-      final invite = await PairingService.instance.createPairingCode(
-        _durationMinutes,
-      );
+      final invite = await PairingService.instance
+          .createPairingCode(_durationMinutes)
+          .timeout(_requestTimeout);
       final code = PairingInviteQrCodec.normalizeCode(invite.code);
       if (code == null) {
         throw StateError('invalid pairing invite');
@@ -127,7 +128,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
       _errorMsg = null;
     });
     try {
-      await PairingService.instance.deleteCode(code);
+      await PairingService.instance.deleteCode(code).timeout(_requestTimeout);
       _countdownTimer?.cancel();
       if (mounted) {
         setState(() {

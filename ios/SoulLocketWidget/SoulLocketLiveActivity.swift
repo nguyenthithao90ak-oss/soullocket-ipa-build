@@ -33,7 +33,7 @@ struct SoulLocketLiveActivity: Widget {
                         .foregroundColor(.gray)
                     HStack {
                         Text("💞").font(.system(size: 16))
-                        Text("\(context.state.days) Days")
+                        Text("\(context.state.days) \(widgetText("comm_ngy_41ec10"))")
                             .font(.system(.title3, design: .rounded))
                             .bold()
                             .foregroundColor(Color(hexStr: "FF4D73"))
@@ -66,7 +66,7 @@ struct SoulLocketLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
                         Text("💞").font(.system(size: 14))
-                        Text("\(context.state.days) Days")
+                        Text("\(context.state.days) \(widgetText("comm_ngy_41ec10"))")
                             .font(.system(.headline, design: .rounded))
                             .foregroundColor(Color(hexStr: "FF4D73"))
                         Text("💞").font(.system(size: 14))
@@ -75,7 +75,8 @@ struct SoulLocketLiveActivity: Widget {
             } compactLeading: {
                 Text("💞").foregroundColor(Color(hexStr: "FF4D73"))
             } compactTrailing: {
-                Text("\(context.state.days)d")
+                Text("\(context.state.days)")
+                    .accessibilityLabel("\(context.state.days) \(widgetText("comm_ngy_41ec10"))")
                     .font(.system(.caption2, design: .rounded))
                     .bold()
                     .foregroundColor(Color(hexStr: "FF4D73"))

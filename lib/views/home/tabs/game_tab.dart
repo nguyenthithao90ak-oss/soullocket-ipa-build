@@ -3,6 +3,7 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async' show StreamSubscription, unawaited;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -194,14 +195,16 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
     if (_openingSoulBlock) return;
     _openingSoulBlock = true;
     final openGameErrorMsg = context.tr('home_khngmcsoul_009d9e');
-    final navigator = Navigator.of(context, rootNavigator: true);
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
-      await navigator.push(
-        MaterialPageRoute(
+      await slPushRoute<void>(
+        context,
+        MaterialPageRoute<void>(
           builder: (_) => const BlockBlastGame(),
           settings: const RouteSettings(name: 'soul_block_game'),
         ),
+        identity: const ValueKey('soul_block_game'),
+        rootNavigator: true,
       );
       if (mounted) setState(() => _coverRevision++);
     } catch (_) {
@@ -273,7 +276,13 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
             navigator.removeRoute(puzzleRoute);
           }
         });
-        await navigator.push(puzzleRoute);
+        if (!context.mounted) return;
+        await slPushRoute<void>(
+          context,
+          puzzleRoute,
+          identity: const ValueKey('memory_puzzle'),
+          rootNavigator: true,
+        );
       } finally {
         await auth?.cancel();
         session.dispose();

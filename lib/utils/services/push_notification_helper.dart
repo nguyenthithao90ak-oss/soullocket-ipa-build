@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
+import 'l10n_service.dart';
 
 class PushNotificationHelper {
   PushNotificationHelper._();
@@ -67,13 +68,18 @@ class PushNotificationHelper {
     required String type,
     required String title,
     required String content,
-    String from = 'Hệ thống',
+    String? from,
     Map<String, dynamic>? extra,
-  }) => _pushSystemViaServer(
-    toHouseId: toHouseId,
-    type: type,
-    title: title,
-    content: content,
-    extra: {'fromLabel': from, ...?extra},
-  );
+  }) {
+    final sourceLabel = from?.trim().isNotEmpty == true
+        ? from!
+        : L10nService().translate('notifications_tab_system');
+    return _pushSystemViaServer(
+      toHouseId: toHouseId,
+      type: type,
+      title: title,
+      content: content,
+      extra: {'fromLabel': sourceLabel, ...?extra},
+    );
+  }
 }

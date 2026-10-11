@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
+import 'storage_upload_progress.dart';
+
 /// Gửi tệp lên bucket R2 riêng tư theo phiên do server ký (`transport: 'r2'`).
 ///
 /// Chỉ chấp nhận URL tới đúng bucket riêng tư, đúng thư mục
@@ -90,12 +92,48 @@ abstract final class PrivateR2Put {
 
   /// 412: lần PUT trước đã tới R2 nhưng app mất phản hồi; server kiểm tra lại
   /// kích thước/MD5/chủ sở hữu khi finalize nên không coi đây là lỗi.
-  static Future<void> send(http.Client client, http.Request request) async {
+  static Future<void> send(
+    http.Client client,
+    http.Request request, {
+    StorageUploadProgressCallback? onProgress,
+  }) async {
     try {
-      final response = await client
-          .send(request)
-          .timeout(const Duration(minutes: 2));
-      await response.stream.drain<void>().timeout(const Duration(seconds: 20));
+      if (onProgress == null) {
+        final response = await client
+            .send(request)
+            .timeout(const Duration(minutes: 2));
+        await response.stream.drain<void>().timeout(
+          const Duration(seconds: 20),
+        );
+        final ok = response.statusCode >= 200 && response.statusCode < 300;
+        if (!ok && response.statusCode != 412) {
+          throw StateError('Private upload failed (${response.statusCode})');
+        }
+        return;
+      }
+
+      final bytes = request.bodyBytes;
+      final streamed = http.StreamedRequest('PUT', request.url)
+        ..followRedirects = request.followRedirects
+        ..maxRedirects = request.maxRedirects
+        ..headers.addAll(request.headers)
+        ..contentLength = bytes.length;
+      final responseFuture = client.send(streamed).then((response) async {
+        await response.stream.drain<void>().timeout(
+          const Duration(seconds: 20),
+        );
+        return response;
+      });
+      final producer = StorageUploadProgress.pumpBytes(
+        sink: streamed.sink,
+        bytes: bytes,
+        onProgress: onProgress,
+      );
+      final results = await Future.wait<Object?>([
+        responseFuture,
+        producer,
+      ]).timeout(const Duration(minutes: 2));
+      final response = results.first as http.Response;
       final ok = response.statusCode >= 200 && response.statusCode < 300;
       if (!ok && response.statusCode != 412) {
         throw StateError('Private upload failed (${response.statusCode})');

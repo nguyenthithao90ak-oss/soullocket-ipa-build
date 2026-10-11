@@ -41,6 +41,30 @@ abstract final class PremiumStoreStyle {
       );
 }
 
+@immutable
+class _PremiumPalette {
+  const _PremiumPalette(this.dark);
+  final bool dark;
+
+  Color get canvas => dark ? SLColors.darkBgMain : SLColors.paperCanvas;
+  Color get surface => dark ? SLColors.darkBgCard : SLColors.paper;
+  Color get ink => dark ? SLColors.darkTextPrimary : PremiumStoreStyle.ink;
+  Color get muted => dark ? SLColors.darkTextSecond : PremiumStoreStyle.muted;
+  Color get rose => dark ? const Color(0xFFE6ADC0) : PremiumStoreStyle.rose;
+  Color get blush => dark ? const Color(0xFF40303B) : PremiumStoreStyle.blush;
+  Color get line => dark ? SLColors.darkBorder : SLColors.border;
+  Color get gold => dark ? const Color(0xFFE2BC83) : PremiumStoreStyle.gold;
+  Color get onAccent => dark ? SLColors.darkBgMain : SLColors.textInverse;
+
+  TextStyle text(double size, {Color? color, bool bold = false}) =>
+      SLTheme.quicksand(
+        fontSize: size,
+        color: color ?? ink,
+        fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+        height: 1.4,
+      );
+}
+
 /// Chỉ quản lý lựa chọn gói trên màn hình; giao dịch do PurchaseService xử lý.
 class PremiumStoreView extends StatefulWidget {
   final List<PremiumPlanOption> plans;
@@ -82,6 +106,8 @@ class PremiumStoreView extends StatefulWidget {
 
 class _PremiumStoreViewState extends State<PremiumStoreView> {
   String? _selectedId;
+  _PremiumPalette get _style =>
+      _PremiumPalette(Theme.of(context).brightness == Brightness.dark);
   String t(String key) => L10nService().translate(key);
 
   PremiumPlanOption? get _selected {
@@ -96,29 +122,43 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
     return Theme(
       data: Theme.of(context).copyWith(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: PremiumStoreStyle.rose,
-          brightness: Brightness.light,
-          surface: Colors.white,
+          seedColor: _style.rose,
+          brightness: Theme.of(context).brightness,
+          surface: _style.surface,
         ),
-        dividerColor: PremiumStoreStyle.line,
+        dividerColor: _style.line,
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: _style.rose,
+            minimumSize: const Size(48, 48),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _style.rose,
+            minimumSize: const Size(48, 48),
+            side: BorderSide(color: _style.line),
+          ),
+        ),
       ),
       child: Scaffold(
-        backgroundColor: PremiumStoreStyle.canvas,
+        backgroundColor: _style.canvas,
         appBar: AppBar(
-          backgroundColor: PremiumStoreStyle.canvas,
+          backgroundColor: _style.canvas,
           surfaceTintColor: Colors.transparent,
-          foregroundColor: PremiumStoreStyle.ink,
+          foregroundColor: _style.ink,
           elevation: 0,
           scrolledUnderElevation: 0,
           automaticallyImplyLeading: false,
           titleSpacing: 24,
           title: Text(
             t('p5_premium_title'),
-            style: PremiumStoreStyle.text(18, bold: true),
+            style: _style.text(18, bold: true),
           ),
           actions: [
             IconButton(
               tooltip: t('p5_close'),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               onPressed: widget.onClose,
               icon: const Icon(Icons.close_rounded, size: 22),
             ),
@@ -137,7 +177,12 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 960),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+                        padding: EdgeInsets.fromLTRB(
+                          MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
+                          12,
+                          MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
+                          32,
+                        ),
                         child: widget.isEnabled ? _content() : _disabled(),
                       ),
                     ),
@@ -164,14 +209,12 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(
-                          color: PremiumStoreStyle.rose,
-                        ),
+                        _progress(),
                         const SizedBox(height: 16),
                         Text(
                           t('p5_premium_processing_payment'),
                           textAlign: TextAlign.center,
-                          style: PremiumStoreStyle.text(16, bold: true),
+                          style: _style.text(16, bold: true),
                         ),
                       ],
                     ),
@@ -219,10 +262,9 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                   ? 'p5_premium_active_title'
                   : 'p5_premium_hero_title',
             ),
-            style: PremiumStoreStyle.text(
-              wide ? 38 : 30,
-              bold: true,
-            ).copyWith(height: 1.18, letterSpacing: -0.7),
+            style: _style
+                .text(wide ? 38 : 30, bold: true)
+                .copyWith(height: 1.18, letterSpacing: -0.7),
           ),
           const SizedBox(height: 12),
           Text(
@@ -231,7 +273,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                   ? 'p5_premium_active_subtitle'
                   : 'p5_premium_benefits_subtitle',
             ),
-            style: PremiumStoreStyle.text(14, color: PremiumStoreStyle.muted),
+            style: _style.text(14, color: _style.muted),
           ),
         ],
       );
@@ -271,31 +313,21 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
   Widget _membership() => Container(
     key: const ValueKey('premium-active'),
     padding: const EdgeInsets.all(20),
-    decoration: _surface(color: PremiumStoreStyle.blush),
+    decoration: _surface(color: _style.blush),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(
-          Icons.verified_outlined,
-          color: PremiumStoreStyle.rose,
-          size: 28,
-        ),
+        Icon(Icons.verified_outlined, color: _style.rose, size: 28),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                t('p5_premium_title'),
-                style: PremiumStoreStyle.text(17, bold: true),
-              ),
+              Text(t('p5_premium_title'), style: _style.text(17, bold: true)),
               const SizedBox(height: 4),
               Text(
                 t('p5_premium_active'),
-                style: PremiumStoreStyle.text(
-                  14,
-                  color: PremiumStoreStyle.rose,
-                ),
+                style: _style.text(14, color: _style.rose),
               ),
             ],
           ),
@@ -313,18 +345,18 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Align(
+            Align(
               alignment: AlignmentDirectional.centerStart,
               child: Icon(
                 Icons.storefront_outlined,
-                color: PremiumStoreStyle.rose,
+                color: _style.rose,
                 size: 28,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               widget.unavailableMessage,
-              style: PremiumStoreStyle.text(14, color: PremiumStoreStyle.muted),
+              style: _style.text(14, color: _style.muted),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
@@ -340,24 +372,21 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          t('p5_premium_choose_plan'),
-          style: PremiumStoreStyle.text(21, bold: true),
-        ),
+        Text(t('p5_premium_choose_plan'), style: _style.text(21, bold: true)),
         const SizedBox(height: 6),
         Text(
           t('premium_store_price_note'),
-          style: PremiumStoreStyle.text(13, color: PremiumStoreStyle.muted),
+          style: _style.text(13, color: _style.muted),
         ),
         const SizedBox(height: 16),
         for (final plan in widget.plans) _planTile(plan),
         if (selected != null) ...[
           const SizedBox(height: 8),
-          Text(selected.description, style: PremiumStoreStyle.text(14)),
+          Text(selected.description, style: _style.text(14)),
           const SizedBox(height: 12),
           Text(
             selected.disclosure,
-            style: PremiumStoreStyle.text(12, color: PremiumStoreStyle.muted),
+            style: _style.text(12, color: _style.muted),
           ),
           const SizedBox(height: 16),
         ],
@@ -368,10 +397,11 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
               ? null
               : () => widget.onPurchase(selected.id),
           style: FilledButton.styleFrom(
-            backgroundColor: PremiumStoreStyle.rose,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: PremiumStoreStyle.line,
-            disabledForegroundColor: PremiumStoreStyle.muted,
+            backgroundColor: _style.rose,
+            minimumSize: const Size(48, 52),
+            foregroundColor: _style.onAccent,
+            disabledBackgroundColor: _style.line,
+            disabledForegroundColor: _style.muted,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -382,9 +412,9 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                 ? t('p5_premium_choose_plan')
                 : '${t('premium_buy_now')} · ${selected.price}',
             textAlign: TextAlign.center,
-            style: PremiumStoreStyle.text(
+            style: _style.text(
               16,
-              color: selected == null ? PremiumStoreStyle.muted : Colors.white,
+              color: selected == null ? _style.muted : _style.onAccent,
               bold: true,
             ),
           ),
@@ -408,11 +438,11 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
         selected: selected,
         inMutuallyExclusiveGroup: true,
         child: Material(
-          color: selected ? PremiumStoreStyle.blush : Colors.white,
+          color: selected ? _style.blush : _style.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
             side: BorderSide(
-              color: selected ? PremiumStoreStyle.rose : PremiumStoreStyle.line,
+              color: selected ? _style.rose : _style.line,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -434,9 +464,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                           ? Icons.radio_button_checked_rounded
                           : Icons.radio_button_unchecked_rounded,
                       size: 22,
-                      color: selected
-                          ? PremiumStoreStyle.rose
-                          : PremiumStoreStyle.muted,
+                      color: selected ? _style.rose : _style.muted,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -451,23 +479,20 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                           children: [
                             Text(
                               plan.title,
-                              style: PremiumStoreStyle.text(16, bold: true),
+                              style: _style.text(16, bold: true),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               plan.billing,
-                              style: PremiumStoreStyle.text(
-                                12,
-                                color: PremiumStoreStyle.muted,
-                              ),
+                              style: _style.text(12, color: _style.muted),
                             ),
                           ],
                         );
                         final price = Text(
                           plan.price,
-                          style: PremiumStoreStyle.text(
+                          style: _style.text(
                             18,
-                            color: PremiumStoreStyle.rose,
+                            color: _style.rose,
                             bold: true,
                           ),
                         );
@@ -503,10 +528,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
   Widget _benefits() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(
-        t('p5_premium_benefits_title'),
-        style: PremiumStoreStyle.text(21, bold: true),
-      ),
+      Text(t('p5_premium_benefits_title'), style: _style.text(21, bold: true)),
       const SizedBox(height: 16),
       Container(
         decoration: _surface(),
@@ -530,6 +552,11 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
                 'p5_premium_benefit_memories_desc',
               ),
               (
+                Icons.forum_outlined,
+                'p5_premium_benefit_ai_title',
+                'p5_premium_benefit_ai_desc',
+              ),
+              (
                 Icons.block_rounded,
                 'p5_premium_no_ads',
                 'p5_premium_benefit_no_ads_desc',
@@ -547,32 +574,32 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
         key: ValueKey(title),
         shape: const Border(),
         collapsedShape: const Border(),
-        iconColor: PremiumStoreStyle.rose,
-        collapsedIconColor: PremiumStoreStyle.muted,
+        iconColor: _style.rose,
+        collapsedIconColor: _style.muted,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Container(
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
-            color: PremiumStoreStyle.canvas,
+            color: _style.canvas,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, size: 20, color: PremiumStoreStyle.rose),
+          child: Icon(icon, size: 20, color: _style.rose),
         ),
-        title: Text(t(title), style: PremiumStoreStyle.text(14, bold: true)),
+        title: Text(t(title), style: _style.text(14, bold: true)),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
         children: [
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: Text(
               t(description),
-              style: PremiumStoreStyle.text(14, color: PremiumStoreStyle.muted),
+              style: _style.text(14, color: _style.muted),
             ),
           ),
         ],
       );
 
   Widget _comparison() => Container(
-    decoration: _surface(color: PremiumStoreStyle.canvas),
+    decoration: _surface(color: _style.canvas),
     child: ExpansionTile(
       key: const ValueKey('premium-comparison'),
       shape: const Border(),
@@ -580,7 +607,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
       tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       title: Text(
         t('p5_premium_comparison_title'),
-        style: PremiumStoreStyle.text(15, bold: true),
+        style: _style.text(15, bold: true),
       ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       children: [
@@ -591,6 +618,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
               'p5_premium_free_upload',
               'p5_premium_free_storage',
               'p5_premium_free_theme',
+              'p5_premium_free_ai',
               'p5_premium_free_ads',
             ],
           ),
@@ -600,6 +628,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
               'p5_premium_subscription_upload',
               'p5_premium_subscription_storage',
               'p5_premium_subscription_theme',
+              'p5_premium_subscription_ai',
               'p5_premium_subscription_ads',
             ],
           ),
@@ -608,6 +637,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
             [
               'p5_premium_lifetime_upload',
               'p5_premium_lifetime_storage',
+              'p5_premium_subscription_ai',
               'p5_premium_lifetime_features',
               'p5_premium_lifetime_payment',
             ],
@@ -618,20 +648,14 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  t(group.$1),
-                  style: PremiumStoreStyle.text(14, bold: true),
-                ),
+                Text(t(group.$1), style: _style.text(14, bold: true)),
                 const SizedBox(height: 8),
                 for (final key in group.$2)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
                       t(key),
-                      style: PremiumStoreStyle.text(
-                        13,
-                        color: PremiumStoreStyle.muted,
-                      ),
+                      style: _style.text(13, color: _style.muted),
                     ),
                   ),
               ],
@@ -651,8 +675,9 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
               ? null
               : widget.onRestore,
           style: OutlinedButton.styleFrom(
+            minimumSize: const Size(48, 52),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            side: const BorderSide(color: PremiumStoreStyle.line),
+            side: BorderSide(color: _style.line),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -661,11 +686,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
           label: Text(
             widget.restoreLabel,
             textAlign: TextAlign.center,
-            style: PremiumStoreStyle.text(
-              14,
-              color: PremiumStoreStyle.rose,
-              bold: true,
-            ),
+            style: _style.text(14, color: _style.rose, bold: true),
           ),
         ),
         const SizedBox(height: 16),
@@ -673,7 +694,7 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
       Text(
         widget.footerNote,
         textAlign: TextAlign.center,
-        style: PremiumStoreStyle.text(12, color: PremiumStoreStyle.muted),
+        style: _style.text(12, color: _style.muted),
       ),
       const SizedBox(height: 12),
       Wrap(
@@ -684,14 +705,14 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
             onPressed: widget.onTerms,
             child: Text(
               t('p5_premium_terms'),
-              style: PremiumStoreStyle.text(12, color: PremiumStoreStyle.rose),
+              style: _style.text(12, color: _style.rose),
             ),
           ),
           TextButton(
             onPressed: widget.onPrivacy,
             child: Text(
               t('p5_premium_privacy'),
-              style: PremiumStoreStyle.text(12, color: PremiumStoreStyle.rose),
+              style: _style.text(12, color: _style.rose),
             ),
           ),
         ],
@@ -699,19 +720,21 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
     ],
   );
 
+  Widget _progress({double strokeWidth = 4}) =>
+      MediaQuery.disableAnimationsOf(context)
+      ? Icon(Icons.hourglass_top_rounded, color: _style.rose)
+      : CircularProgressIndicator(color: _style.rose, strokeWidth: strokeWidth);
+
   Widget _loading() => Padding(
     padding: const EdgeInsets.symmetric(vertical: 28),
     child: Column(
       children: [
-        const CircularProgressIndicator(
-          color: PremiumStoreStyle.rose,
-          strokeWidth: 2,
-        ),
+        _progress(strokeWidth: 2),
         const SizedBox(height: 16),
         Text(
           t('p5_premium_data_updating'),
           textAlign: TextAlign.center,
-          style: PremiumStoreStyle.text(14, color: PremiumStoreStyle.muted),
+          style: _style.text(14, color: _style.muted),
         ),
       ],
     ),
@@ -721,21 +744,17 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
     padding: const EdgeInsets.symmetric(vertical: 48),
     child: Column(
       children: [
-        const Icon(
-          Icons.storefront_outlined,
-          size: 48,
-          color: PremiumStoreStyle.rose,
-        ),
+        Icon(Icons.storefront_outlined, size: 48, color: _style.rose),
         const SizedBox(height: 24),
         Text(
           t('p5_premium_account_features_unavailable'),
-          style: PremiumStoreStyle.text(22, bold: true),
+          style: _style.text(22, bold: true),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
         Text(
           t('p5_premium_section_hidden'),
-          style: PremiumStoreStyle.text(14, color: PremiumStoreStyle.muted),
+          style: _style.text(14, color: _style.muted),
           textAlign: TextAlign.center,
         ),
       ],
@@ -745,24 +764,20 @@ class _PremiumStoreViewState extends State<PremiumStoreView> {
   Widget _eyebrow(IconData icon, String label) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, size: 16, color: PremiumStoreStyle.gold),
+      Icon(icon, size: 16, color: _style.gold),
       const SizedBox(width: 7),
       Flexible(
         child: Text(
           label,
-          style: PremiumStoreStyle.text(
-            12,
-            color: PremiumStoreStyle.muted,
-            bold: true,
-          ),
+          style: _style.text(12, color: _style.muted, bold: true),
         ),
       ),
     ],
   );
 
-  BoxDecoration _surface({Color color = Colors.white}) => BoxDecoration(
-    color: color,
-    border: Border.all(color: PremiumStoreStyle.line),
+  BoxDecoration _surface({Color? color}) => BoxDecoration(
+    color: color ?? _style.surface,
+    border: Border.all(color: _style.line),
     borderRadius: BorderRadius.circular(22),
   );
 }
@@ -772,79 +787,86 @@ class _LocketIllustration extends StatelessWidget {
   const _LocketIllustration({required this.size});
 
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: SizedBox(
-      width: size * 1.5,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: size * 1.45,
-            height: size * .9,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [Color(0xFFF0DFDF), Color(0x00F0DFDF)],
+  Widget build(BuildContext context) {
+    final style = _PremiumPalette(
+      Theme.of(context).brightness == Brightness.dark,
+    );
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size * 1.5,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: size * 1.45,
+              height: size * .9,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [style.blush, style.blush.withValues(alpha: 0)],
+                ),
               ),
             ),
-          ),
-          Transform.translate(
-            offset: Offset(-size * .18, 0),
-            child: Transform.rotate(
-              angle: -.16,
-              child: Container(
-                width: size * .65,
-                height: size * .82,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFDFA),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFE5CDAF)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x1298666E),
-                      blurRadius: 20,
-                      offset: Offset(0, 10),
+            Transform.translate(
+              offset: Offset(-size * .18, 0),
+              child: Transform.rotate(
+                angle: -.16,
+                child: Container(
+                  width: size * .65,
+                  height: size * .82,
+                  decoration: BoxDecoration(
+                    color: style.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: style.gold.withValues(alpha: 0.45),
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.auto_awesome_outlined,
-                  color: PremiumStoreStyle.gold,
-                  size: 32,
-                ),
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(size * .2, size * .06),
-            child: Transform.rotate(
-              angle: .14,
-              child: Container(
-                width: size * .7,
-                height: size * .82,
-                decoration: BoxDecoration(
-                  color: PremiumStoreStyle.rose,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFC18E9F)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x23873F56),
-                      blurRadius: 16,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.favorite_rounded,
-                  color: Color(0xFFF7E5DB),
-                  size: 36,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1298666E),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.auto_awesome_outlined,
+                    color: style.gold,
+                    size: 32,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            Transform.translate(
+              offset: Offset(size * .2, size * .06),
+              child: Transform.rotate(
+                angle: .14,
+                child: Container(
+                  width: size * .7,
+                  height: size * .82,
+                  decoration: BoxDecoration(
+                    color: style.dark ? const Color(0xFF7A445D) : style.rose,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFC18E9F)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x23873F56),
+                        blurRadius: 16,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: Color(0xFFF7E5DB),
+                    size: 36,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

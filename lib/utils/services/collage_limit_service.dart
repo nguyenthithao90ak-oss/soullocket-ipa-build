@@ -16,10 +16,12 @@ class CollageLimitService {
   }
 
   /// Kiểm tra có thể tạo không, nếu chưa thể thì hỏi xem quảng cáo.
+  /// VIP được ghép ảnh không giới hạn (VIP không có quảng cáo để xem thêm lượt).
   Future<bool> checkLimitAndAskAd({
     required Future<bool> Function(int currentLimit, int dailyLimit)
         onAskUserToWatchAd,
     required void Function(String message, {bool isError}) onShowMessage,
+    Future<bool> Function()? isVip,
   }) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -32,6 +34,8 @@ class CollageLimitService {
     int currentLimit = dailyLimit + extraLimit;
 
     if (currentCount >= currentLimit) {
+      // Chỉ hỏi quyền VIP khi đã hết lượt thường, tránh gọi mạng mỗi lần ghép.
+      if (await _checkVip(isVip)) return true;
       final lastAdTime = prefs.getInt('collage_last_ad_time_$today') ?? 0;
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       const int cooldownMs = 15 * 60 * 1000;
@@ -65,6 +69,17 @@ class CollageLimitService {
       }
     }
     return true;
+  }
+
+  Future<bool> _checkVip(Future<bool> Function()? isVip) async {
+    try {
+      return await (isVip ?? AdMobService().isProUser)().timeout(
+        const Duration(seconds: 4),
+      );
+    } catch (_) {
+      // Không đọc được quyền VIP thì giữ luồng thường (xem quảng cáo thêm lượt).
+      return false;
+    }
   }
 
   /// Trừ 1 lượt sau khi tạo thành công (để không bị mất lượt nếu fail giữa chừng)

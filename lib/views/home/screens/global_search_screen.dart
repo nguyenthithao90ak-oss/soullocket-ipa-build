@@ -12,6 +12,7 @@ import '../../../core/sl_route.dart';
 import '../../../utils/services/global_search_service.dart';
 import '../../utilities/history_screen.dart';
 import 'search_utility_icon.dart';
+import 'widgets/reader_surface_design.dart';
 
 class GlobalSearchScreen extends StatefulWidget {
   final GlobalSearchService? searchService;
@@ -176,9 +177,10 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     }
   }
 
-  static const _ink = Color(0xFF302D33);
-  static const _muted = Color(0xFF756E78);
-  static const _accent = Color(0xFFAC4E6C);
+  ReaderSurfacePalette get _palette => ReaderSurfacePalette.of(context);
+  Color get _ink => _palette.ink;
+  Color get _muted => _palette.muted;
+  Color get _accent => _palette.accent;
 
   List<GlobalSearchResult> get _visibleRecentResults => [
     for (final entry in _recentSearches)
@@ -245,7 +247,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                           Text(
                             result.subtitle,
                             style: SLTheme.quicksand(
-                              fontSize: 12,
+                              fontSize: 13,
                               height: 1.5,
                               fontWeight: FontWeight.w500,
                               color: _muted,
@@ -261,19 +263,14 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                         ? Icons.history_rounded
                         : Icons.chevron_right_rounded,
                     size: 19,
-                    color: const Color(0xFF9D949B),
+                    color: _muted,
                   ),
                 ],
               ),
             ),
           ),
         ),
-        const Divider(
-          height: 1,
-          thickness: .7,
-          indent: 70,
-          color: Color(0xFFEAE5E7),
-        ),
+        Divider(height: 1, thickness: .7, indent: 70, color: _palette.line),
       ],
     );
   }
@@ -284,9 +281,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Color(0xFFF4E8ED),
+            color: _palette.accentWash,
           ),
           child: Icon(
             error ? Icons.refresh_rounded : Icons.search_off_rounded,
@@ -321,7 +318,10 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
           label: Text(
             context.tr(error ? 'home_thli_4dffdf' : 'home_xa_4ed187'),
           ),
-          style: TextButton.styleFrom(foregroundColor: _accent),
+          style: TextButton.styleFrom(
+            foregroundColor: _accent,
+            minimumSize: const Size(48, 48),
+          ),
         ),
       ],
     ),
@@ -341,33 +341,22 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       allowedUtilityIds: widget.allowedUtilityIds,
     );
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFDFC),
-      appBar: AppBar(
+      backgroundColor: _palette.canvas,
+      appBar: ReaderSurfacePalette.appBar(
+        context,
+        title: context.tr('home_tmkim_8929ef'),
         actions: [
           IconButton(
             tooltip: context.tr('auth_help_center_guide'),
             icon: const Icon(Icons.help_outline_rounded),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const AppHelpCenterScreen(),
-              ),
+            style: IconButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              fixedSize: const Size(48, 48),
+              tapTargetSize: MaterialTapTargetSize.padded,
             ),
+            onPressed: () => slPush<void>(context, const AppHelpCenterScreen()),
           ),
         ],
-        backgroundColor: const Color(0xFFFFFDFC),
-        foregroundColor: _ink,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          context.tr('home_tmkim_8929ef'),
-          style: SLTheme.quicksand(
-            fontSize: 23,
-            fontWeight: FontWeight.w900,
-            color: _ink,
-          ),
-        ),
       ),
       body: SafeArea(
         top: false,
@@ -393,7 +382,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                     decoration: InputDecoration(
                       hintText: context.tr('search_hint_short'),
                       hintStyle: SLTheme.quicksand(fontSize: 14, color: _muted),
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.search_rounded,
                         color: _muted,
                         size: 23,
@@ -403,14 +392,14 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                           : IconButton(
                               tooltip: context.tr('home_xa_4ed187'),
                               onPressed: _clearQuery,
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close_rounded,
                                 color: _muted,
                                 size: 20,
                               ),
                             ),
                       filled: true,
-                      fillColor: const Color(0xFFF4F0F1),
+                      fillColor: _palette.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -421,10 +410,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFCAA3B2),
-                          width: 1.3,
-                        ),
+                        borderSide: BorderSide(color: _accent, width: 1.3),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -436,9 +422,9 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                 SizedBox(
                   height: 3,
                   child: _isSearching
-                      ? const LinearProgressIndicator(
+                      ? LinearProgressIndicator(
                           color: _accent,
-                          backgroundColor: Color(0xFFF4F0F1),
+                          backgroundColor: _palette.surface,
                         )
                       : null,
                 ),
@@ -467,6 +453,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                               onPressed: _clearRecentSearches,
                               style: TextButton.styleFrom(
                                 foregroundColor: _accent,
+                                minimumSize: const Size(48, 48),
                               ),
                               child: Text(context.tr('home_xa_4ed187')),
                             ),
@@ -495,7 +482,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                           context.tr('comm_ktqutmthy_216f37'),
                           trailing: Text(
                             _results.length.toString(),
-                            style: const TextStyle(color: _muted, fontSize: 12),
+                            style: TextStyle(color: _muted, fontSize: 13),
                           ),
                         ),
                         for (final result in _results) _resultRow(result),

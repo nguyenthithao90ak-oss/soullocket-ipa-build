@@ -17,8 +17,7 @@ extension _CountdownModeIndependentScreenStatePart
 
   Future<void> _loadSpaces() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedNames =
-        prefs.getStringList(_spaceNamesPrefKey) ?? const <String>[];
+    final storedNames = _readCountdownPrefStringList(prefs, _spaceNamesPrefKey);
 
     final names = <String, String>{};
     for (final raw in storedNames) {
@@ -36,7 +35,7 @@ extension _CountdownModeIndependentScreenStatePart
     )) {
       try {
         final scope = key.substring(pendingPrefix.length);
-        final raw = jsonDecode(prefs.getString(key) ?? '{}');
+        final raw = jsonDecode(_readCountdownPrefString(prefs, key) ?? '{}');
         if (scope.isNotEmpty && raw is Map<String, dynamic>) {
           pending[scope] = _snapshotFromSerializedMap(raw, scope: scope);
         }
@@ -92,30 +91,39 @@ extension _CountdownModeIndependentScreenStatePart
     _countdownRequestsSub?.cancel();
     _countdownSpacesSub?.cancel();
     _countdownDeleteRequestsSub?.cancel();
-    _countdownRequestsSub = _countdownSpaceService
-        .watchRequestsForHouse(_selfSpaceHouseId)
-        .listen(
-          (value) {
-            _clearSpaceStreamError('requests');
-            _handleCountdownRequestsChanged(value);
-          },
-          onError: (Object error) => _recordSpaceStreamError('requests', error),
-        );
-    _countdownSpacesSub = _countdownSpaceService
-        .watchSpacesForHouse(_selfSpaceHouseId)
-        .listen((value) {
-          _clearSpaceStreamError('spaces');
-          _handleCountdownSpacesChanged(value);
-        }, onError: (Object error) => _recordSpaceStreamError('spaces', error));
-    _countdownDeleteRequestsSub = _countdownSpaceService
-        .watchDeleteRequestsForHouse(_selfSpaceHouseId)
-        .listen(
-          (value) {
-            _clearSpaceStreamError('deletes');
-            _handleCountdownDeleteRequestsChanged(value);
-          },
-          onError: (Object error) => _recordSpaceStreamError('deletes', error),
-        );
+    try {
+      _countdownRequestsSub = _countdownSpaceService
+          .watchRequestsForHouse(_selfSpaceHouseId)
+          .listen(
+            (value) {
+              _clearSpaceStreamError('requests');
+              _handleCountdownRequestsChanged(value);
+            },
+            onError: (Object error) =>
+                _recordSpaceStreamError('requests', error),
+          );
+      _countdownSpacesSub = _countdownSpaceService
+          .watchSpacesForHouse(_selfSpaceHouseId)
+          .listen(
+            (value) {
+              _clearSpaceStreamError('spaces');
+              _handleCountdownSpacesChanged(value);
+            },
+            onError: (Object error) => _recordSpaceStreamError('spaces', error),
+          );
+      _countdownDeleteRequestsSub = _countdownSpaceService
+          .watchDeleteRequestsForHouse(_selfSpaceHouseId)
+          .listen(
+            (value) {
+              _clearSpaceStreamError('deletes');
+              _handleCountdownDeleteRequestsChanged(value);
+            },
+            onError: (Object error) =>
+                _recordSpaceStreamError('deletes', error),
+          );
+    } catch (error, _) {
+      _recordSpaceStreamError('spaces', error);
+    }
   }
 
   void _recordSpaceStreamError(String stream, Object error) {
@@ -712,7 +720,9 @@ extension _CountdownModeIndependentScreenStatePart
                       decoration: InputDecoration(
                         labelText: context.tr('home_nhpngy_91932a'),
                         hintText: DateInputUtils.formatHint(),
-                        helperText: L10nService().format('date_input_helper', {'format': DateInputUtils.formatHint()}),
+                        helperText: L10nService().format('date_input_helper', {
+                          'format': DateInputUtils.formatHint(),
+                        }),
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
@@ -881,27 +891,40 @@ extension _CountdownModeIndependentScreenStatePart
     if (_uploadingAvatarRole != null) {
       return;
     }
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    bool isCurrent() =>
+        mounted &&
+        scope == _scopeKey &&
+        _uploadHouseId == houseId &&
+        ownerUid != null &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
     final avatarChangeFailedTemplate = context.tr('p7_avatar_change_failed');
-    XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null || !mounted || scope != _scopeKey) {
-      return;
-    }
-
+    if (!isCurrent()) return;
     _safeSetState(() {
       _uploadingAvatarRole = role;
     });
 
     try {
-      if (presetFile == null) {
-        file = await _cropCountdownModeAvatarFile(file);
+      XFile? file =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
+      if (file == null || !isCurrent()) {
+        return;
       }
-      if (file == null || !mounted || scope != _scopeKey) {
+      if (presetFile == null) {
+        file = await _cropCountdownModeAvatarFile(
+          context,
+          file,
+          isScopeCurrent: isCurrent,
+        );
+      }
+      if (file == null || !isCurrent()) {
         return;
       }
       await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
         'role': role,
         'filePath': file.path,
       });
+      if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
         houseId,
         'avatars',
@@ -910,8 +933,8 @@ extension _CountdownModeIndependentScreenStatePart
         minWidth: 720,
         minHeight: 720,
       );
-      if (!mounted || scope != _scopeKey || url == null || url.trim().isEmpty) {
-        if (mounted) {
+      if (!isCurrent() || url == null || url.trim().isEmpty) {
+        if (isCurrent()) {
           _showMessage(context.tr('home_khngticava_73ea14'));
         }
         return;
@@ -924,10 +947,12 @@ extension _CountdownModeIndependentScreenStatePart
           _avatarUrl2 = url.trim();
         }
       });
-      if (await _saveLocalSettings()) {
+      if (await _saveLocalSettings() && isCurrent()) {
         await PendingUploadService.instance.clear(pendingKey);
+        await discardConfirmedCropImage(file);
       }
     } catch (e) {
+      if (!isCurrent()) return;
       _showMessage(
         avatarChangeFailedTemplate.replaceAll(
           '{error}',

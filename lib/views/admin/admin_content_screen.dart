@@ -662,12 +662,11 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                     'admin_chatthnthi_6c9f71',
                                   );
                                 } else if (isUserReport) {
-                                  targetIdStr = 'User: $targetHouseId';
+                                  targetIdStr = L10nService().format('admin_report_user_id', {'id': targetHouseId});
                                 } else if (isCommentReport) {
-                                  targetIdStr =
-                                      'Post: $postId\nComment: $commentId';
+                                  targetIdStr = L10nService().format('admin_report_post_comment_id', {'post': postId, 'comment': commentId});
                                 } else {
-                                  targetIdStr = 'Post: $postId';
+                                  targetIdStr = L10nService().format('admin_report_post_id', {'id': postId});
                                 }
 
                                 return ListTile(
@@ -699,7 +698,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                         ),
                                       ),
                                       Text(
-                                        L10nScope.of(context).format('ui_admin_reporting_person_value1_9aab62', {'value1': r['by'] ?? r['reporterId'] ?? 'Unknown'}),
+                                        L10nScope.of(context).format('ui_admin_reporting_person_value1_9aab62', {'value1': r['by'] ?? r['reporterId'] ?? context.tr('admin_khngr_b18ff7')}),
                                         style: const TextStyle(
                                           color: Colors.grey,
                                         ),

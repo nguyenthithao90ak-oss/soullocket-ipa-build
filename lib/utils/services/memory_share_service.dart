@@ -215,8 +215,14 @@ class MemoryShareService {
           )) {
         throw FirebaseFunctionsException(code: 'invalid-argument', message: '');
       }
-      final limits = await fetchLimits();
-      final pro = await _isPro();
+      // Hai kiểm tra độc lập nên chạy song song để hộp tạo link không phải
+      // chờ lần lượt limits rồi mới tới trạng thái Pro.
+      final accessChecks = await Future.wait<Object>(<Future<Object>>[
+        fetchLimits(),
+        _isPro(),
+      ]);
+      final limits = accessChecks[0] as MemoryLimits;
+      final pro = accessChecks[1] as bool;
       _checkSession(uid);
       final maxItems = limits.maxShareItems(pro);
       if (ids.length > maxItems ||

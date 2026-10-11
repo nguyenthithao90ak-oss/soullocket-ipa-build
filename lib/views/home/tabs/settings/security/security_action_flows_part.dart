@@ -274,6 +274,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         (_SettingsTabState._emailVerifyResendCooldownSeconds * 1000) - diff;
 
     if (remainingMillis > 0) {
+      if (!mounted) return;
       setState(() {
         _emailVerifyWaitSeconds = (remainingMillis / 1000).ceil();
       });
@@ -581,6 +582,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         }
       }
 
+      if (!mounted) return;
       _showToast(
         deniedPermissions.isEmpty
             ? L10nScope.of(context).format('ui_home_all_necessary_permissions_have_been_granted_to_284262', {'value1': statuses.length, 'value2': statuses.length})
@@ -589,6 +591,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       );
       await _promptOpenAppSettings(settingsLockedPermissions);
     } catch (e) {
+      if (!mounted) return;
       _showToast(
         AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message,
         success: false,

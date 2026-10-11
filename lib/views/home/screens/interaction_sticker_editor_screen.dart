@@ -2,6 +2,7 @@ import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -203,7 +204,9 @@ class _InteractionStickerEditorScreenState
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(content: Text(context.tr('interaction_sticker_save_failed'))),
+        SLSnackBar(
+          content: Text(context.tr('interaction_sticker_save_failed')),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -251,11 +254,9 @@ class _InteractionStickerEditorScreenState
             IconButton(
               tooltip: context.tr('sticker_collection_open'),
               icon: const Icon(Icons.inventory_2_outlined),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) =>
-                      StickerLibraryScreen(onStickerSelected: _replaceSticker),
-                ),
+              onPressed: () => slPush<void>(
+                context,
+                StickerLibraryScreen(onStickerSelected: _replaceSticker),
               ),
             ),
           ],

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, TargetPlatform, defaultTargetPlatform;
+    show kIsWeb, TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -113,7 +113,21 @@ class UtilityService {
     'cinema',
     'surprise_maker',
   };
-  static const Set<String> _debugOnlyIds = {'friendly_chat'};
+  /// Tiện ích dành cho tài khoản Pro: vẫn hiện cho mọi người kèm nhãn VIP;
+  /// tài khoản thường mở ra sẽ thấy lời mời nâng cấp. Server chặn riêng
+  /// (functions/index.js), đây chỉ là lớp hiển thị.
+  static const Set<String> _proOnlyIds = {'friendly_chat'};
+
+  /// Trạng thái Pro do PurchaseService cập nhật; null = chưa xác minh.
+  static final ValueNotifier<bool?> proAccess = ValueNotifier<bool?>(null);
+
+  static void setProAccess(bool? value) {
+    if (proAccess.value == value) return;
+    proAccess.value = value;
+  }
+
+  static bool isProOnly(String id) => _proOnlyIds.contains(id.trim());
+
   static final Set<String> _allAppIds = allApps
       .map((UtilityApp app) => app.id)
       .toSet();
@@ -130,10 +144,14 @@ class UtilityService {
   static bool isCoupleOnly(String id) => _coupleOnlyIds.contains(id);
 
   static bool isUtilityVisibleInCurrentBuild(String id) {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      if (id == 'giftcode' || id == 'soul_events') return false;
+    // Giftcode đã chuyển vào Cài đặt Android, không còn là một tiện ích.
+    if (id == 'giftcode') return false;
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        id == 'soul_events') {
+      return false;
     }
-    return kDebugMode || !_debugOnlyIds.contains(id);
+    return true;
   }
 
   static bool isUtilityAllowed(String id, String? relationshipMode) {
@@ -182,7 +200,7 @@ class UtilityService {
     ],
     UtilityCategory.care: ['habit', 'health', 'sleep_tracker'],
     UtilityCategory.fun: ['tarot', 'wheel', 'drawing', 'friendly_chat'],
-    UtilityCategory.other: ['vault', 'diary_export', 'store', 'giftcode'],
+    UtilityCategory.other: ['vault', 'diary_export', 'store'],
   };
 
   static UtilityCategory categoryOf(String id) {
@@ -229,12 +247,6 @@ class UtilityService {
       title: 'copy_fc725e371ce1',
       icon: Icons.event_note_rounded,
       colors: [const Color(0xFFFF4D94), const Color(0xFFFF8C42)],
-    ),
-    UtilityApp(
-      id: 'giftcode',
-      title: 'utility_title_giftcode',
-      icon: Icons.confirmation_number_rounded,
-      colors: [const Color(0xFFFF416C), const Color(0xFFFF4B2B)],
     ),
     UtilityApp(
       id: 'voice',

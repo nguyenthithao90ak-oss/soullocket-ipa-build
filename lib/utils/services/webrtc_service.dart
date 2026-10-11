@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'couple_call_signaling.dart';
+import 'call_setup_failure.dart';
 
 /// ============================================================
 ///  WebRTCService — Gra (Logic/Data)
@@ -26,11 +27,7 @@ class WebRTCService {
       _onPeerCreated = null;
 
   @visibleForTesting
-  WebRTCService.testInstance(
-    this._db,
-    this._auth, [
-    this._onPeerCreated,
-  ]);
+  WebRTCService.testInstance(this._db, this._auth, [this._onPeerCreated]);
 
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
@@ -95,7 +92,7 @@ class WebRTCService {
           .get()
           .timeout(const Duration(seconds: 5));
       final raw = snap.value;
-      final servers = _parseIceServers(raw);
+      final servers = RtcIceServers.parse(raw);
       if (servers.isNotEmpty) {
         return {
           'iceServers': [...servers, ...iceServers],
@@ -107,34 +104,6 @@ class WebRTCService {
       );
     }
     return {'iceServers': iceServers};
-  }
-
-  List<Map<String, dynamic>> _parseIceServers(dynamic raw) {
-    final result = <Map<String, dynamic>>[];
-    if (raw is List) {
-      for (final item in raw) {
-        final server = _parseIceServer(item);
-        if (server != null) result.add(server);
-      }
-    } else if (raw is Map) {
-      for (final item in raw.values) {
-        final server = _parseIceServer(item);
-        if (server != null) result.add(server);
-      }
-    }
-    return result;
-  }
-
-  Map<String, dynamic>? _parseIceServer(dynamic raw) {
-    if (raw is! Map) return null;
-    final urls = raw['urls'];
-    if (urls is! String || urls.trim().isEmpty) return null;
-    final server = <String, dynamic>{'urls': urls.trim()};
-    final username = raw['username']?.toString().trim() ?? '';
-    final credential = raw['credential']?.toString().trim() ?? '';
-    if (username.isNotEmpty) server['username'] = username;
-    if (credential.isNotEmpty) server['credential'] = credential;
-    return server;
   }
 
   /// Bật Camera và Mic
@@ -155,7 +124,10 @@ class WebRTCService {
           : false,
     };
 
-    final stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    final stream = await runCallSetupStep(
+      'media',
+      () => navigator.mediaDevices.getUserMedia(mediaConstraints),
+    );
     if (session != _session) {
       for (final track in stream.getTracks()) {
         await track.stop();
@@ -246,38 +218,44 @@ class WebRTCService {
       throw StateError(UiCopy.text('copy_54e3d751d003'));
     }
 
-    await roomRef
-        .set({
-          'offer': {'sdp': offer.sdp, 'type': offer.type},
-          'callerId': user.uid,
-          'calleeId': resolvedTargetHouseId,
-          'houseId': resolvedCallerHouseId,
-          'status': 'ringing',
-          'timestamp': ServerValue.timestamp,
-          'isVideo': isVideo,
-          'callerName': callerName,
-        })
-        .timeout(const Duration(seconds: 12));
+    await runCallSetupStep(
+      'room_write',
+      () => roomRef
+          .set({
+            'offer': {'sdp': offer.sdp, 'type': offer.type},
+            'callerId': user.uid,
+            'calleeId': resolvedTargetHouseId,
+            'houseId': resolvedCallerHouseId,
+            'status': 'ringing',
+            'timestamp': ServerValue.timestamp,
+            'isVideo': isVideo,
+            'callerName': callerName,
+          })
+          .timeout(const Duration(seconds: 12)),
+    );
     if (session != _session) {
       await roomRef
           .update({'status': 'ended'})
           .timeout(const Duration(seconds: 8));
       throw StateError(UiCopy.text('copy_f68819406a61'));
     }
-    await localCandidates.markReady();
+    await runCallSetupStep('candidate_write', localCandidates.markReady);
     if (session != _session) throw StateError(UiCopy.text('copy_f68819406a61'));
     if (resolvedTargetHouseId == resolvedCallerHouseId) {
-      await _db
-          .ref(CoupleCallInvite.inboxPath(resolvedCallerHouseId))
-          .set({
-            'roomId': roomId,
-            'houseId': resolvedCallerHouseId,
-            'callerUid': user.uid,
-            'callerName': callerName,
-            'isVideo': isVideo,
-            'timestamp': ServerValue.timestamp,
-          })
-          .timeout(const Duration(seconds: 8));
+      await runCallSetupStep(
+        'invite_write',
+        () => _db
+            .ref(CoupleCallInvite.inboxPath(resolvedCallerHouseId))
+            .set({
+              'roomId': roomId,
+              'houseId': resolvedCallerHouseId,
+              'callerUid': user.uid,
+              'callerName': callerName,
+              'isVideo': isVideo,
+              'timestamp': ServerValue.timestamp,
+            })
+            .timeout(const Duration(seconds: 8)),
+      );
       if (session != _session) {
         await _clearCoupleInvite(resolvedCallerHouseId, roomId);
         throw StateError(UiCopy.text('copy_f68819406a61'));
@@ -558,8 +536,9 @@ class WebRTCService {
       .timeout(const Duration(seconds: 8))
       .then((_) {});
 
-  void _logSignalingError(Object error) =>
-      debugPrint('WebRTC signaling: ${AppErrorMapper.resolve(error).message}');
+  void _logSignalingError(Object error) => debugPrint(
+    'WebRTC signaling: ${CallSetupFailure.from(error, 'signaling')}',
+  );
 
   Stream<Map<String, dynamic>> watchIncomingCoupleCalls(String houseId) {
     final uid = _auth.currentUser?.uid ?? '';
@@ -684,7 +663,8 @@ class WebRTCService {
         }
         final callerId = val['houseId']?.toString().trim().isNotEmpty == true
             ? val['houseId'].toString().trim()
-            : val['callerId']?.toString().trim() ?? UiCopy.text('copy_0a3126b85a42');
+            : val['callerId']?.toString().trim() ??
+                  UiCopy.text('copy_0a3126b85a42');
         onIncomingCall(roomId, callerId, val);
       },
       onError: (error) {

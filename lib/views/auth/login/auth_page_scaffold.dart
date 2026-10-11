@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'auth_language_toggle.dart';
@@ -80,11 +81,9 @@ class AuthPageScaffold extends StatelessWidget {
                                     icon: const Icon(
                                       Icons.help_outline_rounded,
                                     ),
-                                    onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) =>
-                                            const AppHelpCenterScreen(),
-                                      ),
+                                    onPressed: () => slPush<void>(
+                                      context,
+                                      const AppHelpCenterScreen(),
                                     ),
                                   ),
                                 ],

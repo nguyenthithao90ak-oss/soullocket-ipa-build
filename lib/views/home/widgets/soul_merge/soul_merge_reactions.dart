@@ -79,13 +79,51 @@ class SoulMergeReactionPicker extends StatelessWidget {
     super.key,
     required this.onSelected,
     this.selected,
+    this.compact = false,
   });
   final ValueChanged<String> onSelected;
   final String? selected;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (compact)
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: SoulMergeReactionCatalog.all.map((reaction) {
+            final active = selected == reaction.reference;
+            return Semantics(
+              button: true,
+              selected: active,
+              label: context.tr(reaction.labelKey),
+              child: Tooltip(
+                message: context.tr(reaction.labelKey),
+                child: Material(
+                  color: active ? scheme.primaryContainer : Colors.transparent,
+                  borderRadius: BorderRadius.circular(15),
+                  child: InkWell(
+                    key: ValueKey(reaction.id),
+                    onTap: () => onSelected(reaction.reference),
+                    borderRadius: BorderRadius.circular(15),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: SoulLocketAnimatedSticker(
+                        sticker: SoulLocketStickerCatalog.find(
+                          reaction.reference,
+                        )!,
+                        size: 44,
+                        animate: false,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      );
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = (constraints.maxWidth - 18) / 4;

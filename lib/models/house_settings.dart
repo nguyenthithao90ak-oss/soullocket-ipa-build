@@ -36,11 +36,11 @@ class HouseSettings {
   final Map<String, dynamic> source;
 
   const HouseSettings({
-    this.houseName = 'My House',
+    this.houseName = '',
     this.homeShowHouseName = false,
     this.homeShowTimer = false,
-    this.nameU1 = 'Bạn Nam',
-    this.nameU2 = 'Bạn Nữ',
+    this.nameU1 = '',
+    this.nameU2 = '',
     this.avtUser1 = '',
     this.avtUser2 = '',
     this.houseAvatar = '',
@@ -74,6 +74,23 @@ class HouseSettings {
   bool get isSingle => relationshipMode == 'single';
   bool get isCouple => relationshipMode == 'couple';
 
+  // Chỉ dịch tên mặc định lúc hiển thị, không đưa bản dịch vào dữ liệu lưu.
+  String get displayHouseName => houseName.trim().isEmpty
+      ? L10nService().translate('home_default_house_name')
+      : houseName;
+
+  String get displayNameU1 => _displayName(nameU1, isUser2: false);
+  String get displayNameU2 => _displayName(nameU2, isUser2: true);
+
+  String _displayName(String name, {required bool isUser2}) {
+    if (name.trim().isNotEmpty) return name;
+    final swapped = source['genderSwapped'] == true;
+    final female = isUser2 != swapped;
+    return L10nService().translate(
+      female ? 'home_bnn_babaec' : 'home_bnnam_123ef2',
+    );
+  }
+
   static String? normalizeRelationshipMode(dynamic value) {
     final mode = value?.toString().trim().toLowerCase();
     if (mode == 'single' || mode == 'couple') {
@@ -83,7 +100,8 @@ class HouseSettings {
   }
 
   static String inferRelationshipModeFromSettingsMap(
-      Map<dynamic, dynamic> map) {
+    Map<dynamic, dynamic> map,
+  ) {
     final explicitMode = normalizeRelationshipMode(map['relationshipMode']);
     if (explicitMode != null) return explicitMode;
 
@@ -141,20 +159,22 @@ class HouseSettings {
             .trim();
     final resolvedCountdownBottomLabel =
         (map['countdownBottomLabel'] ?? map['dayUnit'] ?? '').toString().trim();
+    final resolvedCustomBackgroundUrl =
+        map['customBackgroundUrl']?.toString().trim() ?? '';
+    final resolvedLegacyCustomBackgroundUrl =
+        map['customHomeBackground']?.toString().trim() ?? '';
 
     return HouseSettings(
-      houseName: (map['houseName'] ?? 'My House').toString(),
+      houseName: (map['houseName'] ?? '').toString(),
       homeShowHouseName: map.containsKey('homeShowHouseName')
           ? (map['homeShowHouseName'] == true ||
-              map['homeShowHouseName'] == 'true')
+                map['homeShowHouseName'] == 'true')
           : defaultShowHouseName,
       homeShowTimer: map.containsKey('homeShowTimer')
           ? (map['homeShowTimer'] == true || map['homeShowTimer'] == 'true')
           : false,
-      nameU1: (map['nameU1'] ?? L10nService().translate('core_partner_male'))
-          .toString(),
-      nameU2: (map['nameU2'] ?? L10nService().translate('core_partner_female'))
-          .toString(),
+      nameU1: (map['nameU1'] ?? '').toString(),
+      nameU2: (map['nameU2'] ?? '').toString(),
       avtUser1: (map['avtUser1'] ?? '').toString(),
       avtUser2: (map['avtUser2'] ?? '').toString(),
       houseAvatar: (map['houseAvatar'] ?? '').toString(),
@@ -170,15 +190,17 @@ class HouseSettings {
       transparentMode: map['transparentMode'] is bool
           ? map['transparentMode'] as bool
           : true,
-      fallingEffect:
-          (map['fallingEffect'] ?? defaultSettings.fallingEffect).toString(),
+      fallingEffect: (map['fallingEffect'] ?? defaultSettings.fallingEffect)
+          .toString(),
       avatarSizePx: toDouble(map['avatarSizePx'], defaultSettings.avatarSizePx),
-      countdownSizePx:
-          toDouble(map['countdownSizePx'], defaultSettings.countdownSizePx),
-      avatarFrame:
-          (map['avatarFrame'] ?? defaultSettings.avatarFrame).toString(),
-      countdownStyle:
-          (map['countdownStyle'] ?? defaultSettings.countdownStyle).toString(),
+      countdownSizePx: toDouble(
+        map['countdownSizePx'],
+        defaultSettings.countdownSizePx,
+      ),
+      avatarFrame: (map['avatarFrame'] ?? defaultSettings.avatarFrame)
+          .toString(),
+      countdownStyle: (map['countdownStyle'] ?? defaultSettings.countdownStyle)
+          .toString(),
       countdownTopLabel: resolvedCountdownTopLabel.isEmpty
           ? defaultSettings.countdownTopLabel
           : resolvedCountdownTopLabel,
@@ -193,47 +215,47 @@ class HouseSettings {
       modeLastChangedAt: toInt(map['modeLastChangedAt']),
       modeCooldownUntil: toInt(map['modeCooldownUntil']),
       proUntil: toInt(map['proUntil']),
-      customBackgroundUrl:
-          (map['customBackgroundUrl'] ?? map['customHomeBackground'] ?? '')
-              .toString(),
+      customBackgroundUrl: resolvedCustomBackgroundUrl.isNotEmpty
+          ? resolvedCustomBackgroundUrl
+          : resolvedLegacyCustomBackgroundUrl,
       source: source,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'houseName': houseName,
-        'homeShowHouseName': homeShowHouseName,
-        'homeShowTimer': homeShowTimer,
-        'nameU1': nameU1,
-        'nameU2': nameU2,
-        'avtUser1': avtUser1,
-        'avtUser2': avtUser2,
-        'houseAvatar': houseAvatar,
-        'startDate': startDate,
-        'dobU1': dobU1,
-        'dobU2': dobU2,
-        'theme': theme,
-        'font': font,
-        'privacy': privacy,
-        'friendRequestPolicy': friendRequestPolicy,
-        'friendRequestLimit': friendRequestLimit,
-        'homeBlockTone': homeBlockTone,
-        'fallingEffect': fallingEffect,
-        'avatarSizePx': avatarSizePx,
-        'countdownSizePx': countdownSizePx,
-        'avatarFrame': avatarFrame,
-        'countdownStyle': countdownStyle,
-        'countdownTopLabel': countdownTopLabel,
-        'countdownBottomLabel': countdownBottomLabel,
-        'liteMode': liteMode,
-        'graphicsQuality': graphicsQuality,
-        'transparentMode': transparentMode,
-        'relationshipMode': relationshipMode,
-        if (modeLastChangedAt != null) 'modeLastChangedAt': modeLastChangedAt,
-        if (modeCooldownUntil != null) 'modeCooldownUntil': modeCooldownUntil,
-        if (proUntil != null) 'proUntil': proUntil,
-        'customBackgroundUrl': customBackgroundUrl,
-      };
+    'houseName': houseName,
+    'homeShowHouseName': homeShowHouseName,
+    'homeShowTimer': homeShowTimer,
+    'nameU1': nameU1,
+    'nameU2': nameU2,
+    'avtUser1': avtUser1,
+    'avtUser2': avtUser2,
+    'houseAvatar': houseAvatar,
+    'startDate': startDate,
+    'dobU1': dobU1,
+    'dobU2': dobU2,
+    'theme': theme,
+    'font': font,
+    'privacy': privacy,
+    'friendRequestPolicy': friendRequestPolicy,
+    'friendRequestLimit': friendRequestLimit,
+    'homeBlockTone': homeBlockTone,
+    'fallingEffect': fallingEffect,
+    'avatarSizePx': avatarSizePx,
+    'countdownSizePx': countdownSizePx,
+    'avatarFrame': avatarFrame,
+    'countdownStyle': countdownStyle,
+    'countdownTopLabel': countdownTopLabel,
+    'countdownBottomLabel': countdownBottomLabel,
+    'liteMode': liteMode,
+    'graphicsQuality': graphicsQuality,
+    'transparentMode': transparentMode,
+    'relationshipMode': relationshipMode,
+    if (modeLastChangedAt != null) 'modeLastChangedAt': modeLastChangedAt,
+    if (modeCooldownUntil != null) 'modeCooldownUntil': modeCooldownUntil,
+    if (proUntil != null) 'proUntil': proUntil,
+    'customBackgroundUrl': customBackgroundUrl,
+  };
 
   HouseSettings copyWith({
     String? houseName,

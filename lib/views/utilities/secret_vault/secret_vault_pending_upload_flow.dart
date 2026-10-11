@@ -1,115 +1,55 @@
 part of '../secret_vault_screen.dart';
 
 class _PendingVaultUploadRetryPayload {
-  const _PendingVaultUploadRetryPayload({
-    required this.images,
-    required this.encryptedCaption,
-  });
-
+  const _PendingVaultUploadRetryPayload({required this.images, required this.encryptedCaption});
   final List<XFile> images;
   final String encryptedCaption;
 }
 
 Future<void> _savePendingVaultUploadRecord({
-  required String pendingKey,
-  required List<String> imagePaths,
-  required String encryptedCaption,
+  required String pendingKey, required List<String> imagePaths, required String encryptedCaption,
 }) async {
-  final normalizedPaths = imagePaths
-      .map((path) => path.trim())
-      .where((path) => path.isNotEmpty)
-      .toList(growable: false);
-  if (normalizedPaths.isEmpty) {
-    await PendingUploadService.instance.clear(pendingKey);
-    return;
-  }
-  await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
-    'imagePaths': normalizedPaths,
-    'encryptedCaption': encryptedCaption,
-  });
+  final paths = imagePaths.map((p) => p.trim()).where((p) => p.isNotEmpty).toSet().toList();
+  if (paths.isEmpty) return;
+  final old = await PendingUploadService.instance.load(pendingKey);
+  final rawIds = old?['requestIds'];
+  final ids = SecretVaultUploadIdentity.requestIds(paths,
+    rawIds is Map ? Map<String, dynamic>.from(rawIds) : {});
+  await PendingUploadService.instance.save(pendingKey, {
+    'imagePaths': paths, 'requestIds': ids, 'encryptedCaption': encryptedCaption,
+  }, category: 'secret_vault');
 }
 
-Future<void> _removePendingVaultUploadedImageRecord({
-  required String pendingKey,
-  required String imagePath,
-}) async {
+Future<void> _removePendingVaultUploadedImageRecord({required String pendingKey, required String imagePath}) async {
   final pending = await PendingUploadService.instance.load(pendingKey);
-  if (pending == null) {
-    return;
-  }
-  final normalizedPath = imagePath.trim();
-  final rawPaths = pending['imagePaths'];
-  if (rawPaths is! List) {
-    await PendingUploadService.instance.clear(pendingKey);
-    return;
-  }
-  final remainingPaths = rawPaths
-      .map((item) => item.toString().trim())
-      .where((path) => path.isNotEmpty && path != normalizedPath)
-      .toList(growable: false);
-  if (remainingPaths.isEmpty) {
-    await PendingUploadService.instance.clear(pendingKey);
-    return;
-  }
-  await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
-    'imagePaths': remainingPaths,
-    'encryptedCaption': pending['encryptedCaption']?.toString() ?? '',
-  });
+  if (pending == null) return;
+  final paths = (pending['imagePaths'] as List? ?? []).map((p) => p.toString())
+    .where((p) => p != imagePath).toList();
+  if (paths.isEmpty) { await PendingUploadService.instance.clear(pendingKey); return; }
+  await _savePendingVaultUploadRecord(pendingKey: pendingKey, imagePaths: paths,
+    encryptedCaption: pending['encryptedCaption']?.toString() ?? '');
 }
 
-Future<bool> _hasPendingVaultUploadRecord(String pendingKey) async {
+Future<String> _pendingVaultRequestId(String pendingKey, String imagePath) async {
   final pending = await PendingUploadService.instance.load(pendingKey);
-  return pending != null;
+  final ids = pending?['requestIds'];
+  final id = ids is Map ? ids[imagePath]?.toString() ?? '' : '';
+  if (!RegExp(r'^[a-f0-9]{32}$').hasMatch(id)) throw StateError('Missing pending upload identity');
+  return id;
 }
 
-Future<_PendingVaultUploadRetryPayload?> _loadPendingVaultUploadRetry(
-  String pendingKey,
-) async {
+Future<bool> _hasPendingVaultUploadRecord(String key) async =>
+    await PendingUploadService.instance.load(key) != null;
+
+Future<_PendingVaultUploadRetryPayload?> _loadPendingVaultUploadRetry(String pendingKey) async {
   final pending = await PendingUploadService.instance.load(pendingKey);
-  if (pending == null) {
-    return null;
-  }
-  final rawPaths = pending['imagePaths'];
-  if (rawPaths is! List) {
-    await PendingUploadService.instance.clear(pendingKey);
-    return const _PendingVaultUploadRetryPayload(
-      images: <XFile>[],
-      encryptedCaption: '',
-    );
-  }
-  final retryImages = <XFile>[];
-  final validPaths = <String>[];
-  for (final rawPath in rawPaths) {
-    final path = rawPath.toString().trim();
-    if (path.isEmpty) {
-      continue;
-    }
-    final file = XFile(path);
-    try {
-      if (await file.length() > 0) {
-        retryImages.add(file);
-        validPaths.add(path);
-      }
-    } catch (error) {
-      debugPrint('[SecretVault] Bỏ tệp chờ tải lên không còn đọc được: $error');
-    }
-  }
-  if (validPaths.length != rawPaths.length) {
-    if (validPaths.isEmpty) {
-      await PendingUploadService.instance.clear(pendingKey);
-    } else {
-      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
-        'imagePaths': validPaths,
-        'encryptedCaption': pending['encryptedCaption']?.toString() ?? '',
-      });
-    }
-  }
-  return _PendingVaultUploadRetryPayload(
-    images: retryImages,
-    encryptedCaption: pending['encryptedCaption']?.toString() ?? '',
-  );
+  if (pending == null) return null;
+  // Không bỏ file đã mất trước khi hỏi server: phiên có thể đã chốt nhưng mất ACK.
+  final paths = (pending['imagePaths'] as List? ?? []).map((p) => p.toString())
+    .where((p) => p.isNotEmpty).toList();
+  return _PendingVaultUploadRetryPayload(images: paths.map(XFile.new).toList(),
+    encryptedCaption: pending['encryptedCaption']?.toString() ?? '');
 }
 
-Future<void> _clearPendingVaultUploadRecord(String pendingKey) {
-  return PendingUploadService.instance.clear(pendingKey);
-}
+Future<void> _clearPendingVaultUploadRecord(String pendingKey) =>
+    PendingUploadService.instance.clear(pendingKey);

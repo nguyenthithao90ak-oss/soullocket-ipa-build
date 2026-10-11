@@ -166,9 +166,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           ),
       ],
       countdownStyles: [
-        (context.tr('countdown_default'), 'default', false),
+        (context.tr('countdown_love_letter'), 'default', false),
         for (final key in KeepsakePalette.newStyleKeys)
-          (context.tr('keepsake_' + key), key, false),
+          (context.tr('countdown_' + key), key, false),
         (context.tr('countdown_floating_hearts'), 'floating_hearts', true),
         (context.tr('countdown_glass'), 'glass', false),
         (context.tr('countdown_glow'), 'glow', false),

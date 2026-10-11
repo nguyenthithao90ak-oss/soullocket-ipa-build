@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart'
-    show ChangeNotifier, ValueNotifier, debugPrint, kIsWeb;
+    show ChangeNotifier, ValueNotifier, debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
@@ -302,7 +302,10 @@ class DiaryMemoryController extends ChangeNotifier {
     }
   }
 
-  Future<void> _removePendingUploadedImages(List<XFile> uploadedImages) async {
+  Future<void> _removePendingUploadedImages(
+    List<XFile> uploadedImages, {
+    bool persist = true,
+  }) async {
     if (_pendingUploadPaths.isEmpty) {
       return;
     }
@@ -322,7 +325,23 @@ class DiaryMemoryController extends ChangeNotifier {
         .toList();
     final houseId = _currentHouseId?.trim() ?? '';
     if (remaining.isEmpty || houseId.isEmpty) {
-      await _clearPendingUploadState();
+      if (persist) {
+        await _clearPendingUploadState();
+      } else {
+        _setPendingUploadState(
+          remaining,
+          message: null,
+          notify: false,
+        );
+      }
+      return;
+    }
+    if (!persist) {
+      _setPendingUploadState(
+        remaining,
+        message: _pendingUploadMessage,
+        notify: false,
+      );
       return;
     }
     await _savePendingUploadState(
@@ -777,6 +796,11 @@ class DiaryMemoryController extends ChangeNotifier {
     if (memoryId.isEmpty || uid == null || !scopeIsCurrent()) {
       return;
     }
+
+    if (!PrivateMemoryLinkPolicy.isPrivate(item)) {
+      _normalizeMemoryPhotoUrl(item);
+      return;
+    }
     if (existingUrl.isNotEmpty && !_isMemoryUrlExpired(item)) {
       return;
     }
@@ -831,7 +855,7 @@ class DiaryMemoryController extends ChangeNotifier {
     }
     item['resolvedUrl'] = fallbackUrl;
     if ((item['url']?.toString().trim().isEmpty ?? true) ||
-        !_isMemoryUrlExpired(item)) {
+        _isMemoryUrlExpired(item)) {
       item['url'] = fallbackUrl;
     }
   }
@@ -1677,6 +1701,8 @@ class DiaryMemoryController extends ChangeNotifier {
       final upload = await _storageService.uploadMemoryImage(
         houseId,
         image,
+        minWidth: AppConfig.diaryImageTargetDimension,
+        minHeight: AppConfig.diaryImageTargetDimension,
         quality: uploadQuality,
         beforeUpload: (bytes) => beforeUpload(bytes, isVideoFile),
       );
@@ -1844,10 +1870,15 @@ class DiaryMemoryController extends ChangeNotifier {
           FirebaseAuth.instance.currentUser?.uid == uid;
       if (!scopeIsCurrent()) return;
       final isRetry = presetImages != null || _stagedUploads.isNotEmpty;
+      final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final uploadBytesRef = _dbRef.child(
+        'houses/$houseId/memoryUploadBytes/$todayStr/$uid',
+      );
       // Chạy song song để giảm thời gian chờ trước khi hiện picker
       final preCheckResults = await Future.wait([
         PurchaseService().getVipAccessInfo(),
         _getTotalStorageBytes(houseId),
+        uploadBytesRef.get(),
       ]);
 
       final vipAccess = preCheckResults[0] as VipAccessInfo;
@@ -1882,13 +1913,8 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
 
-      final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
       // ── Đọc dung lượng ảnh + video đã upload hôm nay (bytes sau nén) ──
-      final uploadBytesRef = _dbRef.child(
-        'houses/$houseId/memoryUploadBytes/$todayStr/$uid',
-      );
-      final bytesSnap = await uploadBytesRef.get();
+      final bytesSnap = preCheckResults[2] as DataSnapshot;
       final bytesMap = bytesSnap.value is Map
           ? Map<String, dynamic>.from(bytesSnap.value as Map)
           : <String, dynamic>{};
@@ -1939,8 +1965,14 @@ class DiaryMemoryController extends ChangeNotifier {
       final selected =
           presetImages ??
           (canUploadVideo
-              ? await _storageService.pickMedia(limit: limitToPick)
-              : await _storageService.pickImages(limit: limitToPick));
+              ? await _storageService.pickMedia(
+                  limit: limitToPick,
+                  preserveOriginal: true,
+                )
+              : await _storageService.pickImages(
+                  limit: limitToPick,
+                  preserveOriginal: true,
+                ));
       if (selected.isEmpty || !scopeIsCurrent()) return;
       final pending = await _buildPendingUploadFiles();
       final candidates = <String, XFile>{
@@ -2050,7 +2082,7 @@ class DiaryMemoryController extends ChangeNotifier {
         try {
           final user = await guardController.resolveCurrentUser();
           if (user != null) {
-            await user.getIdToken(true);
+          await user.getIdToken();
           }
         } catch (e) {
           debugPrint(
@@ -2058,7 +2090,9 @@ class DiaryMemoryController extends ChangeNotifier {
           );
         }
 
-        final memoryUploadQuality = vipAccess.isVip ? 82 : 78;
+        final memoryUploadQuality = vipAccess.isVip
+            ? AppConfig.diaryVipImageUploadQuality
+            : AppConfig.diaryImageUploadQuality;
 
         var uploadedCount = 0;
         final errorMessages = <String>[];
@@ -2073,6 +2107,7 @@ class DiaryMemoryController extends ChangeNotifier {
           try {
             var staged = _stagedUploads[path];
             if (AppConfig.privateMemoryUploadEnabled) {
+              var requestIsFresh = false;
               // Journal cũ không chứng minh ownership; không tự chuyển URL cũ
               // thành session mới hoặc ghi đè bản đang chờ xác nhận.
               if (staged != null && staged['privateRequestId'] is! String) {
@@ -2086,6 +2121,7 @@ class DiaryMemoryController extends ChangeNotifier {
                 ).join();
                 staged = {'privateRequestId': requestId};
                 _stagedUploads[path] = staged;
+                requestIsFresh = true;
               }
               // Bắt buộc durable ID trước cả create session và PUT. Retry kể cả
               // sau restart dùng lại ID này, không lưu bearer URL vào journal.
@@ -2100,13 +2136,25 @@ class DiaryMemoryController extends ChangeNotifier {
                 file: image,
                 authorName: authorName,
                 quality: memoryUploadQuality,
+                minWidth: AppConfig.diaryImageTargetDimension,
+                minHeight: AppConfig.diaryImageTargetDimension,
+                requestIsFresh: requestIsFresh,
                 scopeIsCurrent: scopeIsCurrent,
                 latitude: position?.latitude,
                 longitude: position?.longitude,
+                beforeUpload: (bytes, isVideo) async {
+                  if (!kDebugMode) return;
+                  final mebibytes = bytes / (1024 * 1024);
+                  debugPrint(
+                    '[DiaryMemory][R2] payload after compression: '
+                    '$bytes bytes (${mebibytes.toStringAsFixed(2)} MiB), '
+                    'type=${isVideo ? 'video' : 'image'}',
+                  );
+                },
               );
               if (!scopeIsCurrent()) break;
               uploadedCount++;
-              await _removePendingUploadedImages([image]);
+              await _removePendingUploadedImages([image], persist: false);
               continue;
             }
             if (staged?['privateRequestId'] != null) {
@@ -2225,9 +2273,11 @@ class DiaryMemoryController extends ChangeNotifier {
 
         final failedCount = images.length - uploadedCount;
 
-        if (_pendingUploadPaths.isNotEmpty) {
+        if (_pendingUploadPaths.isEmpty) {
+          await _clearPendingUploadState(notify: false);
+        } else {
           final houseId = _currentHouseId?.trim() ?? '';
-          if (houseId.isNotEmpty && _pendingUploadPaths.isNotEmpty) {
+          if (houseId.isNotEmpty) {
             await _savePendingUploadState(
               houseId: houseId,
               paths: _pendingUploadPaths,

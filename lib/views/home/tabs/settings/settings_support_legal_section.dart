@@ -15,10 +15,9 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           await PrivacyCollectionService.instance.settled;
           if (ctx.mounted) Navigator.of(ctx).pop(value);
         },
-        onOpenDocument: (title, path) => Navigator.of(ctx).push<void>(
-          MaterialPageRoute(
-            builder: (_) => DocumentViewerScreen(title: title, assetPath: path),
-          ),
+        onOpenDocument: (title, path) => slPush<void>(
+          ctx,
+          DocumentViewerScreen(title: title, assetPath: path),
         ),
       ),
     );
@@ -40,10 +39,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
   void _openPolicyOverview() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
+    unawaited(
+      slPush<void>(
+        context,
+        DocumentViewerScreen(
           title: context.tr('privacy_policy'),
           assetPath: 'assets/docs/privacy.html',
         ),
@@ -53,10 +52,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
   void _openTermsDocument() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
+    unawaited(
+      slPush<void>(
+        context,
+        DocumentViewerScreen(
           title: context.tr('terms_of_use'),
           assetPath: 'assets/docs/terms.html',
         ),
@@ -66,10 +65,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
   void _openCookieDocument() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
+    unawaited(
+      slPush<void>(
+        context,
+        DocumentViewerScreen(
           title: context.tr('cookie_policy'),
           assetPath: 'assets/docs/cookie-policy.html',
         ),
@@ -79,10 +78,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
   void _openAboutDocument() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
+    unawaited(
+      slPush<void>(
+        context,
+        DocumentViewerScreen(
           title: context.tr('about_soullocket'),
           assetPath: 'assets/docs/about.html',
         ),
@@ -151,10 +150,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   Future<void> _openSupportContact() async {
     if (!mounted) return;
     try {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const UserSupportChatScreen()),
-      );
+      await slPush<void>(context, const UserSupportChatScreen());
     } catch (_) {
       if (!mounted) return;
       SLNotice.showError(context, context.tr('home_chathmhtrl_290465'));
@@ -163,10 +159,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
   void _openGuideDocument() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
+    unawaited(
+      slPush<void>(
+        context,
+        DocumentViewerScreen(
           title: context.tr('user_guide'),
           assetPath: 'assets/docs/huong_dan.html',
         ),
@@ -176,10 +172,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
   void _openFirstSetupGuideDocument() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
+    unawaited(
+      slPush<void>(
+        context,
+        DocumentViewerScreen(
           title: context.tr('home_hngdncitln_85abba'),
           assetPath: 'assets/docs/huong_dan_cai_dat_lan_dau.html',
         ),

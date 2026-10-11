@@ -35,6 +35,7 @@ import '../../utils/services/map_pin_limit_service.dart';
 import '../../utils/services/nominatim_service.dart';
 import '../../utils/services/notification_service.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/screen_activity_mixin.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/sleep_mode_service.dart';
 import '../../utils/services/music_service.dart';
@@ -114,7 +115,8 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
+class _MapScreenState extends State<MapScreen>
+    with WidgetsBindingObserver, ScreenActivityMixin {
   final fm.MapController _mapController = fm.MapController();
   final LocationService _locationService = LocationService();
   final NotificationService _notificationService = NotificationService();
@@ -308,11 +310,29 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   @override
+  void onScreenActivityChanged(bool active) {
+    MapScreen.isMapScreenActive.value = active;
+    _setViewingMap(active);
+    if (!active) {
+      _cancelTransientMapWork(resetRouteFetch: true);
+      _setRealtimePipelinesActive(false);
+      return;
+    }
+
+    _setRealtimePipelinesActive(true);
+    if (!_isMapReady && _isLoading) {
+      _scheduleMapReadyWatchdog();
+    }
+    _scheduleLiveRefresh();
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      MapScreen.isMapScreenActive.value = true;
-      _setViewingMap(true);
+      MapScreen.isMapScreenActive.value = isScreenActive;
+      _setViewingMap(isScreenActive);
       _setPartnerListenerActive(true);
+      if (!isScreenActive) return;
       _setRealtimePipelinesActive(true);
       if (!_isMapReady && _isLoading) {
         _scheduleMapReadyWatchdog();
@@ -328,6 +348,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       MapScreen.isMapScreenActive.value = false;
       _setViewingMap(false);
       if (AppLifecyclePresenceGuard.shouldKeepPresenceOnline) {
+        _setRealtimePipelinesActive(false);
         return;
       }
       _cancelTransientMapWork(resetRouteFetch: true);
@@ -558,20 +579,26 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     }
     if (accuracy <= _kMapGoodAccuracyMeters) {
       return (
-        label: L10nService().format('ui_map_good_gps_value1_m_173844', {'value1': accuracy.toStringAsFixed(0)}),
+        label: L10nService().format('ui_map_good_gps_value1_m_173844', {
+          'value1': accuracy.toStringAsFixed(0),
+        }),
         color: const Color(0xFF22C55E),
         isLow: false,
       );
     }
     if (accuracy <= _kMapFairAccuracyMeters) {
       return (
-        label: L10nService().format('ui_map_gps_is_okay_value1_m_062625', {'value1': accuracy.toStringAsFixed(0)}),
+        label: L10nService().format('ui_map_gps_is_okay_value1_m_062625', {
+          'value1': accuracy.toStringAsFixed(0),
+        }),
         color: const Color(0xFFF59E0B),
         isLow: false,
       );
     }
     return (
-      label: L10nService().format('ui_map_weak_gps_value1_m_8f1783', {'value1': accuracy.toStringAsFixed(0)}),
+      label: L10nService().format('ui_map_weak_gps_value1_m_8f1783', {
+        'value1': accuracy.toStringAsFixed(0),
+      }),
       color: const Color(0xFFF97316),
       isLow: true,
     );
@@ -647,7 +674,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(content: Text(context.tr('map_refresh_settings_unavailable'))),
+        SLSnackBar(
+          content: Text(context.tr('map_refresh_settings_unavailable')),
+        ),
       );
     }
   }
@@ -782,7 +811,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _memories = merged;
       _memorySummary = merged.isEmpty
           ? context.tr('map_chacghimkn_c6823f')
-          : L10nService().format('ui_map_value1_commemorative_pin_on_the_map_12c022', {'value1': merged.length});
+          : L10nService().format(
+              'ui_map_value1_commemorative_pin_on_the_map_12c022',
+              {'value1': merged.length},
+            );
     });
     _memorySummary = _buildMemorySummaryLabel(merged.length);
     _rebuildStaticMarkers();
@@ -1048,12 +1080,24 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
     if (history.isEmpty) {
       _mapInsightText = _isSingleRelationship
-          ? L10nService().format('ui_map_date_value1_does_not_yet_have_your_214fdd', {'value1': _prettyDayFormat.format(date)})
-          : L10nService().format('ui_map_on_value1_there_is_no_movement_data_de7285', {'value1': _prettyDayFormat.format(date)});
+          ? L10nService().format(
+              'ui_map_date_value1_does_not_yet_have_your_214fdd',
+              {'value1': _prettyDayFormat.format(date)},
+            )
+          : L10nService().format(
+              'ui_map_on_value1_there_is_no_movement_data_de7285',
+              {'value1': _prettyDayFormat.format(date)},
+            );
     } else {
       _mapInsightText = _isSingleRelationship
-          ? L10nService().format('ui_map_date_value1_showing_your_travel_history_08f174', {'value1': _prettyDayFormat.format(date)})
-          : L10nService().format('ui_map_date_value1_displaying_your_travel_history_ce7e41', {'value1': _prettyDayFormat.format(date)});
+          ? L10nService().format(
+              'ui_map_date_value1_showing_your_travel_history_08f174',
+              {'value1': _prettyDayFormat.format(date)},
+            )
+          : L10nService().format(
+              'ui_map_date_value1_displaying_your_travel_history_ce7e41',
+              {'value1': _prettyDayFormat.format(date)},
+            );
     }
 
     _emitLiveUiSnapshot();
@@ -1475,51 +1519,23 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final palette = MapPalette.of(context);
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: SLColors.bgMain,
+      backgroundColor: palette.canvas,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leadingWidth: 64,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Center(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: SLColors.borderLight),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, size: 22),
-                color: SLColors.textPrimary,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-          ),
-        ),
-        toolbarHeight: 62,
+        toolbarHeight: 72,
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: SLColors.textPrimary,
+        foregroundColor: palette.ink,
         surfaceTintColor: Colors.transparent,
-        titleSpacing: 0,
-        title: Text(
-          context.tr('map_refresh_nav_title'),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-        actions: [
-          AppHelpButton(
+        titleSpacing: 16,
+        title: MapNavigationBar(
+          onBack: () => Navigator.of(context).pop(),
+          onSearch: _showSearchSheet,
+          helpButton: AppHelpButton(
             articleId: 'gps',
             iconOnly: true,
             statusKey: switch (_locationAccess.status) {
@@ -1535,53 +1551,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 _locationAccess.approximate ? 'map_refresh_approximate' : null,
             },
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: SLColors.borderLight),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                tooltip: context.tr('map_search_place_tooltip'),
-                onPressed: _showSearchSheet,
-                color: SLColors.textPrimary,
-                icon: const Icon(Icons.search_rounded),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: SLColors.borderLight),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                tooltip: context.tr('map_vvtrcabn_bc0bdb'),
-                onPressed: _handleMyLocationTap,
-                color: SLColors.textPrimary,
-                icon: const Icon(Icons.my_location_rounded),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
       body: _isLoading ? _buildMapLoadingState() : _buildMapBodySection(),
     );
@@ -1760,7 +1730,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              marker.togetherTime ?? UiCopy.text('copy_18bd95496b34'),
+                              marker.togetherTime ??
+                                  UiCopy.text('copy_18bd95496b34'),
                               style: SLTheme.quicksand(
                                 fontSize: 9.0,
                                 fontWeight: FontWeight.w900,
@@ -1832,7 +1803,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           children: [
                             const Text('🚗 ', style: TextStyle(fontSize: 10)),
                             Text(
-                              L10nScope.of(context).format('ui_map_value1_km_h_drive_carefully_16ec63', {'value1': speedKmh}),
+                              L10nScope.of(context).format(
+                                'ui_map_value1_km_h_drive_carefully_16ec63',
+                                {'value1': speedKmh},
+                              ),
                               style: SLTheme.quicksand(
                                 fontSize: 8.5,
                                 fontWeight: FontWeight.w900,
@@ -1899,7 +1873,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       } else if (speedKmh > 2) {
                         displayText += '\n🚶 $speedKmh km/h';
                       } else if (marker.speed != null) {
-                        displayText += L10nService().translate('ui_map_stand_still_7a682d');
+                        displayText += L10nService().translate(
+                          'ui_map_stand_still_7a682d',
+                        );
                       }
                     }
 
@@ -2043,7 +2019,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         ),
         image: hasAvatar
             ? DecorationImage(
-                image: CachedNetworkImageProvider(avatarUrl),
+                image: ResizeImage(
+                  CachedNetworkImageProvider(avatarUrl),
+                  width: 200,
+                  height: 200,
+                  policy: ResizeImagePolicy.fit,
+                ),
                 fit: BoxFit.cover,
               )
             : null,
@@ -2314,6 +2295,10 @@ class _MapCheckinItem {
   final String author;
   final int? ts;
 
+  String get displayTitle => title.trim().isEmpty
+      ? L10nService().translate('ui_map_check_in_48431e')
+      : title;
+
   const _MapCheckinItem({
     required this.id,
     required this.lat,
@@ -2418,7 +2403,7 @@ class _PulseGlowCircle extends StatefulWidget {
 }
 
 class _PulseGlowCircleState extends State<_PulseGlowCircle>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, ScreenActivityMixin {
   late final AnimationController _animCtrl;
 
   @override
@@ -2427,7 +2412,16 @@ class _PulseGlowCircleState extends State<_PulseGlowCircle>
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
-    )..repeat();
+    );
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    if (active) {
+      _animCtrl.repeat();
+    } else {
+      _animCtrl.stop();
+    }
   }
 
   @override

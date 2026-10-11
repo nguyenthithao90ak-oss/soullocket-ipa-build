@@ -1,20 +1,20 @@
 part of '../military_lock_service.dart';
 
 abstract final class _MilitaryLockRuleEngine {
-  static const Map<LockScope, String> _scopeTitles = {
-    LockScope.security: 'Khu bảo mật',
-    LockScope.diary: 'Nhật ký tình yêu',
-    LockScope.chat: 'Lời nhắn yêu thương',
-    LockScope.privateArea: 'Kho bí mật',
-    LockScope.app: 'Cánh cửa trái tim',
+  static const Map<LockScope, String> _scopeTitleKeys = {
+    LockScope.security: 'copy_55d99fbf9a7e',
+    LockScope.diary: 'copy_05bf144d9e9b',
+    LockScope.chat: 'copy_f145b5a01af0',
+    LockScope.privateArea: 'copy_1dbbda9c5242',
+    LockScope.app: 'copy_c90a7435320d',
   };
 
-  static const Map<LockScope, String> _scopeReasons = {
-    LockScope.security: 'Xác thực để vào khu vực bảo mật của hai bạn.',
-    LockScope.diary: 'Xác thực để xem nhật ký riêng tư.',
-    LockScope.chat: 'Xác thực để mở phần tin nhắn riêng.',
-    LockScope.privateArea: 'Xác thực để mở kho bí mật.',
-    LockScope.app: 'Xác thực để mở khóa SoulLocket.',
+  static const Map<LockScope, String> _scopeReasonKeys = {
+    LockScope.security: 'copy_9f56b248ba23',
+    LockScope.diary: 'copy_a09ff40e8800',
+    LockScope.chat: 'copy_3815ae07482d',
+    LockScope.privateArea: 'copy_a5ea805f62d0',
+    LockScope.app: 'copy_d573a3201d39',
   };
 
   static const Map<LockScope, String> _scopeKeys = {
@@ -131,11 +131,13 @@ abstract final class _MilitaryLockRuleEngine {
   }
 
   static String getScopeTitle(LockScope scope) {
-    return _scopeTitles[scope] ?? _scopeTitles[LockScope.app]!;
+    final key = _scopeTitleKeys[scope] ?? _scopeTitleKeys[LockScope.app]!;
+    return UiCopy.text(key);
   }
 
   static String scopeReason(LockScope scope) {
-    return _scopeReasons[scope] ?? _scopeReasons[LockScope.app]!;
+    final key = _scopeReasonKeys[scope] ?? _scopeReasonKeys[LockScope.app]!;
+    return UiCopy.text(key);
   }
 
   static String scopePrefKey(LockScope scope) {

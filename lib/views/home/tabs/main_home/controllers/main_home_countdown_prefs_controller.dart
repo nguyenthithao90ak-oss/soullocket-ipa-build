@@ -13,9 +13,20 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     String? avatarFrameKey,
     String? customBackgroundUrl,
     String? countdownTextColor,
+    String? expectedHouseId,
+    String? expectedUid,
     Set<String>? prevalidatedUnlockedStyles,
     bool? isVip,
   }) async {
+    bool scopeIsCurrent() =>
+        (expectedHouseId == null || (mounted && _houseId == expectedHouseId)) &&
+        (expectedUid == null ||
+            FirebaseAuth.instance.currentUser?.uid == expectedUid);
+    void requireCurrentScope() {
+      if (!scopeIsCurrent()) throw StateError('Home media scope changed');
+    }
+
+    requireCurrentScope();
     await UiPrefs.ensureLoaded();
     final current = UiPrefs.notifier.value;
     final resolvedCountdownShapeKey =
@@ -37,7 +48,10 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!allowedCountdownShapeKeys.contains(resolvedCountdownShapeKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            L10nScope.of(context).format('ui_home_cannot_change_shape_because_code_value1_is_b21876', {'value1': resolvedCountdownShapeKey}),
+            L10nScope.of(context).format(
+              'ui_home_cannot_change_shape_because_code_value1_is_b21876',
+              {'value1': resolvedCountdownShapeKey},
+            ),
           );
         }
         return;
@@ -68,7 +82,10 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!allowedCountdownStyleKeys.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            L10nScope.of(context).format('ui_home_cannot_change_count_ring_type_because_type_4400df', {'value1': resolvedCountdownStyleKey}),
+            L10nScope.of(context).format(
+              'ui_home_cannot_change_count_ring_type_because_type_4400df',
+              {'value1': resolvedCountdownStyleKey},
+            ),
           );
         }
         return;
@@ -90,7 +107,10 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!allowedFallingEffectKeys.contains(resolvedFallingEffectKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            L10nScope.of(context).format('ui_home_the_effect_cannot_be_changed_because_the_23aab5', {'value1': resolvedFallingEffectKey}),
+            L10nScope.of(context).format(
+              'ui_home_the_effect_cannot_be_changed_because_the_23aab5',
+              {'value1': resolvedFallingEffectKey},
+            ),
           );
         }
         return;
@@ -108,7 +128,10 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       if (!resolvedUnlockedStyles.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
-            L10nScope.of(context).format('ui_home_type_value1_is_not_opened_see_the_53dbae', {'value1': resolvedCountdownStyleKey}),
+            L10nScope.of(context).format(
+              'ui_home_type_value1_is_not_opened_see_the_53dbae',
+              {'value1': resolvedCountdownStyleKey},
+            ),
           );
         }
         return;
@@ -161,57 +184,67 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       transparentMode: newTransparentMode,
     );
 
-    unawaited(
-      UiPrefs.saveState(nextState).catchError((error) {
-        debugPrint(
-          '[SuppressedError] lib/views/home/tabs/main_home/controllers/main_home_countdown_prefs_controller.dart: $error',
-        );
-      }),
-    );
-
     final houseId = (_houseId ?? '').trim();
-    if (houseId.isNotEmpty) {
-      final updates = <String, dynamic>{'updatedAt': ServerValue.timestamp};
-      if (normalizedCountdownShapeKey != current.countdownShapeKey) {
-        updates['countdownShape'] = normalizedCountdownShapeKey;
-      }
-      if (normalizedCountdownStyleKey != current.countdownStyleKey) {
-        updates['countdownStyle'] = normalizedCountdownStyleKey;
-      }
-      if (normalizedFallingEffectKey != current.fallingEffectKey) {
-        updates['fallingEffect'] = normalizedFallingEffectKey;
-      }
-      if (normalizedCountdownSizePx != current.countdownSizePx) {
-        updates['countdownSizePx'] = normalizedCountdownSizePx;
-      }
-      if (normalizedAvatarSizePx != current.avatarSizePx) {
-        updates['avatarSizePx'] = normalizedAvatarSizePx;
-      }
-      if (normalizedAvatarFrameKey != current.avatarFrameKey) {
-        updates['avatarFrame'] = normalizedAvatarFrameKey;
-      }
-      if (normalizedCustomBackgroundUrl != current.customBackgroundUrl) {
-        updates['customBackgroundUrl'] = normalizedCustomBackgroundUrl;
-        updates['customHomeBackground'] = normalizedCustomBackgroundUrl;
-      }
-      if (normalizedCountdownTextColor != current.countdownTextColor) {
-        updates['countdownTextColor'] = normalizedCountdownTextColor;
-      }
-      if (newTransparentMode != current.transparentMode) {
-        updates['transparentMode'] = newTransparentMode;
-      }
+    final updates = <String, dynamic>{'updatedAt': ServerValue.timestamp};
+    if (normalizedCountdownShapeKey != current.countdownShapeKey) {
+      updates['countdownShape'] = normalizedCountdownShapeKey;
+    }
+    if (normalizedCountdownStyleKey != current.countdownStyleKey) {
+      updates['countdownStyle'] = normalizedCountdownStyleKey;
+    }
+    if (normalizedFallingEffectKey != current.fallingEffectKey) {
+      updates['fallingEffect'] = normalizedFallingEffectKey;
+    }
+    if (normalizedCountdownSizePx != current.countdownSizePx) {
+      updates['countdownSizePx'] = normalizedCountdownSizePx;
+    }
+    if (normalizedAvatarSizePx != current.avatarSizePx) {
+      updates['avatarSizePx'] = normalizedAvatarSizePx;
+    }
+    if (normalizedAvatarFrameKey != current.avatarFrameKey) {
+      updates['avatarFrame'] = normalizedAvatarFrameKey;
+    }
+    if (normalizedCountdownTextColor != current.countdownTextColor) {
+      updates['countdownTextColor'] = normalizedCountdownTextColor;
+    }
+    if (newTransparentMode != current.transparentMode) {
+      updates['transparentMode'] = newTransparentMode;
+    }
 
-      unawaited(
-        _dbRef.child('houses/$houseId/settings').update(updates).catchError((
-          e,
-        ) {
-          if (mounted) {
-            _showLatestSnackBar(
-              context.tr('home_lutrnmycha_08ba34'),
-            );
-          }
-        }),
+    try {
+      // Ghi local trước, rồi chờ RTDB hoàn tất trước khi caller xóa ảnh cũ.
+      // Khi lỗi, URL trước đó vẫn còn để khôi phục.
+      requireCurrentScope();
+      if (customBackgroundUrl != null && houseId.isEmpty) {
+        throw StateError('Home background requires a House');
+      }
+      await UiPrefs.saveState(nextState);
+      requireCurrentScope();
+      if (houseId.isNotEmpty) {
+        await _dbRef.child('houses/$houseId/settings').update(updates);
+        requireCurrentScope();
+        if (normalizedCustomBackgroundUrl != current.customBackgroundUrl) {
+          await _storageService.syncHomeBackground(
+            houseId,
+            normalizedCustomBackgroundUrl,
+          );
+        }
+      }
+    } catch (error) {
+      debugPrint(
+        '[SuppressedError] lib/views/home/tabs/main_home/controllers/main_home_countdown_prefs_controller.dart: $error',
       );
+      try {
+        if (scopeIsCurrent()) await UiPrefs.saveState(current);
+      } catch (rollbackError) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/tabs/main_home/controllers/main_home_countdown_prefs_controller.dart rollback: $rollbackError',
+        );
+      }
+      if (mounted) {
+        _showLatestSnackBar(context.tr('home_lutrnmycha_08ba34'));
+      }
+      rethrow;
     }
   }
 
@@ -225,7 +258,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     final styleOptions = <_CountdownQuickOption>[
       for (final key in KeepsakePalette.newStyleKeys)
         _CountdownQuickOption(
-          label: context.tr('keepsake_' + key),
+          label: context.tr('countdown_' + key),
           value: key,
           icon: key == 'botanical'
               ? Icons.local_florist_rounded
@@ -235,7 +268,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
           accent: KeepsakePalette.of(key).accent,
         ),
       _CountdownQuickOption(
-        label: context.tr('countdown_default'),
+        label: context.tr('countdown_love_letter'),
         value: 'default',
         icon: Icons.favorite_rounded,
         accent: const Color(0xFFD94C86),

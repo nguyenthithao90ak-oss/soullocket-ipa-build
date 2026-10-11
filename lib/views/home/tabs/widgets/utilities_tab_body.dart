@@ -10,6 +10,7 @@ import 'utilities_category_section.dart';
 import 'utilities_daily_pick_card.dart';
 import 'utilities_hub_header.dart';
 import 'utilities_recent_row.dart';
+import 'utilities_scrapbook_design.dart';
 
 class UtilitiesTabBody extends StatefulWidget {
   const UtilitiesTabBody({
@@ -159,7 +160,7 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
   List<Widget> _buildContent(BuildContext context) {
     final pick = widget.dailyPick;
     final pickApp = widget.dailyPickApp;
-    final children = <Widget>[const SizedBox(height: 8)];
+    final children = <Widget>[const SizedBox(height: 14)];
 
     if (pick != null && pickApp != null) {
       children
@@ -226,54 +227,56 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
       1.0,
       1.3,
     );
-    final titleExtent = 72.0 * textScale;
-    final chipsExtent = 40.0 * textScale + 16;
+    final titleExtent = 88.0 * textScale;
+    final chipsExtent = (48.0 * textScale).clamp(48.0, 62.0) + 16;
     _pinnedHeaderExtent = topInset + chipsExtent;
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: _handleScrollNotification,
-      child: CustomScrollView(
-        key: _viewportKey,
-        controller: _scrollController,
-        physics: SLResponsive.scrollPhysicsForPlatform(),
-        slivers: [
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: UtilitiesHubHeaderDelegate(
-              topInset: topInset,
-              titleExtent: titleExtent,
-              chipsExtent: chipsExtent,
-              title: MediaQuery.withClampedTextScaling(
-                maxScaleFactor: 1.3,
-                child: const UtilitiesHubTitle(),
-              ),
-              chips: MediaQuery.withClampedTextScaling(
-                maxScaleFactor: 1.3,
-                child: UtilitiesCategoryChips(
-                  categories: widget.categories.keys.toList(growable: false),
-                  active: _activeCategory,
-                  onSelected: _selectCategory,
-                  controller: _chipsController,
-                  chipKeys: _chipKeys,
+    return UtilitiesScrapbookBackdrop(
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _handleScrollNotification,
+        child: CustomScrollView(
+          key: _viewportKey,
+          controller: _scrollController,
+          physics: SLResponsive.scrollPhysicsForPlatform(),
+          slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: UtilitiesHubHeaderDelegate(
+                topInset: topInset,
+                titleExtent: titleExtent,
+                chipsExtent: chipsExtent,
+                title: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.3,
+                  child: const UtilitiesHubTitle(),
                 ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: _buildContent(context),
+                chips: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.3,
+                  child: UtilitiesCategoryChips(
+                    categories: widget.categories.keys.toList(growable: false),
+                    active: _activeCategory,
+                    onSelected: _selectCategory,
+                    controller: _chipsController,
+                    chipKeys: _chipKeys,
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: _buildContent(context),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -284,14 +287,11 @@ class _LongPressHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = UtilitiesScrapbookColors.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(
-          Icons.push_pin_outlined,
-          size: 14,
-          color: SLColors.textSecond,
-        ),
+        Icon(Icons.push_pin_outlined, size: 14, color: colors.muted),
         const SizedBox(width: 6),
         Flexible(
           child: Text(
@@ -300,7 +300,7 @@ class _LongPressHint extends StatelessWidget {
             style: SLTheme.quicksand(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: SLColors.textSecond,
+              color: colors.muted,
             ),
           ),
         ),

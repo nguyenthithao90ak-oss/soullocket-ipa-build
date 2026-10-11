@@ -51,10 +51,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
                             : const Duration(milliseconds: 180),
                         switchInCurve: Curves.easeOutCubic,
                         switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
                         child: navCollapsed
                             ? _buildCollapsedNavHandle(
                                 isDark: isDark,
@@ -96,6 +94,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
     final navSurface = SoulNavigationSurface(
       key: _firstGuideBottomNavKey,
       isDark: isDark,
+      activeIndex: currentIndex,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -201,7 +200,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
 
     return SoulNavigationTile(
       label: _l10nService.translate(item.labelKey),
-      icon: _getIconForTab(index, isActive: isActive),
+      glyph: SoulNavigationGlyph.values[index],
       accent: item.activeColor,
       selected: isActive,
       isDark: isDark,

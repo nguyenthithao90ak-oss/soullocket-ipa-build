@@ -50,7 +50,9 @@ class PrivateMediaUrlService {
        _now = now ?? DateTime.now;
 
   static const Duration _cacheSafetyWindow = Duration(seconds: 5);
-  static const Duration _maximumCacheLifetime = Duration(seconds: 90);
+  // Link xem riêng tư sống 50 phút từ 07/10/2026 (trước là 120 giây); giữ link tới 5 giây
+  // trước hạn server, tối đa 45 phút, để ảnh/video đang hiện không xin link lại mỗi 90 giây.
+  static const Duration _maximumCacheLifetime = Duration(minutes: 45);
   static const Duration _appCheckFailureCooldown = Duration(seconds: 30);
 
   final String? Function() _currentUid;

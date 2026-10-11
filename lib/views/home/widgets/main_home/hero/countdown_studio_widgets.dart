@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../widgets/keepsake_frame.dart';
+import 'countdown_artwork_surface.dart';
 import 'main_home_countdown_visual_spec.dart';
 
 /// Một mặt nền liên tục: phân nhóm bằng khoảng cách và nét mảnh, không lồng thẻ.
@@ -56,6 +56,7 @@ class CountdownStudioPreview extends StatelessWidget {
     this.number = 500,
     this.colorHex = '',
     this.sizeValue = 400,
+    this.enableMotion = false,
   });
   final String styleKey;
   final String label;
@@ -65,6 +66,7 @@ class CountdownStudioPreview extends StatelessWidget {
   final int number;
   final String colorHex;
   final double sizeValue;
+  final bool enableMotion;
 
   @override
   Widget build(BuildContext context) {
@@ -84,53 +86,27 @@ class CountdownStudioPreview extends StatelessWidget {
           child: Center(
             child: SizedBox.square(
               dimension: (148 + (sizeValue - 200) * .12).clamp(148, 196),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: visual.outerColor,
-                  gradient: visual.outerGradient,
-                  border: visual.outerBorder,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: visual.innerColor,
-                      gradient: visual.innerGradient,
-                      border: visual.innerBorder,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(27),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: ShaderMask(
-                              shaderCallback: (rect) => LinearGradient(
-                                colors: colors,
-                              ).createShader(rect),
-                              child: Text(
-                                number.toString(),
-                                style: const TextStyle(
-                                  fontSize: 54,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  height: 1.1,
-                                ),
-                              ),
-                            ),
+              child: CountdownArtworkSurface(
+                styleKey: styleKey,
+                enableMotion: enableMotion,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: ShaderMask(
+                        shaderCallback: (rect) =>
+                            LinearGradient(colors: colors).createShader(rect),
+                        child: Text(
+                          number.toString(),
+                          style: const TextStyle(
+                            fontSize: 54,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1.1,
                           ),
                         ),
-                        if (styleKey != 'default' && styleKey != 'balanced')
-                          Positioned.fill(
-                            child: KeepsakeOrnaments(
-                              styleKey: styleKey,
-                              animate: false,
-                            ),
-                          ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

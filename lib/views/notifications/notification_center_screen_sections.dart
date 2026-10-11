@@ -29,29 +29,34 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
     );
   }
 
-  String _normalizeNotificationText(String value) {
-    if (value.trim().isEmpty) {
-      return value;
+  String _normalizeNotificationText(String value) => value;
+
+  String _sourceText(_NotifModel notif) {
+    final scheduled = _schedulePresentation(notif);
+    if (scheduled != null) {
+      return _normalizeNotificationText(scheduled.sourceLabel);
     }
-    return value
-        .replaceAll(RegExp(r'\bHe thong\b'), 'Hệ thống')
-        .replaceAll(RegExp(r'\bhe thong\b'), 'hệ thống')
-        .replaceAll(RegExp(r'\bThong bao\b'), 'Thông báo')
-        .replaceAll(RegExp(r'\bthong bao\b'), 'thông báo')
-        .replaceAll(RegExp(r'\bCanh bao\b'), 'Cảnh báo')
-        .replaceAll(RegExp(r'\bcanh bao\b'), 'cảnh báo');
+    final raw = notif.raw;
+    final isServerSystem = raw['source']?.toString() == 'server_system_event';
+    final hasExplicitSource = raw['sourceLabel'] != null ||
+        raw['fromName'] != null ||
+        raw['fromLabel'] != null;
+    final source = isServerSystem && !hasExplicitSource
+        ? context.tr('notifications_tab_system')
+        : notif.from;
+    return _normalizeNotificationText(source);
   }
 
-  String _sourceText(_NotifModel notif) => _normalizeNotificationText(
-    _schedulePresentation(notif)?.sourceLabel ?? notif.from,
-  );
-
   String _titleText(_NotifModel notif) => _normalizeNotificationText(
-    _schedulePresentation(notif)?.title ?? notif.title,
+    _schedulePresentation(notif)?.title ??
+        describeSystemNotification(notif.raw, fallbackMessage: notif.msg)?.title ??
+        notif.title,
   );
 
   String _messageText(_NotifModel notif) => _normalizeNotificationText(
-    _schedulePresentation(notif)?.message ?? notif.msg,
+    _schedulePresentation(notif)?.message ??
+        describeSystemNotification(notif.raw, fallbackMessage: notif.msg)?.message ??
+        notif.msg,
   );
 
   List<_NotifModel> get _filtered {
@@ -807,6 +812,34 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
     );
   }
 
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SLTheme.emptyStatePanel(
+              icon: Icons.cloud_off_rounded,
+              title: context.tr('p5_notif_title'),
+              subtitle: context.tr('settings_initial_load_error'),
+              accentColor: SLColors.danger,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: _retryLoad,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(context.tr('core_retry')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   ({String label, Color accent, Color surface}) get _activeFilterTone {
     final tone = _toneForCategory(_cat);
     return (
@@ -884,7 +917,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
         });
       }
       final d = DateTime.fromMillisecondsSinceEpoch(tsFixed);
-      return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+      return LocaleDateFormat.date(d);
     } catch (_) {
       return '';
     }
@@ -892,9 +925,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
 
   String _fmtDateTime(int ts) {
     try {
-      return DateFormat(
-        'HH:mm - dd/MM/yyyy',
-      ).format(DateTime.fromMillisecondsSinceEpoch(ts));
+      return LocaleDateFormat.dateTime(DateTime.fromMillisecondsSinceEpoch(ts));
     } catch (_) {
       return '';
     }

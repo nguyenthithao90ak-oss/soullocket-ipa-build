@@ -2,6 +2,8 @@ import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -26,6 +28,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
   List<Map<String, dynamic>> _mappings = [];
   bool _isCreating = false;
   String? _error;
+  final SingleOpenGate _openGate = SingleOpenGate();
 
   @override
   void initState() {
@@ -57,7 +60,11 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
     super.dispose();
   }
 
-  Future<void> _startRandomChat() async {
+  Future<void> _startRandomChat() {
+    return _openGate.run(_startRandomChatFlow);
+  }
+
+  Future<void> _startRandomChatFlow() async {
     if (_isCreating) return;
 
     try {
@@ -65,14 +72,12 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
           .map((m) => m['peerHouseId'].toString())
           .toSet();
 
-      final result = await Navigator.push<dynamic>(
+      final result = await slPush<dynamic>(
         context,
-        MaterialPageRoute(
-          builder: (context) => SingleMatchFindingScreen(
-            currentHouseId: widget.houseId,
-            excludeHouseIds: alreadyChatted,
-            isChat: true,
-          ),
+        SingleMatchFindingScreen(
+          currentHouseId: widget.houseId,
+          excludeHouseIds: alreadyChatted,
+          isChat: true,
         ),
       );
 
@@ -95,15 +100,13 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
       );
 
       if (!mounted) return;
-      await Navigator.push(
+      await slPush<void>(
         context,
-        MaterialPageRoute(
-          builder: (_) => ChatDetailScreen(
-            myHouseId: widget.houseId,
-            targetHouseId: pick.houseId,
-            targetName: pick.displayName,
-            targetAvatar: pick.avatarUrl,
-          ),
+        ChatDetailScreen(
+          myHouseId: widget.houseId,
+          targetHouseId: pick.houseId,
+          targetName: pick.displayName,
+          targetAvatar: pick.avatarUrl,
         ),
       );
     } catch (err) {
@@ -447,18 +450,14 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
               ),
             ),
             FilledButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatDetailScreen(
-                      myHouseId: widget.houseId,
-                      targetHouseId: peerHouseId,
-                      targetName: peerName,
-                    ),
-                  ),
-                );
-              },
+              onPressed: () => slPush<void>(
+                context,
+                ChatDetailScreen(
+                  myHouseId: widget.houseId,
+                  targetHouseId: peerHouseId,
+                  targetName: peerName,
+                ),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF7C61FF),
                 shape: RoundedRectangleBorder(

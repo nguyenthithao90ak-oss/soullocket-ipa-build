@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
 
 /// Custom page route với slide từ phải + fade nhẹ.
 /// Thay thế MaterialPageRoute để transition mượt hơn trên cả Android & iOS.
@@ -8,11 +11,10 @@ import 'package:flutter/cupertino.dart';
 ///   Navigator.of(context).push(SLRoute(builder: (_) => TargetScreen()));
 class SLRoute<T> extends PageRoute<T> with CupertinoRouteTransitionMixin<T> {
   final WidgetBuilder builder;
+  final bool _fullscreenDialog;
 
-  SLRoute({
-    required this.builder,
-    super.settings,
-  });
+  SLRoute({required this.builder, bool? fullscreenDialog, super.settings})
+    : _fullscreenDialog = fullscreenDialog ?? false;
 
   @override
   Widget buildContent(BuildContext context) => builder(context);
@@ -24,13 +26,113 @@ class SLRoute<T> extends PageRoute<T> with CupertinoRouteTransitionMixin<T> {
   String? get title => null;
 
   @override
-  bool get popGestureEnabled =>
-      true; // Luôn bật tính năng vuốt để back trên Android/iOS
+  bool get fullscreenDialog => _fullscreenDialog;
+
+  @override
+  bool get popGestureEnabled => true; // Luôn bật tính năng vuốt để back trên Android/iOS
 }
 
 /// Shorthand push helper — thay Navigator.of(context).push(MaterialPageRoute(...))
-Future<T?> slPush<T>(BuildContext context, Widget screen) {
-  return Navigator.of(context).push<T>(
-    SLRoute<T>(builder: (_) => screen),
+Future<T?> slPush<T>(
+  BuildContext context,
+  Widget screen, {
+  bool fullscreenDialog = false,
+}) {
+  return slPushRoute<T>(
+    context,
+    SLRoute<T>(builder: (_) => screen, fullscreenDialog: fullscreenDialog),
+    identity: _SlRouteIdentity(screen.runtimeType, screen.key),
   );
+}
+
+/// Mở route tùy chỉnh qua cùng cơ chế chống mở trùng của [slPush].
+/// Giữ nguyên transition, overlay và Navigator mà tính năng đang sử dụng.
+Future<T?> slPushRoute<T>(
+  BuildContext context,
+  PageRoute<T> route, {
+  required Object identity,
+  bool rootNavigator = false,
+}) {
+  if (!context.mounted) return Future<T?>.value(null);
+  final navigator = Navigator.of(context, rootNavigator: rootNavigator);
+  // Khóa theo màn hình hiện tại và loại màn hình đích. Nhờ vậy các cú chạm
+  // lặp từ cùng một màn hình không tạo route trùng, nhưng màn hình con vẫn
+  // có thể mở bình thường sau khi màn hình cha đã hiển thị.
+  final source = ModalRoute.of(context) ?? navigator;
+  var gates = _slRouteGates[source];
+  if (gates == null) {
+    gates = <Object, SingleOpenGate>{};
+    _slRouteGates[source] = gates;
+  }
+  var openingGate = _slRouteOpeningGates[source];
+  if (openingGate == null) {
+    openingGate = SingleOpenGate();
+    _slRouteOpeningGates[source] = openingGate;
+  }
+  // Bỏ cú chạm vào đích khác trong khi route nguồn đang chuyển màn.
+  // Khóa này chỉ giữ lúc mở; callback màn con vẫn hoạt động sau đó.
+  final activeGate = gates[identity];
+  if (activeGate?.isBusy != true && openingGate.isBusy) {
+    return Future<T?>.value(null);
+  }
+  final gate = gates.putIfAbsent(identity, SingleOpenGate.new);
+  final entryGate = openingGate;
+  return gate
+      .runValue<T>(() async {
+        late Future<T?> result;
+        await entryGate.run(() async {
+          result = navigator.push<T>(route);
+          await _waitForRouteEntry(route);
+        });
+        final value = await result;
+        // Navigator.push hoàn tất khi bắt đầu pop. Chờ overlay được gỡ để
+        // cú chạm còn sót trong hiệu ứng đóng không mở lại màn hình.
+        await route.completed;
+        return value;
+      })
+      .whenComplete(() {
+        if (!gate.isBusy && identical(gates![identity], gate)) {
+          gates.remove(identity);
+        }
+      });
+}
+
+final Expando<Map<Object, SingleOpenGate>> _slRouteGates =
+    Expando<Map<Object, SingleOpenGate>>();
+final Expando<SingleOpenGate> _slRouteOpeningGates = Expando<SingleOpenGate>();
+
+Future<void> _waitForRouteEntry(PageRoute<dynamic> route) async {
+  final animation = route.animation;
+  if (animation == null || animation.status == AnimationStatus.completed) {
+    return;
+  }
+  final entered = Completer<void>();
+  void onStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed && !entered.isCompleted) {
+      entered.complete();
+    }
+  }
+
+  animation.addStatusListener(onStatus);
+  try {
+    // Route có thể bị pop/remove trước khi hiệu ứng mở chạy xong.
+    await Future.any<void>([entered.future, route.popped.then((_) {})]);
+  } finally {
+    animation.removeStatusListener(onStatus);
+  }
+}
+
+class _SlRouteIdentity {
+  const _SlRouteIdentity(this.type, this.key);
+
+  final Type type;
+  final Key? key;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _SlRouteIdentity && other.type == type && other.key == key;
+  }
+
+  @override
+  int get hashCode => Object.hash(type, key);
 }

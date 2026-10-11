@@ -1,16 +1,17 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../models/social_post.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
@@ -99,7 +100,21 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   bool _isLoadingRepost = false;
   bool _isLoadingPrivate = false;
   bool _isLoadingLocket = false;
+  VisitorProfileTabLoadStatus _likedStatus =
+      VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _postsStatus = VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _repostStatus =
+      VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _privateStatus =
+      VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _locketStatus =
+      VisitorProfileTabLoadStatus.idle;
+  Future<List<SocialPost>>? _likedRequest;
+  Future<List<SocialPost>>? _repostRequest;
+  Future<List<SocialPost>>? _privateRequest;
+  Future<List<SocialPost>>? _locketRequest;
   bool _isUpdatingProfileAppearance = false;
+  bool _isUploadingProfileImage = false;
   bool _didPromptPendingProfileHeaderRetry = false;
   bool _didPromptPendingHouseAvatarRetry = false;
 
@@ -263,65 +278,35 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     }
   }
 
-  Future<XFile?> _cropProfileHeaderImage(XFile file) async {
-    if (kIsWeb || file.path.isEmpty) {
-      return file;
-    }
-
-    final cropRatioX = MediaQuery.sizeOf(context).width;
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: file.path,
-      aspectRatio: CropAspectRatio(
-        ratioX: cropRatioX,
-        ratioY: _kProfileHeaderExpandedHeight,
-      ),
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 80,
-      maxWidth: 1080,
-      maxHeight: 1080,
-      uiSettings: [
-        IOSUiSettings(
-          title: context.tr('p5_profile_crop_header'),
-          aspectRatioLockEnabled: true,
-          aspectRatioPickerButtonHidden: true,
-          resetAspectRatioEnabled: false,
-        ),
-      ],
+  Future<XFile?> _cropProfileHeaderImage(XFile file) {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = _editableProfileHouseId;
+    return cropAndConfirmImage(
+      context: context,
+      image: file,
+      aspectRatio: MediaQuery.sizeOf(context).width / _kProfileHeaderExpandedHeight,
+      maxOutputSize: const Size(1080, 1080),
+      titleKey: 'p5_profile_crop_header',
+      isScopeCurrent: () => mounted && ownerUid != null &&
+          _editableProfileHouseId == houseId &&
+          FirebaseAuth.instance.currentUser?.uid == ownerUid,
     );
-
-    if (croppedFile == null) return null;
-    return XFile(croppedFile.path);
   }
 
-  Future<XFile?> _cropHouseAvatarImage(XFile file) async {
-    if (kIsWeb || file.path.isEmpty) {
-      return file;
-    }
-
-    try {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: file.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 82,
-        maxWidth: 800,
-        maxHeight: 800,
-        uiSettings: [
-          IOSUiSettings(
-            title: context.tr('p5_profile_crop_avatar'),
-            aspectRatioLockEnabled: true,
-            aspectRatioPickerButtonHidden: true,
-            resetAspectRatioEnabled: false,
-            cropStyle: CropStyle.circle,
-          ),
-        ],
-      );
-
-      if (croppedFile == null) return null;
-      return XFile(croppedFile.path);
-    } catch (_) {
-      return file;
-    }
+  Future<XFile?> _cropHouseAvatarImage(XFile file) {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = _editableProfileHouseId;
+    return cropAndConfirmImage(
+      context: context,
+      image: file,
+      aspectRatio: 1,
+      circular: true,
+      maxOutputSize: const Size(800, 800),
+      titleKey: 'p5_profile_crop_avatar',
+      isScopeCurrent: () => mounted && ownerUid != null &&
+          _editableProfileHouseId == houseId &&
+          FirebaseAuth.instance.currentUser?.uid == ownerUid,
+    );
   }
 
   Future<void> _promptPendingProfileUploadRetryIfNeeded() async {
@@ -432,23 +417,32 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
   Future<void> _pickAndUploadProfileHeaderImage({XFile? presetFile}) async {
     final houseId = _editableProfileHouseId;
-    if (houseId == null || _isUpdatingProfileAppearance) {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final pendingKey = _pendingProfileHeaderUploadKey;
+    bool isCurrent() => mounted && ownerUid != null &&
+        _editableProfileHouseId == houseId &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+    if (houseId == null || !isCurrent() || _isUpdatingProfileAppearance || _isUploadingProfileImage) {
       return;
     }
 
-    XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null) return;
-
+    _isUploadingProfileImage = true;
     try {
+      XFile? file = presetFile ??
+          await _storageService.pickImage(preserveOriginal: true);
+      if (file == null || !isCurrent()) return;
       if (presetFile == null) {
         file = await _cropProfileHeaderImage(file);
       }
-      if (file == null) return;
+      if (file == null || !isCurrent()) return;
       await PendingUploadService.instance.save(
-        _pendingProfileHeaderUploadKey,
+        pendingKey,
         <String, dynamic>{'filePath': file.path},
       );
 
+      if (!mounted || !isCurrent()) return;
+      final freshHouseId = await _houseService.getCurrentHouseId();
+      if (!isCurrent() || freshHouseId != houseId) return;
       final upload = await _storageService.uploadPublicImage(
         houseId,
         'profile_header',
@@ -459,45 +453,60 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       );
       final url = upload?.downloadUrl.trim() ?? '';
       if (url.isEmpty) {
-        throw L10nService().translate('ui_visitors_unable_to_upload_the_background_image_a60d58');
+        throw L10nService().translate(
+          'ui_visitors_unable_to_upload_the_background_image_a60d58',
+        );
       }
       final refreshedUrl = _withRefreshToken(url);
       await StorageMediaCommit.commit(
-        scopeIsCurrent: () => mounted && _editableProfileHouseId == houseId,
+        scopeIsCurrent: isCurrent,
         persist: () => _saveProfilePresentation(
           headerImageUrl: refreshedUrl,
           propagateFailure: true,
         ),
         clearPending: () =>
-            PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey),
+            PendingUploadService.instance.clear(pendingKey),
       );
-      if (!mounted) return;
+      if (!mounted || !isCurrent()) return;
+      await discardConfirmedCropImage(file);
+      if (!mounted || !isCurrent()) return;
       _showSnack(L10nService().translate('p5_profile_header_updated'));
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || !isCurrent()) return;
       _showSnack(context.tr('p5_profile_header_change_failed'));
+    } finally {
+      _isUploadingProfileImage = false;
     }
   }
 
   Future<void> _pickAndUploadHouseAvatar({XFile? presetFile}) async {
     final houseId = _editableProfileHouseId;
-    if (houseId == null || _isUpdatingProfileAppearance) {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final pendingKey = _pendingHouseAvatarUploadKey;
+    bool isCurrent() => mounted && ownerUid != null &&
+        _editableProfileHouseId == houseId &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+    if (houseId == null || !isCurrent() || _isUpdatingProfileAppearance || _isUploadingProfileImage) {
       return;
     }
 
-    XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null) return;
-
+    _isUploadingProfileImage = true;
     try {
+      XFile? file = presetFile ??
+          await _storageService.pickImage(preserveOriginal: true);
+      if (file == null || !isCurrent()) return;
       if (presetFile == null) {
         file = await _cropHouseAvatarImage(file);
       }
-      if (file == null) return;
+      if (file == null || !isCurrent()) return;
       await PendingUploadService.instance.save(
-        _pendingHouseAvatarUploadKey,
+        pendingKey,
         <String, dynamic>{'filePath': file.path},
       );
 
+      if (!mounted || !isCurrent()) return;
+      final freshHouseId = await _houseService.getCurrentHouseId();
+      if (!isCurrent() || freshHouseId != houseId) return;
       final upload = await _storageService.uploadPublicImage(
         houseId,
         'house_avatar',
@@ -508,23 +517,27 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       );
       final url = upload?.downloadUrl.trim() ?? '';
       if (url.isEmpty) {
-        throw L10nService().translate('ui_visitors_unable_to_upload_the_profile_photo_242a6c');
+        throw L10nService().translate(
+          'ui_visitors_unable_to_upload_the_profile_photo_242a6c',
+        );
       }
       final refreshedUrl = _withRefreshToken(url);
-      if (!mounted) return;
+      if (!mounted || !isCurrent()) return;
 
       setState(() => _isUpdatingProfileAppearance = true);
       try {
         await StorageMediaCommit.commit(
-          scopeIsCurrent: () => mounted && _editableProfileHouseId == houseId,
+          scopeIsCurrent: isCurrent,
           persist: () => _houseSettingsService.updateHouseAvatarOnly(
             houseId: houseId,
             avatarUrl: refreshedUrl,
           ),
           clearPending: () =>
-              PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey),
+              PendingUploadService.instance.clear(pendingKey),
         );
-        if (!mounted) return;
+        if (!mounted || !isCurrent()) return;
+        await discardConfirmedCropImage(file);
+        if (!mounted || !isCurrent()) return;
         setState(() {
           _applyProfilePresentationLocally(houseAvatar: refreshedUrl);
         });
@@ -535,8 +548,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         }
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || !isCurrent()) return;
       _showSnack(context.tr('p5_profile_avatar_change_failed'));
+    } finally {
+      _isUploadingProfileImage = false;
     }
   }
 
@@ -574,28 +589,36 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
   Future<void> _load() async {
     try {
-      _myHouseId = await _houseService.getCurrentHouseId();
+      _myHouseId = await _houseService
+          .getCurrentHouseId()
+          .timeout(const Duration(seconds: 12));
       if (_myHouseId == null) {
         if (!mounted) return;
         setState(() => _isLoading = false);
         return;
       }
+      if (!mounted) return;
 
+      await Future.wait<void>([
+        () async {
       try {
         final mySnap = await _db
             .ref('houses/$_myHouseId/settings/houseName')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 12));
         _myHouseName = mySnap.value?.toString() ?? _myHouseId;
       } catch (error) {
         debugPrint(
           '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
         );
       }
-
+        }(),
+        () async {
       try {
         final targetSnap = await _db
             .ref('house_profiles/${widget.targetHouseId}')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 12));
         if (targetSnap.exists && targetSnap.value is Map) {
           _targetData = Map<String, dynamic>.from(
             Map<dynamic, dynamic>.from(targetSnap.value as Map),
@@ -635,7 +658,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             _db.ref('$base/houseAvatar').get(),
             _db.ref('$base/avatar').get(),
             ...kSettingsFields.map((f) => _db.ref('$base/settings/$f').get()),
-          ]);
+          ]).timeout(const Duration(seconds: 12));
 
           final houseNameSnap = allSnaps[0];
           final houseAvatarSnap = allSnaps[1];
@@ -665,18 +688,21 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           );
         }
       }
-
+        }(),
+        () async {
       try {
         final fireSnap = await _db
             .ref('uploads/fire_totals/${widget.targetHouseId}')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 12));
         _heartCount = (fireSnap.value as num?)?.toInt() ?? 0;
       } catch (error) {
         debugPrint(
           '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
         );
       }
-
+        }(),
+        () async {
       try {
         final today = DateTime.now().toLocal();
         final todayKey = '${today.year}-${today.month}-${today.day}';
@@ -689,7 +715,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             .ref(
               'houses/$_myHouseId/settings/visitorHeartStates/${widget.targetHouseId}',
             )
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 12));
         if (heartStateSnap.exists && heartStateSnap.value is Map) {
           final heartState = Map<String, dynamic>.from(
             Map<dynamic, dynamic>.from(heartStateSnap.value as Map),
@@ -703,7 +730,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
         final friendSnap = await _db
             .ref('friends/$_myHouseId/${widget.targetHouseId}')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 12));
         _isFriend =
             friendSnap.exists &&
             (friendSnap.value == true || friendSnap.value != null);
@@ -714,7 +742,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               .ref('friend_requests')
               .orderByChild('from')
               .equalTo(_myHouseId)
-              .once();
+              .once()
+              .timeout(const Duration(seconds: 12));
           if (reqSnap.snapshot.exists && reqSnap.snapshot.value is Map) {
             final reqMap = Map<dynamic, dynamic>.from(
               reqSnap.snapshot.value as Map,
@@ -740,7 +769,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
                 .ref('friend_requests')
                 .orderByChild('to')
                 .equalTo(_myHouseId)
-                .once();
+                .once()
+                .timeout(const Duration(seconds: 12));
             if (incomingSnap.snapshot.exists &&
                 incomingSnap.snapshot.value is Map) {
               final incomingMap = Map<dynamic, dynamic>.from(
@@ -761,14 +791,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       } catch (e) {
         debugPrint('Lỗi check bạn bè: ${AppErrorMapper.resolve(e).message}');
       }
-
-      try {
-        await _loadPosts();
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
-        );
-      }
+        }(),
+        _loadPosts(),
+      ]);
     } catch (e) {
       debugPrint('Lỗi profile: ${AppErrorMapper.resolve(e).message}');
     } finally {
@@ -780,92 +805,187 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   Future<void> _loadPosts() async {
+    if (_postsStatus == VisitorProfileTabLoadStatus.loading ||
+        _postsStatus == VisitorProfileTabLoadStatus.loaded) {
+      return;
+    }
+    if (mounted) {
+      setState(() => _postsStatus = VisitorProfileTabLoadStatus.loading);
+    }
     try {
-      final posts = await _socialService.fetchHouseFeedPage(
-        widget.targetHouseId,
-      );
-      _posts = posts
-          .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
-          .toList();
+      final posts = await _socialService
+          .fetchHouseFeedPage(widget.targetHouseId)
+          .timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      setState(() {
+        _posts = posts
+            .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
+            .toList();
+        _postsStatus = VisitorProfileTabLoadStatus.loaded;
+      });
     } catch (e) {
       debugPrint('Error loading posts: ${AppErrorMapper.resolve(e).message}');
+      if (mounted) {
+        setState(() => _postsStatus = VisitorProfileTabLoadStatus.failed);
+      }
     }
   }
 
-  Future<void> _loadReposts() async {
-    setState(() => _isLoadingRepost = true);
+  Future<void> _loadReposts({bool retry = false}) async {
+    if (_repostRequest != null) return;
+    if (_repostStatus == VisitorProfileTabLoadStatus.loading ||
+        (_repostStatus == VisitorProfileTabLoadStatus.loaded && !retry) ||
+        (_repostStatus == VisitorProfileTabLoadStatus.failed && !retry)) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _isLoadingRepost = true;
+        _repostStatus = VisitorProfileTabLoadStatus.loading;
+      });
+    }
+    Future<List<SocialPost>>? request;
     try {
-      final posts = await _socialService.fetchRepostFeedPage(
-        widget.targetHouseId,
-      );
-      _repostPosts = posts
-          .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
-          .toList();
+      request = _socialService.fetchRepostFeedPage(widget.targetHouseId);
+      _repostRequest = request;
+      final posts = await request.timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      setState(() {
+        _repostPosts = posts
+            .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
+            .toList();
+        _repostStatus = VisitorProfileTabLoadStatus.loaded;
+      });
     } catch (e) {
       debugPrint('Error loading reposts: ${AppErrorMapper.resolve(e).message}');
+      if (mounted) {
+        setState(() => _repostStatus = VisitorProfileTabLoadStatus.failed);
+      }
     } finally {
+      if (identical(_repostRequest, request)) _repostRequest = null;
       if (mounted) setState(() => _isLoadingRepost = false);
     }
   }
 
-  Future<void> _loadPrivatePosts() async {
-    setState(() => _isLoadingPrivate = true);
+  Future<void> _loadPrivatePosts({bool retry = false}) async {
+    if (_privateRequest != null) return;
+    if (_privateStatus == VisitorProfileTabLoadStatus.loading ||
+        (_privateStatus == VisitorProfileTabLoadStatus.loaded && !retry) ||
+        (_privateStatus == VisitorProfileTabLoadStatus.failed && !retry)) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _isLoadingPrivate = true;
+        _privateStatus = VisitorProfileTabLoadStatus.loading;
+      });
+    }
+    Future<List<SocialPost>>? request;
     try {
-      final posts = await _socialService.fetchPrivateFeedPage(
-        widget.targetHouseId,
-      );
-      _privatePosts = posts
-          .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
-          .toList();
+      request = _socialService.fetchPrivateFeedPage(widget.targetHouseId);
+      _privateRequest = request;
+      final posts = await request.timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      setState(() {
+        _privatePosts = posts
+            .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
+            .toList();
+        _privateStatus = VisitorProfileTabLoadStatus.loaded;
+      });
     } catch (e) {
       debugPrint(
         'Error loading private posts: ${AppErrorMapper.resolve(e).message}',
       );
+      if (mounted) {
+        setState(() => _privateStatus = VisitorProfileTabLoadStatus.failed);
+      }
     } finally {
+      if (identical(_privateRequest, request)) _privateRequest = null;
       if (mounted) setState(() => _isLoadingPrivate = false);
     }
   }
 
-  Future<void> _loadLocketPosts() async {
-    setState(() => _isLoadingLocket = true);
+  Future<void> _loadLocketPosts({bool retry = false}) async {
+    if (_locketRequest != null) return;
+    if (_locketStatus == VisitorProfileTabLoadStatus.loading ||
+        (_locketStatus == VisitorProfileTabLoadStatus.loaded && !retry) ||
+        (_locketStatus == VisitorProfileTabLoadStatus.failed && !retry)) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _isLoadingLocket = true;
+        _locketStatus = VisitorProfileTabLoadStatus.loading;
+      });
+    }
+    Future<List<SocialPost>>? request;
     try {
-      final posts = await _socialService.fetchLocketFeedPage(
-        widget.targetHouseId,
-      );
+      request = _socialService.fetchLocketFeedPage(widget.targetHouseId);
+      _locketRequest = request;
+      final posts = await request.timeout(const Duration(seconds: 12));
       final isMe = _canEditProfile;
-      _locketPosts = posts.where((p) {
-        if (!p.isLocket) return false;
-        if (p.imageUrl.isEmpty && p.videoUrl.isEmpty) return false;
+      if (!mounted) return;
+      setState(() {
+        _locketPosts = posts.where((p) {
+          if (!p.isLocket) return false;
+          if (p.imageUrl.isEmpty && p.videoUrl.isEmpty) return false;
 
-        if (!isMe) {
-          if (_isFriend) {
-            if (p.privacy != 'public' && p.privacy != 'friends') return false;
-          } else {
-            if (p.privacy != 'public') return false;
+          if (!isMe) {
+            if (_isFriend) {
+              if (p.privacy != 'public' && p.privacy != 'friends') return false;
+            } else {
+              if (p.privacy != 'public') return false;
+            }
           }
-        }
-        return true;
-      }).toList();
+          return true;
+        }).toList();
+        _locketStatus = VisitorProfileTabLoadStatus.loaded;
+      });
     } catch (e) {
       debugPrint(
         'Error loading locket posts: ${AppErrorMapper.resolve(e).message}',
       );
+      if (mounted) {
+        setState(() => _locketStatus = VisitorProfileTabLoadStatus.failed);
+      }
     } finally {
+      if (identical(_locketRequest, request)) _locketRequest = null;
       if (mounted) setState(() => _isLoadingLocket = false);
     }
   }
 
-  Future<void> _loadLikedPosts() async {
-    setState(() => _isLoadingLiked = true);
+  Future<void> _loadLikedPosts({bool retry = false}) async {
+    if (_likedRequest != null) return;
+    if (_likedStatus == VisitorProfileTabLoadStatus.loading ||
+        (_likedStatus == VisitorProfileTabLoadStatus.loaded && !retry) ||
+        (_likedStatus == VisitorProfileTabLoadStatus.failed && !retry)) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _isLoadingLiked = true;
+        _likedStatus = VisitorProfileTabLoadStatus.loading;
+      });
+    }
+    Future<List<SocialPost>>? request;
     try {
-      _likedPosts = await _socialService.fetchLikedFeedPage(
-        widget.targetHouseId,
-      );
+      request = _socialService.fetchLikedFeedPage(widget.targetHouseId);
+      _likedRequest = request;
+      final posts = await request.timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      setState(() {
+        _likedPosts = posts;
+        _likedStatus = VisitorProfileTabLoadStatus.loaded;
+      });
     } catch (e) {
       debugPrint(
         'Error loading liked posts: ${AppErrorMapper.resolve(e).message}',
       );
+      if (mounted) {
+        setState(() => _likedStatus = VisitorProfileTabLoadStatus.failed);
+      }
     } finally {
+      if (identical(_likedRequest, request)) _likedRequest = null;
       if (mounted) setState(() => _isLoadingLiked = false);
     }
   }
@@ -1289,18 +1409,25 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
   void _handleTabSelected(String tab) {
     setState(() => _activeTab = tab);
-    if (tab == 'repost' && _repostPosts.isEmpty) _loadReposts();
-    if (tab == 'private' && _privatePosts.isEmpty) _loadPrivatePosts();
-    if (tab == 'locket' && _locketPosts.isEmpty) _loadLocketPosts();
-    if (tab == 'liked' && _likedPosts.isEmpty && !_isLoadingLiked) {
-      _loadLikedPosts();
+    if (tab == 'repost' && _repostStatus == VisitorProfileTabLoadStatus.idle) {
+      unawaited(_loadReposts());
+    }
+    if (tab == 'private' &&
+        _privateStatus == VisitorProfileTabLoadStatus.idle) {
+      unawaited(_loadPrivatePosts());
+    }
+    if (tab == 'locket' && _locketStatus == VisitorProfileTabLoadStatus.idle) {
+      unawaited(_loadLocketPosts());
+    }
+    if (tab == 'liked' && _likedStatus == VisitorProfileTabLoadStatus.idle) {
+      unawaited(_loadLikedPosts());
     }
   }
 
   Map<String, VisitorProfileTabContentData> _tabContentById() {
     return {
       'posts': VisitorProfileTabContentData(
-        isLoading: false,
+        isLoading: _postsStatus == VisitorProfileTabLoadStatus.loading,
         posts: _posts,
         emptyText: context.tr('p5_profile_empty_posts'),
         valueKeyPrefix: 'post',
@@ -1338,25 +1465,40 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   List<Widget> _buildActiveTabSlivers() {
+    final loadStatus = switch (_activeTab) {
+      'locket' => _locketStatus,
+      'repost' => _repostStatus,
+      'private' => _privateStatus,
+      'liked' => _likedStatus,
+      _ => _postsStatus,
+    };
     return buildVisitorProfileTabContentSlivers(
       activeTab: _activeTab,
       tabContent: _tabContentById(),
       buildPostThumb: _buildPostThumb,
       onOpenPost: _openTabFeed,
+      loadStatus: loadStatus,
+      errorText: context.tr('runtime_error_retry'),
+      retryText: context.tr('p5_retry'),
+      onRetry: () {
+        if (_activeTab == 'posts') unawaited(_loadPosts());
+        if (_activeTab == 'locket') unawaited(_loadLocketPosts(retry: true));
+        if (_activeTab == 'repost') unawaited(_loadReposts(retry: true));
+        if (_activeTab == 'private') unawaited(_loadPrivatePosts(retry: true));
+        if (_activeTab == 'liked') unawaited(_loadLikedPosts(retry: true));
+      },
     );
   }
 
   void _openTabFeed(int index, VisitorProfileTabContentData data) {
-    Navigator.push(
+    slPush<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => ShortVideoFeedScreen(
-          houseId: _myHouseId ?? widget.targetHouseId,
-          targetHouseId: widget.targetHouseId,
-          filterType: data.filterType,
-          initialIndex: index,
-          initialPosts: data.posts,
-        ),
+      ShortVideoFeedScreen(
+        houseId: _myHouseId ?? widget.targetHouseId,
+        targetHouseId: widget.targetHouseId,
+        filterType: data.filterType,
+        initialIndex: index,
+        initialPosts: data.posts,
       ),
     );
   }

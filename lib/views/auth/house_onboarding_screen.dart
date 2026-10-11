@@ -996,8 +996,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      const expiredSessionMessage =
-          'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại để tiếp tục.';
+      final expiredSessionMessage = context.tr('auth_expired_session_message');
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(expiredSessionMessage);
       } else {

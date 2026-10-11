@@ -46,6 +46,7 @@ class DiaryFeedController extends ChangeNotifier {
   String? _lastDiaryCacheSignature;
   StreamSubscription<List<DiaryPost>>? _diarySubscription;
   StreamSubscription<List<DiaryPost>>? _pinnedSubscription;
+  Timer? _diaryInitialLoadTimer;
   DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
   bool _hasMore = true;
   bool _isLoadingMore = false;
@@ -577,7 +578,14 @@ class DiaryFeedController extends ChangeNotifier {
       _setLoading(true);
     }
 
-    final user = await resolveCurrentUser();
+    User? user;
+    try {
+      user = await resolveCurrentUser().timeout(const Duration(seconds: 12));
+    } catch (error) {
+      debugPrint('[DiaryFeed] resolve current user timed out or failed: $error');
+      _setLoading(false);
+      return;
+    }
     if (user == null) {
       await _diarySubscription?.cancel();
       _diarySubscription = null;
@@ -590,16 +598,24 @@ class DiaryFeedController extends ChangeNotifier {
     }
 
     try {
-      final houseId = await resolveHouseId();
+      final houseId = await resolveHouseId().timeout(
+        const Duration(seconds: 15),
+      );
       if (houseId != null) {
-        await _hydrateMemberRoles(houseId);
-        await _fetchHouseSettingsData(houseId);
+        await _hydrateMemberRoles(houseId).timeout(
+          const Duration(seconds: 8),
+        );
+        await _fetchHouseSettingsData(houseId).timeout(
+          const Duration(seconds: 8),
+        );
       }
-      await resolveCurrentAuthorName(user);
+      await resolveCurrentAuthorName(user).timeout(const Duration(seconds: 8));
 
       final initialPosts = <DiaryPost>[];
       if (houseId != null) {
-        final cachedRaw = await OfflineCacheService.loadCache('diary_$houseId');
+        final cachedRaw = await OfflineCacheService.loadCache(
+          'diary_$houseId',
+        ).timeout(const Duration(seconds: 4));
         // Hỗ trợ format mới {_cachedAt, items} và format cũ List
         List? cachedData;
         if (cachedRaw is Map) {
@@ -672,6 +688,8 @@ class DiaryFeedController extends ChangeNotifier {
           .streamDiary(houseId, limit: 10)
           .listen(
             (loadedPosts) {
+              _diaryInitialLoadTimer?.cancel();
+              _diaryInitialLoadTimer = null;
               try {
                 if (_disposed) {
                   return;
@@ -703,12 +721,20 @@ class DiaryFeedController extends ChangeNotifier {
               }
             },
             onError: (Object error) {
+              _diaryInitialLoadTimer?.cancel();
+              _diaryInitialLoadTimer = null;
               debugPrint(
                 'Diary realtime listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('home_khngthtinh_eb6eac')).message}',
               );
               _setLoading(false);
             },
           );
+      _diaryInitialLoadTimer?.cancel();
+      _diaryInitialLoadTimer = Timer(const Duration(seconds: 12), () {
+        if (!_disposed) {
+          _setLoading(false);
+        }
+      });
     } catch (e) {
       debugPrint('[DiaryFeed] fetchDiaryPosts error: $e');
       _setLoading(false);
@@ -725,10 +751,9 @@ class DiaryFeedController extends ChangeNotifier {
 
     try {
       if (_lastDocument == null) {
-        final firstPageResult = await DiaryService().fetchDiaryPage(
-          houseId,
-          limit: 10,
-        );
+        final firstPageResult = await DiaryService()
+            .fetchDiaryPage(houseId, limit: 10)
+            .timeout(const Duration(seconds: 15));
         _lastDocument = firstPageResult.lastDoc;
         if (_lastDocument == null) {
           _hasMore = false;
@@ -738,11 +763,13 @@ class DiaryFeedController extends ChangeNotifier {
         }
       }
 
-      final result = await DiaryService().fetchDiaryPage(
-        houseId,
-        limit: 10,
-        startAfter: _lastDocument,
-      );
+      final result = await DiaryService()
+          .fetchDiaryPage(
+            houseId,
+            limit: 10,
+            startAfter: _lastDocument,
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (result.posts.isNotEmpty) {
         _lastDocument = result.lastDoc;
@@ -759,6 +786,8 @@ class DiaryFeedController extends ChangeNotifier {
   }
 
   Future<void> pauseRealtime() async {
+    _diaryInitialLoadTimer?.cancel();
+    _diaryInitialLoadTimer = null;
     await _diarySubscription?.cancel();
     _diarySubscription = null;
     await _pinnedSubscription?.cancel();
@@ -891,6 +920,7 @@ class DiaryFeedController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _diaryInitialLoadTimer?.cancel();
     _diarySubscription?.cancel();
     _pinnedSubscription?.cancel();
     postsVN.dispose();

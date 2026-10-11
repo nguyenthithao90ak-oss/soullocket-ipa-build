@@ -567,10 +567,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => VisitorProfileScreen(targetHouseId: selected.houseId),
-      ),
+    await slPush<void>(
+      context,
+      VisitorProfileScreen(targetHouseId: selected.houseId),
     );
   }
 

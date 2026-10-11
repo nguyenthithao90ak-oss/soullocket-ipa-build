@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -15,6 +16,7 @@ import 'app_check_http_headers.dart';
 import 'revenue_security_telemetry_service.dart';
 import 'purchase_access_policy.dart';
 import 'purchase_processing_queue.dart';
+import 'utility_service.dart';
 
 class VipProduct {
   static const weekly = 'soullocket_vip_weekly';
@@ -198,7 +200,8 @@ class VipAccessInfo {
   /// video mới (0), khớp `limits()` trong functions/privateMemoryUpload.js.
   int get dailyVideoUploadLimitBytes {
     if (!isVip) return 0;
-    return isLifetime ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+    // Khớp limits() ở functions/privateMemoryUpload.js (giảm một nửa từ 07/10/2026).
+    return isLifetime ? 50 * 1024 * 1024 : 25 * 1024 * 1024;
   }
 
   int get dailyMemorySizeLimitMb {
@@ -209,7 +212,8 @@ class VipAccessInfo {
   /// Tổng kho ảnh của nhà (MB); video có kho riêng ở [totalMemoryVideoCapMb].
   int get totalMemoryStorageCapMb {
     if (!isVip) return 91;
-    return isLifetime ? 1024 : 256;
+    // Khớp limits() ở functions/privateMemoryUpload.js (giảm một nửa từ 07/10/2026).
+    return isLifetime ? 512 : 128;
   }
 
   int get totalMemoryVideoCapMb {
@@ -233,7 +237,8 @@ class VipAccessInfo {
 
 enum VipPurchaseState { idle, loading, success, error }
 
-enum _VerificationResult { active, inactive, retry }
+// rejected: máy chủ từ chối dứt khoát (giao dịch đã thuộc tài khoản khác), thử lại ngay cũng cho kết quả y hệt.
+enum _VerificationResult { active, inactive, retry, rejected }
 
 class PurchaseService with WidgetsBindingObserver {
   static final PurchaseService _instance = PurchaseService._internal();
@@ -303,6 +308,8 @@ class PurchaseService with WidgetsBindingObserver {
       _cachedAccessInfo = null;
       _cachedAccessUid = null;
       _cachedAccessCheckedAt = null;
+      // Đổi/đăng xuất tài khoản: trạng thái Pro chưa xác minh lại.
+      UtilityService.setProAccess(null);
       if (user != null && AppConfig.isPurchaseEnabled) {
         unawaited(initialize().catchError((Object _) {}));
         unawaited(syncVipEntitlements());
@@ -444,6 +451,8 @@ class PurchaseService with WidgetsBindingObserver {
       await syncVipEntitlements();
       return false;
     }
+    // Người dùng chủ động khôi phục: luôn hỏi lại máy chủ, bỏ qua mốc "đã bị từ chối" đã nhớ.
+    _forceVerifyUntil = DateTime.now().add(const Duration(seconds: 90));
     final available = await _iap.isAvailable();
     if (!available) {
       await syncVipEntitlements();
@@ -563,7 +572,8 @@ class PurchaseService with WidgetsBindingObserver {
             result = await _verifyAndGrantVip(purchase, ownerUid);
             if (result != _VerificationResult.retry) break;
           }
-          if (result == _VerificationResult.retry) {
+          if (result == _VerificationResult.retry ||
+              result == _VerificationResult.rejected) {
             _statusController.add(VipPurchaseState.error);
             continue;
           }
@@ -601,6 +611,45 @@ class PurchaseService with WidgetsBindingObserver {
     }
   }
 
+  // Giao dịch khôi phục đã thuộc tài khoản khác: nhớ trên máy để các lần mở app sau không gọi
+  // lại máy chủ vô ích mỗi lần (kết quả vẫn y hệt). Lỗi đọc/ghi bộ nhớ thì coi như chưa nhớ.
+  static const Duration _claimRejectCooldown = Duration(hours: 12);
+  DateTime? _forceVerifyUntil;
+
+  String _claimRejectKey(String uid, String token) {
+    var hash = 0x811c9dc5;
+    for (final unit in token.codeUnits) {
+      hash = ((hash ^ unit) * 0x01000193) & 0xffffffff;
+    }
+    return 'iap_claim_rejected_${uid}_${hash.toRadixString(16)}';
+  }
+
+  Future<bool> _claimRecentlyRejected(String uid, String token) async {
+    final until = _forceVerifyUntil;
+    if (until != null && DateTime.now().isBefore(until)) return false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final at = prefs.getInt(_claimRejectKey(uid, token));
+      if (at == null) return false;
+      final age = DateTime.now().millisecondsSinceEpoch - at;
+      return age >= 0 && age < _claimRejectCooldown.inMilliseconds;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _rememberClaimRejected(String uid, String token) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+        _claimRejectKey(uid, token),
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (_) {
+      // Không nhớ được thì lần sau hỏi lại máy chủ như cũ.
+    }
+  }
+
   Future<_VerificationResult> _verifyAndGrantVip(
     PurchaseDetails purchase,
     String expectedUid,
@@ -614,6 +663,9 @@ class PurchaseService with WidgetsBindingObserver {
     try {
       final token = purchase.verificationData.serverVerificationData;
       final source = purchase.verificationData.source;
+      if (token.isNotEmpty && await _claimRecentlyRejected(user.uid, token)) {
+        return _VerificationResult.rejected;
+      }
       final idToken = await user.getIdToken() ?? '';
 
       if (token.isEmpty || idToken.isEmpty) {
@@ -682,6 +734,12 @@ class PurchaseService with WidgetsBindingObserver {
             'serverError': serverError,
           },
         );
+        // Giao dịch khôi phục đã thuộc tài khoản khác: không tốn thêm 2 lượt gọi và 6 giây chờ.
+        if (response.statusCode == 409 &&
+            serverError == 'purchase_already_claimed') {
+          await _rememberClaimRejected(user.uid, token);
+          return _VerificationResult.rejected;
+        }
         return _VerificationResult.retry;
       }
 
@@ -862,6 +920,13 @@ class PurchaseService with WidgetsBindingObserver {
   }
 
   Future<VipAccessInfo> getVipAccessInfo({bool forceRefresh = false}) async {
+    final access = await _loadVipAccessInfo(forceRefresh: forceRefresh);
+    // Tiện ích Pro (Chat thân thiện) mở chat hay lời mời nâng cấp theo kết quả này.
+    UtilityService.setProAccess(access.isVip);
+    return access;
+  }
+
+  Future<VipAccessInfo> _loadVipAccessInfo({bool forceRefresh = false}) async {
     if (!AppConfig.isPurchaseEnabled) {
       return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
     }

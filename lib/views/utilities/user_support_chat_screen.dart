@@ -6,6 +6,8 @@ import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart' hide Query;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../utils/services/ai_counselor_service.dart';
 import '../../utils/services/device_manager_service.dart';
@@ -13,8 +15,15 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/services/storage/support_pending_send_store.dart';
+import 'support_guide_catalog.dart';
 import 'support_ticket_shared.dart';
 import 'widgets/support_chat_widgets.dart';
+import 'widgets/support_guide_widgets.dart';
+
+const _supportEmail = 'support@soullocket.pro.vn';
+
+/// Mã chủ đề server dùng để chuyển yêu cầu sang hàng chờ của đội ngũ.
+const _teamTopicId = '9';
 
 class UserSupportChatScreen extends StatefulWidget {
   const UserSupportChatScreen({
@@ -36,12 +45,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   final _pendingStore = SupportPendingSendStore.secure();
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _composerFocus = FocusNode(debugLabel: 'support-composer');
   final _messages = <String, _SupportMessage>{};
+  final _aiItems = <SupportChatItem>[];
   String? _uid;
   String? _houseId;
   String? _ticketId;
   String? _supportSessionId;
-  String? _selectedTopicId;
   String _myName = L10nService().translate('util_ngidng_3bf886');
   String _ticketStatus = 'new';
   String? _supportStatusMessage;
@@ -51,15 +61,19 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   SupportPendingSend? _pending;
   bool _pendingStoreReady = false;
   bool _isSending = false;
+  bool _aiThinking = false;
+  int _aiSeq = 0;
+  String? _lastAiQuestion;
+  String? _guideCategoryId;
+  String? _guideIssueId;
+  SupportGuideFeedback _guideFeedback = SupportGuideFeedback.none;
   bool _isLoadingOlder = false;
   bool _hasOlderMessages = true;
   bool _receivedFirstPage = false;
   bool _reopeningClosedTicket = false;
-  int _serverQuestionCount = 0;
   DocumentSnapshot<Map<String, dynamic>>? _oldestMessageDoc;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _messagesSub;
   StreamSubscription<DatabaseEvent>? _statusSub;
-  StreamSubscription<DatabaseEvent>? _countSub;
   StreamSubscription<DatabaseEvent>? _houseScopeSub;
   StreamSubscription<User?>? _authSub;
   int _listenerGeneration = 0;
@@ -69,6 +83,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _uid != null &&
       FirebaseAuth.instance.currentUser?.uid == _uid &&
       _ticketId != null;
+
+  bool get _teamMode => supportStatusIsTeam(_ticketStatus);
+
+  bool get _canContactTeam =>
+      _scopeIsCurrent && _pendingStoreReady && !supportStatusIsClosed(_ticketStatus);
 
   CollectionReference<Map<String, dynamic>> _messageCollection(
     String ticketId,
@@ -80,11 +99,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   @override
   void initState() {
     super.initState();
-    _msgCtrl.text = widget.initialDraft?.trim() ?? '';
     final initialTopic = widget.initialTopic?.trim();
     if (initialTopic != null && initialTopic.isNotEmpty) {
       _entryBannerText =
           '${L10nService().translate('support_banner_topic_prefix')}$initialTopic${L10nService().translate('support_banner_topic_suffix')}';
+      _guideCategoryId = supportGuideCategoryForTicketTopic(
+        supportTopicByText(initialTopic)?.id,
+      )?.id;
     }
     _scrollCtrl.addListener(_handleConversationScroll);
     unawaited(_init());
@@ -98,13 +119,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     _houseScopeSub?.cancel();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
+    _composerFocus.dispose();
     super.dispose();
   }
 
   void _cancelListeners() {
     _messagesSub?.cancel();
     _statusSub?.cancel();
-    _countSub?.cancel();
   }
 
   void _invalidateScope() {
@@ -117,6 +138,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _supportContext = const {};
       _pending = null;
       _messages.clear();
+      _aiItems.clear();
       _listenerError = context.tr('err_auth_session_expired');
     });
     _msgCtrl.clear();
@@ -152,7 +174,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           : user.email?.trim().isNotEmpty == true
           ? user.email!.trim()
           : L10nService().translate('util_ngidng_3bf886');
-      _selectedTopicId = supportTopicByText(widget.initialTopic)?.id;
       _houseScopeSub = _db.ref('users/${user.uid}/houseId').onValue.listen((
         event,
       ) {
@@ -168,6 +189,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _listenTicket();
       unawaited(_loadSupportContext(user));
       setState(() {});
+      final draft = widget.initialDraft?.trim() ?? '';
+      if (draft.isNotEmpty && _pending == null) {
+        // Nội dung soạn sẵn từ màn khác dành cho đội ngũ: mở sheet để người dùng xem lại rồi gửi.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scopeIsCurrent) unawaited(_openTeamSheet(prefill: draft));
+        });
+      }
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -203,9 +231,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       if (!_scopeIsCurrent || _ticketId != ticketId) return;
       _pending = pending;
       _pendingStoreReady = true;
-      if (pending != null && _msgCtrl.text.trim().isEmpty) {
-        _msgCtrl.text = pending.text;
-      }
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -229,33 +254,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           (event) {
             if (!active()) return;
             final nextStatus = event.snapshot.value?.toString() ?? 'new';
-            if (_reopeningClosedTicket &&
-                (nextStatus == 'resolved' || nextStatus == 'closed')) {
+            if (_reopeningClosedTicket && supportStatusIsClosed(nextStatus)) {
               return;
             }
-            if (nextStatus != 'resolved' && nextStatus != 'closed') {
+            if (!supportStatusIsClosed(nextStatus)) {
               _reopeningClosedTicket = false;
             }
             setState(() => _ticketStatus = nextStatus);
-          },
-          onError: (Object _) {
-            if (active()) {
-              setState(
-                () => _listenerError = context.tr('util_khngththeo_d103bb'),
-              );
-            }
-          },
-        );
-    _countSub = _db
-        .ref('support_tickets/$ticketId/user_message_count')
-        .onValue
-        .listen(
-          (event) {
-            if (!active()) return;
-            final value = event.snapshot.value;
-            setState(
-              () => _serverQuestionCount = value is num ? value.toInt() : 0,
-            );
           },
           onError: (Object _) {
             if (active()) {
@@ -290,7 +295,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                 }
               }
             });
-            if (firstPage || nearBottom) _scrollToBottom();
+            if (!firstPage && nearBottom) _scrollToBottom();
           },
           onError: (Object _) {
             if (active()) {
@@ -303,7 +308,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   void _handleConversationScroll() {
-    if (_scrollCtrl.hasClients && _scrollCtrl.position.pixels <= 160) {
+    if (_scrollCtrl.hasClients &&
+        _messages.isNotEmpty &&
+        _scrollCtrl.position.pixels <= 160) {
       unawaited(_loadOlderMessages());
     }
   }
@@ -320,12 +327,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       return;
     }
     setState(() => _isLoadingOlder = true);
-    final oldExtent = _scrollCtrl.hasClients
-        ? _scrollCtrl.position.maxScrollExtent
-        : 0.0;
-    final oldOffset = _scrollCtrl.hasClients
-        ? _scrollCtrl.position.pixels
-        : 0.0;
     try {
       final page = await _messageCollection(ticketId)
           .orderBy('ts', descending: true)
@@ -344,18 +345,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           _oldestMessageDoc = page.docs.last;
         }
         _hasOlderMessages = page.docs.length == 20;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_scopeIsCurrent ||
-            generation != _listenerGeneration ||
-            !_scrollCtrl.hasClients) {
-          return;
-        }
-        final offset =
-            oldOffset + _scrollCtrl.position.maxScrollExtent - oldExtent;
-        _scrollCtrl.jumpTo(
-          offset.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
-        );
       });
     } catch (_) {
       if (_scopeIsCurrent && mounted) {
@@ -409,20 +398,275 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     } catch (_) {}
   }
 
-  SupportTopicDefinition? get _currentTopic =>
-      supportTopicById(_selectedTopicId) ??
-      supportTopicByText(widget.initialTopic);
+  // ---------------------------------------------------------------------------
+  // Trợ lý AI: trả lời ngay trong màn này, không phụ thuộc việc lưu ticket.
+  // ---------------------------------------------------------------------------
 
-  Future<void> _send({String? menuId, String? displayMessage}) async {
+  void _onComposerSend() {
+    final text = _msgCtrl.text.trim();
+    if (text.isEmpty) return;
+    if (_teamMode) {
+      unawaited(_sendComposerToTeam(text));
+    } else {
+      unawaited(_askAi(text));
+    }
+  }
+
+  Future<void> _askAi(String question) async {
+    final text = question.trim();
+    if (text.isEmpty || _aiThinking || !mounted) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final category = supportGuideCategoryById(_guideCategoryId);
+    final categoryLabel = category == null ? '' : context.tr(category.titleKey);
+    final seq = ++_aiSeq;
+    _msgCtrl.clear();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _aiThinking = true;
+      _lastAiQuestion = text;
+      _aiItems.add(
+        SupportChatItem(
+          id: 'ai_q_$seq',
+          text: text,
+          sender: SupportSender.user,
+          time: _formatTime(DateTime.now().millisecondsSinceEpoch),
+        ),
+      );
+    });
+    _scrollToBottom();
+    final outcome = await AiCounselorService().generateTaskOutcome(
+      AiTask.appSupport,
+      {
+        'message': text,
+        'category': categoryLabel.length > 120
+            ? categoryLabel.substring(0, 120)
+            : categoryLabel,
+        'isMenuCommand': false,
+      },
+    );
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return;
+    final reply = outcome.text?.trim() ?? '';
+    setState(() {
+      _aiThinking = false;
+      if (reply.isNotEmpty) {
+        _aiItems.add(
+          SupportChatItem(
+            id: 'ai_a_$seq',
+            text: reply,
+            sender: SupportSender.assistant,
+            time: _formatTime(DateTime.now().millisecondsSinceEpoch),
+            actions: [
+              if (_canContactTeam)
+                SupportChatAction(
+                  label: context.tr('support_ui_still_need_help'),
+                  icon: Icons.support_agent_rounded,
+                  onTap: () => unawaited(_openTeamSheet()),
+                ),
+            ],
+          ),
+        );
+      } else {
+        _aiItems.add(_aiFailureItem(seq, text, outcome.errorMessage));
+      }
+    });
+    _scrollToBottom();
+  }
+
+  SupportChatItem _aiFailureItem(int seq, String question, String? reason) {
+    final suggestions = searchSupportGuide(question, context.tr, limit: 2);
+    final why = reason?.trim().isNotEmpty == true
+        ? reason!.trim()
+        : context.tr('friendly_chat_connection_error');
+    return SupportChatItem(
+      id: 'ai_err_$seq',
+      text: L10nService().format('support_ui_ai_failed', {'reason': why}),
+      sender: SupportSender.assistant,
+      time: _formatTime(DateTime.now().millisecondsSinceEpoch),
+      failed: true,
+      actions: [
+        for (final issue in suggestions)
+          SupportChatAction(
+            label: supportGuideText(issue.titleKey, context.tr),
+            icon: Icons.menu_book_outlined,
+            primary: true,
+            onTap: () => _openGuideIssue(issue),
+          ),
+        SupportChatAction(
+          label: context.tr('dialog_retry'),
+          icon: Icons.refresh_rounded,
+          onTap: () => unawaited(_askAi(question)),
+        ),
+        if (_canContactTeam)
+          SupportChatAction(
+            label: context.tr('support_ui_contact_team'),
+            icon: Icons.support_agent_rounded,
+            onTap: () => unawaited(_openTeamSheet()),
+          ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Hướng dẫn theo danh mục.
+  // ---------------------------------------------------------------------------
+
+  void _openGuideIssue(SupportGuideIssue issue) {
+    setState(() {
+      _guideCategoryId = issue.categoryId;
+      _guideIssueId = issue.id;
+      _guideFeedback = SupportGuideFeedback.none;
+    });
+    _scrollToTop();
+  }
+
+  void _selectCategory(String id) => setState(() {
+    _guideCategoryId = id;
+    _guideIssueId = null;
+    _guideFeedback = SupportGuideFeedback.none;
+  });
+
+  void _selectIssue(String id) => setState(() {
+    _guideIssueId = id;
+    _guideFeedback = SupportGuideFeedback.none;
+  });
+
+  void _backToCategories() => setState(() {
+    _guideCategoryId = null;
+    _guideIssueId = null;
+    _guideFeedback = SupportGuideFeedback.none;
+  });
+
+  void _backToIssues() => setState(() {
+    _guideIssueId = null;
+    _guideFeedback = SupportGuideFeedback.none;
+  });
+
+  void _guideFeedbackChanged(bool resolved) => setState(
+    () => _guideFeedback = resolved
+        ? SupportGuideFeedback.resolved
+        : SupportGuideFeedback.unresolved,
+  );
+
+  void _askAiFromGuide() {
+    final issue = supportGuideIssue(_guideCategoryId, _guideIssueId);
+    if (issue != null && _msgCtrl.text.trim().isEmpty) {
+      final title = supportGuideText(issue.titleKey, context.tr);
+      final prefill = L10nService().format('support_ui_ai_prefill', {
+        'issue': title,
+      });
+      _msgCtrl.value = TextEditingValue(
+        text: prefill,
+        selection: TextSelection.collapsed(offset: prefill.length),
+      );
+    }
+    _scrollToBottom();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) FocusScope.of(context).requestFocus(_composerFocus);
+    });
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Gửi cho đội ngũ hỗ trợ (ticket có biên nhận, giữ bản nháp khi lỗi).
+  // ---------------------------------------------------------------------------
+
+  String _teamDraft() {
+    final lines = <String>[];
+    final category = supportGuideCategoryById(_guideCategoryId);
+    final issue = supportGuideIssue(_guideCategoryId, _guideIssueId);
+    if (category != null) {
+      lines.add(
+        issue == null
+            ? context.tr(category.titleKey)
+            : '${context.tr(category.titleKey)}: ${supportGuideText(issue.titleKey, context.tr)}',
+      );
+    }
+    if (issue != null && _guideFeedback == SupportGuideFeedback.unresolved) {
+      lines.add(
+        L10nService().format('support_ui_team_tried', {
+          'issue': supportGuideText(issue.titleKey, context.tr),
+        }),
+      );
+    }
+    final question = _msgCtrl.text.trim().isNotEmpty
+        ? _msgCtrl.text.trim()
+        : _lastAiQuestion?.trim() ?? '';
+    if (question.isNotEmpty) lines.add(question);
+    return lines.isEmpty ? '' : '${lines.join('\n')}\n';
+  }
+
+  Future<void> _openTeamSheet({String? prefill}) async {
+    if (!_canContactTeam) return;
+    FocusScope.of(context).unfocus();
+    final badges = [
+      supportAppVersionLabel,
+      if ((_supportContext['deviceModel'] ?? '').isNotEmpty)
+        _supportContext['deviceModel']!,
+      if ((_supportContext['devicePlatform'] ?? '').isNotEmpty)
+        _supportContext['devicePlatform']!,
+    ];
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SupportSheet(
+        title: context.tr('support_ui_contact_team'),
+        child: SupportTeamSheetContent(
+          initialText: prefill ?? _pending?.text ?? _teamDraft(),
+          attached: badges,
+          onSubmit: _sendToTeam,
+          onEmail: _openEmail,
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _sendToTeam(String text) async {
+    final ok = await _sendTicketMessage(text);
+    if (!mounted) return ok;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.tr(ok ? 'support_ui_team_sent' : 'support_ui_team_failed'),
+        ),
+      ),
+    );
+    if (ok) {
+      setState(() {
+        if (_msgCtrl.text.trim() == (_lastAiQuestion ?? '').trim()) {
+          _msgCtrl.clear();
+        }
+      });
+      _scrollToBottom();
+    }
+    return ok;
+  }
+
+  Future<void> _sendComposerToTeam(String text) async {
+    final ok = await _sendTicketMessage(text);
+    if (!mounted) return;
+    if (ok) {
+      if (_msgCtrl.text.trim() == text) _msgCtrl.clear();
+      _scrollToBottom();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('support_ui_send_failed'))),
+      );
+    }
+  }
+
+  /// Ghi tin vào ticket rồi chờ biên nhận server. Tin chưa xác nhận được giữ lại
+  /// để gửi lại đúng ID (không tạo bản trùng).
+  Future<bool> _sendTicketMessage(String input) async {
+    final text = input.trim();
     if (_isSending ||
+        text.isEmpty ||
         !_scopeIsCurrent ||
         !_pendingStoreReady ||
-        _ticketStatus == 'closed' ||
-        _ticketStatus == 'resolved') {
-      return;
+        supportStatusIsClosed(_ticketStatus)) {
+      return false;
     }
-    final input = displayMessage ?? _msgCtrl.text.trim();
-    if (input.isEmpty && _pending == null) return;
     final uid = _uid!;
     final ticketId = _ticketId!;
     final user = FirebaseAuth.instance.currentUser!;
@@ -436,79 +680,92 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           (freshHouse?.trim().isNotEmpty == true ? freshHouse!.trim() : null) !=
               _houseId) {
         _invalidateScope();
-        return;
+        return false;
       }
-      if (_pending == null) {
-        if (!mounted) return;
-        if (!await SecurityService().guardAction(
-          context,
-          'support_ticket_send',
-          content: input,
-        )) {
-          return;
-        }
-        if (!mounted || !active()) return;
-        final commandId = menuId ?? supportTopicById(input)?.id;
-        final topic =
-            supportTopicById(commandId ?? _selectedTopicId) ??
-            supportTopicByText(input);
-        final summary = buildSupportSummary(input, topic: topic);
-        final label = topic == null
-            ? context.tr('util_htrkhc_abd8c5')
-            : supportTopicLabel(context, topic.id);
-        _pending = SupportPendingSend(
-          id: _messageCollection(ticketId).doc().id,
-          payload: {
-            'text': input,
-            'is_bot': false,
-            'is_admin': false,
-            'is_menu_command': commandId != null,
-            'sender': _myName,
-            'ticket_id': ticketId,
-            'user_uid': uid,
-            if (_houseId != null) 'house_id': _houseId,
-            if (user.email != null) 'user_email': user.email!.trim(),
-            if (topic != null) 'topic_id': topic.id,
-            'topic_label': label,
+      // Gửi lại tin còn treo trước để giữ đúng thứ tự và không mất nội dung cũ.
+      final previous = _pending;
+      if (previous != null) {
+        if (!await _deliverPending(previous, active)) return false;
+        if (previous.text == text) return true;
+      }
+      if (!mounted) return false;
+      if (!await SecurityService().guardAction(
+        context,
+        'support_ticket_send',
+        content: text,
+      )) {
+        return false;
+      }
+      if (!mounted || !active()) return false;
+      final category = supportGuideCategoryById(_guideCategoryId);
+      final topic = supportTopicById(category?.ticketTopicId) ??
+          supportTopicByText(text);
+      final summary = buildSupportSummary(text, topic: topic);
+      final label = category != null
+          ? context.tr(category.titleKey)
+          : topic != null
+          ? supportTopicLabel(context, topic.id)
+          : context.tr('util_htrkhc_abd8c5');
+      final pending = SupportPendingSend(
+        id: _messageCollection(ticketId).doc().id,
+        payload: {
+          'text': text,
+          'is_bot': false,
+          'is_admin': false,
+          'is_menu_command': false,
+          'sender': _myName,
+          'ticket_id': ticketId,
+          'user_uid': uid,
+          if (_houseId != null) 'house_id': _houseId,
+          if (user.email != null) 'user_email': user.email!.trim(),
+          // Chủ đề '9' báo server chuyển yêu cầu sang hàng chờ của đội ngũ.
+          'topic_id': _teamTopicId,
+          'topic_label': label,
+          'summary': summary,
+          if (_supportSessionId != null) 'session_id': _supportSessionId,
+          'context': {
+            ..._supportContext,
+            'priority': topic?.priority ?? 'high',
             'summary': summary,
-            if (_supportSessionId != null) 'session_id': _supportSessionId,
-            'context': {
-              ..._supportContext,
-              if (topic != null) 'priority': topic.priority,
-              'summary': summary,
-            },
-            'ts': DateTime.now().millisecondsSinceEpoch,
+            if (category != null) 'guideCategory': category.id,
+            'guideIssue': ?_guideIssueId,
           },
-        );
-      }
-      final pending = _pending!;
+          'ts': DateTime.now().millisecondsSinceEpoch,
+        },
+      );
+      _pending = pending;
+      return await _deliverPending(pending, active);
+    } catch (_) {
+      return false;
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  Future<bool> _deliverPending(
+    SupportPendingSend pending,
+    bool Function() active,
+  ) async {
+    try {
       await _pendingStore.save(pending).timeout(const Duration(seconds: 5));
-      if (!active()) return;
+      if (!active()) return false;
       await deliverSupportMessage(
         pending: pending,
         scopeIsCurrent: active,
         commit: (attempt) => _commitMessage(attempt, active),
         readReceipt: () => _readDeliveryReceipt(pending, active),
       );
-      if (!active()) return;
+      if (!active()) return false;
       await _pendingStore.clear(pending).timeout(const Duration(seconds: 5));
-      if (!active()) return;
+      if (!active()) return false;
       setState(() {
-        _pending = null;
+        if (_pending?.id == pending.id) _pending = null;
         _listenerError = null;
-        _selectedTopicId = pending.payload['topic_id'] as String?;
-        if (_msgCtrl.text.trim() == pending.text) _msgCtrl.clear();
       });
-      _scrollToBottom();
-      await _generateReply(pending, active);
-    } catch (error) {
-      if (active() && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('support_ui_send_failed'))),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSending = false);
+      return true;
+    } catch (_) {
+      if (active() && mounted) setState(() {});
+      return false;
     }
   }
 
@@ -516,7 +773,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     if (!_scopeIsCurrent || _isSending) return;
     _supportSessionId =
         'session_${sha256.convert(utf8.encode('$_uid|$_ticketId|${DateTime.now().microsecondsSinceEpoch}')).toString().substring(0, 32)}';
-    _serverQuestionCount = 0;
     _reopeningClosedTicket = true;
     setState(() => _ticketStatus = 'new');
     _listenTicket();
@@ -543,11 +799,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         .timeout(const Duration(seconds: 10));
   }
 
+  /// Biên nhận do Cloud Function ghi sau khi nhận tin; lần đầu có thể chậm
+  /// vài giây vì hàm phải khởi động nên chờ tối đa khoảng 15 giây.
   Future<Map<String, dynamic>?> _readDeliveryReceipt(
     SupportPendingSend pending,
     bool Function() active,
   ) async {
-    for (var attempt = 0; attempt < 5; attempt++) {
+    for (var attempt = 0; attempt < 12; attempt++) {
       if (!active()) throw StateError('Support scope changed');
       final receipt = await _db
           .ref('support_tickets/${pending.ticketId}/messages/${pending.id}')
@@ -556,65 +814,29 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       if (receipt.exists && receipt.value is Map) {
         return Map<String, dynamic>.from(receipt.value as Map);
       }
-      if (attempt < 4) {
-        await Future<void>.delayed(const Duration(milliseconds: 700));
+      if (attempt < 11) {
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
       }
     }
     return null;
   }
 
-  Future<void> _generateReply(
-    SupportPendingSend pending,
-    bool Function() active,
-  ) async {
-    final replyId = 'bot_${pending.id}';
-    final ref = _messageCollection(pending.ticketId).doc(replyId);
+  Future<void> _openEmail() async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: _supportEmail,
+      queryParameters: const {'subject': 'SoulLocket Support'},
+    );
     try {
-      if (!active()) return;
-      final existing = await ref
-          .get(const GetOptions(source: Source.server))
-          .timeout(const Duration(seconds: 8));
-      if (!mounted || !active() || existing.exists) return;
-      final topic = supportTopicById(pending.payload['topic_id'] as String?);
-      final fallback = topic?.id == '9'
-          ? context.tr('support_ui_team_guidance')
-          : '${context.tr('support_ui_intake_desc')}\n\n${context.tr('support_ui_safety')}';
-      String reply = fallback;
-      try {
-        final generated = await AiCounselorService()
-            .generateTask(AiTask.appSupport, {
-              'message': pending.text,
-              'category': topic == null
-                  ? context.tr('util_htrkhc_abd8c5')
-                  : supportTopicLabel(context, topic.id),
-              'isMenuCommand': pending.payload['is_menu_command'] == true,
-            });
-        if (!mounted || !active()) return;
-        if (generated?.trim().isNotEmpty == true) reply = generated!.trim();
-      } catch (_) {}
-      if (!active()) return;
-      await FirebaseFirestore.instance
-          .runTransaction((transaction) async {
-            final existingReply = await transaction.get(ref);
-            if (!active()) throw StateError('Support scope changed');
-            if (!existingReply.exists) {
-              transaction.set(
-                ref,
-                pending.replyPayload(
-                  text: reply,
-                  timestamp: DateTime.now().millisecondsSinceEpoch,
-                ),
-              );
-            }
-          })
-          .timeout(const Duration(seconds: 10));
-    } catch (_) {
-      if (active() && mounted) {
-        setState(
-          () => _listenerError = context.tr('support_ui_ai_unavailable'),
-        );
-      }
-    }
+      if (await launchUrl(uri, mode: LaunchMode.platformDefault)) return;
+    } catch (_) {}
+    try {
+      await Clipboard.setData(const ClipboardData(text: _supportEmail));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('update_hub_link_copied'))),
+      );
+    } catch (_) {}
   }
 
   Future<void> _retryListeners() async {
@@ -626,7 +848,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scopeIsCurrent || !_scrollCtrl.hasClients) return;
+      if (!mounted || !_scrollCtrl.hasClients) return;
       unawaited(
         _scrollCtrl.animateTo(
           _scrollCtrl.position.maxScrollExtent,
@@ -637,107 +859,81 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     });
   }
 
+  void _scrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollCtrl.hasClients) return;
+      unawaited(
+        _scrollCtrl.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final messages = _messages.values.toList()
+    final history = _messages.values.toList()
       ..sort(
         (first, second) => first.ts == second.ts
             ? first.id.compareTo(second.id)
             : first.ts.compareTo(second.ts),
       );
     return SupportChatView(
-      messages: messages.isEmpty
-          ? [
-              const SupportChatItem(
-                id: 'greeting',
-                text: '',
-                sender: SupportSender.assistant,
-                time: '',
-                welcome: true,
-              ),
-            ]
-          : [
-              for (final message in messages)
-                SupportChatItem(
-                  id: message.id,
-                  text: message.text,
-                  sender: message.isAdmin
-                      ? SupportSender.team
-                      : message.isBot
-                      ? SupportSender.assistant
-                      : SupportSender.user,
-                  time: _formatTime(message.ts),
-                ),
-            ],
+      messages: [
+        for (final message in history)
+          SupportChatItem(
+            id: message.id,
+            text: message.text,
+            sender: message.isAdmin
+                ? SupportSender.team
+                : message.isBot
+                ? SupportSender.assistant
+                : SupportSender.user,
+            time: _formatTime(message.ts),
+          ),
+        ..._aiItems,
+      ],
       controller: _msgCtrl,
+      focusNode: _composerFocus,
       scrollController: _scrollCtrl,
       status: _ticketStatus,
-      messageCount: _serverQuestionCount,
-      hasTicket: _scopeIsCurrent && _pendingStoreReady,
+      hasTicket: _canContactTeam,
       sending: _isSending,
+      thinking: _aiThinking,
+      aiMode: !_teamMode,
       loadingHistory: _isLoadingOlder,
-      selectedTopicId: _selectedTopicId,
       notice: _listenerError ?? _supportStatusMessage,
       entryNotice: _pending != null
-          ? context.tr('support_ui_pending_retry')
+          ? context.tr('support_ui_pending_team')
           : _entryBannerText,
+      onEntryAction: _pending != null && _canContactTeam
+          ? () => unawaited(_openTeamSheet())
+          : null,
       onRetry: _scopeIsCurrent ? () => unawaited(_retryListeners()) : null,
       onReopen: _reopenClosedTicket,
-      onSend: () => unawaited(_send()),
+      onSend: _onComposerSend,
       onBack: () => Navigator.of(context).maybePop(),
-      onGuide: _showSupportIntakeGuide,
-      onFaq: _showFaq,
-      onTopics: _showTopics,
-      onTopic: _selectTopic,
+      onContactTeam: () => unawaited(_openTeamSheet()),
+      guide: supportStatusIsClosed(_ticketStatus)
+          ? null
+          : SupportGuidePanel(
+              categoryId: _guideCategoryId,
+              issueId: _guideIssueId,
+              feedback: _guideFeedback,
+              onCategory: _selectCategory,
+              onIssue: _selectIssue,
+              onBackToCategories: _backToCategories,
+              onBackToIssues: _backToIssues,
+              onFeedback: _guideFeedbackChanged,
+              onAskAi: _askAiFromGuide,
+              onContactTeam: () => unawaited(_openTeamSheet()),
+              onEmail: () => unawaited(_openEmail()),
+              teamAvailable: _canContactTeam,
+            ),
     );
   }
-
-  void _selectTopic(String id) {
-    if (_isSending || !_scopeIsCurrent || _pending != null) return;
-    unawaited(
-      _send(menuId: id, displayMessage: supportTopicLabel(context, id)),
-    );
-  }
-
-  Future<void> _showSupportIntakeGuide() => _showSheet(
-    context.tr('util_hngdngihtr_9c6550'),
-    SupportIntakeContent(
-      topic: _currentTopic,
-      badges: _supportContext.values
-          .where((value) => value.trim().isNotEmpty)
-          .toList(),
-      checklist: [
-        context.tr('util_chnngchtrc_f6b51b'),
-        context.tr('util_ghirmnhnhh_326eae'),
-        context.tr('util_mtbcvathao_540a4d'),
-        context.tr('util_bnvncthgib_1075eb'),
-      ],
-    ),
-  );
-
-  Future<void> _showSheet(String title, Widget child) async {
-    FocusScope.of(context).unfocus();
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SupportSheet(title: title, child: child),
-    );
-  }
-
-  void _showTopics() => unawaited(
-    _showSheet(
-      context.tr('support_ui_topics'),
-      SupportTopicsContent(
-        selectedId: _selectedTopicId,
-        enabled: _scopeIsCurrent && !_isSending && _pending == null,
-        onTopic: (id) {
-          Navigator.of(context).pop();
-          _selectTopic(id);
-        },
-      ),
-    ),
-  );
 
   String _formatTime(int ts) {
     if (ts <= 0) return '';
@@ -751,10 +947,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         ? time
         : '${date.day}/${date.month} $time';
   }
-
-  void _showFaq() => unawaited(
-    _showSheet(context.tr('util_cuhithnggp_65b83c'), const SupportFaqContent()),
-  );
 }
 
 class _SupportMessage {

@@ -80,189 +80,68 @@ class _LoveCardPublicViewerScreenState
   @override
   Widget build(BuildContext context) {
     final palette = _palette;
-    return Scaffold(
-      backgroundColor: palette.background.last,
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: palette.background,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = palette.backgroundFor(isDark);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(
+            statusBarColor: Colors.transparent,
+            systemNavigationBarColor: background.last,
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
           ),
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: _LoveCardBackdropMotif(palette: palette),
-              ),
-            ),
-            SafeArea(
-              child: Column(
-                children: [
-                  _buildHeader(palette),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 420),
-                      // Giữ animation trong [0, 1] cho cả độ mờ và tỉ lệ.
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeIn,
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: ScaleTransition(
-                            scale: Tween<double>(
-                              begin: 0.96,
-                              end: 1,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: _opened
-                          ? _buildOpenedLetter(palette)
-                          : _buildSealedLetter(palette),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(_LoveCardViewerTheme palette) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-      child: Row(
-        children: [
-          _ViewerCircleButton(
-            icon: Icons.arrow_back_ios_new_rounded,
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onTap: widget.onBack ?? () => Navigator.of(context).maybePop(),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  palette.headerTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _opened
-                      ? context.tr('love_card_receiver_opened_badge')
-                      : context.tr('love_card_receiver_private_badge'),
-                  style: SLTheme.quicksand(
-                    color: Colors.white.withValues(alpha: 0.56),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+      child: Scaffold(
+        backgroundColor: background.last,
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: background,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          _ViewerCircleButton(
-            icon: Icons.ios_share_rounded,
-            tooltip: context.tr('share'),
-            onTap: _shareCard,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSealedLetter(_LoveCardViewerTheme palette) {
-    return Center(
-      key: const ValueKey('sealed-letter'),
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(22, 20, 22, 28),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: Column(
+          child: Stack(
             children: [
-              _LetterBadge(
-                icon: palette.leadingIcon,
-                label: palette.badge,
-                color: palette.accent,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                context.tr('love_card_receiver_unopened_title'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontSize: 27,
-                  height: 1.16,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.tr('love_card_receiver_unopened_subtitle'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: Colors.white.withValues(alpha: 0.66),
-                  fontSize: 13,
-                  height: 1.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 30),
-              _SealedLoveEnvelope(
-                palette: palette,
-                senderName: _senderName,
-                onOpen: _openLetter,
-              ),
-              const SizedBox(height: 22),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _openLetter,
-                  borderRadius: BorderRadius.circular(999),
-                  child: Ink(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: ExcludeSemantics(
+                    child: RepaintBoundary(
+                      child: _LoveCardBackdropMotif(palette: palette),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Column(
+                  children: [
+                    _buildHeader(palette, isDark),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeIn,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.98,
+                                end: 1,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _opened
+                            ? _buildOpenedLetter(palette, isDark)
+                            : _buildSealedLetter(palette, isDark),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.touch_app_rounded,
-                          color: palette.envelopeLight,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.tr('love_card_receiver_open_action'),
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -272,240 +151,335 @@ class _LoveCardPublicViewerScreenState
     );
   }
 
-  Widget _buildOpenedLetter(_LoveCardViewerTheme palette) {
+  Widget _buildHeader(_LoveCardViewerTheme palette, bool isDark) {
+    final foreground = palette.foregroundFor(isDark);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(
+        children: [
+          _ViewerCircleButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onTap: widget.onBack ?? () => Navigator.of(context).maybePop(),
+            foreground: foreground,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  palette.headerTitle,
+                  style: SLTheme.quicksand(
+                    color: foreground,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _opened
+                      ? context.tr('love_card_receiver_opened_badge')
+                      : context.tr('love_card_receiver_private_badge'),
+                  style: SLTheme.quicksand(
+                    color: palette.mutedFor(isDark),
+                    fontSize: 11,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _ViewerCircleButton(
+            icon: Icons.ios_share_rounded,
+            tooltip: context.tr('share'),
+            onTap: _shareCard,
+            foreground: foreground,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSealedLetter(_LoveCardViewerTheme palette, bool isDark) {
+    return Center(
+      key: const ValueKey('sealed-letter'),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Column(
+            children: [
+              _LetterBadge(
+                icon: palette.leadingIcon,
+                label: palette.badge,
+                color: isDark ? palette.envelopeLight : palette.accentInk,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                context.tr('love_card_receiver_unopened_title'),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.playfairDisplay(
+                  color: palette.foregroundFor(isDark),
+                  fontSize: 28,
+                  height: 1.25,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                context.tr('love_card_receiver_unopened_subtitle'),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: palette.mutedFor(isDark),
+                  fontSize: 13,
+                  height: 1.6,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 28),
+              _SealedLoveEnvelope(palette: palette, onOpen: _openLetter),
+              const SizedBox(height: 24),
+              Text(
+                L10nService().format('love_card_receiver_from', {
+                  'name': _senderName,
+                }),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: palette.foregroundFor(isDark),
+                  fontSize: 14,
+                  height: 1.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              _ActionPillButton(
+                key: const ValueKey('open-card-action'),
+                label: context.tr('love_card_receiver_open_action'),
+                icon: Icons.mark_email_read_outlined,
+                onTap: _openLetter,
+                background: palette.accentInk,
+                foreground: Colors.white,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOpenedLetter(_LoveCardViewerTheme palette, bool isDark) {
     final imageUrl = widget.payload.imageUrl?.trim() ?? '';
     return LayoutBuilder(
       key: const ValueKey('opened-letter'),
       builder: (context, constraints) {
-        final horizontalPadding = constraints.maxWidth < 420 ? 14.0 : 22.0;
+        final horizontalPadding = constraints.maxWidth < 360 ? 16.0 : 22.0;
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
             horizontalPadding,
-            12,
+            10,
             horizontalPadding,
-            MediaQuery.paddingOf(context).bottom + 28,
+            28,
           ),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: palette.paper,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.70),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.22),
-                      blurRadius: 34,
-                      offset: const Offset(0, 18),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: -42,
-                      right: -34,
-                      child: Container(
-                        width: 145,
-                        height: 145,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: palette.envelopeLight.withValues(alpha: 0.36),
+              constraints: const BoxConstraints(maxWidth: 580),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RepaintBoundary(
+                    child: Container(
+                      key: const ValueKey('love-card-keepsake-paper'),
+                      decoration: BoxDecoration(
+                        color: palette.paper,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: palette.accentInk.withValues(alpha: 0.12),
                         ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 22, 22, 26),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              _LetterBadge(
-                                icon: palette.leadingIcon,
-                                label: palette.badge,
-                                color: palette.accent,
-                                onPaper: true,
-                              ),
-                              const Spacer(),
-                              _PostageStamp(palette: palette),
-                            ],
-                          ),
-                          const SizedBox(height: 22),
-                          Text(
-                            palette.headline,
-                            style: SLTheme.quicksand(
-                              color: palette.ink,
-                              fontSize: 20,
-                              height: 1.2,
-                              fontWeight: FontWeight.w900,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.14 : 0.05,
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            L10nService().format('love_card_receiver_from', {
-                              'name': _senderName,
-                            }),
-                            style: SLTheme.quicksand(
-                              color: palette.muted,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          if (imageUrl.isNotEmpty) ...[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(22),
-                              child: AspectRatio(
-                                aspectRatio: 16 / 10,
-                                child: CachedNetworkImage(
-                                  imageUrl: imageUrl,
-                                  fit: BoxFit.cover,
-                                  fadeInDuration: const Duration(
-                                    milliseconds: 180,
-                                  ),
-                                  placeholder: (context, imageUrl) =>
-                                      ColoredBox(
-                                        color: palette.envelopeLight.withValues(
-                                          alpha: 0.26,
-                                        ),
-                                        child: Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: palette.accent,
-                                          ),
-                                        ),
-                                      ),
-                                  errorWidget: (context, imageUrl, error) =>
-                                      ColoredBox(
-                                        color: palette.envelopeLight.withValues(
-                                          alpha: 0.22,
-                                        ),
-                                        child: Icon(
-                                          Icons.broken_image_outlined,
-                                          color: palette.muted,
-                                          size: 34,
-                                        ),
-                                      ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 22),
-                          ],
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(18, 20, 18, 22),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.58),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: palette.accent.withValues(alpha: 0.12),
-                              ),
-                            ),
-                            child: Text(
-                              _messageText,
-                              style: GoogleFonts.dancingScript(
-                                color: palette.ink,
-                                fontSize: 29,
-                                height: 1.42,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 22),
-                          _LetterDivider(palette: palette),
-                          const SizedBox(height: 18),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: palette.accent.withValues(alpha: 0.10),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Icon(
-                                  palette.trailingIcon,
-                                  color: palette.accent,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 11),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _senderName,
-                                      style: SLTheme.quicksand(
-                                        color: palette.ink,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      _signature,
-                                      style: GoogleFonts.dancingScript(
-                                        color: palette.accent,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _formatTime(widget.payload.timestampMs),
-                                      style: SLTheme.quicksand(
-                                        color: palette.muted,
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 22),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ActionPillButton(
-                                  label: context.tr('util_saochp_cbfba9'),
-                                  icon: Icons.copy_rounded,
-                                  onTap: _copyCardContent,
-                                  background: palette.accent.withValues(
-                                    alpha: 0.10,
-                                  ),
-                                  foreground: palette.accent,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _ActionPillButton(
-                                  label: context.tr('share'),
-                                  icon: Icons.send_rounded,
-                                  onTap: _shareCard,
-                                  background: palette.accent,
-                                  foreground: Colors.white,
-                                ),
-                              ),
-                            ],
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context.tr(
+                                          'love_card_receiver_private_badge',
+                                        ),
+                                        style: SLTheme.quicksand(
+                                          color: palette.mutedInk,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      _LetterBadge(
+                                        icon: palette.leadingIcon,
+                                        label: palette.badge,
+                                        color: palette.accentInk,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                _PostageStamp(palette: palette),
+                              ],
+                            ),
+                            const SizedBox(height: 22),
+                            Text(
+                              palette.headline,
+                              style: GoogleFonts.playfairDisplay(
+                                color: palette.ink,
+                                fontSize: 26,
+                                height: 1.25,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              L10nService().format('love_card_receiver_from', {
+                                'name': _senderName,
+                              }),
+                              style: SLTheme.quicksand(
+                                color: palette.mutedInk,
+                                fontSize: 12,
+                                height: 1.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            if (imageUrl.isNotEmpty) ...[
+                              _LetterPhoto(
+                                palette: palette,
+                                imageUrl: imageUrl,
+                              ),
+                              const SizedBox(height: 26),
+                            ] else ...[
+                              _LetterDivider(palette: palette),
+                              const SizedBox(height: 24),
+                            ],
+                            Text(
+                              _messageText,
+                              key: const ValueKey('love-card-message'),
+                              style: GoogleFonts.lora(
+                                color: palette.ink,
+                                fontSize: 18,
+                                height: 1.75,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
+                            _LetterDivider(palette: palette),
+                            const SizedBox(height: 22),
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    _signature,
+                                    key: const ValueKey('love-card-signature'),
+                                    textAlign: TextAlign.end,
+                                    style: GoogleFonts.dancingScript(
+                                      color: palette.accentInk,
+                                      fontSize: 27,
+                                      height: 1.3,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _senderName,
+                                    textAlign: TextAlign.end,
+                                    style: SLTheme.quicksand(
+                                      color: palette.ink,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _formatTime(widget.payload.timestampMs),
+                                    key: const ValueKey('love-card-date'),
+                                    textAlign: TextAlign.end,
+                                    style: SLTheme.quicksand(
+                                      color: palette.mutedInk,
+                                      fontSize: 11,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildLetterActions(palette, isDark),
+                ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLetterActions(_LoveCardViewerTheme palette, bool isDark) {
+    final copy = _ActionPillButton(
+      key: const ValueKey('copy-card-action'),
+      label: context.tr('util_saochp_cbfba9'),
+      icon: Icons.copy_outlined,
+      onTap: _copyCardContent,
+      background: palette.foregroundFor(isDark).withValues(alpha: 0.04),
+      foreground: palette.foregroundFor(isDark),
+      outlined: true,
+    );
+    final share = _ActionPillButton(
+      key: const ValueKey('share-card-action'),
+      label: context.tr('share'),
+      icon: Icons.ios_share_rounded,
+      onTap: _shareCard,
+      background: palette.accentInk,
+      foreground: Colors.white,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 300 ||
+            MediaQuery.textScalerOf(context).scale(13) > 20) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [copy, const SizedBox(height: 10), share],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: copy),
+            const SizedBox(width: 12),
+            Expanded(child: share),
+          ],
         );
       },
     );

@@ -2,19 +2,23 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-enum SoulMergeOption { background, removeBackground, overlay, heartStyle }
+enum SoulMergeOption { avatar, background, removeBackground, overlay, heartStyle }
 
 class SoulMergeOptionsSheet extends StatelessWidget {
   const SoulMergeOptionsSheet({
     super.key,
+    this.hasAvatar = false,
     required this.hasBackground,
     required this.overlayEnabled,
-    required this.isUploadingBackground,
+    this.isUploadingBackground = false,
+    this.isUploadingAsset = false,
   });
 
+  final bool hasAvatar;
   final bool hasBackground;
   final bool overlayEnabled;
   final bool isUploadingBackground;
+  final bool isUploadingAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -48,21 +52,36 @@ class SoulMergeOptionsSheet extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: isUploadingBackground
+                leading: isUploadingAsset
+                    ? const SizedBox.square(
+                        dimension: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        hasAvatar
+                            ? Icons.account_circle_rounded
+                            : Icons.add_a_photo_rounded,
+                      ),
+                title: Text(context.tr('p5_profile_change_avatar')),
+                enabled: !isUploadingAsset,
+                onTap: () => Navigator.pop(context, SoulMergeOption.avatar),
+              ),
+              ListTile(
+                leading: isUploadingAsset
                     ? const SizedBox.square(
                         dimension: 24,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.wallpaper_rounded),
                 title: Text(context.tr('home_tinn_ca8199')),
-                enabled: !isUploadingBackground,
+                enabled: !isUploadingAsset,
                 onTap: () => Navigator.pop(context, SoulMergeOption.background),
               ),
               if (hasBackground)
                 ListTile(
                   leading: const Icon(Icons.hide_image_outlined),
                   title: Text(context.tr('theme_remove_bg')),
-                  enabled: !isUploadingBackground,
+                  enabled: !isUploadingAsset,
                   onTap: () =>
                       Navigator.pop(context, SoulMergeOption.removeBackground),
                 ),

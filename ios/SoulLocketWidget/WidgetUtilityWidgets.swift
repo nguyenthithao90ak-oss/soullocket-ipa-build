@@ -11,14 +11,6 @@ enum UtilityWidgetKind: Equatable {
         case .sleep: return "widget_title_sleep"
         }
     }
-    var themeKey: String {
-        switch self {
-        case .cycle: return "green"
-        case .calendar: return "blue"
-        case .event: return "orange"
-        case .sleep: return "purple"
-        }
-    }
     var symbol: String {
         switch self {
         case .cycle: return "drop.fill"
@@ -43,21 +35,55 @@ enum UtilityWidgetKind: Equatable {
         case .sleep: return "widget_moon"
         }
     }
-    var palette: [Color] {
-        switch self {
-        case .cycle: return [Color(hex:"FFF7DB"), Color(hex:"E4F2D5"), Color(hex:"C9E7E0")]
-        case .calendar: return [Color(hex:"F0F9FF"), Color(hex:"DCEAFF"), Color(hex:"D9DDFB")]
-        case .event: return [Color(hex:"FFF9ED"), Color(hex:"FBE4D7")]
-        case .sleep: return [Color(hex:"292943"), Color(hex:"44425F")]
-        }
+    /// Nền dùng đúng palette widget đôi (WidgetThemeBackdrop); artwork vẫn riêng từng loại.
+    func palette(for themeKey: String) -> [Color] {
+        (WidgetAppearanceDesign.palettes[WidgetAppearanceDesign.theme(themeKey)] ?? []).map { Color(hex: $0) }
     }
-    var ink: Color {
-        switch self {
-        case .cycle: return Color(hex:"324D38")
-        case .calendar: return Color(hex:"294C74")
-        case .event: return Color(hex:"654339")
-        case .sleep: return Color(hex:"FFF8E8")
+    /// Chữ giống tên/nhãn của widget đôi iOS (WidgetTheme.textColor).
+    func ink(for themeKey: String) -> Color {
+        WidgetTheme.from(WidgetAppearanceDesign.theme(themeKey)).textColor
+    }
+}
+
+/// Màu nhấn/thẻ theo theme widget đôi, cùng công thức WidgetThemeDesign Flutter và Android.
+enum UtilityThemeColors {
+    /// Khớp WidgetTheme.accentColor (màu số ngày của widget đôi iOS).
+    static let accentHex: [String: String] = [
+        "pink": "FF4D73", "dark": "FF8FB1", "white": "D6336C", "blue": "1565C0",
+        "orange": "EA580C", "purple": "8B5CF6", "green": "10B981", "red": "FFF0DC",
+        "premium": "FFF1B5", "cosmic": "FFF0BD",
+    ]
+    static func isDark(_ theme: String) -> Bool {
+        ["dark", "red", "premium", "cosmic"].contains(WidgetAppearanceDesign.theme(theme))
+    }
+    private static func accentValue(_ theme: String) -> String {
+        accentHex[WidgetAppearanceDesign.theme(theme)] ?? "FF4D73"
+    }
+    static func accent(_ theme: String) -> Color { Color(hex: accentValue(theme)) }
+    static func track(_ theme: String) -> Color {
+        mix(accentValue(theme), "FFFFFF", isDark(theme) ? 0.52 : 0.72)
+    }
+    static func card(_ theme: String) -> Color {
+        isDark(theme) ? Color.black.opacity(0.22) : Color.white.opacity(0.48)
+    }
+    static func avatar(_ theme: String) -> Color {
+        if isDark(theme) { return Color.white.opacity(0.14) }
+        let first = WidgetAppearanceDesign.palettes[WidgetAppearanceDesign.theme(theme)]?.first ?? "FFF3E5"
+        return mix(first, "FFFFFF", 0.52)
+    }
+    /// Số đếm sự kiện: màu theme pha nhẹ màu riêng như widget đôi pha màu tim.
+    static func days(_ theme: String, tintHex: String) -> Color {
+        mix(accentValue(theme), tintHex, isDark(theme) ? 0.28 : 0.36)
+    }
+    static func mix(_ from: String, _ to: String, _ t: Double) -> Color {
+        func rgb(_ hex: String) -> (Double, Double, Double) {
+            let value = Int(hex.replacingOccurrences(of: "#", with: ""), radix: 16) ?? 0
+            return (Double((value >> 16) & 255), Double((value >> 8) & 255), Double(value & 255))
         }
+        let a = rgb(from), b = rgb(to)
+        return Color(red: (a.0 + (b.0 - a.0) * t) / 255,
+                     green: (a.1 + (b.1 - a.1) * t) / 255,
+                     blue: (a.2 + (b.2 - a.2) * t) / 255)
     }
 }
 
@@ -135,7 +161,7 @@ struct UtilityWidgetData {
     static func load() -> UtilityWidgetData {
         let defaults = UserDefaults(suiteName: appGroupID)
         let keys = ["cycle_phase_label", "cycle_next_period_in", "cycle_tip", "cycle_progress",
-            "cycle_next_period_days",
+            "cycle_next_period_days", "cycle_target_label", "cycle_expected_date", "cycle_estimate_label",
             "calendar_countdown", "calendar_next_date", "calendar_events_text",
             "se_title", "se_date", "se_days", "se_label", "se_color", "se_target_date",
             "sleep_my_name", "sleep_partner_name", "sleep_my_status", "sleep_partner_status",
@@ -267,7 +293,7 @@ struct WidgetUtilityView: View {
     }
     private func line(_ value: String, size: CGFloat = 12, lines: Int = 1) -> some View {
         Text(value).font(.system(size: size, weight: .semibold, design: .rounded))
-            .lineLimit(lines).minimumScaleFactor(0.65).foregroundColor(kind.ink)
+            .lineLimit(lines).minimumScaleFactor(0.65).foregroundColor(kind.ink(for: data.themeKey))
     }
     @ViewBuilder private func planContent(height: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -275,20 +301,24 @@ struct WidgetUtilityView: View {
                 if kind == .cycle {
                     if small {
                         VStack(spacing: 4) {
-                            CycleDayRing(days: cycleDays, progress: progress, diameter: min(64, max(44, height - 91)), ink: kind.ink)
-                            line(data.text("cycle_phase_label"), size: 12)
+                            CycleDayRing(days: cycleDays, progress: progress, diameter: min(52, max(40, height - 91)), ink: kind.ink(for: data.themeKey),
+                                accent: UtilityThemeColors.accent(data.themeKey), track: UtilityThemeColors.track(data.themeKey))
+                            line(cycleTarget, size: 9, lines: 1)
+                            line(data.text("cycle_phase_label"), size: 10)
                         }.frame(maxWidth: .infinity)
                     } else {
                         HStack(alignment: .center, spacing: 10) {
-                            CycleDayRing(days: cycleDays, progress: progress, diameter: large ? 94 : min(72, max(48, height - 74)), ink: kind.ink)
+                            CycleDayRing(days: cycleDays, progress: progress, diameter: large ? 94 : min(72, max(48, height - 74)), ink: kind.ink(for: data.themeKey),
+                                accent: UtilityThemeColors.accent(data.themeKey), track: UtilityThemeColors.track(data.themeKey))
                             VStack(alignment: .leading, spacing: 5) {
-                                line(data.text("cycle_phase_label"), size: large ? 22 : height < 155 ? 16 : 18, lines: 2)
-                                line(data.text("cycle_next_period_in"), size: large ? 13 : height < 155 ? 9 : 10, lines: large ? 3 : height < 155 ? 1 : 2)
+                                line(cycleTarget, size: large ? 12 : 10, lines: 2)
+                                line(data.text("cycle_phase_label"), size: large ? 22 : height < 155 ? 14 : 16, lines: 2)
+                                line(data.text("cycle_expected_date").isEmpty ? data.text("cycle_next_period_in") : data.text("cycle_expected_date"), size: large ? 12 : 9, lines: 2)
                             }.frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    if large && !data.text("cycle_tip").isEmpty {
-                        line(data.text("cycle_tip"), size: 12, lines: 2).opacity(0.8)
+                    if large {
+                        line(data.text("cycle_estimate_label").isEmpty ? widgetText("cycle_ui_estimate") : data.text("cycle_estimate_label"), size: 10, lines: 2).opacity(0.8)
                     }
                 } else {
                     line(data.calendarCountdown(at: date), size: large ? 26 : small ? 15 : 20, lines: 2)
@@ -300,7 +330,11 @@ struct WidgetUtilityView: View {
                 line(widgetText(kind == .cycle ? "util_health_enable_cycle_tracking" : "widget_sync_empty"), size: 11, lines: 3)
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-            .padding(small ? 8 : 10).background(Color.white.opacity(0.48).clipShape(RoundedRectangle(cornerRadius: 16)))
+            .padding(small ? 8 : 10).background(UtilityThemeColors.card(data.themeKey).clipShape(RoundedRectangle(cornerRadius: 16)))
+    }
+    private var cycleTarget: String {
+        let value = data.text("cycle_target_label")
+        return value.isEmpty ? widgetText("cycle_ui_until_next_period") : value
     }
     @ViewBuilder var body: some View {
         if kind == .sleep || kind == .event {
@@ -310,10 +344,12 @@ struct WidgetUtilityView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         WidgetArtwork(name: kind.artwork).frame(width: 26, height: 22)
+                            .rotationEffect(.degrees(kind == .cycle && alternate ? 4 : 0))
                         line(widgetText(kind.titleKey))
                         Spacer(minLength: 0)
                     }
-                    if large { WidgetArtwork(name: kind.artwork).frame(height: 74).frame(maxWidth: .infinity).padding(.top, 4) }
+                    if large { WidgetArtwork(name: kind.artwork).frame(height: 74).frame(maxWidth: .infinity).padding(.top, 4)
+                            .rotationEffect(.degrees(kind == .cycle && alternate ? -4 : 0)) }
                     planContent(height: proxy.size.height)
                 }.padding(large ? 16 : small ? 9 : 12).frame(width: proxy.size.width, height: proxy.size.height)
             }.clipShape(RoundedRectangle(cornerRadius: 24))
@@ -331,14 +367,16 @@ private struct CycleDayRing: View {
     let progress: Double
     let diameter: CGFloat
     let ink: Color
+    let accent: Color
+    let track: Color
 
     var body: some View {
         ZStack {
             Circle()
-                .strokeBorder(Color(hex: "D7E2CA"), lineWidth: diameter >= 90 ? 8 : 6)
+                .strokeBorder(track, lineWidth: diameter >= 90 ? 8 : 6)
             Circle()
                 .trim(from: 0, to: max(0, min(1, progress)))
-                .stroke(Color(hex: "648269"), style: StrokeStyle(lineWidth: diameter >= 90 ? 8 : 6, lineCap: .round))
+                .stroke(accent, style: StrokeStyle(lineWidth: diameter >= 90 ? 8 : 6, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .padding(diameter >= 90 ? 4 : 3)
             VStack(spacing: 2) {
@@ -349,7 +387,7 @@ private struct CycleDayRing: View {
                     .minimumScaleFactor(0.6)
                 Text(widgetText("p3_health_days_remaining"))
                     .font(.system(size: diameter >= 90 ? 8 : 7, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color(hex: "648269"))
+                    .foregroundColor(accent)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }.padding(.horizontal, diameter >= 90 ? 11 : 9)
@@ -424,7 +462,7 @@ private struct WidgetUtilityBackdrop: View {
     let alternate: Bool
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            LinearGradient(colors: kind.palette, startPoint:.topLeading,endPoint:.bottomTrailing)
+            LinearGradient(colors: kind.palette(for: themeKey), startPoint:.topLeading,endPoint:.bottomTrailing)
             // Lớp họa tiết chủ đề chung chỉ ở mức nhẹ; nền ngủ/sự kiện vẫn giữ bản sắc riêng.
             Image("widget_theme_" + WidgetAppearanceDesign.theme(themeKey) + (alternate ? "_twinkle" : ""))
                 .resizable().renderingMode(.original).opacity(kind == .sleep ? 0.22 : 0.18)
@@ -449,7 +487,7 @@ struct WidgetSleepEventView: View {
     private var alternate: Bool { WidgetAppearanceDesign.alternate(at:date, enabled:data.animated && !reduceMotion) }
     private var small:Bool { family == .systemSmall }
     private var large:Bool { family == .systemLarge }
-    private var ink:Color { kind == .sleep ? Color(hex:"FFF8E8") : Color(hex:"654339") }
+    private var ink:Color { kind.ink(for: data.themeKey) }
     private func line(_ value:String,size:CGFloat=12,lines:Int=1)->some View {
         Text(value).font(.system(size:size,weight:.semibold,design:.rounded)).foregroundColor(ink).lineLimit(lines).minimumScaleFactor(0.7)
     }
@@ -459,7 +497,7 @@ struct WidgetSleepEventView: View {
             HStack(spacing:6) {
                 WidgetArtwork(name:index == 0 ? "widget_avatar_warm" : "widget_avatar_cream")
                     .frame(width:large ? 32 : 27,height:large ? 32 : 27)
-                    .background(Color(hex:"F6EFDF").clipShape(RoundedRectangle(cornerRadius:10)))
+                    .background(UtilityThemeColors.avatar(data.themeKey).clipShape(RoundedRectangle(cornerRadius:10)))
                 line(p.name.isEmpty ? widgetText(index == 0 ? "p3_sleep_default_me" : "p3_sleep_default_partner") : p.name,size:large ? 15 : 11)
             }
             line(widgetText(sleepStateKey(state)),size:large ? 14 : 10,lines:2)
@@ -473,27 +511,25 @@ struct WidgetSleepEventView: View {
                 line(p.source == "healthkit" ? "Apple Health" : widgetText(p.source == "manual" ? "sleep_source_manual" : p.source == "screen_estimate" ? "sleep_source_estimate" : "sleep_sync_hint"),size:9,lines:large ? 2 : 1).opacity(0.65)
             }
         }.frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading)
-         .padding(large ? 12 : 8).background(Color.white.opacity(0.07).clipShape(RoundedRectangle(cornerRadius:16)))
+         .padding(large ? 12 : 8).background(UtilityThemeColors.card(data.themeKey).clipShape(RoundedRectangle(cornerRadius:16)))
     }
     private func smallPerson(_ p:SleepWidgetPerson,index:Int)->some View {
         let state=p.effectiveState(at:date)
         return HStack(spacing:7) {
             WidgetArtwork(name:index == 0 ? "widget_avatar_warm" : "widget_avatar_cream")
-                .frame(width:22,height:26).background(Color(hex:"F6EFDF").clipShape(RoundedRectangle(cornerRadius:8)))
+                .frame(width:22,height:26).background(UtilityThemeColors.avatar(data.themeKey).clipShape(RoundedRectangle(cornerRadius:8)))
             VStack(alignment:.leading,spacing:3) {
                 line(p.name.isEmpty ? widgetText(index == 0 ? "p3_sleep_default_me" : "p3_sleep_default_partner") : p.name,size:10)
                 line(widgetText(sleepStateKey(state)),size:8)
                 if state == "recorded" { line(sleepDurationText(p.duration),size:12) }
             }.frame(maxWidth:.infinity,alignment:.leading)
         }.padding(7).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.leading)
-            .background(Color.white.opacity(0.07).clipShape(RoundedRectangle(cornerRadius:13)))
+            .background(UtilityThemeColors.card(data.themeKey).clipShape(RoundedRectangle(cornerRadius:13)))
     }
     private var eventAccent:Color {
         let hex=data.text("se_color").replacingOccurrences(of:"#",with:"")
-        guard hex.count == 6, let value=Int(hex,radix:16) else { return Color(hex:"984C36") }
-        let r=Double((value >> 16) & 255),g=Double((value >> 8) & 255),b=Double(value & 255)
-        let factor=min(1,112/max(max(r,g),max(b,1)))
-        return Color(red:r*factor/255,green:g*factor/255,blue:b*factor/255)
+        let tint = hex.count == 6 && Int(hex,radix:16) != nil ? hex : "984C36"
+        return UtilityThemeColors.days(data.themeKey, tintHex: tint)
     }
     private var eventDays:String {
         let pieces=data.text("se_target_date").split(separator:"-").compactMap{Int($0)}

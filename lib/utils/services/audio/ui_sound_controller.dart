@@ -34,6 +34,7 @@ class UiSoundController {
   int _audibleStops = 0;
   bool _playing = false;
   Duration? _lastSound;
+  final _nextVariant = <UiSoundCue, int>{};
 
   void setEnabled(bool enabled) {
     if (_disposed || _enabled == enabled) return;
@@ -82,11 +83,13 @@ class UiSoundController {
     final now = _clock();
     if (_lastSound != null && now - _lastSound! < cooldown) return;
     _lastSound = now;
+    final variant = _nextVariant[cue] ?? 0;
+    _nextVariant[cue] = (variant + 1) % UiSoundWaves.variantCount(cue);
     final generation = _generation;
     _playing = true;
     _syncBusy();
     try {
-      await _output.prepare(UiSoundWaves.waveFor(cue));
+      await _output.prepare(UiSoundWaves.waveFor(cue, variant: variant));
       if (!_isCurrent(generation)) return;
       await _output.play(volume);
       if (!_isCurrent(generation)) {

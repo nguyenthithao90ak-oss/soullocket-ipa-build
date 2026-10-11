@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/security_protection_analytics_service.dart';
 import '../../utils/services/security_protection_service.dart';
@@ -10,10 +13,7 @@ import 'security_protection_copy.dart';
 class SecurityProtectionHelpScreen extends StatefulWidget {
   final SecurityProtectionVerdict verdict;
 
-  const SecurityProtectionHelpScreen({
-    super.key,
-    required this.verdict,
-  });
+  const SecurityProtectionHelpScreen({super.key, required this.verdict});
 
   @override
   State<SecurityProtectionHelpScreen> createState() =>
@@ -38,19 +38,30 @@ class _SecurityProtectionHelpScreenState
   }
 
   Future<void> _openSupport() async {
-    await _analyticsService.logDecision(
-      verdict: widget.verdict,
-      eventType: 'support_opened',
-      source: 'security_help_screen',
+    unawaited(
+      _analyticsService.logDecision(
+        verdict: widget.verdict,
+        eventType: 'support_opened',
+        source: 'security_help_screen',
+      ),
     );
     if (!mounted) return;
     final copy = resolveSecurityProtectionCopy(context, widget.verdict);
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => UserSupportChatScreen(
-          initialTopic: L10nService().translate('ui_security_protect_sensitive_operations_009056'),
-          initialDraft:
-              L10nService().format('ui_security_value1_value2_action_value3_screen_value4_reason_d586de', {'value1': widget.verdict.reason.key, 'value2': copy.supportDraft, 'value3': widget.verdict.actionId, 'value4': widget.verdict.screenId, 'value5': widget.verdict.reasonCode}),
+    await slPush<void>(
+      context,
+      UserSupportChatScreen(
+        initialTopic: L10nService().translate(
+          'ui_security_protect_sensitive_operations_009056',
+        ),
+        initialDraft: L10nService().format(
+          'ui_security_value1_value2_action_value3_screen_value4_reason_d586de',
+          {
+            'value1': widget.verdict.reason.key,
+            'value2': copy.supportDraft,
+            'value3': widget.verdict.actionId,
+            'value4': widget.verdict.screenId,
+            'value5': widget.verdict.reasonCode,
+          },
         ),
       ),
     );
@@ -60,8 +71,9 @@ class _SecurityProtectionHelpScreenState
   Widget build(BuildContext context) {
     final copy = resolveSecurityProtectionCopy(context, widget.verdict);
     final isBlocked = widget.verdict.shouldBlock;
-    final accent =
-        isBlocked ? const Color(0xFFD32F2F) : const Color(0xFFF57C00);
+    final accent = isBlocked
+        ? const Color(0xFFD32F2F)
+        : const Color(0xFFF57C00);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FC),
@@ -84,10 +96,7 @@ class _SecurityProtectionHelpScreenState
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  accent.withValues(alpha: 0.14),
-                  Colors.white,
-                ],
+                colors: [accent.withValues(alpha: 0.14), Colors.white],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -105,8 +114,10 @@ class _SecurityProtectionHelpScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
@@ -146,15 +157,24 @@ class _SecurityProtectionHelpScreenState
                   runSpacing: 10,
                   children: [
                     _buildMetaChip(
-                      label: L10nScope.of(context).format('ui_security_risk_level_value1_32a21e', {'value1': widget.verdict.effectiveRisk.key}),
+                      label: L10nScope.of(context).format(
+                        'ui_security_risk_level_value1_32a21e',
+                        {'value1': widget.verdict.effectiveRisk.key},
+                      ),
                       accent: accent,
                     ),
                     _buildMetaChip(
-                      label: L10nScope.of(context).format('ui_security_reason_value1_4442c8', {'value1': widget.verdict.reason.key}),
+                      label: L10nScope.of(context).format(
+                        'ui_security_reason_value1_4442c8',
+                        {'value1': widget.verdict.reason.key},
+                      ),
                       accent: accent,
                     ),
                     _buildMetaChip(
-                      label: L10nScope.of(context).format('ui_security_phase_value1_68a79a', {'value1': widget.verdict.rolloutStage.key}),
+                      label: L10nScope.of(context).format(
+                        'ui_security_phase_value1_68a79a',
+                        {'value1': widget.verdict.rolloutStage.key},
+                      ),
                       accent: accent,
                     ),
                   ],
@@ -210,7 +230,9 @@ class _SecurityProtectionHelpScreenState
           ),
           const SizedBox(height: 16),
           _buildSectionCard(
-            title: context.tr('ui_security_quick_faq_for_customer_service_and_users_b8feaa'),
+            title: context.tr(
+              'ui_security_quick_faq_for_customer_service_and_users_b8feaa',
+            ),
             icon: Icons.help_outline_rounded,
             children: [
               for (final faq in copy.faqs)
@@ -248,7 +270,9 @@ class _SecurityProtectionHelpScreenState
             icon: Icons.support_agent_rounded,
             children: [
               Text(
-                context.tr('ui_security_include_actions_screens_reason_codes_and_apps_a25951'),
+                context.tr(
+                  'ui_security_include_actions_screens_reason_codes_and_apps_a25951',
+                ),
                 style: SLTheme.quicksand(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
@@ -295,7 +319,9 @@ class _SecurityProtectionHelpScreenState
             side: BorderSide(color: accent.withValues(alpha: 0.28)),
           ),
           child: Text(
-            isBlocked ? context.tr('ui_security_i_ll_handle_it_and_try_again_d7f39e') : context.tr('ui_security_understood_continue_61278b'),
+            isBlocked
+                ? context.tr('ui_security_i_ll_handle_it_and_try_again_d7f39e')
+                : context.tr('ui_security_understood_continue_61278b'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               color: accent,
@@ -306,10 +332,7 @@ class _SecurityProtectionHelpScreenState
     );
   }
 
-  Widget _buildMetaChip({
-    required String label,
-    required Color accent,
-  }) {
+  Widget _buildMetaChip({required String label, required Color accent}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(

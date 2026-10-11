@@ -44,6 +44,11 @@ class LivingStickerPainter extends CustomPainter {
       (size.height - 200 * scale) / 2,
     );
     canvas.scale(scale);
+    if (scene.artworkId?.startsWith('milestone_') ?? false) {
+      _paintMilestoneArtwork(canvas, t);
+      canvas.restore();
+      return;
+    }
     if (scene.artStyle != null) {
       _paintPackArtwork(canvas, t);
       canvas.restore();
@@ -130,6 +135,163 @@ class LivingStickerPainter extends CustomPainter {
     }
     _atmosphere(canvas, t);
     canvas.restore();
+  }
+
+  /// Bộ die-cut đôi mèo: mốc có huy hiệu số, dịp khác giữ đạo cụ theo ý nghĩa.
+  void _paintMilestoneArtwork(Canvas c, double t) {
+    final isCount = const {
+      'milestone_days',
+      'milestone_months',
+      'milestone_years',
+    }.contains(scene.artworkId);
+    final accent = scene.accent;
+    final silhouette = Path()
+      ..moveTo(27, 92)
+      ..cubicTo(15, 49, 41, 20, 76, 28)
+      ..quadraticBezierTo(100, 8, 124, 28)
+      ..cubicTo(159, 20, 185, 49, 173, 92)
+      ..cubicTo(197, 134, 179, 174, 151, 177)
+      ..quadraticBezierTo(100, 194, 49, 177)
+      ..cubicTo(21, 174, 3, 134, 27, 92)
+      ..close();
+    c.drawPath(
+      silhouette.shift(const Offset(0, 3)),
+      Paint()..color = ink.withValues(alpha: .08),
+    );
+    _shape(c, silhouette, const Color(0xFFFFFDFA), border: false);
+    _stroke(c, silhouette, color: accent.withValues(alpha: .30), width: 1.6);
+    _ellipse(
+      c,
+      const Rect.fromLTWH(31, 34, 138, 138),
+      accent.withValues(alpha: .13),
+      border: false,
+    );
+    _ellipse(
+      c,
+      const Rect.fromLTWH(40, 165, 120, 13),
+      accent.withValues(alpha: .16),
+      border: false,
+    );
+
+    if (isCount || scene.subject == StickerSubject.couple) {
+      _milestoneCats(c, const Offset(100, 120), .86, t);
+      if (isCount) {
+        _object(
+          c,
+          scene.prop!,
+          const Offset(100, 48),
+          .28,
+          t,
+          scene.gesture,
+          accent: accent,
+        );
+        // Huy hiệu chỉ có số; nhãn Day/Month/Year đầy đủ nằm dưới hình ở UI.
+        _rounded(
+          c,
+          const Rect.fromLTWH(53, 140, 94, 36),
+          accent,
+          radius: 17,
+          border: false,
+        );
+        _rounded(
+          c,
+          const Rect.fromLTWH(57, 144, 86, 28),
+          const Color(0xFFFFFDFA),
+          radius: 13,
+          border: false,
+        );
+        final value = scene.detail!;
+        _text(
+          c,
+          value,
+          const Offset(100, 158),
+          value.length > 4 ? 18 : 24,
+          ink,
+        );
+      } else if (scene.prop != null) {
+        _object(c, scene.prop!, const Offset(100, 152), .42, t, scene.gesture);
+      }
+    } else {
+      if (const {
+        StickerSubject.cat,
+        StickerSubject.bunny,
+        StickerSubject.puppy,
+      }.contains(scene.subject)) {
+        _character(
+          c,
+          const Offset(100, 95),
+          .75,
+          scene.subject,
+          scene.gesture,
+          t,
+        );
+      } else {
+        _object(
+          c,
+          scene.subject,
+          const Offset(100, 87),
+          .78,
+          t,
+          scene.gesture,
+          accent: accent,
+          detail: scene.detail,
+          face: true,
+        );
+      }
+      _milestoneCats(c, const Offset(100, 152), .40, t);
+      if (scene.prop != null) {
+        _object(c, scene.prop!, const Offset(157, 141), .29, t, scene.gesture);
+      }
+    }
+    for (final point in [const Offset(26, 67), const Offset(174, 66)]) {
+      c.save();
+      c.translate(point.dx, point.dy);
+      _shape(c, _star(7, points: 4, inner: .25), accent, border: false);
+      c.restore();
+    }
+    _atmosphere(c, t);
+  }
+
+  void _milestoneCats(Canvas c, Offset center, double scale, double t) {
+    c.save();
+    c.translate(center.dx, center.dy);
+    c.scale(scale);
+    _character(
+      c,
+      const Offset(-39, 0),
+      1,
+      StickerSubject.cat,
+      scene.gesture,
+      t,
+    );
+    c.save();
+    c.translate(39, 0);
+    c.scale(-1, 1);
+    _character(
+      c,
+      Offset.zero,
+      1,
+      StickerSubject.cat,
+      scene.gesture,
+      t,
+      second: true,
+      furColor: Color.lerp(pink, scene.accent, .13),
+    );
+    // Nơ nhỏ giúp nhận ra mèo thứ hai, không biến đổi toàn bộ sticker.
+    _shape(
+      c,
+      Path()
+        ..moveTo(-25, -66)
+        ..quadraticBezierTo(-44, -82, -43, -61)
+        ..lineTo(-25, -66)
+        ..quadraticBezierTo(-7, -82, -8, -61)
+        ..close(),
+      scene.accent,
+      border: false,
+    );
+    _ellipse(c, const Rect.fromLTWH(-29, -70, 8, 8), rose, border: false);
+    c.restore();
+    c.restore();
   }
 
   void _atmosphere(Canvas canvas, double t) {

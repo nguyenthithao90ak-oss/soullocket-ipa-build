@@ -17,12 +17,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_route.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/screen_activity_mixin.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 
 class LocalAlbumScreen extends StatefulWidget {
-  const LocalAlbumScreen({super.key});
+  const LocalAlbumScreen({super.key, this.directoryLoader});
+  final Future<Directory> Function()? directoryLoader;
 
   @override
   State<LocalAlbumScreen> createState() => _LocalAlbumScreenState();
@@ -37,12 +41,18 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   static const int _maxVideosPerDay = 30;
   static const int _maxVideoSizeBytes = 500 * 1024 * 1024; // 500MB
   final ImagePicker _picker = ImagePicker();
+  final SingleOpenGate _importGate = SingleOpenGate();
+  bool _albumSheetOpen = false;
+  bool _albumSheetActionHandled = false;
 
   List<LocalAlbumItem> _items = [];
   List<LocalAlbumItem> _filteredItems = [];
   final Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
   bool _isLoading = true;
+  bool _loadFailed = false;
+  bool _initializingDirectory = false;
+  int _loadGeneration = 0;
   String _searchQuery = '';
   DateTime? _selectedMonth;
   bool _showSearch = false;
@@ -56,11 +66,33 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   }
 
   Future<void> _initDir() async {
-    final dir = await getApplicationDocumentsDirectory();
-    _albumDir = '${dir.path}/local_album';
-    await Directory(_albumDir!).create(recursive: true);
-    _loadItems();
-    _showFirstTimeNotice();
+    if (_initializingDirectory || !mounted) return;
+    _initializingDirectory = true;
+    setState(() {
+      _isLoading = _items.isEmpty;
+      _loadFailed = false;
+    });
+    try {
+      final dir = await (widget.directoryLoader?.call() ??
+              getApplicationDocumentsDirectory())
+          .timeout(const Duration(seconds: 6));
+      final albumDir = '${dir.path}/local_album';
+      await Directory(albumDir).create(recursive: true)
+          .timeout(const Duration(seconds: 6));
+      if (!mounted) return;
+      _albumDir = albumDir;
+      await _loadItems();
+      if (mounted) unawaited(_showFirstTimeNotice());
+    } catch (error) {
+      debugPrint('[LocalAlbum] Initialization failed: $error');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
+      });
+    } finally {
+      _initializingDirectory = false;
+    }
   }
 
   Future<String> _saveFile(Uint8List bytes, String ext) async {
@@ -114,11 +146,13 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
 
   @override
   void dispose() {
+    _loadGeneration++;
     _searchCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _showFirstTimeNotice() async {
+    try {
     final prefs = await SharedPreferences.getInstance();
     final alreadyShown = prefs.getBool(_noticePrefsKey) ?? false;
     if (alreadyShown || !mounted) return;
@@ -135,31 +169,44 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         ),
       ),
     );
+    } catch (error) {
+      debugPrint('[LocalAlbum] Notice failed: $error');
+    }
   }
 
   Future<void> _loadItems() async {
-    if (_albumDir == null) return;
-    setState(() => _isLoading = true);
+    if (_albumDir == null || !mounted) return;
+    final generation = ++_loadGeneration;
+    final directory = _albumDir!;
+    setState(() => _isLoading = _items.isEmpty);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_prefsKey) ?? [];
-      _items = [];
-      for (final s in raw) {
-        final item = LocalAlbumItem.fromJson(s);
-        if (item.fileName.isEmpty) continue;
-        final file = File('${_albumDir!}/${item.fileName}');
-        if (!await file.exists()) continue;
-        _items.add(item);
-      }
-      _items.sort((a, b) => b.addedAtMs.compareTo(a.addedAtMs));
+      final items = await _readItems(directory).timeout(const Duration(seconds: 12));
+      if (!mounted || generation != _loadGeneration) return;
+      _items = items;
+      _loadFailed = false;
       _applyFilters();
     } catch (e) {
       debugPrint('Error loading local album: $e');
+      if (mounted && generation == _loadGeneration) _loadFailed = true;
     } finally {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<List<LocalAlbumItem>> _readItems(String directory) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_prefsKey) ?? [];
+    final items = <LocalAlbumItem>[];
+    for (final serialized in raw) {
+      final item = LocalAlbumItem.fromJson(serialized);
+      if (item.fileName.isEmpty) continue;
+      if (!await File('$directory/${item.fileName}').exists()) continue;
+      items.add(item);
+    }
+    items.sort((first, second) => second.addedAtMs.compareTo(first.addedAtMs));
+    return items;
   }
 
   Future<void> _saveItems() async {
@@ -251,7 +298,10 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     return months;
   }
 
-  Future<void> _pickImages() async {
+  Future<void> _pickImages() => _importGate.run(_pickImagesInternal);
+
+  Future<void> _pickImagesInternal() async {
+    if (!mounted || _isLoading || _albumDir == null) return;
     if (_items.length >= _maxItems) {
       _showMsg(
         L10nScope.of(context).format(
@@ -268,8 +318,9 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     );
     if (images.isEmpty || !mounted) return;
     for (final xfile in images) {
-      if (_items.length >= _maxItems) break;
+      if (!mounted || _items.length >= _maxItems) break;
       final bytes = await xfile.readAsBytes();
+      if (!mounted) break;
       final fileName = await _saveFile(bytes, '.jpg');
       if (fileName.isEmpty) continue;
       _items.add(
@@ -283,11 +334,15 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       );
     }
     await _saveItems();
+    if (!mounted) return;
     _applyFilters();
     setState(() {});
   }
 
-  Future<void> _pickVideos() async {
+  Future<void> _pickVideos() => _importGate.run(_pickVideosInternal);
+
+  Future<void> _pickVideosInternal() async {
+    if (!mounted || _isLoading || _albumDir == null) return;
     if (!AppConfig.isVideoUploadEnabled) {
       _showMsg(
         context.tr(
@@ -305,7 +360,12 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       );
       return;
     }
+    final videoDayLimitMessage = L10nScope.of(context).format(
+      'ui_utilities_value1_video_day_limit_reached_some_videos_d8a615',
+      {'value1': _maxVideosPerDay},
+    );
     int todayCount = await _getTodayVideoCount();
+    if (!mounted) return;
     if (todayCount >= _maxVideosPerDay) {
       _showMsg(
         L10nScope.of(context).format(
@@ -316,17 +376,13 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       return;
     }
     final videos = await _picker.pickMultipleMedia();
-    if (videos.isEmpty || !mounted) return;
+    if (!mounted) return;
+    if (videos.isEmpty) return;
     int added = 0;
     for (final xfile in videos) {
-      if (_items.length >= _maxItems) break;
+      if (!mounted || _items.length >= _maxItems) break;
       if (todayCount + added >= _maxVideosPerDay) {
-        _showMsg(
-          L10nScope.of(context).format(
-            'ui_utilities_value1_video_day_limit_reached_some_videos_d8a615',
-            {'value1': _maxVideosPerDay},
-          ),
-        );
+        _showMsg(videoDayLimitMessage);
         break;
       }
       final ext = p.extension(xfile.name).toLowerCase();
@@ -336,6 +392,8 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       // Kiểm tra dung lượng
       final srcFile = File(xfile.path);
       final size = await srcFile.length();
+      // Thoát vòng lặp để vẫn lưu metadata của các file đã nhập trước đó.
+      if (!mounted) break;
       if (size > _maxVideoSizeBytes) {
         _showMsg(
           L10nScope.of(context).format(
@@ -361,11 +419,16 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     }
     if (added > 0) await _incrementTodayVideoCount(todayCount + added);
     await _saveItems();
+    if (!mounted) return;
     _applyFilters();
     setState(() {});
   }
 
-  Future<void> _pickFromFilePicker() async {
+  Future<void> _pickFromFilePicker() =>
+      _importGate.run(_pickFromFilePickerInternal);
+
+  Future<void> _pickFromFilePickerInternal() async {
+    if (!mounted || _isLoading || _albumDir == null) return;
     if (_items.length >= _maxItems) {
       _showMsg(
         L10nScope.of(context).format(
@@ -376,11 +439,13 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       return;
     }
     int todayCount = await _getTodayVideoCount();
+    if (!mounted) return;
     final files = await FilePicker.pickFiles(type: FileType.media);
-    if (files.isEmpty || !mounted) return;
+    if (!mounted) return;
+    if (files.isEmpty) return;
     int videoAdded = 0;
     for (final file in files) {
-      if (_items.length >= _maxItems) break;
+      if (!mounted || _items.length >= _maxItems) break;
       final ext = p.extension(file.name).toLowerCase();
       final isVideo = [
         '.mp4',
@@ -403,6 +468,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         final srcPath = file.path ?? '';
         if (srcPath.isEmpty) continue;
         final size = await File(srcPath).length();
+        if (!mounted) break;
         if (size > _maxVideoSizeBytes) {
           _showMsg(
             L10nScope.of(context).format(
@@ -429,6 +495,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         final srcPath = file.path ?? '';
         if (srcPath.isEmpty) continue;
         final bytes = await File(srcPath).readAsBytes();
+        if (!mounted) break;
         if (bytes.isEmpty) continue;
         final fileName = await _saveFile(bytes, ext.isNotEmpty ? ext : '.jpg');
         if (fileName.isEmpty) continue;
@@ -447,6 +514,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
       await _incrementTodayVideoCount(todayCount + videoAdded);
     }
     await _saveItems();
+    if (!mounted) return;
     _applyFilters();
     setState(() {});
   }
@@ -479,8 +547,14 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     }
     if (mounted) {
       final msg = failed > 0
-          ? L10nService().format('ui_utilities_value1_image_saved_value2_image_error_2a26a1', {'value1': saved, 'value2': failed})
-          : L10nService().format('ui_utilities_value1_photo_saved_to_device_711cb5', {'value1': saved});
+          ? L10nService().format(
+              'ui_utilities_value1_image_saved_value2_image_error_2a26a1',
+              {'value1': saved, 'value2': failed},
+            )
+          : L10nService().format(
+              'ui_utilities_value1_photo_saved_to_device_711cb5',
+              {'value1': saved},
+            );
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
       );
@@ -610,39 +684,63 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   }
 
   void _showAlbumSheet({required String title, required List<Widget> options}) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: KeepsakeStyle.surface(context),
-      showDragHandle: true,
-      useSafeArea: true,
-      isScrollControlled: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * .8,
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => ListView(
-        shrinkWrap: true,
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          24 + MediaQuery.paddingOf(ctx).bottom,
+    if (!mounted || _albumSheetOpen) return;
+    _albumSheetOpen = true;
+    _albumSheetActionHandled = false;
+    unawaited(_showAlbumSheetInternal(title: title, options: options));
+  }
+
+  Future<void> _showAlbumSheetInternal({
+    required String title,
+    required List<Widget> options,
+  }) async {
+    ModalRoute<void>? sheetRoute;
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: KeepsakeStyle.surface(context),
+        showDragHandle: true,
+        useSafeArea: true,
+        isScrollControlled: true,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .8,
         ),
-        children: [
-          Text(
-            title,
-            style: KeepsakeStyle.text(ctx, size: 19, weight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          for (var i = 0; i < options.length; i++) ...[
-            if (i > 0) const SizedBox(height: 8),
-            options[i],
-          ],
-        ],
-      ),
-    );
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) {
+          sheetRoute ??= ModalRoute.of<void>(ctx);
+          return ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.fromLTRB(
+              20,
+              0,
+              20,
+              24 + MediaQuery.paddingOf(ctx).bottom,
+            ),
+            children: [
+              Text(
+                title,
+                style: KeepsakeStyle.text(
+                  ctx,
+                  size: 19,
+                  weight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              for (var i = 0; i < options.length; i++) ...[
+                if (i > 0) const SizedBox(height: 8),
+                options[i],
+              ],
+            ],
+          );
+        },
+      );
+      await sheetRoute?.completed;
+    } finally {
+      _albumSheetOpen = false;
+      _albumSheetActionHandled = false;
+    }
   }
 
   Widget _buildSheetOption({
@@ -659,7 +757,13 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
           : KeepsakeStyle.surface(context),
       borderRadius: SLRadius.lgAll,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          if (!_albumSheetOpen || _albumSheetActionHandled || !mounted) return;
+          // Chỉ một lựa chọn được phép pop sheet; chạm lặp trong hiệu ứng
+          // đóng không được pop luôn màn Album bên dưới.
+          _albumSheetActionHandled = true;
+          onTap();
+        },
         borderRadius: SLRadius.lgAll,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -716,25 +820,23 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   void _viewItem(LocalAlbumItem item) {
     final startIndex = _filteredItems.indexOf(item);
     if (startIndex < 0) return;
-    Navigator.push(
+    slPush<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => _LocalItemViewerScreen(
-          albumDir: _albumDir ?? '',
-          items: _filteredItems,
-          initialIndex: startIndex,
-          onDelete: (id) {
-            final idx = _items.indexWhere((i) => i.id == id);
-            if (idx >= 0) {
-              _deleteFile(_items[idx].fileName);
-              _items.removeAt(idx);
-              _saveItems();
-              _applyFilters();
-              setState(() {});
-            }
-          },
-          onDataChanged: () => setState(() {}),
-        ),
+      _LocalItemViewerScreen(
+        albumDir: _albumDir ?? '',
+        items: _filteredItems,
+        initialIndex: startIndex,
+        onDelete: (id) {
+          final idx = _items.indexWhere((i) => i.id == id);
+          if (idx >= 0) {
+            _deleteFile(_items[idx].fileName);
+            _items.removeAt(idx);
+            _saveItems();
+            _applyFilters();
+            setState(() {});
+          }
+        },
+        onDataChanged: () => setState(() {}),
       ),
     );
   }
@@ -870,6 +972,27 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   }
 
   Widget _buildAlbumContent() {
+    if (_loadFailed && _items.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.folder_off_outlined, color: KeepsakeStyle.rosewood, size: 42),
+              SLSpacing.h12,
+              Text(context.tr('p5_premium_load_failed'), textAlign: TextAlign.center),
+              SLSpacing.h12,
+              OutlinedButton.icon(
+                onPressed: _initDir,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(context.tr('retry')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     if (_albumDir == null || _isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: KeepsakeStyle.rosewood),
@@ -1199,11 +1322,14 @@ class _LocalItemViewerScreen extends StatefulWidget {
   State<_LocalItemViewerScreen> createState() => _LocalItemViewerScreenState();
 }
 
-class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
+class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen>
+    with ScreenActivityMixin<_LocalItemViewerScreen> {
   late PageController _pageController;
   late int _currentIndex;
   VideoPlayerController? _videoController;
   bool _videoInitialized = false;
+  bool _videoShouldPlay = true;
+  int _videoGeneration = 0;
 
   @override
   void initState() {
@@ -1215,6 +1341,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
 
   @override
   void dispose() {
+    _videoGeneration++;
     _pageController.dispose();
     _videoController?.dispose();
     super.dispose();
@@ -1223,29 +1350,64 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
   String _filePath(int index) =>
       '${widget.albumDir}/${widget.items[index].fileName}';
 
-  void _initVideoIfNeeded() {
+  Future<void> _initVideoIfNeeded() async {
+    final generation = ++_videoGeneration;
     final item = widget.items[_currentIndex];
+    final oldController = _videoController;
+    _videoController = null;
+    _videoInitialized = false;
+    _videoShouldPlay = true;
+    oldController?.dispose();
+
     if (item.type != 'video') {
-      _videoController?.dispose();
-      _videoController = null;
-      _videoInitialized = false;
       return;
     }
     final path = _filePath(_currentIndex);
-    _videoController?.dispose();
-    _videoController = VideoPlayerController.file(File(path));
-    _videoInitialized = false;
-    _videoController!
-        .initialize()
-        .then((_) {
-          if (mounted) {
-            setState(() => _videoInitialized = true);
-            _videoController!.play();
-          }
-        })
-        .catchError((_) {
-          if (mounted) setState(() => _videoInitialized = true);
-        });
+    final candidate = VideoPlayerController.file(File(path));
+    _videoController = candidate;
+    try {
+      await candidate.initialize().timeout(const Duration(seconds: 20));
+    } catch (_) {
+      if (!mounted ||
+          generation != _videoGeneration ||
+          !identical(_videoController, candidate)) {
+        candidate.dispose();
+        return;
+      }
+      setState(() => _videoInitialized = true);
+      return;
+    }
+
+    if (!mounted ||
+        generation != _videoGeneration ||
+        !identical(_videoController, candidate)) {
+      candidate.dispose();
+      return;
+    }
+
+    setState(() => _videoInitialized = true);
+    if (isScreenActive && _videoShouldPlay) {
+      await candidate.play();
+    } else {
+      await candidate.pause();
+    }
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    final controller = _videoController;
+    if (!active) {
+      if (controller?.value.isInitialized == true) {
+        controller?.pause();
+      }
+      return;
+    }
+    if (_videoShouldPlay &&
+        _videoInitialized &&
+        controller != null &&
+        controller.value.isInitialized) {
+      controller.play();
+    }
   }
 
   void _deleteCurrent() {
@@ -1437,7 +1599,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                             context.tr(
                               'ui_utilities_the_image_cannot_be_displayed_c6f58b',
                             ),
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                       ),
@@ -1459,6 +1621,11 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
   }
 
   Widget _buildVideoView(int index) {
+    if (index != _currentIndex) {
+      return const Center(
+        child: Icon(Icons.video_file_rounded, color: Colors.white70, size: 64),
+      );
+    }
     if (!_videoInitialized) {
       return const Center(
         child: CircularProgressIndicator(color: Colors.white),
@@ -1466,15 +1633,19 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     }
     if (_videoController == null || !_videoController!.value.isInitialized) {
       return Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.video_file_rounded, color: Colors.white70, size: 80),
-            SizedBox(height: 16),
+            const Icon(
+              Icons.video_file_rounded,
+              color: Colors.white70,
+              size: 80,
+            ),
+            const SizedBox(height: 16),
             Text(
               context.tr('ui_utilities_cannot_play_video_e932b6'),
-              style: TextStyle(color: Colors.white54, fontSize: 14),
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
             ),
           ],
         ),
@@ -1482,10 +1653,13 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     }
     return GestureDetector(
       onTap: () {
-        if (_videoController!.value.isPlaying) {
-          _videoController!.pause();
+        final controller = _videoController;
+        if (controller == null) return;
+        _videoShouldPlay = !controller.value.isPlaying;
+        if (_videoShouldPlay) {
+          controller.play();
         } else {
-          _videoController!.play();
+          controller.pause();
         }
         setState(() {});
       },

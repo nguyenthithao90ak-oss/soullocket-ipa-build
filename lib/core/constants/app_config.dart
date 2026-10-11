@@ -175,6 +175,18 @@ class AppConfig {
   /// Chiều rộng tối đa ảnh sau khi nén (px)
   static const int imageMaxWidth = 1200;
 
+  /// Chất lượng ảnh Nhật ký sau lần nén duy nhất ở tầng upload.
+  static const int diaryImageUploadQuality = 86;
+
+  /// Chất lượng ảnh Nhật ký cho tài khoản VIP.
+  static const int diaryVipImageUploadQuality = 90;
+
+  /// Kích thước đích dùng khi nén ảnh Nhật ký (px).
+  static const int diaryImageTargetDimension = 1600;
+
+  /// Cỡ giải mã tối đa cho viewer ảnh Nhật ký trên màn hình điện thoại.
+  static const int diaryImageViewerCacheWidth = 1600;
+
   // ── SUPPORT CHAT ─────────────────────────────────────────────────────
   // ── SERVER VERIFICATION URL ──────────────────────────────────────────
   static const String cloudflareWorkerUrl = String.fromEnvironment(

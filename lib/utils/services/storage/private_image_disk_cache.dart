@@ -145,6 +145,47 @@ class PrivateImageDiskCache {
     });
   }
 
+  Future<Uint8List?> readPreview(
+    String uid,
+    String houseId,
+    String memoryId,
+  ) async {
+    final generation = _generation;
+    final tag = memoryTag(uid, houseId, memoryId);
+    final cacheKey = await _serial<String?>(() async {
+      if (kIsWeb || uid != currentUid() || generation != _generation) {
+        return null;
+      }
+      try {
+        final box = await _box(uid);
+        final index = Map<String, dynamic>.from(
+          await box.get('_index') as Map? ?? {},
+        );
+        if (uid != currentUid() || generation != _generation) return null;
+        final now = _now().millisecondsSinceEpoch;
+        for (final entry in index.entries.toList().reversed) {
+          final metadata = entry.value;
+          if (metadata is! Map ||
+              metadata['mid'] != tag ||
+              metadata['savedAt'] is! int) {
+            continue;
+          }
+          final age = now - (metadata['savedAt'] as int);
+          if (age >= 0 && age < ttl.inMilliseconds) return entry.key;
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    });
+    if (cacheKey == null ||
+        uid != currentUid() ||
+        generation != _generation) {
+      return null;
+    }
+    return read(uid, cacheKey);
+  }
+
   /// Chỉ đọc chỉ mục để ưu tiên ảnh Nhật ký đã có trên máy, không giải mã
   /// hàng loạt ảnh và không mở URL mạng để kiểm tra cache.
   Future<Set<String>> cachedMemoryIds(

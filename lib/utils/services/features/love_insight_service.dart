@@ -1,6 +1,8 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:soullocket_app/utils/services/core/rtdb_read_coalescer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -199,6 +201,12 @@ class LoveInsightData {
 class LoveInsightService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
+  // Gộp lượt đọc presence trùng khi mở app (nhiều service cùng đọc trong vài giây).
+  Future<Object?> _readPresence(String houseId) => RtdbReadCoalescer.shared.read(
+    '${FirebaseAuth.instance.currentUser?.uid}|houses/$houseId/presence',
+    () async => (await _dbRef.child('houses/$houseId/presence').get()).value,
+  );
+
   // Cache 5 phút để tránh tải toàn bộ diary+album nhiều lần
   static LoveInsightData? _cachedInsight;
   static String? _cachedHouseId;
@@ -344,7 +352,7 @@ class LoveInsightService {
             .where('ts', isGreaterThanOrEqualTo: cutoff45Days)
             .get(),
         _dbRef.child('houses/$houseId/settings').get(),
-        _dbRef.child('houses/$houseId/presence').get(),
+        _readPresence(houseId),
         _dbRef.child('houses/$houseId/metrics/diary_views').get(),
         _dbRef.child('houses/$houseId/metrics/app_open').get(),
         firestore
@@ -367,7 +375,7 @@ class LoveInsightService {
         (results[0] as QuerySnapshot).docs,
         (results[1] as QuerySnapshot).docs,
         (results[2] as DataSnapshot).value,
-        (results[3] as DataSnapshot).value,
+        results[3],
         (results[4] as DataSnapshot).value,
         (results[5] as DataSnapshot).value,
         (results[6] as AggregateQuerySnapshot).count ?? 0,
@@ -1246,10 +1254,10 @@ class LoveInsightService {
       final nowTs = now.millisecondsSinceEpoch;
       final data = await computeInsights(houseId, relationshipMode);
       final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
-      final presenceSnap = await _dbRef.child('houses/$houseId/presence').get();
+      final presenceValue = await _readPresence(houseId);
       final metricsSnap = await _dbRef.child('houses/$houseId/metrics').get();
       final settings = _asMap(settingsSnap.value);
-      final presence = _asMap(presenceSnap.value);
+      final presence = _asMap(presenceValue);
       final metrics = _asMap(metricsSnap.value);
 
       final upcomingDays = _daysUntilUpcomingAnniversary(settings['startDate']);

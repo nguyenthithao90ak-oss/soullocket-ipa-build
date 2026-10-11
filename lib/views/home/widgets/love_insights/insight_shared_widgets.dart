@@ -3,9 +3,6 @@ part of '../../love_insights_view.dart';
 extension _InsightSharedWidgetsExt on LoveInsightsView {
   // ── Palette chung ──
 
-  static const _textDark = Color(0xFF492E3A);
-  static const _textGrey = Color(0xFF806C73);
-
   String _displayName(LoveInsightData insight, {required bool isFirst}) {
     final current = (isFirst ? nameU1 : nameU2).trim();
     final cached = (isFirst ? insight.nameU1 : insight.nameU2).trim();
@@ -54,7 +51,8 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
     );
   }
 
-  Widget _buildInfoChip({
+  Widget _buildInfoChip(
+    BuildContext context, {
     required IconData icon,
     required String text,
     required Color color,
@@ -63,14 +61,17 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: background,
+        color: _InsightStyle.wash(context, background),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.12), width: 1),
+        border: Border.all(
+          color: _InsightStyle.accent(context, color).withValues(alpha: 0.12),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: color),
+          Icon(icon, size: 15, color: _InsightStyle.accent(context, color)),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -78,7 +79,7 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
               style: SLTheme.quicksand(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: _InsightStyle.accent(context, color),
               ),
             ),
           ),
@@ -87,7 +88,8 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
     );
   }
 
-  Widget _buildCardTitle({
+  Widget _buildCardTitle(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -100,10 +102,17 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.10),
+            color: _InsightStyle.accent(
+              context,
+              accent,
+            ).withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 21, color: accent),
+          child: Icon(
+            icon,
+            size: 21,
+            color: _InsightStyle.accent(context, accent),
+          ),
         ),
         SLSpacing.w12,
         Expanded(
@@ -115,7 +124,7 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
                 style: SLTheme.quicksand(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: _textDark,
+                  color: _InsightStyle.ink(context),
                 ),
               ),
               if (subtitle.isNotEmpty) ...[
@@ -126,7 +135,7 @@ extension _InsightSharedWidgetsExt on LoveInsightsView {
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     height: 1.5,
-                    color: _textGrey,
+                    color: _InsightStyle.muted(context),
                   ),
                 ),
               ],

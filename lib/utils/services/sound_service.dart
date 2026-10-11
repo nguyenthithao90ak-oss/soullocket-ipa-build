@@ -98,6 +98,11 @@ class SoundService {
   Future<void> playSaved() => _play(UiSoundCue.saved);
   Future<void> playPaired() => _play(UiSoundCue.paired);
   Future<void> playSent() => _play(UiSoundCue.sent);
+  Future<void> playReceived() => _play(UiSoundCue.received);
+  Future<void> playReward() => _play(UiSoundCue.reward);
+  Future<void> playResult() => _play(UiSoundCue.result);
+  Future<void> playFlip() => _play(UiSoundCue.flip);
+  Future<void> playUploadComplete() => _play(UiSoundCue.uploadComplete);
 
   void dispose() {
     if (_disposed) return;

@@ -46,15 +46,15 @@ class CollageDecor {
   }
 
   factory CollageDecor.upload() {
-    return const CollageDecor(
-      badge: 'Bộ sưu tập riêng',
-      occasionLabel: 'Khoảnh khắc được bạn chọn',
+    return CollageDecor(
+      badge: UiCopy.text('copy_707b15afff03'),
+      occasionLabel: UiCopy.text('copy_a8d05a7109d2'),
       message: '',
-      footerText: 'SoulLocket cảm ơn',
-      primary: Color(0xFF6A4C40),
-      secondary: Color(0xFFD7C4B8),
-      backgroundTop: Color(0xFFFFF8F2),
-      backgroundBottom: Color(0xFFF1E4D6),
+      footerText: UiCopy.text('copy_21611872b94e'),
+      primary: const Color(0xFF6A4C40),
+      secondary: const Color(0xFFD7C4B8),
+      backgroundTop: const Color(0xFFFFF8F2),
+      backgroundBottom: const Color(0xFFF1E4D6),
       showBlessing: false,
     );
   }
@@ -120,7 +120,7 @@ Random _layoutRandom(CollageRenderOptions options, int salt) {
 }
 
 class CollageGenerator {
-  static const String watermark = 'SoulLocket cảm ơn';
+  static String get watermark => UiCopy.text('copy_21611872b94e');
   static final Map<String, ui.Image> _loadedStickerImages =
       <String, ui.Image>{};
 
@@ -133,7 +133,11 @@ class CollageGenerator {
   }) async {
     if (images.isEmpty) return null;
     final effectiveDecor =
-        decor ?? CollageDecor.memory(occasionLabel: UiCopy.text('copy_fc45b5c58245'), message: '');
+        decor ??
+        CollageDecor.memory(
+          occasionLabel: UiCopy.text('copy_fc45b5c58245'),
+          message: '',
+        );
     final renderScale = options.renderScale;
     await _loadStickerImages(options.stickers);
 
@@ -225,9 +229,15 @@ class CollageGenerator {
         .toInt();
 
     final picture = recorder.endRecording();
-    final img = await picture.toImage(outputWidth, outputHeight);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return byteData!.buffer.asUint8List();
+    ui.Image? img;
+    try {
+      img = await picture.toImage(outputWidth, outputHeight);
+      final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+      return byteData!.buffer.asUint8List();
+    } finally {
+      img?.dispose();
+      picture.dispose();
+    }
   }
 
   static double _drawText(

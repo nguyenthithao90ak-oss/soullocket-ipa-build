@@ -1,67 +1,33 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
-Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
-  if (kIsWeb) {
-    return file;
-  }
-  try {
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: file.path,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 80,
-      maxWidth: 1080,
-      maxHeight: 1080,
-      uiSettings: [
-        IOSUiSettings(
-          title: L10nService().translate('home_chnhavatar_d974c0'),
-          aspectRatioPresets: const [CropAspectRatioPreset.square],
-          aspectRatioLockEnabled: true,
-          aspectRatioPickerButtonHidden: true,
-          resetAspectRatioEnabled: false,
-        ),
-      ],
-    );
-    if (croppedFile == null) {
-      return null;
-    }
-    return XFile(croppedFile.path);
-  } catch (_) {
-    return file;
-  }
-}
+Future<XFile?> _cropCountdownModeAvatarFile(
+  BuildContext context,
+  XFile file, {
+  required bool Function() isScopeCurrent,
+}) => cropAndConfirmImage(
+  context: context,
+  image: file,
+  aspectRatio: 1,
+  circular: true,
+  maxOutputSize: const Size(1080, 1080),
+  titleKey: 'home_chnhavatar_d974c0',
+  isScopeCurrent: isScopeCurrent,
+);
 
-Future<XFile?> _cropCountdownModeBackgroundFile(XFile file) async {
-  if (kIsWeb) {
-    return file;
-  }
-  try {
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: file.path,
-      aspectRatio: _themeBackgroundAspectRatio,
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 80,
-      maxWidth: 1080,
-      maxHeight: 2560,
-      uiSettings: [
-        IOSUiSettings(
-          title: L10nService().translate('home_chnhnnkhng_a929e1'),
-          aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],
-          aspectRatioLockEnabled: true,
-          aspectRatioPickerButtonHidden: true,
-          resetAspectRatioEnabled: false,
-        ),
-      ],
-    );
-    if (croppedFile == null) {
-      return null;
-    }
-    return XFile(croppedFile.path);
-  } catch (_) {
-    return file;
-  }
-}
+Future<XFile?> _cropCountdownModeBackgroundFile(
+  BuildContext context,
+  XFile file, {
+  required bool Function() isScopeCurrent,
+}) => cropAndConfirmImage(
+  context: context,
+  image: file,
+  aspectRatio:
+      _themeBackgroundAspectRatio.ratioX / _themeBackgroundAspectRatio.ratioY,
+  maxOutputSize: const Size(1080, 2560),
+  titleKey: 'home_chnhnnkhng_a929e1',
+  isScopeCurrent: isScopeCurrent,
+);
 
 class CountdownSpaceEditorScreen extends StatefulWidget {
   const CountdownSpaceEditorScreen({
@@ -544,6 +510,14 @@ class _CountdownModeEditorScreenState
     XFile? presetFile,
   }) async {
     final houseId = _uploadHouseId;
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final spaceScope = widget.spaceScope;
+    bool isCurrent() =>
+        mounted &&
+        ownerUid != null &&
+        _uploadHouseId == houseId &&
+        widget.spaceScope == spaceScope &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
     if (houseId == null) {
       _showMessage(context.tr('home_khngtmthym_b7eeff'));
       return;
@@ -554,23 +528,28 @@ class _CountdownModeEditorScreenState
     }
     final uploadFailedTemplate = context.tr('p7_avatar_upload_failed');
 
-    XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null) {
-      return;
-    }
-    if (!mounted) {
-      return;
-    }
-
+    if (!isCurrent()) return;
     setState(() {
       _uploadingAvatarRole = role;
     });
 
     try {
-      if (presetFile == null) {
-        file = await _cropCountdownModeAvatarFile(file);
-      }
+      XFile? file =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
       if (file == null) {
+        return;
+      }
+      if (!isCurrent()) {
+        return;
+      }
+      if (presetFile == null) {
+        file = await _cropCountdownModeAvatarFile(
+          context,
+          file,
+          isScopeCurrent: isCurrent,
+        );
+      }
+      if (file == null || !isCurrent()) {
         return;
       }
       final pendingKey = _pendingAvatarUploadKey;
@@ -580,6 +559,7 @@ class _CountdownModeEditorScreenState
           'filePath': file.path,
         });
       }
+      if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
         houseId,
         'avatars',
@@ -588,11 +568,11 @@ class _CountdownModeEditorScreenState
         minWidth: 512,
         minHeight: 512,
         onProgress: (p) {
-          if (mounted) setState(() => _avatarUploadProgress = p);
+          if (isCurrent()) setState(() => _avatarUploadProgress = p);
         },
       );
-      if (!mounted || url == null || url.trim().isEmpty) {
-        if (mounted) {
+      if (!isCurrent() || url == null || url.trim().isEmpty) {
+        if (isCurrent()) {
           _showMessage(context.tr('home_khngticava_73ea14'));
         }
         return;
@@ -607,7 +587,9 @@ class _CountdownModeEditorScreenState
       if (pendingKey != null) {
         await PendingUploadService.instance.clear(pendingKey);
       }
+      await discardConfirmedCropImage(file);
     } catch (e) {
+      if (!isCurrent()) return;
       _showMessage(
         uploadFailedTemplate.replaceAll(
           '{error}',
@@ -626,6 +608,14 @@ class _CountdownModeEditorScreenState
 
   Future<void> _pickBackgroundImage({XFile? presetFile}) async {
     final houseId = _uploadHouseId;
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final spaceScope = widget.spaceScope;
+    bool isCurrent() =>
+        mounted &&
+        ownerUid != null &&
+        _uploadHouseId == houseId &&
+        widget.spaceScope == spaceScope &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
     if (houseId == null) {
       _showMessage(context.tr('home_khngtmthym_6caf0b'));
       return;
@@ -634,28 +624,33 @@ class _CountdownModeEditorScreenState
       return;
     }
     final uploadFailedTemplate = context.tr('p7_background_upload_failed');
-    final allowUpload = await _ensureBackgroundUploadAccess();
-    if (!allowUpload || !mounted) {
-      return;
-    }
-
-    XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null) {
-      return;
-    }
-    if (!mounted) {
-      return;
-    }
-
+    if (!isCurrent()) return;
     setState(() {
       _isUploadingBackground = true;
     });
 
     try {
-      if (presetFile == null) {
-        file = await _cropCountdownModeBackgroundFile(file);
+      final allowUpload = await _ensureBackgroundUploadAccess();
+      if (!allowUpload || !isCurrent()) {
+        return;
       }
+
+      XFile? file =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
       if (file == null) {
+        return;
+      }
+      if (!isCurrent()) {
+        return;
+      }
+      if (presetFile == null) {
+        file = await _cropCountdownModeBackgroundFile(
+          context,
+          file,
+          isScopeCurrent: isCurrent,
+        );
+      }
+      if (file == null || !isCurrent()) {
         return;
       }
       final pendingKey = _pendingBackgroundUploadKey;
@@ -664,6 +659,7 @@ class _CountdownModeEditorScreenState
           'filePath': file.path,
         });
       }
+      if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
         houseId,
         'themes',
@@ -675,8 +671,8 @@ class _CountdownModeEditorScreenState
           // Progress updates can be handled here when UI is ready
         },
       );
-      if (!mounted || url == null || url.trim().isEmpty) {
-        if (mounted) {
+      if (!isCurrent() || url == null || url.trim().isEmpty) {
+        if (isCurrent()) {
           _showMessage(context.tr('home_khngticnnm_27a6df'));
         }
         return;
@@ -690,7 +686,9 @@ class _CountdownModeEditorScreenState
       if (pendingKey != null) {
         await PendingUploadService.instance.clear(pendingKey);
       }
+      await discardConfirmedCropImage(file);
     } catch (e) {
+      if (!isCurrent()) return;
       _showMessage(
         uploadFailedTemplate.replaceAll(
           '{error}',
@@ -736,9 +734,11 @@ class _CountdownModeEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    final themeData = _CountdownModeThemeData.resolve('theme-pink-glow');
+    final themeData = _CountdownModeThemeData.resolve(
+      _resolveThemeKey(_themeKey),
+    );
     return Scaffold(
-      backgroundColor: AppearancePanelStyle.canvas,
+      backgroundColor: themeData.background.first,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -750,24 +750,33 @@ class _CountdownModeEditorScreenState
           ),
         ),
       ),
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ..._buildEditorHeader(context, themeData),
-                  ..._buildEditorPreview(context, themeData),
-                  ..._buildEditorLabels(context, themeData),
-                  ..._buildEditorDate(context, themeData),
-                  ..._buildEditorStyles(context, themeData),
-                  ..._buildEditorBackground(context, themeData),
-                  ..._buildEditorDelete(context, themeData),
-                ],
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: themeData.background,
+          ),
+        ),
+        child: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ..._buildEditorHeader(context, themeData),
+                    ..._buildEditorPreview(context, themeData),
+                    ..._buildEditorLabels(context, themeData),
+                    ..._buildEditorDate(context, themeData),
+                    ..._buildEditorStyles(context, themeData),
+                    ..._buildEditorBackground(context, themeData),
+                    ..._buildEditorDelete(context, themeData),
+                  ],
+                ),
               ),
             ),
           ),

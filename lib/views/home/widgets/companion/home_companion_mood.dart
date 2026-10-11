@@ -28,6 +28,16 @@ class HomeCompanionMood extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Hiện/ẩn dần khi bé khách ghé chơi hoặc ra về (nhân với [opacity]).
+  double _visibility = 1;
+  double get visibility => _visibility;
+  set visibility(double value) {
+    final next = value.clamp(0.0, 1.0).toDouble();
+    if (next == _visibility) return;
+    _visibility = next;
+    notifyListeners();
+  }
+
   /// Nhắm mắt, thở chậm, có chữ "z" bay lên.
   bool get dozing => _dozing;
   set dozing(bool value) {

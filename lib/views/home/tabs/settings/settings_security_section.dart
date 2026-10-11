@@ -13,10 +13,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
         _showToast(context.tr('home_vuilngtovo_6d854c'));
         return;
       }
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const DeviceManagerScreen()),
-      );
+      slPush<void>(context, const DeviceManagerScreen());
     }
 
     final questionItems = <String>{
@@ -71,12 +68,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     label: context.tr('p6_pair_now'),
                     icon: Icons.link_rounded,
                     variant: SLSettingsButtonVariant.tonal,
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PairingDashboardScreen(),
-                      ),
-                    ),
+                    onPressed: () =>
+                        slPush<void>(context, const PairingDashboardScreen()),
                   ),
                 ],
               ),

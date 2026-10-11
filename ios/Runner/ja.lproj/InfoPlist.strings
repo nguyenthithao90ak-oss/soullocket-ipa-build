@@ -1,12 +1,7 @@
-/* Lời xin quyền & tên app (ja). Đồng bộ với Info.plist. */
-"NSCameraUsageDescription" = "SoulLocket は思い出の写真の撮影、接続やログイン用の QR コードの読み取り、ビデオ通話の開始時にカメラを使用します。";
-"NSFaceIDUsageDescription" = "SoulLocket は素早いロック解除とプライベートなコンテンツの保護に Face ID を使用します。";
-"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket はバックグラウンドを含めて位置情報を使用し、パートナーとの位置共有、カップルマップの更新、近くの友達探しに役立てます。";
-"NSLocationAlwaysUsageDescription" = "SoulLocket はバックグラウンドを含めて位置情報を使用し、パートナーとの位置共有、カップルマップの更新、近くの友達探しに役立てます。";
-"NSLocationWhenInUseUsageDescription" = "SoulLocket はアプリの使用中に位置情報を使用し、カップルマップ、現在地、場所付きの日記、近くのスポットを表示します。";
-"NSMicrophoneUsageDescription" = "SoulLocket は音声・ビデオ通話や、録音機能を使うときにマイクを使用します。";
-"NSPhotoLibraryAddUsageDescription" = "SoulLocket は思い出の写真、コラージュ、アプリで作成したコンテンツを写真ライブラリに保存します。";
-"NSPhotoLibraryUsageDescription" = "SoulLocket はプロフィール、投稿、日記、コラージュ、思い出に使う写真や動画を選べるよう、写真ライブラリにアクセスします。";
-"NSHealthShareUsageDescription" = "睡眠トラッキングをオンにすると、SoulLocket はヘルスケアに記録された睡眠データを読み取ります。睡眠の概要はパートナーと共有されます。これらの記録はリアルタイムで睡眠を検出するものではありません。";
-"NSHealthUpdateUsageDescription" = "SoulLocket は睡眠スケジュールを同期するためにヘルスケアデータへのアクセスが必要です。";
-"NSUserTrackingUsageDescription" = "データは匿名化され、アプリの改善と関連性の高い広告の表示に使用されます。第三者に販売されることはありません。";
+/* Lời xin quyền & tên app (ja). Đồng bộ với Info.plist. */"NSCameraUsageDescription" = "SoulLocket は思い出の写真の撮影、接続やログイン用の QR コードの読み取り、ビデオ通話の開始時にカメラを使用します。";"NSFaceIDUsageDescription" = "SoulLocket は素早いロック解除とプライベートなコンテンツの保護に Face ID を使用します。";"NSLocationAlwaysAndWhenInUseUsageDescription" = "SoulLocket はバックグラウンドを含めて位置情報を使用し、パートナーとの位置共有、カップルマップの更新、近くの友達探しに役立てます。";"NSLocationAlwaysUsageDescription" = "SoulLocket はバックグラウンドを含めて位置情報を使用し、パートナーとの位置共有、カップルマップの更新、近くの友達探しに役立てます。";"NSLocationWhenInUseUsageDescription" = "SoulLocket はアプリの使用中に位置情報を使用し、カップルマップ、現在地、場所付きの日記、近くのスポットを表示します。";"NSMicrophoneUsageDescription" = "SoulLocket は音声・ビデオ通話や、録音機能を使うときにマイクを使用します。";"NSPhotoLibraryAddUsageDescription" = "SoulLocket は思い出の写真、コラージュ、アプリで作成したコンテンツを写真ライブラリに保存します。";"NSPhotoLibraryUsageDescription" = "SoulLocket はプロフィール、投稿、日記、コラージュ、思い出に使う写真や動画を選べるよう、写真ライブラリにアクセスします。";"NSHealthShareUsageDescription" = "睡眠トラッキングをオンにすると、SoulLocket はヘルスケアに記録された睡眠データを読み取ります。睡眠の概要はパートナーと共有されます。これらの記録はリアルタイムで睡眠を検出するものではありません。";"NSHealthUpdateUsageDescription" = "SoulLocket は睡眠スケジュールを同期するためにヘルスケアデータへのアクセスが必要です。";"NSUserTrackingUsageDescription" = "データは匿名化され、アプリの改善と関連性の高い広告の表示に使用されます。第三者に販売されることはありません。";
+"att_pre_prompt_title" = "経験をカスタマイズ";
+"att_pre_prompt_body" = "SoulLocket は、より関連性のある広告を表示し、キャンペーンの性能を測定するためにあなたの活動を追跡します。設定でいつでも変更できます。";
+"att_pre_prompt_continue" = "続行";
+"att_pre_prompt_decline" = "いや";
+"CFBundleDisplayName" = "SoulLocket：ふたりの恋の日数";
+"CFBundleName" = "SoulLocket";

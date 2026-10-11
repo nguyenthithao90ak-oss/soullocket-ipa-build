@@ -77,16 +77,17 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
     return visible;
   }
 
-  Widget _buildTimelineSection(LoveInsightData insight) {
+  Widget _buildTimelineSection(BuildContext context, LoveInsightData insight) {
     final visibleTimeline = _buildVisibleTimeline(insight.timeline);
     return Container(
       key: const ValueKey('insight-timeline'),
       padding: const EdgeInsets.all(20),
-      decoration: _softCardDecoration(),
+      decoration: _softCardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCardTitle(
+            context,
             icon: Icons.auto_stories_outlined,
             title: L10nService().translate(
               _isSingle ? 'home_dngthigian_231147' : 'home_dngthigian_a93fc5',
@@ -100,15 +101,18 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFFFAF5EF),
+                color: _InsightStyle.wash(context, const Color(0xFFFAF5EF)),
                 borderRadius: BorderRadius.circular(22),
               ),
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.event_note_rounded,
                     size: 36,
-                    color: Color(0xFFB88A7B),
+                    color: _InsightStyle.accent(
+                      context,
+                      const Color(0xFFB88A7B),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -122,7 +126,10 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       height: 1.55,
-                      color: const Color(0xFF806C73),
+                      color: _InsightStyle.accent(
+                        context,
+                        const Color(0xFF806C73),
+                      ),
                     ),
                   ),
                 ],
@@ -131,6 +138,7 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
           else
             ...visibleTimeline.asMap().entries.map(
               (item) => _buildTimelineItem(
+                context,
                 item.value,
                 isLast: item.key == visibleTimeline.length - 1,
               ),
@@ -140,7 +148,11 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
     );
   }
 
-  Widget _buildTimelineItem(_TimelineDisplayEntry item, {bool isLast = false}) {
+  Widget _buildTimelineItem(
+    BuildContext context,
+    _TimelineDisplayEntry item, {
+    bool isLast = false,
+  }) {
     final entry = item.entry;
     final dateText = LocaleDateFormat.date(entry.date);
     final isCurrent = item.state == _TimelineEntryState.current;
@@ -175,9 +187,14 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: background,
+                    color: _InsightStyle.wash(context, background),
                     shape: BoxShape.circle,
-                    border: Border.all(color: accent.withValues(alpha: 0.25)),
+                    border: Border.all(
+                      color: _InsightStyle.accent(
+                        context,
+                        accent,
+                      ).withValues(alpha: 0.25),
+                    ),
                   ),
                   child: Icon(
                     isCurrent
@@ -186,14 +203,17 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                         ? Icons.event_outlined
                         : Icons.check_rounded,
                     size: 15,
-                    color: accent,
+                    color: _InsightStyle.accent(context, accent),
                   ),
                 ),
                 if (!isLast)
                   Expanded(
                     child: Container(
                       width: 1.5,
-                      color: const Color(0xFFE8D9D3),
+                      color: _InsightStyle.wash(
+                        context,
+                        const Color(0xFFE8D9D3),
+                      ),
                     ),
                   ),
               ],
@@ -209,9 +229,14 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                 ),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: background,
+                  color: _InsightStyle.wash(context, background),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: accent.withValues(alpha: 0.12)),
+                  border: Border.all(
+                    color: _InsightStyle.accent(
+                      context,
+                      accent,
+                    ).withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +252,9 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: _InsightStyle.surface(
+                              context,
+                            ).withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -235,7 +262,7 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                             style: SLTheme.quicksand(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: accent,
+                              color: _InsightStyle.accent(context, accent),
                             ),
                           ),
                         ),
@@ -244,7 +271,10 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                           style: SLTheme.quicksand(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF806C73),
+                            color: _InsightStyle.accent(
+                              context,
+                              const Color(0xFF806C73),
+                            ),
                           ),
                         ),
                       ],
@@ -256,7 +286,10 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         height: 1.4,
-                        color: const Color(0xFF492E3A),
+                        color: _InsightStyle.accent(
+                          context,
+                          const Color(0xFF492E3A),
+                        ),
                       ),
                     ),
                     if (entry.subtitle.trim().isNotEmpty) ...[
@@ -267,7 +300,10 @@ extension _InsightTimelineSectionExt on LoveInsightsView {
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           height: 1.5,
-                          color: const Color(0xFF806C73),
+                          color: _InsightStyle.accent(
+                            context,
+                            const Color(0xFF806C73),
+                          ),
                         ),
                       ),
                     ],

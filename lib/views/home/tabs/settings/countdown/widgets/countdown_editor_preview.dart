@@ -15,6 +15,7 @@ extension PreviewEditorExt on _CountdownModeEditorScreenState {
             icon: const Icon(Icons.copy_all_rounded, size: 18),
             label: Text(context.tr('p7_countdown_copy_main')),
             style: TextButton.styleFrom(
+              minimumSize: const Size(48, 48),
               foregroundColor: themeData.isDark
                   ? Colors.white
                   : SLSettingsColors.accentStrong,

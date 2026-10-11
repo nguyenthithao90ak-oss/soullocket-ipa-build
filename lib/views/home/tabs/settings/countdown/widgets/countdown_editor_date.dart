@@ -42,6 +42,7 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                         ? () => _pickAvatarImage(isLeft: true)
                         : null,
                     style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(48, 48),
                       foregroundColor: const Color(0xFF2563EB),
                       side: const BorderSide(color: Color(0xFFCFE0FF)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -82,6 +83,7 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                         ? () => _pickAvatarImage(isLeft: false)
                         : null,
                     style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(48, 48),
                       foregroundColor: SLSettingsColors.accentStrong,
                       side: const BorderSide(color: Color(0xFFF2C3D7)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -115,7 +117,7 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
             ),
             const SizedBox(height: 16),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 context.tr('home_icongia_641af3'),
                 style: SLTheme.quicksand(
@@ -126,77 +128,97 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
               ),
             ),
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: _kCountdownModeCenterIconPresets.map((preset) {
-                final isSelected = preset.type == _centerIconType;
-                return Tooltip(
-                  message: preset.label,
-                  excludeFromSemantics: true,
-                  child: Semantics(
-                    button: true,
-                    selected: isSelected,
-                    label: preset.label,
-                    excludeSemantics: true,
-                    child: Material(
-                      color: Colors.transparent,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        onTap: () =>
-                            _safeSetState(() => _centerIconType = preset.type),
-                        customBorder: const CircleBorder(),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 160),
-                          width: 62,
-                          height: 62,
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.94),
-                            border: Border.all(
-                              color: isSelected
-                                  ? preset.accent
-                                  : Colors.white.withValues(alpha: 0.78),
-                              width: isSelected ? 2.2 : 1.2,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final largeText =
+                    MediaQuery.textScalerOf(context).scale(13) > 20;
+                final columns = constraints.maxWidth >= 340 && !largeText
+                    ? 3
+                    : 2;
+                final width =
+                    (constraints.maxWidth - (columns - 1) * 10) / columns;
+                return Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: _kCountdownModeCenterIconPresets.map((preset) {
+                    final selected = preset.type == _centerIconType;
+                    final label = context.tr(preset.labelKey);
+                    return Semantics(
+                      button: true,
+                      selected: selected,
+                      label: label,
+                      excludeSemantics: true,
+                      child: SizedBox(
+                        key: ValueKey('space_editor_sticker_${preset.type}'),
+                        width: width,
+                        child: Material(
+                          color: selected
+                              ? SLSettingsColors.accentSoft
+                              : const Color(0xFFFAF8F5),
+                          borderRadius: BorderRadius.circular(18),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () => _safeSetState(
+                              () => _centerIconType = preset.type,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: preset.accent.withValues(
-                                  alpha: isSelected ? 0.22 : 0.10,
+                            borderRadius: BorderRadius.circular(18),
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(
+                                10,
+                                12,
+                                10,
+                                12,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: selected
+                                      ? SLSettingsColors.accentStrong
+                                      : SLSettingsColors.border,
+                                  width: selected ? 1.5 : 1,
                                 ),
-                                blurRadius: isSelected ? 18 : 11,
-                                offset: const Offset(0, 7),
                               ),
-                            ],
-                          ),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: preset.gradient,
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.84),
-                                width: 2,
-                              ),
-                            ),
-                            child: Center(
-                              child: _buildCountdownModeCenterIconVisual(
-                                preset: preset,
-                                size: 36,
-                                emojiSize: 26,
+                              child: Column(
+                                children: [
+                                  Stack(
+                                    alignment: AlignmentDirectional.topEnd,
+                                    children: [
+                                      Center(
+                                        child:
+                                            _buildCountdownModeCenterIconVisual(
+                                              preset: preset,
+                                              size: 68,
+                                              emojiSize: 42,
+                                            ),
+                                      ),
+                                      if (selected)
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: SLSettingsColors.accentStrong,
+                                          size: 18,
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    label,
+                                    textAlign: TextAlign.center,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: SLSettingsColors.ink,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }).toList(),
                 );
-              }).toList(),
+              },
             ),
           ],
         ),

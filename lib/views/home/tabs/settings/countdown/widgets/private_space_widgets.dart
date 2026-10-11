@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/sl_theme.dart';
 import '../../../../../../utils/services/l10n_service.dart';
 import '../../theme/appearance_panel_widgets.dart';
+import '../../../../widgets/main_home/hero/balanced_countdown_style.dart';
 
 /// Thẻ co theo nội dung thay vì ép chiều cao, kể cả khi tăng cỡ chữ.
 class PrivateSpaceCard extends StatelessWidget {
@@ -392,37 +393,51 @@ class PrivateSpaceTimeCell extends StatelessWidget {
     super.key,
     required this.value,
     required this.label,
+    this.dark = false,
   });
   final String value, label;
+  final bool dark;
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minWidth: 76),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: BoxDecoration(
-      color: AppearancePanelStyle.paper,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: AppearancePanelStyle.line),
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: SLTheme.quicksand(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: AppearancePanelStyle.ink,
-          ),
+  Widget build(BuildContext context) {
+    final palette = BalancedCountdownPalette(dark: dark);
+    return Container(
+      constraints: const BoxConstraints(minWidth: 76),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [palette.paper, palette.blush],
         ),
-        const SizedBox(height: 3),
-        Text(
-          label,
-          style: SLTheme.quicksand(
-            fontSize: 11,
-            color: AppearancePanelStyle.muted,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: palette.border.withValues(alpha: .55)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 12,
+            offset: Offset(0, 5),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: SLTheme.quicksand(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: palette.ink,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: SLTheme.quicksand(fontSize: 11, color: palette.muted),
+          ),
+        ],
+      ),
+    );
+  }
 }

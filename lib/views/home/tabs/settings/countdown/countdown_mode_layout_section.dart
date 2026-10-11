@@ -6,46 +6,44 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
     final currentSpaceId = (_openedSpaceHouseId ?? _selfSpaceHouseId).trim();
     final sharedSpace = _sharedSpaceFor(currentSpaceId);
     final deleteRequest = _deleteRequestFor(currentSpaceId);
-    final result = await Navigator.of(context)
-        .push<_CountdownModeSettingsResult>(
-          MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (_) => CountdownSpaceEditorScreen(
-              currentHouseId: widget.currentHouseId,
-              spaceScope: currentSpaceId,
-              isVipActive: widget.isVipActive,
-              spaceTitle: _spaceTitle(currentSpaceId),
-              isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
-              showDeleteSection:
-                  currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
-              canRequestDelete:
-                  currentSpaceId != _selfSpaceHouseId &&
-                  sharedSpace != null &&
-                  deleteRequest == null,
-              canAcceptDelete:
-                  deleteRequest != null &&
-                  !deleteRequest.isRequestedBy(_selfSpaceHouseId),
-              deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
-              deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
-              singleMode: _singleMode,
-              anchorDate: _anchorDate,
-              themeKey: _themeKey,
-              styleKey: _countdownStyleKey,
-              frameKey: _avatarFrameKey,
-              fontKey: _fontKey,
-              transparentMode: _transparentMode,
-              sizePx: _countdownSizePx,
-              topLabel: _topLabelText,
-              bottomLabel: _bottomLabelText,
-              nameU1: _nameU1,
-              nameU2: _nameU2,
-              avatarUrl1: _avatarUrl1,
-              avatarUrl2: _avatarUrl2,
-              customBackgroundUrl: _customBackgroundUrl,
-              centerIconType: _centerIconType,
-            ),
-          ),
-        );
+    final result = await slPush<_CountdownModeSettingsResult>(
+      context,
+      CountdownSpaceEditorScreen(
+        currentHouseId: widget.currentHouseId,
+        spaceScope: currentSpaceId,
+        isVipActive: widget.isVipActive,
+        spaceTitle: _spaceTitle(currentSpaceId),
+        isAccepted: _acceptedSpaceHouseIds.contains(currentSpaceId),
+        showDeleteSection:
+            currentSpaceId != _selfSpaceHouseId && sharedSpace != null,
+        canRequestDelete:
+            currentSpaceId != _selfSpaceHouseId &&
+            sharedSpace != null &&
+            deleteRequest == null,
+        canAcceptDelete:
+            deleteRequest != null &&
+            !deleteRequest.isRequestedBy(_selfSpaceHouseId),
+        deleteStatusTitle: _deleteStatusTitle(currentSpaceId),
+        deleteStatusDescription: _deleteStatusDescription(currentSpaceId),
+        singleMode: _singleMode,
+        anchorDate: _anchorDate,
+        themeKey: _themeKey,
+        styleKey: _countdownStyleKey,
+        frameKey: _avatarFrameKey,
+        fontKey: _fontKey,
+        transparentMode: _transparentMode,
+        sizePx: _countdownSizePx,
+        topLabel: _topLabelText,
+        bottomLabel: _bottomLabelText,
+        nameU1: _nameU1,
+        nameU2: _nameU2,
+        avatarUrl1: _avatarUrl1,
+        avatarUrl2: _avatarUrl2,
+        customBackgroundUrl: _customBackgroundUrl,
+        centerIconType: _centerIconType,
+      ),
+      fullscreenDialog: true,
+    );
 
     if (result == null || !mounted) {
       return;

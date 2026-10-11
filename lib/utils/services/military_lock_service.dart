@@ -404,15 +404,15 @@ class MilitaryLockService {
     try {
       return await _localAuth.authenticate(
         localizedReason: UiCopy.text('copy_c636d93cb0f8'),
-        authMessages: const <AuthMessages>[
+        authMessages: <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: 'Kiểm tra sinh trắc học',
-            cancelButton: 'Hủy',
-            signInHint: 'Chạm cảm biến hoặc nhìn vào camera',
+            signInTitle: L10nService().translate('biometric_test_title'),
+            cancelButton: L10nService().translate('cancel'),
+            signInHint: L10nService().translate('biometric_sign_in_hint'),
           ),
           IOSAuthMessages(
-            localizedFallbackTitle: 'Dùng mã PIN',
-            cancelButton: 'Hủy',
+            localizedFallbackTitle: L10nService().translate('biometric_use_pin'),
+            cancelButton: L10nService().translate('cancel'),
           ),
         ],
         biometricOnly: true,
@@ -438,15 +438,15 @@ class MilitaryLockService {
     try {
       return await _localAuth.authenticate(
         localizedReason: localizedReason,
-        authMessages: const <AuthMessages>[
+        authMessages: <AuthMessages>[
           AndroidAuthMessages(
-            signInTitle: 'Xác thực sinh trắc học',
-            cancelButton: 'Dùng mã PIN',
-            signInHint: 'Chạm cảm biến hoặc nhìn vào camera',
+            signInTitle: L10nService().translate('biometric_auth_title'),
+            cancelButton: L10nService().translate('biometric_use_pin'),
+            signInHint: L10nService().translate('biometric_sign_in_hint'),
           ),
           IOSAuthMessages(
-            localizedFallbackTitle: 'Dùng mã PIN',
-            cancelButton: 'Hủy',
+            localizedFallbackTitle: L10nService().translate('biometric_use_pin'),
+            cancelButton: L10nService().translate('cancel'),
           ),
         ],
         biometricOnly: true,

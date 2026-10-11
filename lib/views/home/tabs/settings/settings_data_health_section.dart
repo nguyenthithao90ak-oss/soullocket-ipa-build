@@ -501,10 +501,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       );
       return;
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const DeviceManagerScreen()),
-    );
+    slPush<void>(context, const DeviceManagerScreen());
   }
 
   Widget _buildPrivacyStatusTile({
@@ -1048,12 +1045,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       );
                       return;
                     }
-                    Navigator.push(
+                    slPush<void>(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SettingsLinksManagerScreen(houseId: _houseId!),
-                      ),
+                      SettingsLinksManagerScreen(houseId: _houseId!),
                     );
                   },
                 ),

@@ -13,6 +13,11 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _cancelLiveWorkBindingsImpl() {
+    _homeCoupleDecorSubscription?.cancel();
+    _homeCoupleDecorSubscription = null;
+    _homeCoupleDecorLoadStarted = false;
+    _homeCoupleDecorScope = null;
+    _homeCoupleDecorLoadSerial++;
     _presenceBatchTimer?.cancel();
     _presenceBatchTimer = null;
     _pendingPresenceUpdates.clear();
@@ -974,7 +979,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _seenReactionFlightIds.clear();
       _localReactionThrowMs.clear();
       _showDefaultHeartSuggestion = false;
-      _smartInteractionPreset = _defaultSmartInteractionPreset();
+      _smartInteractionPresetNotifier.value = _defaultSmartInteractionPreset();
       _manualInteractionPresetType = null;
       _rotationQueue.clear();
     }

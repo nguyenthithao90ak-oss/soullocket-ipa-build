@@ -18,10 +18,17 @@ import 'package:share_plus/share_plus.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/ui_copy.dart';
+import '../../utils/screen_activity_mixin.dart';
 import '../../utils/services/cinema_video_export_service.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/love_insight_service.dart';
+import '../home/tabs/diary/utils/diary_memory_media.dart';
+import '../home/tabs/diary/utils/private_memory_link_policy.dart';
+import '../home/tabs/diary/widgets/private_diary_image.dart';
+import 'cinema/cinema_waiting_room.dart';
 
 part 'cinema/cinema_models_part.dart';
 part 'cinema/cinema_screen_reel_part.dart';
@@ -57,7 +64,7 @@ class CinemaScreen extends StatefulWidget {
   State<CinemaScreen> createState() => _CinemaScreenState();
 }
 
-class _CinemaScreenState extends State<CinemaScreen> {
+class _CinemaScreenState extends State<CinemaScreen> with ScreenActivityMixin {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final ScrollController _filmstripController = ScrollController();
   final LoveInsightService _loveInsightService = LoveInsightService();
@@ -66,6 +73,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
   StreamSubscription<DatabaseEvent>? _memoriesSub;
   StreamSubscription<DatabaseEvent>? _dailyReelSub;
   Timer? _previewTimer;
+  Timer? _dayRefreshTimer;
 
   String _houseName = L10nService().translate('util_rpknim_d094b9');
   DateTime? _startDate;
@@ -92,9 +100,6 @@ class _CinemaScreenState extends State<CinemaScreen> {
   bool get _isAnniversaryToday {
     return _milestoneForDate(DateTime.now()) != null;
   }
-
-  LoveInsightTimelineEntry? get _todayMilestone =>
-      _milestoneForDate(DateTime.now());
 
   _CinemaDailyReel? get _activeReel {
     final reel = _dailyReel;
@@ -128,7 +133,6 @@ class _CinemaScreenState extends State<CinemaScreen> {
     _listenToSettings();
     _listenToMemories();
     _listenToDailyReel();
-    _startPreviewTimer();
   }
 
   @override
@@ -141,11 +145,39 @@ class _CinemaScreenState extends State<CinemaScreen> {
   }
 
   @override
+  void onScreenActivityChanged(bool active) {
+    _startPreviewTimer();
+    _scheduleDayRefresh();
+    if (!active) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!isScreenActive) return;
+      setState(() {});
+      _startPreviewTimer();
+      unawaited(_ensureDailyReel());
+    });
+  }
+
+  void _scheduleDayRefresh() {
+    _dayRefreshTimer?.cancel();
+    if (!isScreenActive) return;
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    _dayRefreshTimer = Timer(tomorrow.difference(now), () {
+      if (!isScreenActive) return;
+      setState(() {});
+      _startPreviewTimer();
+      unawaited(_ensureDailyReel());
+      _scheduleDayRefresh();
+    });
+  }
+
+  @override
   void dispose() {
     _settingsSub?.cancel();
     _memoriesSub?.cancel();
     _dailyReelSub?.cancel();
     _previewTimer?.cancel();
+    _dayRefreshTimer?.cancel();
     _filmstripController.dispose();
     super.dispose();
   }
@@ -198,16 +230,24 @@ class _CinemaScreenState extends State<CinemaScreen> {
           final item = Map<String, dynamic>.from(
             Map<dynamic, dynamic>.from(value),
           );
-          final imageUrl = _resolveMemoryImage(item);
-          if (imageUrl == null) {
+          item['id'] = key.toString();
+          if (isDiaryMemoryVideo(item) ||
+              item['deletedAt'] != null ||
+              item['trashedAt'] != null) {
             return;
           }
+          final isPrivate = PrivateMemoryLinkPolicy.isPrivate(item);
+          final imageUrl = isPrivate ? '' : _resolveMemoryImage(item);
+          if (!isPrivate && imageUrl == null) return;
 
           records.add(
             _CinemaMemoryRecord(
               id: key.toString(),
-              imageUrl: imageUrl,
-              thumbnailUrl: _readTrimmedString(item['thumbUrl']),
+              imageUrl: imageUrl ?? '',
+              isPrivate: isPrivate,
+              thumbnailUrl: isPrivate
+                  ? ''
+                  : _readTrimmedString(item['thumbUrl']),
               authorName: _readTrimmedString(
                 item['authorName'] ?? item['author'],
               ),
@@ -247,6 +287,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
           _dailyReel = nextReel;
           _previewIndex = nextIndex;
         });
+        _startPreviewTimer();
         _scheduleFilmstripAlignment(animate: false);
         unawaited(_ensureDailyReel());
       },
@@ -259,7 +300,8 @@ class _CinemaScreenState extends State<CinemaScreen> {
   }
 
   Future<void> _ensureDailyReel() async {
-    if (_isEnsuringDailyReel ||
+    if (!mounted ||
+        _isEnsuringDailyReel ||
         !_didLoadSettings ||
         !_didLoadMemories ||
         !_didLoadDailyReel) {
@@ -306,7 +348,26 @@ class _CinemaScreenState extends State<CinemaScreen> {
   Widget build(BuildContext context) {
     final reel = _activeReel;
     final selectedItem = _selectedItem;
-    final todayMilestone = _todayMilestone;
+
+    if (!_isLoading &&
+        (_startDate == null || !_isAnniversaryToday || _records.isEmpty)) {
+      final teaserPhotos = _records.reversed.take(3).toList(growable: false);
+      return CinemaWaitingRoom(
+        key: ValueKey('cinema-waiting-${widget.houseId}'),
+        houseName: _houseName,
+        photoCount: teaserPhotos.length,
+        photoBuilder: (context, index) =>
+            _buildMemoryImage(teaserPhotos[index]),
+        milestones: _milestoneTimeline(_startDate)
+            .map(
+              (entry) => CinemaMilestone(date: entry.date, title: entry.title),
+            )
+            .toList(growable: false),
+        onBack: () => Navigator.of(context).maybePop(),
+        onInfo: () => _showInfoDialog(context),
+        notice: _hasLegacyPayload ? context.tr('util_linkphimcv_f4802e') : null,
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF09121E),
@@ -317,23 +378,10 @@ class _CinemaScreenState extends State<CinemaScreen> {
               child: AnimatedSwitcher(
                 duration: const Duration(seconds: 1),
                 child: Stack(
-                  key: ValueKey<String>(reel.items.first.imageUrl),
+                  key: ValueKey<String>(reel.items.first.id),
                   fit: StackFit.expand,
                   children: [
-                    reel.items.first.imageUrl.startsWith('http')
-                        ? CachedNetworkImage(
-                            imageUrl: reel.items.first.imageUrl,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 800,
-                            errorWidget: (_, _, _) =>
-                                Container(color: Colors.black),
-                          )
-                        : Image.file(
-                            File(reel.items.first.imageUrl),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                Container(color: Colors.black),
-                          ),
+                    _buildMemoryImage(reel.items.first),
                     FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(
@@ -432,38 +480,6 @@ class _CinemaScreenState extends State<CinemaScreen> {
                                         backgroundColor: Color(0x22FFFFFF),
                                       ),
                                     ),
-                                  )
-                                else if (_startDate == null)
-                                  _buildStateCard(
-                                    icon: Icons.event_busy_rounded,
-                                    title: context.tr('util_chacngybtu_0f2f9a'),
-                                    message: context.tr(
-                                      'util_rpchmckhin_716a2e',
-                                    ),
-                                  )
-                                else if (!_isAnniversaryToday)
-                                  _buildStateCard(
-                                    icon: Icons.lock_clock_rounded,
-                                    title: context.tr('util_rpchamhmna_2cca0a'),
-                                    message: context.tr(
-                                      'util_rpchmkhich_85285a',
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 16),
-                                      child: _buildLockedShowtimeCard(),
-                                    ),
-                                  )
-                                else if (_records.isEmpty)
-                                  _buildStateCard(
-                                    icon: Icons.photo_library_outlined,
-                                    title: context.tr('util_chacnhdngv_7555bb'),
-                                    message: L10nService()
-                                        .format('util_cinema_today_milestone', {
-                                          'title':
-                                              todayMilestone?.title
-                                                  .toLowerCase() ??
-                                              context.tr('util_knim_1a2b3c'),
-                                        }),
                                   )
                                 else if (reel == null || selectedItem == null)
                                   _buildStateCard(

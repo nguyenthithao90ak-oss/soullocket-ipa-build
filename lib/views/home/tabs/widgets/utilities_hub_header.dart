@@ -5,6 +5,7 @@ import 'package:soullocket_app/utils/services/utility_service.dart';
 import '../../../../core/sl_theme.dart';
 import '../../../../widgets/app_help_center.dart';
 import 'utilities_category_section.dart';
+import 'utilities_scrapbook_design.dart';
 
 /// Đầu trang thu gọn: tiêu đề trượt đi khi cuộn, hàng chủ đề luôn ghim lại.
 class UtilitiesHubHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -35,13 +36,12 @@ class UtilitiesHubHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final progress = (shrinkOffset / titleExtent).clamp(0.0, 1.0);
+    final colors = UtilitiesScrapbookColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SLColors.paperCanvas.withValues(alpha: progress),
+        color: colors.canvas.withValues(alpha: progress),
         border: Border(
-          bottom: BorderSide(
-            color: SLColors.border.withValues(alpha: progress),
-          ),
+          bottom: BorderSide(color: colors.line.withValues(alpha: progress)),
         ),
       ),
       child: ClipRect(
@@ -82,6 +82,10 @@ class UtilitiesHubTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = UtilitiesScrapbookColors.of(context);
+    final showFlowers =
+        MediaQuery.sizeOf(context).width >= 360 &&
+        MediaQuery.textScalerOf(context).scale(14) / 14 < 1.25;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 8, 4),
       child: Row(
@@ -101,7 +105,7 @@ class UtilitiesHubTitle extends StatelessWidget {
                     style: SLTheme.quicksand(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: SLColors.textPrimary,
+                      color: colors.ink,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -109,17 +113,19 @@ class UtilitiesHubTitle extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   context.tr('utilities_hub_subtitle'),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: SLColors.textSecond,
+                    color: colors.muted,
                   ),
                 ),
               ],
             ),
           ),
+          if (showFlowers)
+            const UtilitiesStationeryArt(size: 46, bouquet: true),
           const AppHelpButton(articleId: 'utilities', iconOnly: true),
         ],
       ),
@@ -187,32 +193,35 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = UtilitiesScrapbookColors.of(context);
     final shape = StadiumBorder(
-      side: selected
-          ? BorderSide.none
-          : const BorderSide(color: SLColors.border),
+      side: selected ? BorderSide.none : BorderSide(color: colors.line),
     );
     return Semantics(
       button: true,
       selected: selected,
       child: Material(
-        color: selected ? SLColors.textPrimary : SLColors.paper,
+        color: selected ? colors.accent : colors.paper,
         shape: shape,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           customBorder: shape,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Center(
-              widthFactor: 1,
-              child: Text(
-                label,
-                maxLines: 1,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? SLColors.paper : SLColors.textMedium,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? colors.onAccent : colors.muted,
+                  ),
                 ),
               ),
             ),

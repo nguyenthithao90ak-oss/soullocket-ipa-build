@@ -12,6 +12,10 @@ import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/r2_sticker_image.dart';
 import '../../../widgets/soullocket_animated_sticker.dart';
 import 'diary/widgets/diary_custom_mood_image.dart';
+import 'diary/widgets/diary_item_art.dart';
+import '../../../utils/screen_activity_mixin.dart';
+import 'short_video_cached_video_controller.dart'
+    if (dart.library.html) 'short_video_cached_video_controller_web.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;
@@ -100,35 +104,52 @@ class DiaryItem extends StatelessWidget {
     }
 
     final displayName = rawName;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final authorColor = authorRole == 'user1'
         ? const Color(0xFFB65C86)
         : authorRole == 'user2'
         ? const Color(0xFF8873BD)
         : const Color(0xFFE28C6D);
     final moodColor = _getMoodColor(post.mood);
+    final nameInk = isDark
+        ? Color.alphaBlend(Colors.white.withValues(alpha: 0.35), authorColor)
+        : authorColor;
+    final moodInk = isDark
+        ? Color.alphaBlend(Colors.white.withValues(alpha: 0.32), moodColor)
+        : moodColor;
+    final cardBase = isDark ? SLColors.darkBgCard : SLColors.paperBlush;
+    final cardTint = isDark
+        ? Color.alphaBlend(
+            moodColor.withValues(alpha: 0.16),
+            SLColors.darkBgElevated,
+          )
+        : Color.alphaBlend(moodColor.withValues(alpha: 0.09), SLColors.paper);
+    final contentColor = isDark
+        ? SLColors.darkTextPrimary
+        : SLColors.textPrimary;
+    final dateColor = isDark ? SLColors.darkTextSecond : SLColors.textSecondary;
     final isShortText = post.content.trim().length < 30;
-    final moodSize = isShortText ? 78.0 : 58.0;
+    final moodSize = isShortText ? 70.0 : 56.0;
+    final contentFontSize = isShortText ? 18.0 : 15.0;
+    final contentLineHeight = isShortText ? 1.45 : 1.6;
 
     return RepaintBoundary(
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              const Color(0xFFFFFAFC),
-              Color.alphaBlend(
-                moodColor.withValues(alpha: 0.09),
-                const Color(0xFFF8F4FD),
-              ),
-            ],
+            colors: [cardBase, cardTint],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white, width: 1.6),
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.10) : Colors.white,
+            width: 1.6,
+          ),
           boxShadow: [
             BoxShadow(
-              color: moodColor.withValues(alpha: 0.14),
+              color: moodColor.withValues(alpha: isDark ? 0.20 : 0.14),
               blurRadius: 24,
               offset: const Offset(0, 10),
             ),
@@ -138,175 +159,186 @@ class DiaryItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(27),
           child: Stack(
             children: [
-              Positioned(
-                right: -28,
-                top: -36,
-                child: Container(
-                  width: 105,
-                  height: 105,
-                  decoration: BoxDecoration(
-                    color: moodColor.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 30,
-                top: 0,
-                child: Container(
-                  width: 46,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: moodColor.withValues(alpha: 0.3),
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(5),
-                    ),
-                  ),
+              Positioned.fill(
+                child: DiaryPostCanvasDecor(
+                  accent: moodColor,
+                  mood: post.mood,
+                  isMine: isMyPost,
+                  pinned: post.pinned,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(19, 17, 17, 18),
+                padding: const EdgeInsetsDirectional.fromSTEB(22, 22, 22, 42),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 11,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: authorColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(
-                                  color: authorColor.withValues(alpha: 0.16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 11,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: authorColor.withValues(
+                                    alpha: isDark ? 0.20 : 0.10,
+                                  ),
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(
+                                    color: authorColor.withValues(alpha: 0.18),
+                                  ),
+                                ),
+                                child: Text(
+                                  displayName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SLTheme.quicksand(
+                                    color: nameInk,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                displayName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              const SizedBox(height: 6),
+                              Text(
+                                DateFormat(
+                                  'dd/MM/yyyy • HH:mm',
+                                ).format(post.timestamp),
                                 style: SLTheme.quicksand(
-                                  color: authorColor,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12.5,
+                                  color: dateColor,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          flex: 2,
-                          child: Text(
-                            DateFormat(
-                              'dd/MM/yyyy • HH:mm',
-                            ).format(post.timestamp),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.end,
-                            style: SLTheme.quicksand(
-                              color: const Color(0xFF8E8198),
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            ],
                           ),
                         ),
                         if (isMyPost) ...[
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => onConfirmDelete(post),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF3EF),
-                                borderRadius: BorderRadius.circular(10),
+                          const SizedBox(width: 10),
+                          IconButton(
+                            key: ValueKey('diary-post-delete-${post.id}'),
+                            tooltip: context.tr('home_xa_4ed187'),
+                            onPressed: () => onConfirmDelete(post),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(48, 48),
+                              fixedSize: const Size(48, 48),
+                              backgroundColor: isDark
+                                  ? SLColors.darkBgElevated
+                                  : SLColors.paperPeach.withValues(alpha: 0.55),
+                              foregroundColor: isDark
+                                  ? const Color(0xFFFFB4A8)
+                                  : const Color(0xFFAB6257),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
                               ),
-                              child: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 17,
-                                color: Color(0xFFC98275),
-                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 19,
                             ),
                           ),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 13),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(15, 14, 12, 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        borderRadius: BorderRadius.circular(21),
-                        border: Border.all(
-                          color: moodColor.withValues(alpha: 0.12),
+                    const SizedBox(height: 16),
+                    DiaryPostPaperSurface(
+                      accent: moodColor,
+                      lineSpacing:
+                          MediaQuery.textScalerOf(
+                            context,
+                          ).scale(contentFontSize) *
+                          contentLineHeight,
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          20,
+                          22,
+                          18,
+                          32,
                         ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final content = Text(
                               post.content,
+                              key: ValueKey('diary-post-content-${post.id}'),
                               textAlign: isShortText
                                   ? TextAlign.center
                                   : TextAlign.start,
                               style: SLTheme.quicksand(
                                 fontWeight: isShortText
-                                    ? FontWeight.w900
-                                    : FontWeight.w700,
-                                fontSize: isShortText ? 17.5 : 14.7,
-                                height: isShortText ? 1.4 : 1.55,
-                                color: const Color(0xFF3B4354),
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                                fontSize: contentFontSize,
+                                height: contentLineHeight,
+                                color: contentColor,
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: moodSize + 8,
-                            height: moodSize + 8,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: moodColor.withValues(alpha: 0.11),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(17),
-                              child: post.mood == '📷'
-                                  ? DiaryCustomMoodImage(
-                                      url: post.customMoodUrl,
-                                      size: moodSize,
-                                    )
-                                  : R2StickerImage(
-                                      _getMoodAsset(
-                                        post.mood,
-                                        customMoodUrl: post.customMoodUrl,
-                                        houseId: houseId,
-                                        authorId: post.authorId,
-                                      ),
-                                      width: moodSize,
-                                      height: moodSize,
-                                      fit: BoxFit.contain,
-                                      animateLocalSticker: true,
-                                      errorWidget: Text(
-                                        post.mood,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: isShortText ? 34 : 25,
-                                          color: moodColor,
+                            );
+                            final mood = DiaryPostMoodFrame(
+                              key: ValueKey('diary-post-mood-${post.id}'),
+                              accent: moodColor,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: post.mood == '📷'
+                                    ? DiaryCustomMoodImage(
+                                        url: post.customMoodUrl,
+                                        size: moodSize,
+                                      )
+                                    : R2StickerImage(
+                                        _getMoodAsset(
+                                          post.mood,
+                                          customMoodUrl: post.customMoodUrl,
+                                          houseId: houseId,
+                                          authorId: post.authorId,
+                                        ),
+                                        width: moodSize,
+                                        height: moodSize,
+                                        fit: BoxFit.contain,
+                                        animateLocalSticker: true,
+                                        errorWidget: Text(
+                                          post.mood,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: isShortText ? 34 : 25,
+                                            color: moodInk,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                            ),
-                          ),
-                        ],
+                              ),
+                            );
+                            // Chữ lớn hoặc màn hẹp được dùng trọn chiều ngang.
+                            final stacked =
+                                constraints.maxWidth < 240 ||
+                                MediaQuery.textScalerOf(context).scale(15) >
+                                    21 ||
+                                post.content.length > 110;
+                            if (stacked) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  content,
+                                  const SizedBox(height: 14),
+                                  Align(
+                                    alignment: isShortText
+                                        ? Alignment.center
+                                        : AlignmentDirectional.centerEnd,
+                                    child: mood,
+                                  ),
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(child: content),
+                                const SizedBox(width: 16),
+                                mood,
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
                     if (post.imageUrl.isNotEmpty) ...[
@@ -381,15 +413,17 @@ class DiaryItem extends StatelessWidget {
                             Icon(
                               Icons.push_pin_rounded,
                               size: 13,
-                              color: moodColor,
+                              color: moodInk,
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              context.tr('home_ghimtms_3f794c'),
-                              style: SLTheme.quicksand(
-                                color: moodColor,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 10.8,
+                            Flexible(
+                              child: Text(
+                                context.tr('home_ghimtms_3f794c'),
+                                style: SLTheme.quicksand(
+                                  color: moodInk,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 10.8,
+                                ),
                               ),
                             ),
                           ],
@@ -416,83 +450,182 @@ class _DiaryItemVideoWidget extends StatefulWidget {
   State<_DiaryItemVideoWidget> createState() => _DiaryItemVideoWidgetState();
 }
 
-class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
+class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget>
+    with ScreenActivityMixin<_DiaryItemVideoWidget> {
   VideoPlayerController? _controller;
+  VideoPlayerController? _loadingController;
   bool _initialized = false;
   bool _hasError = false;
+  bool _isLoading = false;
+  bool _playAfterInitialization = false;
+  bool _resumeOnActive = false;
+  int _loadGeneration = 0;
 
   @override
-  void initState() {
-    super.initState();
-    _initVideo();
+  void didUpdateWidget(covariant _DiaryItemVideoWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _resetVideoState();
+    }
+  }
+
+  void _resetVideoState() {
+    ++_loadGeneration;
+    final oldController = _controller;
+    final oldLoading = _loadingController;
+    _controller = null;
+    _loadingController = null;
+    _initialized = false;
+    _hasError = false;
+    _isLoading = false;
+    _playAfterInitialization = false;
+    _resumeOnActive = false;
+    oldController?.dispose();
+    if (!identical(oldLoading, oldController)) oldLoading?.dispose();
   }
 
   Future<void> _initVideo() async {
+    if (_isLoading || _initialized) return;
+    final generation = ++_loadGeneration;
+    final oldController = _controller;
+    final oldLoading = _loadingController;
+    _loadingController = null;
+    _controller = null;
+    _initialized = false;
+    _hasError = false;
+    _isLoading = true;
+    _resumeOnActive = false;
+    oldController?.dispose();
+    oldLoading?.dispose();
+    VideoPlayerController? candidate;
     try {
       final String rawUrl = widget.url.trim();
       final playUrl = CloudflareR2Service.resolveVideoUrl(rawUrl);
+      if (playUrl.isEmpty) throw const FormatException('Empty video URL');
       final uri = Uri.parse(playUrl);
 
-      VideoPlayerController controller;
-      try {
-        final fileInfo = await AppCacheManager.instance.getFileFromCache(
-          playUrl,
-        );
-        final cachedFile =
-            fileInfo?.file ??
-            await AppCacheManager.instance.getSingleFile(playUrl);
-        controller = VideoPlayerController.file(cachedFile);
-      } catch (_) {
-        controller = VideoPlayerController.networkUrl(uri);
+      // Chỉ dùng file đã có trong cache; cache miss phát trực tiếp URL để
+      // tránh tải toàn bộ video trước khi người dùng bấm phát.
+      candidate = await createCachedVideoController(playUrl);
+      if (!mounted || generation != _loadGeneration) {
+        candidate?.dispose();
+        return;
       }
+      candidate ??= VideoPlayerController.networkUrl(uri);
+      _loadingController = candidate;
+      await candidate.initialize().timeout(const Duration(seconds: 20));
+      if (!mounted || generation != _loadGeneration) {
+        await candidate.dispose();
+        return;
+      }
+      await candidate.setLooping(true);
 
-      _controller = controller;
-      await controller.initialize();
-      if (mounted) {
-        setState(() => _initialized = true);
-        controller.setLooping(true);
+      if (!mounted || generation != _loadGeneration) {
+        candidate.dispose();
+        return;
+      }
+      _controller = candidate;
+      _loadingController = null;
+      _initialized = true;
+      _hasError = false;
+      _isLoading = false;
+      setState(() {});
+      if (_playAfterInitialization && isScreenActive) {
+        _playAfterInitialization = false;
+        await candidate.play();
       }
     } catch (_) {
-      if (mounted) setState(() => _hasError = true);
+      candidate?.dispose();
+      if (mounted && generation == _loadGeneration) {
+        _loadingController = null;
+        _isLoading = false;
+        setState(() => _hasError = true);
+      }
+    }
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    final controller = _controller;
+    if (!active) {
+      if (controller?.value.isPlaying == true) {
+        _resumeOnActive = true;
+        controller?.pause();
+      }
+      return;
+    }
+    if ((_resumeOnActive || _playAfterInitialization) &&
+        _initialized &&
+        controller != null &&
+        controller.value.isInitialized) {
+      _resumeOnActive = false;
+      _playAfterInitialization = false;
+      controller.play();
     }
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _resetVideoState();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      return Container(
-        height: 140,
-        color: Colors.black26,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, color: Colors.white70, size: 28),
-            SizedBox(height: 4),
-            Text(
-              context.tr('ui_home_cannot_play_video_e932b6'),
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ],
+      return GestureDetector(
+        onTap: () {
+          _hasError = false;
+          _playAfterInitialization = true;
+          _initVideo();
+          setState(() {});
+        },
+        child: Container(
+          height: 140,
+          color: Colors.black26,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.refresh_rounded,
+                color: Colors.white70,
+                size: 32,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.tr('ui_home_cannot_play_video_e932b6'),
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     final controller = _controller;
     if (!_initialized || controller == null) {
-      return Container(
-        height: 160,
-        color: Colors.black12,
-        alignment: Alignment.center,
-        child: const CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+      return GestureDetector(
+        onTap: () {
+          if (_isLoading) return;
+          _playAfterInitialization = true;
+          _initVideo();
+          setState(() {});
+        },
+        child: Container(
+          height: 160,
+          color: Colors.black12,
+          alignment: Alignment.center,
+          child: _isLoading
+              ? const CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+                )
+              : const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white70,
+                  size: 42,
+                ),
         ),
       );
     }
@@ -501,13 +634,14 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          if (isPlaying) {
-            controller.pause();
-          } else {
-            controller.play();
-          }
-        });
+        final shouldPlay = !controller.value.isPlaying;
+        _resumeOnActive = false;
+        if (shouldPlay) {
+          controller.play();
+        } else {
+          controller.pause();
+        }
+        setState(() {});
       },
       child: Stack(
         alignment: Alignment.center,

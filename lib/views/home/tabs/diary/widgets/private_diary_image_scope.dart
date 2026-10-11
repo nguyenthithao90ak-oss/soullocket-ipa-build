@@ -76,8 +76,12 @@ class PrivateDiaryImageCache {
     entry._expiry = Timer(entry.remaining, () => remove(entry));
     int retainedBytes() => _entries.values.fold<int>(0, (total, cached) {
       final provider = cached.provider;
-      return total +
-          (provider is MemoryImage ? provider.bytes.lengthInBytes : 0);
+      final bytes = provider is MemoryImage
+          ? provider.bytes
+          : provider is ResizeImage && provider.imageProvider is MemoryImage
+          ? (provider.imageProvider as MemoryImage).bytes
+          : null;
+      return total + (bytes?.lengthInBytes ?? 0);
     });
     while (_entries.length > maximumEntries || retainedBytes() > maximumBytes) {
       _evict(_entries.remove(_entries.keys.first)!);

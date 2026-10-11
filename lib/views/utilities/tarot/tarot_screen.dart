@@ -1,1637 +1,2127 @@
+import 'dart:async';
 import 'dart:math';
-
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
-import '../../../widgets/lossless_sticker_assets.dart';
-import '../../../utils/services/tarot_reading_service.dart';
-
-part 'models/tarot_models.dart';
-part 'painters/tarot_painters.dart';
-
-final List<TarotCard> _allCards = [
-  TarotCard(
-    name: 'The Fool',
-    symbol: '🪁',
-    uprightMeaning: L10nService().translate('util_mtkhiumiyb_69a121'),
-    reversedMeaning: L10nService().translate('util_svivnghocn_831dbf'),
-  ),
-  TarotCard(
-    name: 'The Magician',
-    symbol: '✨',
-    uprightMeaning: L10nService().translate('util_bnckhnngbi_222433'),
-    reversedMeaning: L10nService().translate('util_nnglngangb_eb5169'),
-  ),
-  TarotCard(
-    name: 'The High Priestess',
-    symbol: '🔮',
-    uprightMeaning: L10nService().translate('util_trcgicrtmn_b7f63e'),
-    reversedMeaning: L10nService().translate('util_bnangbquat_917c34'),
-  ),
-  TarotCard(
-    name: 'The Empress',
-    symbol: '🌷',
-    uprightMeaning: L10nService().translate('util_nnglngnuid_fe7eee'),
-    reversedMeaning: L10nService().translate('util_schmscangm_1aee7f'),
-  ),
-  TarotCard(
-    name: 'The Emperor',
-    symbol: '🛡️',
-    uprightMeaning: L10nService().translate('util_srrngranhg_ff9c12'),
-    reversedMeaning: L10nService().translate('util_kimsotquta_562f9a'),
-  ),
-  TarotCard(
-    name: 'The Lovers',
-    symbol: '💞',
-    uprightMeaning: L10nService().translate('util_tnhcmlachn_c55c2e'),
-    reversedMeaning: L10nService().translate('util_mtcnbnghoc_8bd0c6'),
-  ),
-  TarotCard(
-    name: 'The Chariot',
-    symbol: '🏹',
-    uprightMeaning: L10nService().translate('util_cmxcmuntin_80677b'),
-    reversedMeaning: L10nService().translate('util_bnangcyqun_df95ab'),
-  ),
-  TarotCard(
-    name: 'Strength',
-    symbol: '🦁',
-    uprightMeaning: L10nService().translate('util_sdummnhbit_22f465'),
-    reversedMeaning: L10nService().translate('util_btananglmb_fb948e'),
-  ),
-  TarotCard(
-    name: 'The Hermit',
-    symbol: '🕯️',
-    uprightMeaning: L10nService().translate('util_bncnmtqung_fa6015'),
-    reversedMeaning: L10nService().translate('util_skhpliangd_9eaa01'),
-  ),
-  TarotCard(
-    name: 'Wheel of Fortune',
-    symbol: '🎡',
-    uprightMeaning: L10nService().translate('util_mtbcngotcm_4d6d49'),
-    reversedMeaning: L10nService().translate('util_bnangchngl_04ea64'),
-  ),
-  TarotCard(
-    name: 'Justice',
-    symbol: '⚖️',
-    uprightMeaning: L10nService().translate('util_mithihisth_9be6af'),
-    reversedMeaning: L10nService().translate('util_mtphaangnt_ea389e'),
-  ),
-  TarotCard(
-    name: 'The Hanged Man',
-    symbol: '🪞',
-    uprightMeaning: L10nService().translate('util_cnigcnhnhi_f3f101'),
-    reversedMeaning: L10nService().translate('util_schnchangk_fa687f'),
-  ),
-  TarotCard(
-    name: 'Death',
-    symbol: '🦋',
-    uprightMeaning: L10nService().translate('util_mtlpcmxcca_f51277'),
-    reversedMeaning: L10nService().translate('util_bnangnumti_7d7304'),
-  ),
-  TarotCard(
-    name: 'Temperance',
-    symbol: '🍷',
-    uprightMeaning: L10nService().translate('util_cnbngchaln_889b06'),
-    reversedMeaning: L10nService().translate('util_cmxcanglch_213be8'),
-  ),
-  TarotCard(
-    name: 'The Devil',
-    symbol: '⛓️',
-    uprightMeaning: L10nService().translate('util_smnhdnhmch_b6b4b3'),
-    reversedMeaning: L10nService().translate('util_bnangcchig_3dfb60'),
-  ),
-  TarotCard(
-    name: 'The Tower',
-    symbol: '⚡',
-    uprightMeaning: L10nService().translate('util_mtsthtmnhc_132ccc'),
-    reversedMeaning: L10nService().translate('util_bnangtrhon_c9bc90'),
-  ),
-  TarotCard(
-    name: 'The Star',
-    symbol: '⭐',
-    uprightMeaning: L10nService().translate('util_hyvngchaln_c66c59'),
-    reversedMeaning: L10nService().translate('util_bncntinliv_18533e'),
-  ),
-  TarotCard(
-    name: 'The Moon',
-    symbol: '🌙',
-    uprightMeaning: L10nService().translate('util_nismhvtrcg_5f74a0'),
-    reversedMeaning: L10nService().translate('util_sngmangdnt_488841'),
-  ),
-  TarotCard(
-    name: 'The Sun',
-    symbol: '🌞',
-    uprightMeaning: L10nService().translate('util_ssngrmpvcm_2cea33'),
-    reversedMeaning: L10nService().translate('util_nimvuiangb_a50170'),
-  ),
-  TarotCard(
-    name: 'Judgement',
-    symbol: '🎺',
-    uprightMeaning: L10nService().translate('util_mtligithct_36f5b0'),
-    reversedMeaning: L10nService().translate('util_bnangchnch_327f10'),
-  ),
-  TarotCard(
-    name: 'The World',
-    symbol: '🌍',
-    uprightMeaning: L10nService().translate('util_mtvngcmxct_4bf877'),
-    reversedMeaning: L10nService().translate('util_ciugcndang_f50965'),
-  ),
-  TarotCard(
-    name: 'Ace of Cups',
-    symbol: '💗',
-    uprightMeaning: L10nService().translate('util_cmxcmiduvc_5d5c8d'),
-    reversedMeaning: L10nService().translate('util_cmxcbnnhoc_ef2f5b'),
-  ),
-  TarotCard(
-    name: 'Two of Cups',
-    symbol: '🥂',
-    uprightMeaning: L10nService().translate('util_sngiuvktni_afbc3d'),
-    reversedMeaning: L10nService().translate('util_lchnhpcmxc_c7d730'),
-  ),
-  TarotCard(
-    name: 'Three of Swords',
-    symbol: '💔',
-    uprightMeaning: L10nService().translate('util_niauchocvt_9875c5'),
-    reversedMeaning: L10nService().translate('util_giaionhiph_904415'),
-  ),
-  TarotCard(
-    name: 'Ten of Cups',
-    symbol: '🌈',
-    uprightMeaning: L10nService().translate('util_nnglngvinm_345e6a'),
-    reversedMeaning: L10nService().translate('util_bctranhpan_75390f'),
-  ),
-  TarotCard(
-    name: 'Queen of Cups',
-    symbol: '👑',
-    uprightMeaning: L10nService().translate('util_tritimrtnh_62a4d2'),
-    reversedMeaning: L10nService().translate('util_bnangmcmxc_76d380'),
-  ),
-  TarotCard(
-    name: 'Knight of Wands',
-    symbol: '🔥',
-    uprightMeaning: L10nService().translate('util_nnglngammc_24d8a1'),
-    reversedMeaning: L10nService().translate('util_sbcngcthlm_7a75e1'),
-  ),
-];
+import 'models/tarot_models.dart';
+import 'painters/tarot_painters.dart';
 
 class TarotScreen extends StatefulWidget {
   final String houseId;
   final String relationshipMode;
   final String myName;
-
   const TarotScreen({
     super.key,
     required this.houseId,
     required this.relationshipMode,
     required this.myName,
   });
-
   @override
   State<TarotScreen> createState() => _TarotScreenState();
 }
 
-class _TarotScreenState extends State<TarotScreen>
-    with TickerProviderStateMixin {
-  final TarotReadingService _tarotReadingService = TarotReadingService();
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+enum _TarotTab { read, library, journal }
 
-  List<PickedCard> _pickedCards = [];
-  bool _isPicking = false;
-  bool _isAnalyzingReading = false;
-  bool _isProfileLoading = true;
-  int _analysisSession = 0;
-  int? _pressedCardIndex;
-  String _viewerRole = 'user1';
-  String? _analysisError;
-  TarotPersonalizedReading? _personalizedReading;
-  TarotViewerProfile? _viewerProfile;
-  Map<String, dynamic> _settingsMap = const {};
-  late TarotSpreadTemplate _selectedSpread;
-
-  TarotViewerProfile get _resolvedProfile => TarotViewerProfile.fromSettings(
-    viewerRole: _viewerRole,
-    relationshipMode: widget.relationshipMode,
-    localeCode: L10nService().locale.languageCode,
-    settings: _settingsMap,
-    fallbackName: widget.myName,
-  );
+class _TarotScreenState extends State<TarotScreen> {
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get ink => isDark ? const Color(0xFFF4EDDF) : const Color(0xFF30283D);
+  Color get muted => isDark ? const Color(0xFFB7ADC4) : const Color(0xFF80748B);
+  Color get plum => isDark ? const Color(0xFFC4A9E8) : const Color(0xFF775A9A);
+  Color get dark => const Color(0xFF34253F);
+  Color get cream => isDark ? const Color(0xFF201B27) : const Color(0xFFF8F5EF);
+  Color get surface => isDark ? const Color(0xFF2D2537) : Colors.white;
+  Color get onPlum => isDark ? dark : Colors.white;
+  Color get gold => const Color(0xFFD5AA66);
+  Color get rose => const Color(0xFFDFA5A5);
+  bool get reduceMotion => MediaQuery.disableAnimationsOf(context);
+  final l10n = L10nService();
+  final question = TextEditingController();
+  final search = TextEditingController();
+  final note = TextEditingController();
+  final random = Random();
+  _TarotTab tab = _TarotTab.read;
+  int phase = 0, promptIndex = 0;
+  List<TarotCard> deck = [];
+  final chosen = <int>{};
+  String sessionId = '';
+  DateTime sessionDate = DateTime.now();
+  String? savedSessionId;
+  StreamSubscription<User?>? authSubscription;
+  bool scopeLost = false;
+  int journalRevision = 0;
+  String topic = 'self', filter = 'all', uid = '';
+  TarotSpread spread = tarotSpreads.first;
+  List<TarotDraw> draws = [];
+  List<TarotSession> journal = [];
+  bool busy = false, saving = false;
+  String tr(String key) => l10n.translate('tarot2_$key');
+  String fmt(String key, Map<String, Object?> values) =>
+      l10n.format('tarot2_$key', values);
 
   @override
   void initState() {
     super.initState();
-    _selectedSpread = TarotReadingService.spreads.first;
-    _loadViewerProfile();
-  }
-
-  Future<void> _loadViewerProfile() async {
+    l10n.addListener(refreshLocale);
+    loadJournal();
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final role = prefs.getString('il_role') ?? 'user1';
-      final settingsSnap = await _dbRef
-          .child('houses/${widget.houseId}/settings')
-          .get();
-      final settingsMap = settingsSnap.exists && settingsSnap.value is Map
-          ? Map<String, dynamic>.from(
-              Map<dynamic, dynamic>.from(settingsSnap.value as Map),
-            )
-          : <String, dynamic>{};
-      final profile = TarotViewerProfile.fromSettings(
-        viewerRole: role,
-        relationshipMode: widget.relationshipMode,
-        localeCode: L10nService().locale.languageCode,
-        settings: settingsMap,
-        fallbackName: widget.myName,
-      );
-      if (!mounted) return;
-      setState(() {
-        _viewerRole = role;
-        _settingsMap = settingsMap;
-        _viewerProfile = profile;
-        _isProfileLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _viewerProfile = _resolvedProfile;
-        _isProfileLoading = false;
-      });
-    }
-  }
-
-  void _selectSpread(TarotSpreadTemplate spread) {
-    if (_selectedSpread.id == spread.id) return;
-    setState(() {
-      _selectedSpread = spread;
-      _pickedCards = [];
-      _personalizedReading = null;
-      _analysisError = null;
-    });
-  }
-
-  void _pickCards() {
-    final session = _analysisSession + 1;
-    setState(() {
-      _analysisSession = session;
-      _isPicking = true;
-      _isAnalyzingReading = false;
-      _analysisError = null;
-      _personalizedReading = null;
-      _pickedCards = [];
-    });
-
-    Future.delayed(const Duration(milliseconds: 1300), () {
-      if (!mounted) return;
-      final random = Random();
-      final shuffled = List<TarotCard>.from(_allCards)..shuffle(random);
-      setState(() {
-        _pickedCards = shuffled
-            .take(_selectedSpread.slots.length)
-            .map(
-              (card) => PickedCard(card: card, isReversed: random.nextBool()),
-            )
-            .toList();
-        _isPicking = false;
-      });
-      _analyzePickedCards(session);
-    });
-  }
-
-  Future<void> _analyzePickedCards(int session) async {
-    if (!mounted || _pickedCards.length != _selectedSpread.slots.length) return;
-    setState(() {
-      _isAnalyzingReading = true;
-      _analysisError = null;
-    });
-
-    try {
-      final profile = _viewerProfile ?? _resolvedProfile;
-      final reading = await _tarotReadingService.buildReading(
-        houseId: widget.houseId,
-        viewerProfile: profile,
-        spread: _selectedSpread,
-        selections: List.generate(_pickedCards.length, (index) {
-          final picked = _pickedCards[index];
-          final slot = _selectedSpread.slots[index];
-          return TarotReadingSelection(
-            slotId: slot.id,
-            label: L10nService().translate(slot.labelKey),
-            cardName: picked.card.name,
-            isReversed: picked.isReversed,
-            baseMeaning: picked.isReversed
-                ? picked.card.reversedMeaning
-                : picked.card.uprightMeaning,
-          );
-        }),
-      );
-      if (!mounted || session != _analysisSession) return;
-      setState(() {
-        _personalizedReading = reading;
-        _isAnalyzingReading = false;
-      });
-    } catch (_) {
-      if (!mounted || session != _analysisSession) return;
-      setState(() {
-        _isAnalyzingReading = false;
-        _analysisError = L10nService().translate('tarot_analysis_failed');
-      });
-    }
-  }
-
-  void _flipCard(int index) {
-    if (_pickedCards[index].isFlipped) return;
-    setState(() => _pressedCardIndex = index);
-    Future.delayed(const Duration(milliseconds: 120), () {
-      if (!mounted || index >= _pickedCards.length) return;
-      if (_pickedCards[index].isFlipped) return;
-      setState(() {
-        _pickedCards[index].isFlipped = true;
-        if (_pressedCardIndex == index) {
-          _pressedCardIndex = null;
+      authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+        user,
+      ) {
+        if (uid.isNotEmpty && user?.uid != uid && mounted) {
+          setState(() {
+            journalRevision++;
+            scopeLost = true;
+            journal = [];
+          });
         }
       });
-    });
+    } catch (_) {}
+  }
+
+  void refreshLocale() {
+    if (mounted) setState(() {});
   }
 
   @override
-  Widget build(BuildContext context) {
-    final profile = _viewerProfile ?? _resolvedProfile;
-    return Scaffold(
-      backgroundColor: const Color(0xFF0E1022),
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          L10nService().translate('tarot_title'),
-          style: SLTheme.quicksand(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Stack(
-        children: [
-          _buildBackdrop(),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = _isCompactWidth(constraints.maxWidth);
-              final horizontalPadding = _horizontalPaddingFor(
-                constraints.maxWidth,
-              );
-              return SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          compact ? 8 : 12,
-                          horizontalPadding,
-                          compact ? 16 : 24,
-                        ),
-                        children: [
-                          _buildHeroHeader(profile),
-                          SizedBox(height: compact ? 16 : 18),
-                          _buildSpreadSelector(),
-                          SizedBox(height: compact ? 16 : 18),
-                          if (_isPicking)
-                            _buildShufflingState()
-                          else if (_pickedCards.isEmpty)
-                            _buildEmptyState()
-                          else ...[
-                            _buildReadingPanel(profile),
-                            const SizedBox(height: 10),
-                            for (var i = 0; i < _pickedCards.length; i++)
-                              _buildTarotCardInteractive(
-                                _pickedCards[i],
-                                _selectedSpread.slots[i],
-                                i,
-                              ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        compact ? 6 : 8,
-                        horizontalPadding,
-                        compact ? 14 : 22,
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _isPicking || _isAnalyzingReading
-                            ? null
-                            : _pickCards,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF5D8F),
-                          foregroundColor: Colors.white,
-                          minimumSize: Size(double.infinity, compact ? 50 : 58),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: SLRadius.xlAll,
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          _pickedCards.isEmpty
-                              ? L10nService().translate('tarot_pick_button')
-                              : L10nService().translate('tarot_pick_again'),
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                            fontSize: compact ? 14 : 16,
-                            letterSpacing: compact ? 0.2 : 0.6,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
+  void dispose() {
+    authSubscription?.cancel();
+    l10n.removeListener(refreshLocale);
+    question.dispose();
+    search.dispose();
+    note.dispose();
+    super.dispose();
   }
 
-  bool _isCompactWidth(double width) => width <= 390;
-
-  double _horizontalPaddingFor(double width) =>
-      _isCompactWidth(width) ? 12 : 18;
-
-  double _panelRadiusFor(double width) => _isCompactWidth(width) ? 22 : 28;
-
-  double _panelPaddingFor(double width) => _isCompactWidth(width) ? 14 : 18;
-
-  Widget _buildTarotSticker({
-    required double width,
-    required double height,
-    BoxFit fit = BoxFit.contain,
-    double opacity = 1,
-  }) {
-    return Opacity(
-      opacity: opacity,
-      child: Image.asset(
-        LosslessStickerAssets.resolve(
-          'assets/images/utility_stickers/tarot.png',
-        ),
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: width,
-            height: height,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(width * 0.28),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF5D4BFF), Color(0xFFFF5D8F)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.white.withValues(alpha: 0.92),
-              size: width * 0.46,
-            ),
-          );
-        },
-      ),
-    );
+  String get authUid {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid ?? '';
+    } catch (_) {
+      return '';
+    }
   }
 
-  Widget _buildBackdrop() {
-    return Stack(
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF0E1022),
-                Color(0xFF191934),
-                Color(0xFF271C3D),
-                Color(0xFF0E1022),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+  bool sameScope(String expectedUid, String expectedHouse) =>
+      mounted &&
+      !scopeLost &&
+      uid == expectedUid &&
+      authUid == expectedUid &&
+      widget.houseId == expectedHouse;
+
+  @override
+  void didUpdateWidget(covariant TarotScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId) {
+      journalRevision++;
+      journal = [];
+      uid = '';
+      scopeLost = false;
+      question.clear();
+      search.clear();
+      setup();
+      loadJournal();
+    }
+  }
+
+  Future<void> loadJournal() async {
+    final current = authUid;
+    final house = widget.houseId;
+    final revision = ++journalRevision;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted ||
+          revision != journalRevision ||
+          current != authUid ||
+          house != widget.houseId) {
+        return;
+      }
+      final saved = TarotJournalStore.load(prefs, current, house);
+      setState(() {
+        uid = current;
+        journal = saved;
+      });
+    } catch (_) {
+      if (mounted && revision == journalRevision && current == authUid) {
+        setState(() => uid = current);
+      }
+    }
+  }
+
+  Future<void> start([TarotCard? daily]) async {
+    if (busy || saving) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => busy = true);
+    await Future<void>.delayed(Duration(milliseconds: reduceMotion ? 0 : 250));
+    if (!mounted) return;
+    setState(() {
+      sessionDate = DateTime.now();
+      sessionId = sessionDate.microsecondsSinceEpoch.toString();
+      savedSessionId = null;
+      note.clear();
+      chosen.clear();
+      deck = shuffledTarotDeck(random);
+      draws = [];
+      if (daily != null) {
+        spread = tarotSpreads.first;
+        draws = [TarotDraw(daily, reversed: false)];
+        phase = 2;
+      } else {
+        phase = 1;
+      }
+      busy = false;
+    });
+  }
+
+  void choose(int index) {
+    if (chosen.contains(index) || draws.length >= spread.slots.length) return;
+    setState(() {
+      chosen.add(index);
+      draws = [
+        ...draws,
+        TarotDraw(deck[index], reversed: random.nextInt(4) == 0),
+      ];
+    });
+  }
+
+  void shuffle() {
+    setState(() {
+      deck = shuffledTarotDeck(random);
+      chosen.clear();
+      draws = [];
+    });
+  }
+
+  void reveal(int index) {
+    if (index >= draws.length || draws[index].revealed) return;
+    final copy = List<TarotDraw>.of(draws);
+    copy[index] = copy[index].reveal();
+    setState(() => draws = copy);
+  }
+
+  void revealAll() =>
+      setState(() => draws = [for (final draw in draws) draw.reveal()]);
+  bool get allRevealed =>
+      draws.isNotEmpty && draws.every((draw) => draw.revealed);
+  void setup() => setState(() {
+    phase = 0;
+    draws = [];
+    chosen.clear();
+    deck = [];
+    savedSessionId = null;
+    note.clear();
+  });
+  void snack(String value) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(
+          value,
+          style: SLTheme.quicksand(fontWeight: FontWeight.w700),
         ),
-        Positioned(
-          top: -40,
-          left: -50,
-          child: _glowOrb(const Color(0xFF6B5BFF), 180),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: dark,
+      ),
+    );
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: cream,
+    appBar: AppBar(
+      backgroundColor: cream,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () => Navigator.maybePop(context),
+        icon: Icon(Icons.arrow_back_rounded, color: ink),
+      ),
+      title: Text(
+        tr('title'),
+        style: SLTheme.quicksand(
+          color: ink,
+          fontSize: 19,
+          fontWeight: FontWeight.w900,
         ),
-        Positioned(
-          top: 220,
-          right: -80,
-          child: _glowOrb(const Color(0xFFFF6FA8), 220),
-        ),
-        Positioned(
-          bottom: 120,
-          left: -60,
-          child: _glowOrb(const Color(0xFF3AC8C8), 190),
-        ),
-        IgnorePointer(
-          child: CustomPaint(size: Size.infinite, painter: _TarotDustPainter()),
+      ),
+      actions: [
+        IconButton(
+          tooltip: tr('guide'),
+          onPressed: showGuide,
+          icon: Icon(Icons.auto_awesome_outlined, color: plum),
         ),
       ],
-    );
+    ),
+    body: SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              child: KeyedSubtree(
+                key: ValueKey(tab.name + phase.toString()),
+                child: body(),
+              ),
+            ),
+          ),
+          if (tab == _TarotTab.read && phase == 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
+              child: startButton(),
+            ),
+          bottomNav(),
+        ],
+      ),
+    ),
+  );
+  Widget body() {
+    if (tab == _TarotTab.library) return library();
+    if (tab == _TarotTab.journal) return journalView();
+    return phase == 0
+        ? setupView()
+        : phase == 1
+        ? drawView()
+        : resultView();
   }
 
-  Widget _buildHeroHeader(TarotViewerProfile profile) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = _isCompactWidth(constraints.maxWidth);
-        final panelRadius = _panelRadiusFor(constraints.maxWidth);
-        final panelPadding = _panelPaddingFor(constraints.maxWidth);
-        final heroArt = _buildTarotSticker(
-          width: compact ? 68 : 94,
-          height: compact ? 68 : 94,
-        );
-
-        final headerText = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: compact ? 10 : 12,
-                vertical: compact ? 5 : 6,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                color: const Color(0x22FFFFFF),
-              ),
-              child: Text(
-                L10nService().translate('tarot_header_badge'),
-                style: SLTheme.quicksand(
-                  color: const Color(0xFFFFD4E4),
-                  fontWeight: FontWeight.w800,
-                  fontSize: compact ? 10 : 11,
-                ),
-              ),
-            ),
-            SizedBox(height: compact ? 8 : 12),
-            Text(
-              L10nService().translate('tarot_header_title'),
-              style: SLTheme.quicksand(
-                fontSize: compact ? 18.5 : 24,
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                height: 1.1,
-              ),
-            ),
-            SizedBox(height: compact ? 7 : 10),
-            Text(
-              L10nService().translate('tarot_header_desc'),
-              style: SLTheme.quicksand(
-                color: Colors.white.withValues(alpha: 0.78),
-                fontWeight: FontWeight.w600,
-                fontSize: compact ? 12.2 : 14,
-                height: 1.35,
-              ),
-            ),
-          ],
-        );
-
-        return Container(
-          padding: EdgeInsets.all(panelPadding),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(panelRadius),
-            gradient: const LinearGradient(
-              colors: [Color(0x33FFFFFF), Color(0x14FFFFFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.24),
-                blurRadius: 28,
-                offset: const Offset(0, 18),
-              ),
-            ],
-          ),
+  Widget bottomNav() => Container(
+    decoration: BoxDecoration(
+      color: cream,
+      border: Border(top: BorderSide(color: ink.withValues(alpha: .08))),
+    ),
+    padding: const EdgeInsets.fromLTRB(12, 7, 12, 9),
+    child: Row(
+      children: [
+        nav(_TarotTab.read, Icons.auto_awesome_rounded, tr('read_tab')),
+        nav(_TarotTab.library, Icons.menu_book_rounded, tr('library_tab')),
+        nav(
+          _TarotTab.journal,
+          Icons.bookmark_border_rounded,
+          tr('journal_tab'),
+        ),
+      ],
+    ),
+  );
+  Widget nav(_TarotTab item, IconData icon, String label) {
+    final active = tab == item;
+    return Expanded(
+      child: InkWell(
+        key: ValueKey('tarot-tab-${item.name}'),
+        onTap: () => setState(() => tab = item),
+        borderRadius: BorderRadius.circular(17),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (compact) ...[
-                Align(alignment: Alignment.centerRight, child: heroArt),
-                SizedBox(height: compact ? 12 : 14),
-                headerText,
-              ] else
-                Row(
-                  children: [
-                    Expanded(child: headerText),
-                    SizedBox(width: compact ? 10 : 12),
-                    heroArt,
-                  ],
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 5,
                 ),
-              SizedBox(height: compact ? 12 : 16),
-              if (_isProfileLoading)
-                Text(
-                  L10nService().translate('tarot_profile_loading'),
-                  style: SLTheme.quicksand(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    fontWeight: FontWeight.w700,
-                    fontSize: compact ? 12 : 13,
-                  ),
-                )
-              else
-                Wrap(
-                  spacing: compact ? 6 : 8,
-                  runSpacing: compact ? 6 : 8,
-                  children: [
-                    _profileChip(profile.viewerName, const Color(0xFF6B5BFF)),
-                    if (profile.viewerAgeLabel != null)
-                      _profileChip(
-                        profile.viewerAgeLabel!,
-                        const Color(0xFFFF6FA8),
-                      ),
-                    if (profile.viewerZodiacLabel != null)
-                      _profileChip(
-                        '${profile.viewerZodiacEmoji ?? ''} ${profile.viewerZodiacLabel!}'
-                            .trim(),
-                        const Color(0xFF3AC8C8),
-                      ),
-                    if (profile.compatibilityScore != null)
-                      _profileChip(
-                        '${L10nService().translate('tarot_chip_compatibility')} ${profile.compatibilityScore}%',
-                        const Color(0xFFFFB347),
-                      ),
-                    if (profile.maturityLabel.isNotEmpty)
-                      _profileChip(
-                        profile.maturityLabel,
-                        const Color(0xFFA78BFA),
-                      ),
-                  ],
+                decoration: BoxDecoration(
+                  color: active
+                      ? plum.withValues(alpha: .13)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(30),
                 ),
+                child: Icon(icon, size: 22, color: active ? plum : muted),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                  color: active ? plum : muted,
+                ),
+              ),
             ],
           ),
-        ).animate().fadeIn(duration: 320.ms).slideY(begin: 0.05, end: 0);
-      },
+        ),
+      ),
     );
   }
 
-  Widget _buildSpreadSelector() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = _isCompactWidth(constraints.maxWidth);
-        final cardWidth = (constraints.maxWidth * (compact ? 0.7 : 0.58))
-            .clamp(compact ? 160.0 : 180.0, compact ? 216.0 : 240.0)
-            .toDouble();
-        final cardRadius = compact ? 20.0 : 24.0;
-        final cardSpacing = compact ? 10.0 : 12.0;
+  Widget scroll(Widget child) => SingleChildScrollView(
+    physics: const BouncingScrollPhysics(),
+    padding: const EdgeInsets.fromLTRB(18, 9, 18, 25),
+    child: child,
+  );
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget setupView() => scroll(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        hero(),
+        const SizedBox(height: 17),
+        daily(),
+        const SizedBox(height: 22),
+        Text(
+          tr('setup_title'),
+          style: SLTheme.quicksand(
+            color: ink,
+            fontSize: 23,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          tr('setup_desc'),
+          style: SLTheme.quicksand(color: muted, fontSize: 14, height: 1.45),
+        ),
+        const SizedBox(height: 18),
+        topics(),
+        const SizedBox(height: 20),
+        questionBox(),
+        const SizedBox(height: 21),
+        spreads(),
+        const SizedBox(height: 18),
+        howTo(),
+      ],
+    ),
+  );
+  Widget hero() => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: dark,
+      borderRadius: BorderRadius.circular(28),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Text(
-              L10nService().translate('tarot_select_spread'),
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: compact ? 15 : 16,
-              ),
-            ),
-            SizedBox(height: compact ? 10 : 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(TarotReadingService.spreads.length, (
-                  index,
-                ) {
-                  final spread = TarotReadingService.spreads[index];
-                  final selected = _selectedSpread.id == spread.id;
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      right: index == TarotReadingService.spreads.length - 1
-                          ? 0
-                          : cardSpacing,
-                    ),
-                    child: SizedBox(
-                      width: cardWidth,
-                      child: GestureDetector(
-                        onTap: () => _selectSpread(spread),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          padding: EdgeInsets.all(compact ? 12 : 16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(cardRadius),
-                            gradient: LinearGradient(
-                              colors: selected
-                                  ? const [Color(0xFF5D4BFF), Color(0xFFFF5D8F)]
-                                  : const [
-                                      Color(0x22FFFFFF),
-                                      Color(0x12FFFFFF),
-                                    ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            border: Border.all(
-                              color: selected
-                                  ? Colors.white.withValues(alpha: 0.3)
-                                  : Colors.white.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                L10nService().translate(spread.badgeKey),
-                                style: SLTheme.quicksand(
-                                  color: selected
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.72),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: compact ? 10.5 : 11,
-                                ),
-                              ),
-                              SizedBox(height: compact ? 18 : 22),
-                              Text(
-                                L10nService().translate(spread.titleKey),
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: compact ? 14.5 : 17,
-                                  height: 1.2,
-                                ),
-                              ),
-                              SizedBox(height: compact ? 6 : 8),
-                              Text(
-                                L10nService().translate(spread.subtitleKey),
-                                maxLines: compact ? null : 3,
-                                overflow: compact
-                                    ? null
-                                    : TextOverflow.ellipsis,
-                                style: SLTheme.quicksand(
-                                  color: Colors.white.withValues(alpha: 0.82),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: compact ? 11.8 : 13,
-                                  height: 1.3,
-                                ),
-                              ),
-                              SizedBox(height: compact ? 8 : 10),
-                              Text(
-                                '${spread.slots.length} ${L10nService().translate('tarot_card_unit')}',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white.withValues(alpha: 0.78),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: compact ? 11.5 : 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = _isCompactWidth(constraints.maxWidth);
-        return Container(
-          padding: EdgeInsets.all(compact ? 20 : 26),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              _panelRadiusFor(constraints.maxWidth),
-            ),
-            color: Colors.white.withValues(alpha: 0.05),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: Column(
-            children: [
-              _buildTarotSticker(
-                    width: compact ? 82 : 120,
-                    height: compact ? 82 : 120,
-                  )
-                  .animate(
-                    onPlay: (controller) => controller.repeat(reverse: true),
-                  )
-                  .scale(
-                    begin: const Offset(0.96, 0.96),
-                    end: const Offset(1.04, 1.04),
-                    duration: 1600.ms,
-                  ),
-              SizedBox(height: compact ? 14 : 18),
-              Text(
-                L10nService().translate('tarot_empty_title'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: compact ? 17 : 18,
-                ),
-              ),
-              SizedBox(height: compact ? 8 : 10),
-              Text(
-                L10nService().translate('tarot_empty_desc'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: Colors.white.withValues(alpha: 0.72),
-                  fontWeight: FontWeight.w600,
-                  fontSize: compact ? 13 : 14,
-                  height: 1.45,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildShufflingState() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = _isCompactWidth(constraints.maxWidth);
-        return Container(
-          width: double.infinity,
-          constraints: BoxConstraints(minHeight: compact ? 244 : 280),
-          padding: EdgeInsets.symmetric(vertical: compact ? 12 : 16),
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: List.generate(3, (index) {
-                  return Transform.translate(
-                        offset: Offset((index - 1) * (compact ? 16 : 18), 0),
-                        child: Transform.rotate(
-                          angle: (index - 1) * 0.18,
-                          child: _miniCardBack(compact: compact),
-                        ),
-                      )
-                      .animate(
-                        onPlay: (controller) =>
-                            controller.repeat(reverse: true),
-                      )
-                      .moveY(
-                        begin: -10,
-                        end: 10,
-                        duration: 500.ms,
-                        delay: (index * 120).ms,
-                      );
-                }),
-              ),
-              SizedBox(height: compact ? 20 : 26),
-              Text(
-                L10nService().translate('tarot_shuffling'),
-                style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: compact ? 15 : 16,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildReadingPanel(TarotViewerProfile profile) {
-    if (_isAnalyzingReading) {
-      return _glassPanel(
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.4,
-                color: Color(0xFFFF7AAE),
-              ),
-            ),
-            const SizedBox(width: 12),
+            Icon(Icons.auto_awesome_outlined, color: gold, size: 18),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                L10nService().translate('tarot_reading_loading'),
+                tr('deck_stats'),
                 style: SLTheme.quicksand(
-                  color: Colors.white.withValues(alpha: 0.82),
+                  color: const Color(0xFFDBCADF),
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  height: 1.45,
+                  height: 1.4,
                 ),
               ),
             ),
           ],
         ),
-      );
-    }
-
-    if (_analysisError != null) {
-      return _glassPanel(
-        child: Text(
-          _analysisError!,
-          style: SLTheme.quicksand(
-            color: Colors.white.withValues(alpha: 0.78),
-            fontWeight: FontWeight.w700,
-            height: 1.45,
-          ),
-        ),
-      );
-    }
-
-    if (_personalizedReading == null) return const SizedBox.shrink();
-
-    final reading = _personalizedReading!;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = _isCompactWidth(constraints.maxWidth);
-        return _glassPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                reading.headline,
-                style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: compact ? 17 : 18,
-                  height: 1.28,
-                ),
+        const SizedBox(height: 18),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final artWidth = constraints.maxWidth < 280 ? 82.0 : 100.0;
+            final title = Text(
+              tr('hero_title'),
+              style: GoogleFonts.lora(
+                color: const Color(0xFFF8EDDB),
+                fontSize: constraints.maxWidth < 280 ? 20 : 21,
+                height: 1.18,
+                fontWeight: FontWeight.w500,
               ),
-              SizedBox(height: compact ? 8 : 10),
-              Text(
-                reading.spreadSummary,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFFFFD8E7),
-                  fontWeight: FontWeight.w800,
-                  fontSize: compact ? 13 : 14,
-                  height: 1.45,
-                ),
-              ),
-              SizedBox(height: compact ? 10 : 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: reading.metrics
-                    .map((item) => _metricChip(item.label, item.value))
-                    .toList(),
-              ),
-              SizedBox(height: compact ? 12 : 14),
-              ...reading.facets.map(
-                (facet) => Padding(
-                  padding: EdgeInsets.only(bottom: compact ? 8 : 10),
-                  child: _facetTile(facet),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                reading.energySummary,
-                style: SLTheme.quicksand(
-                  color: Colors.white.withValues(alpha: 0.82),
-                  fontWeight: FontWeight.w700,
-                  fontSize: compact ? 13 : 14,
-                  height: 1.45,
-                ),
-              ),
-              SizedBox(height: compact ? 8 : 10),
-              Text(
-                reading.advice,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFFFFD8E7),
-                  fontWeight: FontWeight.w800,
-                  fontSize: compact ? 13 : 14,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTarotCardInteractive(
-    PickedCard pickedCard,
-    TarotSpreadSlot slot,
-    int index,
-  ) {
-    final isPressed = _pressedCardIndex == index && !pickedCard.isFlipped;
-    return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (_) {
-            if (pickedCard.isFlipped) return;
-            setState(() => _pressedCardIndex = index);
-          },
-          onTapCancel: () {
-            if (_pressedCardIndex != index) return;
-            setState(() => _pressedCardIndex = null);
-          },
-          onTap: () => _flipCard(index),
-          child: AnimatedScale(
-            scale: isPressed ? 0.94 : 1,
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutBack,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        (pickedCard.isFlipped
-                                ? const Color(0xFFFF8CC6)
-                                : const Color(0xFF8B6DFF))
-                            .withValues(
-                              alpha: isPressed || pickedCard.isFlipped
-                                  ? 0.24
-                                  : 0.08,
-                            ),
-                    blurRadius: isPressed ? 30 : 18,
-                    spreadRadius: isPressed ? 1.5 : 0,
-                    offset: const Offset(0, 10),
+            );
+            final artwork = SizedBox(
+              width: artWidth,
+              height: artWidth * 1.1,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Transform.translate(
+                    offset: Offset(-artWidth * .23, 7),
+                    child: Transform.rotate(
+                      angle: -.2,
+                      child: TarotArtwork(back: true, width: artWidth * .47),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(artWidth * .23, 7),
+                    child: Transform.rotate(
+                      angle: .2,
+                      child: TarotArtwork(back: true, width: artWidth * .47),
+                    ),
+                  ),
+                  TarotArtwork(card: tarotCards[17], width: artWidth * .56),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      color: gold,
+                      size: 14,
+                    ),
                   ),
                 ],
               ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 720),
-                switchInCurve: Curves.easeOutBack,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) {
-                  final rotate = Tween<double>(begin: pi, end: 0).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeInOutCubicEmphasized,
-                    ),
-                  );
-                  final lift = Tween<double>(begin: 0.985, end: 1).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutBack,
-                    ),
-                  );
-                  return AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      final angle = rotate.value;
-                      final isFront = angle < pi / 2;
-                      return Transform.scale(
-                        scale: lift.value,
-                        child: Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()
-                            ..setEntry(3, 2, 0.0012)
-                            ..rotateY(angle),
-                          child: isFront
-                              ? child
-                              : Transform(
-                                  alignment: Alignment.center,
-                                  transform: Matrix4.identity()..rotateY(pi),
-                                  child: _buildCardBack(slot),
-                                ),
-                        ),
-                      );
-                    },
-                    child: child,
-                  );
-                },
-                child: pickedCard.isFlipped
-                    ? _buildCardFront(pickedCard, slot, index)
-                    : _buildCardBack(slot, key: ValueKey('back_$index')),
-              ),
-            ),
+            );
+            if (MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  title,
+                  const SizedBox(height: 8),
+                  Center(child: artwork),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: title),
+                const SizedBox(width: 10),
+                artwork,
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(
+          tr('hero_desc'),
+          style: SLTheme.quicksand(
+            color: const Color(0xFFD9C9DD),
+            fontSize: 12,
+            height: 1.45,
           ),
-        )
-        .animate()
-        .fadeIn(duration: 320.ms)
-        .slideY(begin: 0.08, end: 0, delay: (index * 70).ms);
-  }
+        ),
+      ],
+    ),
+  );
 
-  Widget _buildCardBack(TarotSpreadSlot slot, {Key? key}) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = _isCompactWidth(constraints.maxWidth);
-        final radius = _panelRadiusFor(constraints.maxWidth);
-        return Container(
-          key: key,
-          margin: const EdgeInsets.only(top: 12),
-          constraints: BoxConstraints(minHeight: compact ? 170 : 198),
-          padding: EdgeInsets.fromLTRB(
-            compact ? 16 : 18,
-            compact ? 16 : 20,
-            compact ? 16 : 18,
-            compact ? 16 : 18,
+  Widget daily() {
+    final card = tarotDailyCard(DateTime.now());
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(color: gold.withValues(alpha: .34)),
+        boxShadow: [
+          BoxShadow(
+            color: ink.withValues(alpha: .04),
+            blurRadius: 13,
+            offset: const Offset(0, 7),
           ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF251B45), Color(0xFF141730)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: 0,
-                top: 0,
-                child: _buildTarotSticker(
-                  width: compact ? 42 : 54,
-                  height: compact ? 42 : 54,
-                  opacity: 0.92,
-                ),
-              ),
-              Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: compact ? constraints.maxWidth - 34 : 240,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: compact ? 12 : 14,
-                          vertical: compact ? 7 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          L10nService().translate(slot.labelKey),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: compact ? 12.5 : 13,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: compact ? 12 : 14),
-                      Text(
-                        L10nService().translate('tarot_tap_to_open'),
-                        textAlign: TextAlign.center,
-                        style: SLTheme.quicksand(
-                          color: Colors.white.withValues(alpha: 0.66),
-                          fontWeight: FontWeight.w700,
-                          fontSize: compact ? 12.5 : 13,
-                        ),
-                      ),
-                    ],
+        ],
+      ),
+      child: Row(
+        children: [
+          mini(card, 67),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('card_of_day'),
+                  style: SLTheme.quicksand(
+                    color: ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCardFront(
-    PickedCard pickedCard,
-    TarotSpreadSlot slot,
-    int index,
-  ) {
-    final reading = _personalizedReading?.cardFor(slot.id);
-    final palette = _cardPalette(pickedCard.card.name);
-    final meaning =
-        reading?.interpretation ??
-        (pickedCard.isReversed
-            ? pickedCard.card.reversedMeaning
-            : pickedCard.card.uprightMeaning);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 380;
-        final stacked = constraints.maxWidth < 362;
-        final radius = _panelRadiusFor(constraints.maxWidth);
-        final panelWidth = (constraints.maxWidth * 0.30).clamp(104.0, 120.0);
-        final orientationLabel = pickedCard.isReversed
-            ? L10nService().translate('tarot_reversed')
-            : L10nService().translate('tarot_upright');
-        final panel = Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: palette,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.06),
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.12),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-              Center(
-                child: Transform.rotate(
-                  angle: pickedCard.isReversed ? pi : 0,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      pickedCard.card.symbol,
-                      style: TextStyle(fontSize: stacked ? 56 : 52),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 10,
-                right: 10,
-                bottom: 12,
-                child: Text(
-                  orientationLabel,
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 3),
+                Text(
+                  card.localizedName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: compact ? 10.5 : 11,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-        final stackedPanel = ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 138),
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: palette,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withValues(alpha: 0.06),
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.12),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 14),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Transform.rotate(
-                          angle: pickedCard.isReversed ? pi : 0,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              pickedCard.card.symbol,
-                              style: const TextStyle(fontSize: 56),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          orientationLabel,
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: compact ? 10.5 : 11,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-
-        final details = Padding(
-          padding: EdgeInsets.all(stacked ? 14 : 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: stacked ? constraints.maxWidth - 28 : 220,
-                  ),
-                  child: _profileChip(
-                    L10nService().translate(slot.labelKey),
-                    const Color(0xFF6B5BFF),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                pickedCard.card.name,
-                maxLines: stacked ? null : 2,
-                overflow: stacked ? null : TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: compact ? 15.5 : 17,
-                ),
-              ),
-              if (reading != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  reading.headline,
-                  maxLines: stacked ? null : 3,
-                  overflow: stacked ? null : TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: const Color(0xFFFFC8DB),
+                    color: plum,
+                    fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    fontSize: compact ? 12.5 : 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tr('daily_note'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    color: muted,
+                    fontSize: 11,
                     height: 1.35,
                   ),
                 ),
-              ],
-              const SizedBox(height: 8),
-              Text(
-                meaning,
-                style: SLTheme.quicksand(
-                  color: Colors.white.withValues(alpha: 0.84),
-                  fontWeight: FontWeight.w600,
-                  fontSize: compact ? 13 : 14,
-                  height: 1.45,
-                ),
-              ),
-            ],
-          ),
-        );
-
-        return Container(
-          key: ValueKey('front_$index'),
-          margin: const EdgeInsets.only(top: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            color: Colors.white.withValues(alpha: 0.06),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(radius),
-            child: stacked
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [stackedPanel, details],
-                  )
-                : IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(width: panelWidth, child: panel),
-                        Expanded(child: details),
-                      ],
+                TextButton(
+                  key: const Key('tarot-daily-reading'),
+                  onPressed: () => start(card),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(44, 34),
+                  ),
+                  child: Text(
+                    tr('open_daily'),
+                    style: SLTheme.quicksand(
+                      color: plum,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _glowOrb(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 80,
-            spreadRadius: 12,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _glassPanel({required Widget child}) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          padding: EdgeInsets.all(_panelPaddingFor(constraints.maxWidth)),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              _panelRadiusFor(constraints.maxWidth),
-            ),
-            gradient: const LinearGradient(
-              colors: [Color(0x33FFFFFF), Color(0x14FFFFFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          ),
-          child: child,
-        );
-      },
-    );
-  }
-
-  Widget _miniCardBack({bool compact = false}) {
-    return Container(
-      width: compact ? 74 : 86,
-      height: compact ? 110 : 126,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(compact ? 20 : 24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5D4BFF), Color(0xFFFF5D8F)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: _buildTarotSticker(
-          width: compact ? 34 : 44,
-          height: compact ? 34 : 44,
-        ),
-      ),
-    );
-  }
-
-  Widget _profileChip(String text, Color color) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final compact = _isCompactWidth(screenWidth);
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: (compact ? screenWidth - 96 : 220.0).clamp(132.0, 260.0),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 10 : 12,
-        vertical: compact ? 5.5 : 7,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.32)),
-      ),
-      child: Text(
-        text,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
+  Widget topics() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        tr('themes'),
         style: SLTheme.quicksand(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: compact ? 10.5 : 11.5,
+          color: ink,
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
         ),
       ),
-    );
-  }
-
-  Widget _metricChip(String label, String value) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final compact = _isCompactWidth(screenWidth);
-    final maxChipWidth = compact ? ((screenWidth - 38) / 2) : 164.0;
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: compact ? 92 : 108,
-        maxWidth: maxChipWidth.clamp(120.0, 164.0),
+      const SizedBox(height: 7),
+      Text(
+        tr('topic_intro'),
+        style: SLTheme.quicksand(color: muted, fontSize: 12, height: 1.35),
       ),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 11 : 12,
-          vertical: compact ? 9 : 10,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w700,
-                fontSize: compact ? 10.5 : 11,
+      const SizedBox(height: 10),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final item in tarotTopics)
+            ChoiceChip(
+              label: Text(tr('topic_$item')),
+              selected: topic == item,
+              onSelected: (_) => setState(() => topic = item),
+              selectedColor: plum,
+              backgroundColor: surface,
+              labelStyle: SLTheme.quicksand(
+                color: topic == item ? surface : ink,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
-            const SizedBox(height: 4),
+        ],
+      ),
+    ],
+  );
+  Widget questionBox() => Container(
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: surface,
+      borderRadius: BorderRadius.circular(21),
+      border: Border.all(color: ink.withValues(alpha: .08)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tr('question'),
+          style: SLTheme.quicksand(
+            color: ink,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          key: const Key('tarot-question-field'),
+          controller: question,
+          maxLines: 2,
+          maxLength: 220,
+          style: SLTheme.quicksand(color: ink, fontSize: 14),
+          decoration: InputDecoration(
+            hintText: tr('question_hint'),
+            hintStyle: SLTheme.quicksand(color: muted, fontSize: 12),
+            filled: true,
+            fillColor: cream,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: gold.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr('question_${topic}_$promptIndex'),
+                style: SLTheme.quicksand(color: ink, fontSize: 13, height: 1.4),
+              ),
+              Wrap(
+                spacing: 10,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(
+                      () =>
+                          question.text = tr('question_${topic}_$promptIndex'),
+                    ),
+                    child: Text(tr('use_prompt')),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        setState(() => promptIndex = (promptIndex + 1) % 3),
+                    child: Text(tr('new_prompt')),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget spreads() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        tr('spreads'),
+        style: SLTheme.quicksand(
+          color: ink,
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      const SizedBox(height: 5),
+      Text(
+        tr('spread_hint'),
+        style: SLTheme.quicksand(color: muted, fontSize: 12),
+      ),
+      const SizedBox(height: 10),
+      ...[for (final item in tarotSpreads) spreadTile(item)],
+    ],
+  );
+  Widget spreadTile(TarotSpread item) {
+    final active = spread.id == item.id;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        key: ValueKey('tarot-spread-${item.id}'),
+        onTap: () => setState(() => spread = item),
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 170),
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: active ? plum.withValues(alpha: .1) : surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: active ? plum : ink.withValues(alpha: .08),
+              width: active ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: active ? plum : cream,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(
+                  active ? Icons.check_rounded : Icons.layers_outlined,
+                  color: active ? surface : plum,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: SLTheme.quicksand(
+                        color: ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      item.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        color: muted,
+                        fontSize: 11.5,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                fmt('spread_count', {'count': item.slots.length}),
+                style: SLTheme.quicksand(
+                  color: plum,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget howTo() => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: ink.withValues(alpha: .045),
+      borderRadius: BorderRadius.circular(19),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tr('how_it_works'),
+          style: SLTheme.quicksand(
+            color: ink,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            step('1', tr('themes')),
+            line(),
+            step('2', tr('spreads')),
+            line(),
+            step('3', tr('tap_reveal')),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          tr('guide_short'),
+          style: SLTheme.quicksand(color: muted, fontSize: 12, height: 1.4),
+        ),
+      ],
+    ),
+  );
+  Widget step(String num, String text) => Expanded(
+    child: Column(
+      children: [
+        Container(
+          width: 29,
+          height: 29,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: plum, shape: BoxShape.circle),
+          child: Text(
+            num,
+            style: SLTheme.quicksand(
+              color: const Color(0xFFFFFFFF),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          text,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: SLTheme.quicksand(
+            color: ink,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    ),
+  );
+  Widget line() => Container(
+    width: 13,
+    height: 1,
+    color: plum.withValues(alpha: .25),
+    margin: const EdgeInsets.only(bottom: 23),
+  );
+  Widget startButton() => SizedBox(
+    width: double.infinity,
+    height: 55,
+    child: FilledButton(
+      key: const Key('tarot-start-reading'),
+      onPressed: busy ? null : start,
+      style: FilledButton.styleFrom(
+        backgroundColor: plum,
+        foregroundColor: onPlum,
+        disabledBackgroundColor: plum.withValues(alpha: .4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17)),
+      ),
+      child: busy
+          ? SizedBox(
+              width: 21,
+              height: 21,
+              child: CircularProgressIndicator(strokeWidth: 2, color: surface),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.auto_awesome_rounded, size: 19),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    tr('begin'),
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    ),
+  );
+
+  Widget drawView() => scroll(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tr('pick_title'),
+          style: GoogleFonts.lora(
+            color: ink,
+            fontSize: 26,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          tr('pick_desc'),
+          style: SLTheme.quicksand(color: muted, fontSize: 13, height: 1.4),
+        ),
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                spread.title,
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
             Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              fmt('pick_progress', {
+                'picked': draws.length,
+                'total': spread.slots.length,
+              }),
               style: SLTheme.quicksand(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: compact ? 12.5 : 13,
+                color: plum,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        LinearProgressIndicator(
+          value: draws.length / spread.slots.length,
+          color: plum,
+          backgroundColor: plum.withValues(alpha: .1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        const SizedBox(height: 22),
+        LayoutBuilder(
+          builder: (context, c) {
+            final width = (c.maxWidth - 24) / 4;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 12,
+              children: [
+                for (var i = 0; i < 12; i++)
+                  Semantics(
+                    button: true,
+                    selected: chosen.contains(i),
+                    label: fmt('card_number', {'number': i + 1}),
+                    child: InkWell(
+                      key: Key('tarot-deck-$i'),
+                      onTap: draws.length >= spread.slots.length
+                          ? null
+                          : () => choose(i),
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: width,
+                        child: Stack(
+                          children: [
+                            Opacity(
+                              opacity: chosen.contains(i) ? 0.45 : 1.0,
+                              child: TarotArtwork(back: true, width: width),
+                            ),
+                            if (chosen.contains(i))
+                              Positioned.fill(
+                                child: Center(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: surface,
+                                    ),
+                                    child: Icon(
+                                      Icons.check_rounded,
+                                      color: plum,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+        if (draws.length == spread.slots.length) revealActions(),
+        Wrap(
+          spacing: 12,
+          children: [
+            TextButton.icon(
+              key: const Key('tarot-shuffle'),
+              onPressed: shuffle,
+              icon: const Icon(Icons.shuffle_rounded, size: 17),
+              label: Text(tr('shuffle')),
+            ),
+            TextButton(onPressed: setup, child: Text(tr('change_setup'))),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget revealActions() => Column(
+    children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: gold.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(17),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFF9B6A21),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                tr('draw_done'),
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
+      const SizedBox(height: 11),
+      SizedBox(
+        width: double.infinity,
+        height: 49,
+        child: FilledButton(
+          key: const Key('tarot-view-reading'),
+          onPressed: () => setState(() => phase = 2),
+          style: FilledButton.styleFrom(
+            backgroundColor: dark,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          child: Text(
+            tr('view_reading'),
+            style: SLTheme.quicksand(
+              color: const Color(0xFFFFFFFF),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 
-  Widget _facetTile(TarotReadingFacet facet) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final compact = _isCompactWidth(screenWidth);
+  Widget resultView() => scroll(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: saving ? null : setup,
+              icon: Icon(Icons.arrow_back_rounded, color: ink),
+            ),
+            Expanded(
+              child: Text(
+                tr('results'),
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: showGuide,
+              icon: Icon(Icons.info_outline_rounded, color: muted),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [dark, const Color(0xFF7658B8)]),
+            borderRadius: BorderRadius.circular(23),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr('topic_$topic'),
+                style: SLTheme.quicksand(
+                  color: gold,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                question.text.trim().isEmpty
+                    ? tr('no_question')
+                    : question.text.trim(),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  color: const Color(0xFFFFFFFF),
+                  fontSize: 17,
+                  height: 1.25,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                tr('reading_note'),
+                style: SLTheme.quicksand(
+                  color: Colors.white.withValues(alpha: .8),
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        ...[for (var i = 0; i < draws.length; i++) resultCard(i)],
+        noteBox(),
+        const SizedBox(height: 12),
+        resultActions(),
+      ],
+    ),
+  );
+  Widget resultCard(int index) {
+    final draw = draws[index], slot = spread.slots[index];
     return Container(
-      padding: EdgeInsets.all(compact ? 12 : 14),
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(compact ? 18 : 20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: ink.withValues(alpha: .07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _profileChip(facet.accent, const Color(0xFFFF7AAE)),
-          SizedBox(height: compact ? 7 : 8),
-          Text(
-            facet.title,
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: compact ? 14 : 15,
+          Row(
+            children: [
+              Container(
+                width: 25,
+                height: 25,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: plum.withValues(alpha: .1),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  (index + 1).toString(),
+                  style: SLTheme.quicksand(
+                    color: plum,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  tr('slot_$slot'),
+                  style: SLTheme.quicksand(
+                    color: ink,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Center(
+            child: Semantics(
+              button: !draw.revealed,
+              label: draw.revealed ? draw.card.localizedName : tr('tap_reveal'),
+              child: InkWell(
+                key: Key('tarot-reveal-$index'),
+                onTap: draw.revealed
+                    ? () => showCard(draw.card)
+                    : () => reveal(index),
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: reduceMotion ? 0 : 300),
+                  child: KeyedSubtree(
+                    key: ValueKey(draw.revealed),
+                    child: cardVisual(draw, width: 136),
+                  ),
+                ),
+              ),
             ),
           ),
-          SizedBox(height: compact ? 5 : 6),
-          Text(
-            facet.body,
-            style: SLTheme.quicksand(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontWeight: FontWeight.w600,
-              fontSize: compact ? 13 : 14,
-              height: 1.45,
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              draw.revealed ? draw.card.localizedName : tr('tap_reveal'),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lora(
+                color: ink,
+                fontSize: 21,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
+          if (draw.revealed) ...[
+            const SizedBox(height: 6),
+            Center(
+              child: Text(
+                '${draw.reversed ? tr('reversed') : tr('upright')} · ${draw.card.theme}',
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: muted,
+                  fontSize: 11,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            detail(tr('meaning'), draw.card.meaning(draw.reversed), plum),
+            detail(tr('position'), tr('slot_desc_$slot'), gold),
+            detail(tr('topic_lens'), tr('lens_$topic'), rose),
+            detail(tr('reflection'), draw.card.reflection, plum),
+            detail(
+              tr('action'),
+              '${draw.card.action} ${tr('topic_action_$topic')}',
+              gold,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  List<Color> _cardPalette(String cardName) {
-    if (cardName == 'The Sun' ||
-        cardName == 'The Star' ||
-        cardName == 'The World') {
-      return const [Color(0xFFFFB347), Color(0xFFFF6FA8)];
-    }
-    if (cardName == 'The Moon' || cardName == 'The High Priestess') {
-      return const [Color(0xFF5876FF), Color(0xFF8B5CFF)];
-    }
-    if (cardName == 'The Tower' ||
-        cardName == 'Death' ||
-        cardName == 'Three of Swords') {
-      return const [Color(0xFFFF6B6B), Color(0xFF8E2B5B)];
-    }
-    if (cardName == 'Temperance' ||
-        cardName == 'The Lovers' ||
-        cardName == 'Ace of Cups') {
-      return const [Color(0xFF3AC8C8), Color(0xFF6B5BFF)];
-    }
-    return const [Color(0xFF5D4BFF), Color(0xFFFF5D8F)];
+  Widget detail(String title, String text, Color color) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 4,
+          height: 34,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(5),
+          ),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: SLTheme.quicksand(
+                  color: muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                text,
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontSize: 13,
+                  height: 1.42,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+  Widget noteBox() => Container(
+    width: double.infinity,
+    margin: const EdgeInsets.only(top: 1),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: ink.withValues(alpha: .045),
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.lightbulb_outline_rounded, color: plum, size: 20),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            '${fmt('theme_label', {'topic': tr('topic_$topic')})} · ${tr('perspective')}',
+            style: SLTheme.quicksand(color: muted, fontSize: 12, height: 1.4),
+          ),
+        ),
+      ],
+    ),
+  );
+  Widget resultActions() => Column(
+    children: [
+      if (!allRevealed) ...[
+        TextButton.icon(
+          key: const Key('tarot-reveal-all'),
+          onPressed: revealAll,
+          icon: const Icon(Icons.auto_awesome_rounded),
+          label: Text(tr('reveal_all')),
+        ),
+        const SizedBox(height: 8),
+      ],
+
+      SizedBox(
+        width: double.infinity,
+        height: 51,
+        child: FilledButton.icon(
+          key: const Key('tarot-save-reading'),
+          onPressed: saving || !allRevealed ? null : openSave,
+          style: FilledButton.styleFrom(
+            backgroundColor: plum,
+            foregroundColor: onPlum,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          icon: const Icon(Icons.bookmark_add_outlined),
+          label: Text(
+            savedSessionId == sessionId ? tr('saved') : tr('save'),
+            style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+          ),
+        ),
+      ),
+      const SizedBox(height: 9),
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: setup,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(44, 48),
+                side: BorderSide(color: ink.withValues(alpha: .2)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Text(
+                tr('new_reading'),
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton(
+              key: const Key('tarot-restart-reading'),
+              onPressed: saving ? null : () => start(),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(44, 48),
+                side: BorderSide(color: plum.withValues(alpha: .35)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Text(
+                tr('start_over'),
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: plum,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+
+  Widget library() {
+    final q = search.text.trim().toLowerCase();
+    final cards = tarotCards.where((card) {
+      final okFilter =
+          filter == 'all' ||
+          (filter == 'major' && card.isMajor) ||
+          (filter != 'major' &&
+              filter != 'all' &&
+              !card.isMajor &&
+              card.suit.name == filter);
+      return okFilter &&
+          (q.isEmpty ||
+              card.localizedName.toLowerCase().contains(q) ||
+              card.theme.toLowerCase().contains(q) ||
+              card.suitName.toLowerCase().contains(q) ||
+              card.meaning(false).toLowerCase().contains(q) ||
+              card.meaning(true).toLowerCase().contains(q));
+    }).toList();
+    return scroll(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr('library_title'),
+            style: SLTheme.quicksand(
+              color: ink,
+              fontSize: 25,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            tr('library_desc'),
+            style: SLTheme.quicksand(color: muted, fontSize: 13, height: 1.45),
+          ),
+          const SizedBox(height: 15),
+          TextField(
+            controller: search,
+            onChanged: (_) => setState(() {}),
+            style: SLTheme.quicksand(color: ink, fontSize: 14),
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.search_rounded, color: plum),
+              hintText: tr('search'),
+              hintStyle: SLTheme.quicksand(color: muted, fontSize: 13),
+              filled: true,
+              fillColor: surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(17),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          filters(),
+          const SizedBox(height: 13),
+          if (cards.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(27),
+                child: Text(
+                  tr('no_results'),
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    color: muted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            )
+          else ...[
+            for (final card in cards) libraryTile(card),
+          ],
+        ],
+      ),
+    );
   }
+
+  Widget filters() => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        for (final item in [
+          'all',
+          'major',
+          'cups',
+          'wands',
+          'swords',
+          'pentacles',
+        ])
+          Padding(
+            padding: const EdgeInsets.only(right: 7),
+            child: ChoiceChip(
+              label: Text(
+                item == 'all'
+                    ? tr('all')
+                    : item == 'major'
+                    ? tr('major')
+                    : tr('suit_$item'),
+              ),
+              selected: filter == item,
+              onSelected: (_) => setState(() => filter = item),
+              selectedColor: plum,
+              backgroundColor: surface,
+              labelStyle: SLTheme.quicksand(
+                color: filter == item ? surface : ink,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(27),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+  Widget libraryTile(TarotCard card) {
+    return InkWell(
+      onTap: () => showCard(card),
+      borderRadius: BorderRadius.circular(19),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 9),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: ink.withValues(alpha: .07)),
+        ),
+        child: Row(
+          children: [
+            mini(card, 55),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    card.localizedName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      color: ink,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    card.theme,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      color: muted,
+                      fontSize: 11,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: muted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget journalView() => scroll(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tr('saved_readings'),
+          style: SLTheme.quicksand(
+            color: ink,
+            fontSize: 25,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          fmt('saved_count', {'count': journal.length}),
+          style: SLTheme.quicksand(color: muted, fontSize: 13),
+        ),
+        const SizedBox(height: 16),
+        if (journal.isEmpty)
+          emptyJournal()
+        else ...[
+          for (final item in journal) journalTile(item),
+        ],
+      ],
+    ),
+  );
+  Widget emptyJournal() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(20, 27, 20, 27),
+    decoration: BoxDecoration(
+      color: surface,
+      borderRadius: BorderRadius.circular(25),
+      border: Border.all(color: ink.withValues(alpha: .07)),
+    ),
+    child: Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: plum.withValues(alpha: .1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.bookmark_border_rounded, color: plum, size: 29),
+        ),
+        const SizedBox(height: 15),
+        Text(
+          tr('journal_empty'),
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(
+            color: ink,
+            fontSize: 20,
+            height: 1.12,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          tr('journal_empty_desc'),
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(color: muted, fontSize: 13, height: 1.4),
+        ),
+        const SizedBox(height: 13),
+        Text(
+          tr('journal_storage'),
+          textAlign: TextAlign.center,
+          style: SLTheme.quicksand(color: muted, fontSize: 11, height: 1.35),
+        ),
+      ],
+    ),
+  );
+  Widget journalTile(TarotSession item) {
+    final date =
+        '${item.date.day.toString().padLeft(2, '0')}/${item.date.month.toString().padLeft(2, '0')}/${item.date.year}';
+    return InkWell(
+      onTap: () => showSession(item),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 9),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: ink.withValues(alpha: .07)),
+        ),
+        child: Row(
+          children: [
+            mini(item.draws.first.card, 54),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('topic_${item.topic}'),
+                    style: SLTheme.quicksand(
+                      color: plum,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    fmt('reading_date', {'date': date}),
+                    style: SLTheme.quicksand(color: muted, fontSize: 11),
+                  ),
+                  if (item.note.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        item.note,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTheme.quicksand(color: ink, fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () => deleteSession(item),
+              tooltip: tr('delete_entry'),
+              icon: Icon(Icons.delete_outline_rounded, color: muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget cardVisual(TarotDraw draw, {bool compact = false, double? width}) {
+    final w = width ?? (compact ? 100.0 : 132.0);
+    return SizedBox(
+      width: w,
+      height: w * 1.54,
+      child: Stack(
+        children: [
+          TarotArtwork(card: draw.card, back: !draw.revealed, width: w),
+          if (draw.revealed)
+            Positioned(
+              left: 6,
+              right: 6,
+              bottom: 11,
+              child: Text(
+                draw.card.localizedName,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  color: const Color(0xFF40375D),
+                  fontSize: w < 75 ? 8 : 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget mini(TarotCard card, double width) =>
+      cardVisual(TarotDraw(card, revealed: true), compact: true, width: width);
+  Future<void> openSave() async {
+    if (!allRevealed || saving) return;
+    final owner = uid, house = widget.houseId, readingId = sessionId;
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(29)),
+      ),
+      builder: (sheet) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheet).bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: .16),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  tr('save_prompt'),
+                  style: SLTheme.quicksand(
+                    color: ink,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  tr('perspective'),
+                  style: SLTheme.quicksand(color: muted, fontSize: 13),
+                ),
+                const SizedBox(height: 13),
+                TextField(
+                  key: const Key('tarot-note-field'),
+                  controller: note,
+                  minLines: 3,
+                  maxLines: 5,
+                  maxLength: 1200,
+                  style: SLTheme.quicksand(color: ink, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: tr('note_hint'),
+                    hintStyle: SLTheme.quicksand(color: muted),
+                    filled: true,
+                    fillColor: surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(19),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    key: const Key('tarot-save-note'),
+                    onPressed: () => Navigator.pop(sheet, note.text.trim()),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: plum,
+                      foregroundColor: onPlum,
+                      minimumSize: const Size(48, 51),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      tr('save'),
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (result == null || !sameScope(owner, house) || sessionId != readingId) {
+      return;
+    }
+    await saveSession(result);
+  }
+
+  Future<void> saveSession(String reflection) async {
+    final owner = uid, house = widget.houseId;
+    if (owner.isEmpty || !sameScope(owner, house)) {
+      snack(tr('journal_anonymous'));
+      return;
+    }
+    final session = TarotSession(
+      id: sessionId,
+      date: sessionDate,
+      topic: topic,
+      spreadId: spread.id,
+      question: question.text.trim(),
+      draws: List.of(draws),
+      note: reflection,
+    );
+    setState(() => saving = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!sameScope(owner, house)) return;
+      final saved = await TarotJournalStore.save(prefs, owner, house, session);
+      if (!sameScope(owner, house)) return;
+      setState(() {
+        journal = saved;
+        savedSessionId = session.id;
+      });
+      snack(tr('saved'));
+    } catch (_) {
+      if (sameScope(owner, house)) snack(tr('save_failed'));
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> deleteSession(TarotSession item) async {
+    final owner = uid, house = widget.houseId;
+    if (owner.isEmpty || !sameScope(owner, house)) return;
+    final ok =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: Text(
+              tr('delete_confirm'),
+              style: SLTheme.quicksand(color: ink, fontWeight: FontWeight.w900),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, false),
+                child: Text(tr('cancel')),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialog, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: plum,
+                  foregroundColor: onPlum,
+                ),
+                child: Text(tr('confirm')),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!ok || !sameScope(owner, house)) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!sameScope(owner, house)) return;
+      final rest = await TarotJournalStore.delete(prefs, owner, house, item.id);
+      if (sameScope(owner, house)) setState(() => journal = rest);
+    } catch (_) {
+      if (sameScope(owner, house)) snack(tr('save_failed'));
+    }
+  }
+
+  Future<void> showCard(TarotCard card) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(29)),
+      ),
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 25),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: mini(card, 87)),
+              const SizedBox(height: 13),
+              Center(
+                child: Text(
+                  card.localizedName,
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    color: ink,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Center(
+                child: Text(
+                  card.theme,
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    color: plum,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 17),
+              detail(tr('meaning_up'), card.meaning(false), plum),
+              detail(tr('meaning_rev'), card.meaning(true), rose),
+              detail(tr('try_prompt'), card.reflection, gold),
+              detail(tr('small_step'), card.action, plum),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> showSession(TarotSession item) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(29)),
+      ),
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 17, 20, 25),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr('saved_readings'),
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                tr('topic_${item.topic}'),
+                style: SLTheme.quicksand(
+                  color: plum,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (item.question.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    item.question,
+                    style: SLTheme.quicksand(
+                      color: ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 13),
+              for (var i = 0; i < item.draws.length; i++)
+                detail(
+                  tr(
+                    'slot_${item.spread.slots[min(i, item.spread.slots.length - 1)]}',
+                  ),
+                  item.draws[i].card.meaning(item.draws[i].reversed),
+                  plum,
+                ),
+              if (item.note.trim().isNotEmpty)
+                detail(tr('note'), item.note, gold),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> showGuide() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(29)),
+      ),
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: .16),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 17),
+              Text(
+                tr('guide_title'),
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                tr('guide_intro'),
+                style: SLTheme.quicksand(
+                  color: muted,
+                  fontSize: 13,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 17),
+              guideItem(
+                Icons.help_outline_rounded,
+                tr('guide_question_title'),
+                tr('guide_question_body'),
+              ),
+              guideItem(
+                Icons.compare_arrows_rounded,
+                tr('guide_orientation_title'),
+                tr('guide_orientation_body'),
+              ),
+              guideItem(
+                Icons.layers_outlined,
+                tr('guide_deck_title'),
+                tr('guide_deck_body'),
+              ),
+              guideItem(
+                Icons.edit_note_rounded,
+                tr('guide_reflect_title'),
+                tr('guide_reflect_body'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  setState(() => tab = _TarotTab.library);
+                },
+                child: Text(
+                  tr('browse'),
+                  style: SLTheme.quicksand(
+                    color: plum,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget guideItem(IconData icon, String title, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: plum.withValues(alpha: .1),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(icon, color: plum, size: 20),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: SLTheme.quicksand(
+                  color: ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                text,
+                style: SLTheme.quicksand(
+                  color: muted,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -1,11 +1,12 @@
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui' as ui;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -15,29 +16,43 @@ import '../../../utils/services/location_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/love_wheel_service.dart';
 import 'package:soullocket_app/widgets/sl_toast.dart';
+import 'wheel_options_editor.dart';
+import 'wheel_stage.dart';
 
 class WheelScreen extends StatefulWidget {
   final String houseId;
+  final DatabaseReference? database;
+  final LoveWheelService? service;
 
-  const WheelScreen({super.key, required this.houseId});
+  const WheelScreen({super.key, required this.houseId})
+    : database = null,
+      service = null;
+
+  @visibleForTesting
+  const WheelScreen.forTesting({
+    super.key,
+    required this.houseId,
+    required this.database,
+    required this.service,
+  });
 
   @override
   State<WheelScreen> createState() => _WheelScreenState();
 }
-
 class _WheelScreenState extends State<WheelScreen>
     with SingleTickerProviderStateMixin {
   static const Duration _restaurantFetchTimeout = Duration(seconds: 12);
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  final LoveWheelService _wheelService = LoveWheelService();
+  late final DatabaseReference _dbRef =
+      widget.database ?? FirebaseDatabase.instance.ref();
+  late final LoveWheelService _wheelService =
+      widget.service ?? LoveWheelService();
   StreamSubscription<DatabaseEvent>? _wheelSub;
-  StreamSubscription<List<Map<String, dynamic>>>? _historySub;
 
   List<String> _items = [
     L10nService().translate('util_ainucm_2b8319'),
     L10nService().translate('util_airabt_f0a676'),
     L10nService().translate('util_ailaunh_38cac1'),
-    L10nService().translate('util_aigit_48460b')
+    L10nService().translate('util_aigit_48460b'),
   ];
   final TextEditingController _itemController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -50,22 +65,27 @@ class _WheelScreenState extends State<WheelScreen>
   Animation<double>? _spinAnimation;
   double _currentAngle = 0;
   int? _selectedIndex;
+  int? _spinTargetIndex;
+  List<String> _spinItems = const [];
+  List<String>? _pendingItems;
   List<_WheelHistoryEntry> _history = const [];
 
   @override
   void initState() {
     super.initState();
-    _spinController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 6000),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _handleSpinCompleted();
-        }
-      });
+    _spinController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 3800),
+        )..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            _handleSpinCompleted();
+          }
+        });
     _itemController.text = _items.join('\n');
     _loadWheelData();
-    _listenToHistory();
+    unawaited(_loadLocalHistory());
+    unawaited(_migrateLegacyHistory());
   }
 
   void _loadWheelData() {
@@ -74,25 +94,27 @@ class _WheelScreenState extends State<WheelScreen>
         .child('houses/${widget.houseId}/wheel_items')
         .onValue
         .listen((event) {
-      final parsed = _parseItems(event.snapshot.value);
-      if (parsed == null) return;
-      if (mounted) {
-        setState(() {
-          _items = parsed;
-          if (_items.isEmpty) {
-            _result = '';
-            _selectedIndex = null;
-          } else if (_selectedIndex != null &&
-              _selectedIndex! >= _items.length) {
-            _selectedIndex = null;
-          }
-          if (!_focusNode.hasFocus) {
-            final newText = _items.join('\n');
-            if (_itemController.text != newText) {
-              _itemController.text = newText;
-            }
-          }
+          final parsed = _parseItems(event.snapshot.value);
+          if (parsed == null) return;
+          _applyItems(parsed);
         });
+  }
+
+  void _applyItems(List<String> items) {
+    if (!mounted) return;
+    if (_isSpinning || _isFetchingRestaurants) {
+      _pendingItems = List<String>.unmodifiable(items);
+      return;
+    }
+    setState(() {
+      if (!listEquals(_items, items)) {
+        _result = '';
+        _selectedIndex = null;
+      }
+      _items = items;
+      if (!_focusNode.hasFocus) {
+        final newText = _items.join('\n');
+        if (_itemController.text != newText) _itemController.text = newText;
       }
     });
   }
@@ -126,36 +148,39 @@ class _WheelScreenState extends State<WheelScreen>
     await _dbRef.child('houses/${widget.houseId}/wheel_items').set(_items);
   }
 
-  void _listenToHistory() {
-    _historySub?.cancel();
-    _historySub = _wheelService.listenToWheelHistory(widget.houseId).listen((
-      records,
-    ) {
-      if (!mounted) return;
-      setState(() {
-        _history =
-            records.map(_WheelHistoryEntry.fromMap).toList(growable: false);
-      });
+  Future<void> _loadLocalHistory() async {
+    final records = await _wheelService.loadLocalWheelHistory(widget.houseId);
+    if (!mounted) return;
+    setState(() {
+      _history = records
+          .map(_WheelHistoryEntry.fromMap)
+          .toList(growable: false);
     });
   }
 
+  Future<void> _migrateLegacyHistory() async {
+    await _wheelService.clearLegacyServerHistory(widget.houseId);
+    if (mounted) await _loadLocalHistory();
+  }
+
   void _onTextChanged(String text) {
+    if (_isSpinning || _isFetchingRestaurants) return;
     if (_debounce?.isActive ?? false) _debounce!.cancel();
+    final newItems = text
+        .split('\n')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+    _applyItems(newItems);
     _debounce = Timer(const Duration(milliseconds: 800), () async {
-      final newItems = text
-          .split('\n')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
       if (!mounted) return;
-      setState(() {
-        _items = newItems;
-      });
       await _saveWheelData();
     });
   }
 
   Future<void> _fetchNearbyRestaurants() async {
+    if (_isSpinning || _isFetchingRestaurants) return;
+    _debounce?.cancel();
     setState(() {
       _isFetchingRestaurants = true;
     });
@@ -166,19 +191,23 @@ class _WheelScreenState extends State<WheelScreen>
       }
 
       if (!mounted) return;
-      final hasPerm =
-          await LocationService().requestPermission(context: context);
+      final hasPerm = await LocationService().requestPermission(
+        context: context,
+      );
       if (!hasPerm) {
         throw Exception(L10nService().translate('util_quyntruycp_d7e682'));
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
-      const apiKey =
-          String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
+      const apiKey = String.fromEnvironment(
+        'GOOGLE_MAPS_API_KEY',
+        defaultValue: '',
+      );
       List<String> newItems = [];
 
       if (apiKey.isNotEmpty) {
@@ -207,9 +236,11 @@ class _WheelScreenState extends State<WheelScreen>
         }
       } else {
         // Fallback to OpenStreetMap Overpass API if no Google Maps API key is configured
-        final overpassUrl =
-            Uri.parse('https://overpass-api.de/api/interpreter');
-        final query = '''
+        final overpassUrl = Uri.parse(
+          'https://overpass-api.de/api/interpreter',
+        );
+        final query =
+            '''
           [out:json];
           (
             node["amenity"="restaurant"](around:1500,${position.latitude},${position.longitude});
@@ -238,51 +269,71 @@ class _WheelScreenState extends State<WheelScreen>
 
       if (newItems.isNotEmpty) {
         if (!mounted) return;
+        _pendingItems = null;
         setState(() {
           _items = newItems;
           _itemController.text = newItems.join('\n');
         });
         await _saveWheelData();
         if (!mounted) return;
-        SLToast.success(context, L10nService().format('ui_utilities_found_value1_eateries_near_you_fd7a0d', {'value1': newItems.length}));
+        SLToast.success(
+          context,
+          L10nService().format(
+            'ui_utilities_found_value1_eateries_near_you_fd7a0d',
+            {'value1': newItems.length},
+          ),
+        );
       } else {
         throw Exception(L10nService().translate('util_khngtmthyq_bdb7de'));
       }
     } catch (_) {
       if (mounted) {
-        SLToast.error(context, L10nService().translate('util_khngtmcqun_717598'));
+        SLToast.error(
+          context,
+          L10nService().translate('util_khngtmcqun_717598'),
+        );
       }
     } finally {
       if (mounted) {
         setState(() {
           _isFetchingRestaurants = false;
         });
+        final pendingItems = _pendingItems;
+        _pendingItems = null;
+        if (pendingItems != null) _applyItems(pendingItems);
       }
     }
   }
 
   Future<void> _spin() async {
-    if (_items.length < 2 || _spinController.isAnimating || _isSpinning) {
+    if (_items.length < 2 ||
+        _spinController.isAnimating ||
+        _isSpinning ||
+        _isFetchingRestaurants) {
       return;
     }
 
     _focusNode.unfocus();
+    HapticFeedback.mediumImpact();
     setState(() {
       _isSpinning = true;
       _result = '';
       _selectedIndex = null;
+      _spinTargetIndex = null;
+      _spinItems = List<String>.unmodifiable(_items);
     });
 
     try {
-      final itemsSnapshot = List<String>.from(_items, growable: false);
+      final itemsSnapshot = _spinItems;
       final targetIndex = await _wheelService.spinTheWheel(
         widget.houseId,
         itemsSnapshot,
       );
       if (!mounted || itemsSnapshot.isEmpty) return;
+      _spinTargetIndex = targetIndex;
 
       final rand = Random();
-      final spins = 10 + rand.nextInt(10);
+      final spins = 7 + rand.nextInt(6);
       final sweep = 2 * pi / itemsSnapshot.length;
       final pointerAngle =
           (targetIndex * sweep) + sweep * (0.2 + rand.nextDouble() * 0.6);
@@ -291,12 +342,13 @@ class _WheelScreenState extends State<WheelScreen>
       final delta = _normalizeAngle(targetNormalized - currentNormalized);
       final endAngle = _currentAngle + spins * 2 * pi + delta;
 
-      _spinAnimation = Tween<double>(
-        begin: _currentAngle,
-        end: endAngle,
-      ).animate(
-        CurvedAnimation(parent: _spinController, curve: Curves.easeOutQuart),
-      );
+      _spinAnimation = Tween<double>(begin: _currentAngle, end: endAngle)
+          .animate(
+            CurvedAnimation(
+              parent: _spinController,
+              curve: Curves.easeOutQuart,
+            ),
+          );
 
       _spinController.forward(from: 0);
     } catch (e) {
@@ -304,6 +356,9 @@ class _WheelScreenState extends State<WheelScreen>
       setState(() {
         _isSpinning = false;
       });
+      final pendingItems = _pendingItems;
+      _pendingItems = null;
+      if (pendingItems != null) _applyItems(pendingItems);
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: L10nService().translate('util_chathquayl_0d5dc0'),
@@ -320,7 +375,7 @@ class _WheelScreenState extends State<WheelScreen>
   void _handleSpinCompleted() {
     final angle = _spinAnimation?.value ?? _currentAngle;
     _currentAngle = angle;
-    if (_items.isEmpty) {
+    if (_spinItems.isEmpty) {
       if (mounted) {
         setState(() {
           _isSpinning = false;
@@ -330,13 +385,23 @@ class _WheelScreenState extends State<WheelScreen>
       }
       return;
     }
-    final idx = _selectedIndexForAngle(angle, _items.length);
+    final idx =
+        _spinTargetIndex ?? _selectedIndexForAngle(angle, _spinItems.length);
     if (mounted) {
       setState(() {
         _isSpinning = false;
         _selectedIndex = idx;
-        _result = _items[idx];
+        _result = _spinItems[idx];
+        final pendingItems = _pendingItems;
+        _pendingItems = null;
+        if (pendingItems != null && !listEquals(pendingItems, _spinItems)) {
+          _items = pendingItems;
+          _selectedIndex = null;
+          _itemController.text = pendingItems.join('\n');
+        }
       });
+      HapticFeedback.heavyImpact();
+      unawaited(_loadLocalHistory());
     }
   }
 
@@ -359,7 +424,6 @@ class _WheelScreenState extends State<WheelScreen>
   @override
   void dispose() {
     _wheelSub?.cancel();
-    _historySub?.cancel();
     _debounce?.cancel();
     _spinController.dispose();
     _itemController.dispose();
@@ -372,7 +436,9 @@ class _WheelScreenState extends State<WheelScreen>
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: SLTheme.appBar(
-          context, L10nService().translate('util_vngquaynhm_856e66')),
+        context,
+        L10nService().translate('util_vngquaynhm_856e66'),
+      ),
       body: SLTheme.background(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -397,196 +463,36 @@ class _WheelScreenState extends State<WheelScreen>
   }
 
   Widget _buildInputArea() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: SLRadius.lgAll,
-        border: Border.all(
-          color: SLTheme.primary.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: SLTheme.primary.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding:
-                const EdgeInsets.only(left: 16, top: 12, right: 16, bottom: 10),
-            decoration: BoxDecoration(
-              color: SLTheme.primary.withValues(alpha: 0.05),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  L10nService().translate('util_nhpcclachn_bd1e90'),
-                  style: SLTheme.quicksand(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: SLTheme.primary,
-                  ),
-                ),
-                GestureDetector(
-                  onTap:
-                      _isFetchingRestaurants ? null : _fetchNearbyRestaurants,
-                  child: Row(
-                    children: [
-                      if (_isFetchingRestaurants)
-                        const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(SLTheme.primary),
-                          ),
-                        )
-                      else
-                        const Icon(Icons.restaurant_menu,
-                            color: SLTheme.primary, size: 16),
-                      SLSpacing.w4,
-                      Text(
-                        L10nService().translate('util_tmqungny_6f19d7'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: SLTheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextField(
-            controller: _itemController,
-            focusNode: _focusNode,
-            maxLines: 5,
-            minLines: 3,
-            style: SLTheme.quicksand(
-              color: SLTheme.textMain,
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-            decoration: InputDecoration(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: InputBorder.none,
-              hintText: context.tr('ui_utilities_for_example_who_cooks_who_washes_the_85f0e7'),
-              hintStyle: SLTheme.quicksand(
-                color: SLTheme.textMuted.withValues(alpha: 0.5),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            onChanged: _onTextChanged,
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: WheelOptionsEditor(
+        controller: _itemController,
+        focusNode: _focusNode,
+        onChanged: _onTextChanged,
+        readOnly: _isSpinning || _isFetchingRestaurants,
+        isFetchingRestaurants: _isFetchingRestaurants,
+        onFindRestaurants: _isFetchingRestaurants || _isSpinning
+            ? null
+            : _fetchNearbyRestaurants,
       ),
     );
   }
 
   Widget _buildWheelArea() {
+    final wheelItems = _isSpinning && _spinItems.isNotEmpty
+        ? _spinItems
+        : _items;
+    final canSpin =
+        _items.length >= 2 && !_isSpinning && !_isFetchingRestaurants;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final size = min(constraints.maxWidth, 340.0);
-          return Center(
-            child: Container(
-              width: size + 20,
-              height: size + 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.9),
-                boxShadow: [
-                  BoxShadow(
-                    color: SLTheme.primary.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: SizedBox(
-                  width: size,
-                  height: size,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _spinController,
-                        builder: (context, child) {
-                          final angle = _spinAnimation?.value ?? _currentAngle;
-                          return Transform.rotate(
-                            angle: angle,
-                            child: SizedBox.expand(
-                              child: CustomPaint(
-                                painter: _WheelPainter(
-                                    items: _items,
-                                    selectedIndex: _selectedIndex),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      Positioned(
-                        top: 0,
-                        child: _Pointer(),
-                      ),
-                      GestureDetector(
-                        onTap:
-                            (_items.length >= 2 && !_spinController.isAnimating)
-                                ? _spin
-                                : null,
-                        child: Container(
-                          width: size * 0.22,
-                          height: size * 0.22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              context.tr('ui_utilities_spin_962324'),
-                              style: SLTheme.quicksand(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: SLTheme.primary,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: WheelStage(
+        items: wheelItems,
+        rotation: _spinController,
+        angle: () => _spinAnimation?.value ?? _currentAngle,
+        spinning: _isSpinning,
+        selectedIndex: _isSpinning ? null : _selectedIndex,
+        onSpin: canSpin ? _spin : null,
       ),
     );
   }
@@ -599,17 +505,20 @@ class _WheelScreenState extends State<WheelScreen>
             animation: _spinController,
             builder: (context, child) {
               final angle = _spinAnimation?.value ?? _currentAngle;
-              final idx = _selectedIndexForAngle(angle, _items.length);
-              final currentItem = _items.isNotEmpty ? _items[idx] : '';
+              final idx = _selectedIndexForAngle(angle, _spinItems.length);
+              final currentItem = _spinItems.isNotEmpty ? _spinItems[idx] : '';
               return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: SLTheme.primary.withValues(alpha: 0.3),
-                      width: 1.5),
+                    color: SLTheme.primary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: SLTheme.primary.withValues(alpha: 0.15),
@@ -636,47 +545,52 @@ class _WheelScreenState extends State<WheelScreen>
           )
         else if (_result.isNotEmpty)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFB3D9), SLTheme.primary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: SLTheme.primary.withValues(alpha: 0.4),
-                  blurRadius: 16,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 16,
                 ),
-              ],
-            ),
-            child: Text(
-              '🎉 $_result 🎉',
-              style: SLTheme.quicksand(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                shadows: [
-                  const Shadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFB3D9), SLTheme.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          )
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: SLTheme.primary.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '🎉 $_result 🎉',
+                  style: SLTheme.quicksand(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    shadows: [
+                      const Shadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
               .animate(key: ValueKey(_result))
               .scale(
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.easeOutBack)
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOutBack,
+              )
               .shimmer(
-                  duration: const Duration(milliseconds: 1500),
-                  color: Colors.white.withValues(alpha: 0.6))
+                duration: const Duration(milliseconds: 1500),
+                color: Colors.white.withValues(alpha: 0.6),
+              )
               .elevation(duration: const Duration(milliseconds: 600)),
         SLSpacing.h20,
         Padding(
@@ -684,7 +598,10 @@ class _WheelScreenState extends State<WheelScreen>
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _items.length < 2 || _isSpinning ? null : _spin,
+              onPressed:
+                  _items.length < 2 || _isSpinning || _isFetchingRestaurants
+                  ? null
+                  : _spin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
                 disabledBackgroundColor: SLTheme.primary.withValues(alpha: 0.5),
@@ -771,8 +688,10 @@ class _WheelScreenState extends State<WheelScreen>
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(999),
@@ -781,7 +700,7 @@ class _WheelScreenState extends State<WheelScreen>
                   ),
                 ),
                 child: Text(
-                  '${_history.length}/5',
+                  '${_history.length}/1',
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
@@ -799,8 +718,9 @@ class _WheelScreenState extends State<WheelScreen>
               decoration: BoxDecoration(
                 color: SLTheme.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(18),
-                border:
-                    Border.all(color: SLTheme.primary.withValues(alpha: 0.12)),
+                border: Border.all(
+                  color: SLTheme.primary.withValues(alpha: 0.12),
+                ),
               ),
               child: Text(
                 L10nService().translate('util_chaclchsqu_9e0f48'),
@@ -863,8 +783,9 @@ class _WheelScreenState extends State<WheelScreen>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: SLTheme.primary
-                      .withValues(alpha: index == 0 ? 0.18 : 0.1),
+                  color: SLTheme.primary.withValues(
+                    alpha: index == 0 ? 0.18 : 0.1,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -916,16 +837,22 @@ class _WheelScreenState extends State<WheelScreen>
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF0F6),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                      color: SLTheme.primary.withValues(alpha: 0.18)),
+                    color: SLTheme.primary.withValues(alpha: 0.18),
+                  ),
                 ),
                 child: Text(
-                  L10nScope.of(context).format('ui_utilities_value1_items_1acb61', {'value1': entry.options.length}),
+                  L10nScope.of(context).format(
+                    'ui_utilities_value1_items_1acb61',
+                    {'value1': entry.options.length},
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
@@ -952,7 +879,8 @@ class _WheelScreenState extends State<WheelScreen>
               for (var i = 0; i < entry.options.length; i++)
                 _buildHistoryOptionChip(
                   label: entry.options[i],
-                  isWinner: entry.selectedIndex == i ||
+                  isWinner:
+                      entry.selectedIndex == i ||
                       (entry.selectedIndex == null &&
                           entry.options[i] == entry.resultText),
                 ),
@@ -1005,7 +933,6 @@ class _WheelScreenState extends State<WheelScreen>
     );
   }
 }
-
 class _WheelHistoryEntry {
   final String id;
   final String resultText;
@@ -1025,9 +952,9 @@ class _WheelHistoryEntry {
     final rawOptions = data['options'];
     final options = rawOptions is List
         ? rawOptions
-            .map((item) => item?.toString().trim() ?? '')
-            .where((item) => item.isNotEmpty)
-            .toList(growable: false)
+              .map((item) => item?.toString().trim() ?? '')
+              .where((item) => item.isNotEmpty)
+              .toList(growable: false)
         : const <String>[];
 
     return _WheelHistoryEntry(
@@ -1054,177 +981,4 @@ class _WheelHistoryEntry {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '');
   }
-}
-
-class _WheelPainter extends CustomPainter {
-  final List<String> items;
-  final int? selectedIndex;
-
-  _WheelPainter({required this.items, required this.selectedIndex});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = min(size.width, size.height) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    final bgPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    if (items.isEmpty) {
-      final borderPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.18)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3;
-      canvas.drawCircle(center, radius, borderPaint);
-      return;
-    }
-
-    final count = items.length;
-    final sweep = 2 * pi / count;
-    const startAngle = -pi / 2;
-
-    final colorPalette = [
-      const Color(0xFFFF85B3),
-      const Color(0xFF81D4FA),
-      const Color(0xFFFFD54F),
-      const Color(0xFFB388FF),
-      const Color(0xFF81C784),
-      const Color(0xFFFFB74D),
-      const Color(0xFF4FC3F7),
-      const Color(0xFFF06292),
-      const Color(0xFF4DB6AC),
-    ];
-
-    for (var i = 0; i < count; i++) {
-      final baseColor = count <= colorPalette.length
-          ? colorPalette[i % colorPalette.length]
-          : HSVColor.fromAHSV(1, (i * (360 / count)) % 360, 0.55, 1.0)
-              .toColor();
-
-      final paint = Paint()
-        ..color = baseColor.withValues(alpha: 0.9)
-        ..style = PaintingStyle.fill;
-
-      canvas.drawArc(rect, startAngle + i * sweep, sweep, true, paint);
-
-      final dividerPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.85)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3;
-      canvas.drawArc(rect, startAngle + i * sweep, sweep, true, dividerPaint);
-
-      if (selectedIndex != null && selectedIndex == i) {
-        final highlightPaint = Paint()
-          ..color = Colors.white.withValues(alpha: 0.85)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6;
-        canvas.drawArc(rect, startAngle + i * sweep + 0.02, sweep - 0.04, true,
-            highlightPaint);
-      }
-
-      final mid = startAngle + (i + 0.5) * sweep;
-      final labelPos = Offset(
-        center.dx + cos(mid) * radius * 0.62,
-        center.dy + sin(mid) * radius * 0.62,
-      );
-
-      final tp = TextPainter(
-        text: TextSpan(
-          text: items[i],
-          style: SLTheme.quicksand(
-            fontSize: max(11, min(14, 240 / count)),
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                  color: Colors.black.withValues(alpha: 0.35), blurRadius: 10),
-            ],
-          ),
-        ),
-        textAlign: TextAlign.center,
-        textDirection: ui.TextDirection.ltr,
-        maxLines: 2,
-        ellipsis: '…',
-      )..layout(maxWidth: radius * 0.78);
-
-      tp.paint(canvas, labelPos - Offset(tp.width / 2, tp.height / 2));
-    }
-
-    final ringPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        center,
-        radius,
-        [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.4),
-        ],
-        [0.6, 1.0],
-      )
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10;
-    canvas.drawCircle(center, radius - 5, ringPaint);
-
-    final outerBorderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6;
-    canvas.drawCircle(center, radius - 3, outerBorderPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _WheelPainter oldDelegate) {
-    return oldDelegate.items != items ||
-        oldDelegate.selectedIndex != selectedIndex;
-  }
-}
-
-class _Pointer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.92),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 14,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.favorite, color: Color(0xFFFC4A1A), size: 18),
-        ),
-        SLSpacing.gapH(2),
-        CustomPaint(
-          size: const Size(22, 16),
-          painter: _TrianglePainter(),
-        ),
-      ],
-    );
-  }
-}
-
-class _TrianglePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(size.width / 2, size.height)
-      ..lineTo(0, 0)
-      ..lineTo(size.width, 0)
-      ..close();
-    final paint = Paint()..color = Colors.white.withValues(alpha: 0.92);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

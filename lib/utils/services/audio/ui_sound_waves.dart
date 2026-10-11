@@ -1,12 +1,23 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-enum UiSoundCue { click, success, saved, paired, sent }
+enum UiSoundCue {
+  click,
+  success,
+  saved,
+  paired,
+  sent,
+  received,
+  reward,
+  result,
+  flip,
+  uploadComplete,
+}
 
 /// Âm tổng hợp cục bộ: không tải asset, không dùng mạng hoặc ghi âm người dùng.
 abstract final class UiSoundWaves {
   static const sampleRate = 22050;
-  static final _cache = <UiSoundCue, Uint8List>{};
+  static final _cache = <String, Uint8List>{};
 
   static Duration durationFor(UiSoundCue cue) => switch (cue) {
     UiSoundCue.click => const Duration(milliseconds: 75),
@@ -14,14 +25,32 @@ abstract final class UiSoundWaves {
     UiSoundCue.saved => const Duration(milliseconds: 300),
     UiSoundCue.paired => const Duration(milliseconds: 440),
     UiSoundCue.sent => const Duration(milliseconds: 130),
+    UiSoundCue.received => const Duration(milliseconds: 180),
+    UiSoundCue.reward => const Duration(milliseconds: 420),
+    UiSoundCue.result => const Duration(milliseconds: 360),
+    UiSoundCue.flip => const Duration(milliseconds: 105),
+    UiSoundCue.uploadComplete => const Duration(milliseconds: 330),
   };
 
-  static Uint8List waveFor(UiSoundCue cue) =>
-      _cache.putIfAbsent(cue, () => _synthesize(cue).asUnmodifiableView());
+  /// Số biến thể của cue. Biến thể được đổi luân phiên khi cùng một sự kiện
+  /// xảy ra nhiều lần, tránh cảm giác lặp lại máy móc.
+  static int variantCount(UiSoundCue cue) => switch (cue) {
+    UiSoundCue.click || UiSoundCue.success => 1,
+    _ => 2,
+  };
+
+  static Uint8List waveFor(UiSoundCue cue, {int variant = 0}) {
+    final normalized = variant % variantCount(cue);
+    final key = '${cue.name}:$normalized';
+    return _cache.putIfAbsent(
+      key,
+      () => _synthesize(cue, normalized).asUnmodifiableView(),
+    );
+  }
 
   static Uint8List silence() => _header(441);
 
-  static Uint8List _synthesize(UiSoundCue cue) {
+  static Uint8List _synthesize(UiSoundCue cue, int variant) {
     final seconds = durationFor(cue).inMicroseconds / 1000000;
     final count = (seconds * sampleRate).round();
     final wave = _header(count);
@@ -33,16 +62,49 @@ abstract final class UiSoundWaves {
       final frequency = switch (cue) {
         UiSoundCue.click => 420 - 150 * p,
         UiSoundCue.success => p < 0.46 ? 523.25 : 659.25,
-        UiSoundCue.saved => p < 0.33 ? 392.0 : 783.99,
-        UiSoundCue.paired => p < 0.42 ? 523.25 : 659.25,
-        UiSoundCue.sent => 310 + 390 * p,
+        UiSoundCue.saved =>
+          variant == 0
+              ? (p < 0.33 ? 392.0 : 783.99)
+              : (p < 0.45 ? 440.0 : 659.25),
+        UiSoundCue.paired =>
+          variant == 0
+              ? (p < 0.42 ? 523.25 : 659.25)
+              : (p < 0.35 ? 440.0 : 659.25),
+        UiSoundCue.sent => variant == 0 ? 310 + 390 * p : 520 - 260 * p,
+        UiSoundCue.received => variant == 0 ? 740 - 300 * p : 620 - 230 * p,
+        UiSoundCue.reward =>
+          variant == 0
+              ? (p < 0.33
+                    ? 587.33
+                    : p < 0.66
+                    ? 739.99
+                    : 880.0)
+              : (p < 0.33
+                    ? 659.25
+                    : p < 0.66
+                    ? 783.99
+                    : 987.77),
+        UiSoundCue.result =>
+          variant == 0
+              ? (p < 0.5 ? 783.99 : 523.25)
+              : (p < 0.5 ? 659.25 : 493.88),
+        UiSoundCue.flip => variant == 0 ? 900 - 340 * p : 660 + 260 * p,
+        UiSoundCue.uploadComplete =>
+          variant == 0
+              ? (p < 0.46 ? 493.88 : 659.25)
+              : (p < 0.46 ? 554.37 : 739.99),
       };
       phase += 2 * math.pi * frequency / sampleRate;
       final envelope = math.pow(math.sin(math.pi * p), 2).toDouble();
-      // Nốt chuông có đuôi êm; cặp nốt hòa âm chỉ dành cho ghép nối hoàn tất.
-      final harmonic = cue == UiSoundCue.paired
-          ? math.sin(2 * math.pi * 783.99 * t) * 0.22
-          : math.sin(phase * 2) * 0.09;
+      // Nốt chuông có đuôi êm; mỗi semantic cue có màu âm riêng.
+      final harmonic = switch (cue) {
+        UiSoundCue.paired =>
+          math.sin(2 * math.pi * (variant == 0 ? 783.99 : 659.25) * t) * 0.22,
+        UiSoundCue.reward => math.sin(phase * 2) * 0.16,
+        UiSoundCue.result => math.sin(phase * 0.5) * 0.16,
+        UiSoundCue.flip => math.sin(phase * 3) * 0.05,
+        _ => math.sin(phase * 2) * 0.09,
+      };
       final signal = math.sin(phase) * 0.68 + harmonic;
       final sample = (signal * envelope * 0.30 * 32767).round();
       data.setInt16(44 + i * 2, sample.clamp(-32767, 32767), Endian.little);

@@ -1,47 +1,22 @@
 part of '../../main_home_tab.dart';
 
 extension MainHomeAvatarController on _MainHomeTabState {
-  Future<XFile?> _cropAvatarImage(XFile file, {required bool isUser1}) async {
-    if (kIsWeb || file.path.isEmpty) {
-      return file;
-    }
-
-    try {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: file.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 80,
-        maxWidth: 1080,
-        maxHeight: 1080,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: isUser1
-                ? L10nService().translate('home_ctavatarbn_f914c9')
-                : L10nService().translate('home_ctavatarng_30711f'),
-            toolbarColor: const Color(0xFFD81B60),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-            cropStyle: CropStyle.circle,
-          ),
-          IOSUiSettings(
-            title: isUser1 ? context.tr('home_ctavatarbn_f914c9') : context.tr('home_ctavatarng_30711f'),
-            aspectRatioLockEnabled: true,
-            aspectRatioPickerButtonHidden: true,
-            resetAspectRatioEnabled: false,
-            cropStyle: CropStyle.circle,
-          ),
-        ],
-      );
-
-      if (croppedFile == null) {
-        return null;
-      }
-      return XFile(croppedFile.path);
-    } catch (_) {
-      return file;
-    }
+  Future<XFile?> _cropAvatarImage(XFile file, {required bool isUser1}) {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = _houseId;
+    return cropAndConfirmImage(
+      context: context,
+      image: file,
+      aspectRatio: 1,
+      circular: true,
+      maxOutputSize: const Size(1080, 1080),
+      titleKey: isUser1 ? 'home_ctavatarbn_f914c9' : 'home_ctavatarng_30711f',
+      isScopeCurrent: () =>
+          mounted &&
+          ownerUid != null &&
+          _houseId == houseId &&
+          FirebaseAuth.instance.currentUser?.uid == ownerUid,
+    );
   }
 
   String _pendingAvatarUploadKeyForHouse(String houseId) =>
@@ -69,9 +44,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(
-            context.tr('home_lniavatart_37d3af'),
-          ),
+          content: Text(context.tr('home_lniavatart_37d3af')),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
             label: context.tr('Thử lại'),
@@ -128,15 +101,6 @@ extension MainHomeAvatarController on _MainHomeTabState {
     if (!mounted || houseId == null || uploadUid == null) return;
     if (_uploadingAvatarRole != null) return;
 
-    XFile? file;
-    try {
-      file = presetFile ?? await _storageService.pickImage();
-    } catch (e) {
-      if (mounted) SLNotice.showInfo(context, L10nScope.of(context).format('ui_home_error_selecting_photo_value1_f81600', {'value1': e}));
-    }
-    if (file == null) return;
-    if (!mounted) return;
-
     final role = isUser1 ? 'user1' : 'user2';
     final field = isUser1 ? 'avtUser1' : 'avtUser2';
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
@@ -146,17 +110,48 @@ extension MainHomeAvatarController on _MainHomeTabState {
     _avatarUploadProgressNotifier.value = 0.0;
 
     try {
+      XFile? file;
+      try {
+        file =
+            presetFile ??
+            await _storageService.pickImage(preserveOriginal: true);
+      } catch (e) {
+        if (mounted)
+          SLNotice.showInfo(
+            context,
+            L10nScope.of(context).format(
+              'ui_home_error_selecting_photo_value1_f81600',
+              {'value1': e},
+            ),
+          );
+      }
+      if (file == null) return;
+      if (!mounted ||
+          _houseId != houseId ||
+          FirebaseAuth.instance.currentUser?.uid != uploadUid) {
+        return;
+      }
       if (presetFile == null) {
         file = await _cropAvatarImage(file, isUser1: isUser1);
       }
       if (file == null) {
         return;
       }
+      if (!mounted ||
+          _houseId != houseId ||
+          FirebaseAuth.instance.currentUser?.uid != uploadUid) {
+        return;
+      }
+      final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();
       await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
         'role': role,
         'filePath': file.path,
       });
 
+      if (!mounted ||
+          _houseId != houseId ||
+          FirebaseAuth.instance.currentUser?.uid != uploadUid)
+        return;
       final upload = await _storageService.uploadPublicImage(
         houseId,
         'home_avatar',
@@ -166,7 +161,9 @@ extension MainHomeAvatarController on _MainHomeTabState {
         minWidth: 512,
         minHeight: 512,
         onProgress: (p) {
-          if (mounted) {
+          if (mounted &&
+              _houseId == houseId &&
+              FirebaseAuth.instance.currentUser?.uid == uploadUid) {
             _avatarUploadProgressNotifier.value = p;
           }
         },
@@ -176,30 +173,35 @@ extension MainHomeAvatarController on _MainHomeTabState {
         throw L10nService().translate('ui_home_can_t_get_new_photos_76a1ef');
       }
 
-      final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();
+      // Finalize đã ghi URL và các bản sao hồ sơ trên server. Không ghi lại
+      // URL ở client vì có thể đè lượt thay ảnh mới hơn từ thiết bị khác.
       await StorageMediaCommit.commit(
         scopeIsCurrent: () =>
             mounted &&
             _houseId == houseId &&
             FirebaseAuth.instance.currentUser?.uid == uploadUid,
-        persist: () =>
-            _dbRef.child('houses/$houseId/settings').update({field: url}),
+        persist: () async {},
         clearPending: () => PendingUploadService.instance.clear(pendingKey),
       );
 
+      await discardConfirmedCropImage(file);
       if (oldAvatarUrl != url && oldAvatarUrl.startsWith('http')) {
         try {
-          await _storageService.deleteImageByUrl(oldAvatarUrl);
+          final deleted = await _storageService.deletePublicImageByUrl(
+            houseId,
+            oldAvatarUrl,
+          );
+          if (!deleted) {
+            debugPrint('[MainHome] Chưa xác nhận được việc dọn avatar cũ.');
+          }
         } catch (error) {
           debugPrint('[MainHome] Old avatar cleanup failed: $error');
         }
       }
 
-      if (mounted) {
-        _safeSetState(() {
-          _houseSettings ??= {};
-          _houseSettings![field] = url;
-        });
+      if (mounted &&
+          _houseId == houseId &&
+          FirebaseAuth.instance.currentUser?.uid == uploadUid) {
         _avatarUploadProgressNotifier.value = 1.0;
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -217,9 +219,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(
-              context.tr('home_chathinhid_401e49'),
-            ),
+            content: Text(context.tr('home_chathinhid_401e49')),
             behavior: SnackBarBehavior.floating,
           ),
         );

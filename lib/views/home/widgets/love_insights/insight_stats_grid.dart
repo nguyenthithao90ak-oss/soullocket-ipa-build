@@ -1,7 +1,7 @@
 part of '../../love_insights_view.dart';
 
 extension _InsightStatsGridExt on LoveInsightsView {
-  Widget _buildStatsGrid(LoveInsightData insight) {
+  Widget _buildStatsGrid(BuildContext context, LoveInsightData insight) {
     final cards = [
       _MetricCardData(
         title: L10nService().translate('home_nhtk_d59e8b'),
@@ -51,20 +51,33 @@ extension _InsightStatsGridExt on LoveInsightsView {
           runSpacing: 12,
           children: [
             for (final card in cards)
-              SizedBox(width: itemWidth, child: _buildMetricCard(card)),
+              SizedBox(
+                width: itemWidth,
+                child: _buildMetricCard(context, card),
+              ),
           ],
         );
       },
     );
   }
 
-  Widget _buildMetricCard(_MetricCardData card) {
+  Widget _buildMetricCard(BuildContext context, _MetricCardData card) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.lerp(Colors.white, card.accent, 0.065),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: card.accent.withValues(alpha: 0.08)),
+        color: Color.lerp(_InsightStyle.surface(context), card.accent, 0.13),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _InsightStyle.surface(context), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: _InsightStyle.accent(
+              context,
+              card.accent,
+            ).withValues(alpha: 0.10),
+            offset: const Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,20 +94,32 @@ extension _InsightStatsGridExt on LoveInsightsView {
                       style: SLTheme.quicksand(
                         fontSize: 30,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF492E3A),
+                        color: _InsightStyle.accent(
+                          context,
+                          const Color(0xFF492E3A),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(12),
+              Transform.rotate(
+                angle: -0.10,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _InsightStyle.surface(
+                      context,
+                    ).withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    card.icon,
+                    size: 23,
+                    color: _InsightStyle.accent(context, card.accent),
+                  ),
                 ),
-                child: Icon(card.icon, size: 20, color: card.accent),
               ),
             ],
           ),
@@ -104,7 +129,7 @@ extension _InsightStatsGridExt on LoveInsightsView {
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF493B43),
+              color: _InsightStyle.accent(context, const Color(0xFF493B43)),
             ),
           ),
           const SizedBox(height: 4),
@@ -114,7 +139,7 @@ extension _InsightStatsGridExt on LoveInsightsView {
               fontSize: 11,
               height: 1.4,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF756972),
+              color: _InsightStyle.accent(context, const Color(0xFF756972)),
             ),
           ),
         ],

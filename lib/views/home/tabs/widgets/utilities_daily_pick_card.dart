@@ -4,6 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 
 import 'utilities_hub_tile.dart';
+import 'utilities_scrapbook_design.dart';
 
 class UtilityDailyPick {
   const UtilityDailyPick({
@@ -129,145 +130,159 @@ class UtilitiesDailyPickCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = UtilitiesScrapbookColors.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stickerSize = (constraints.maxWidth * 0.34).clamp(96.0, 140.0);
-        return Semantics(
-          button: true,
-          child: Material(
-            color: pick.surface,
-            borderRadius: BorderRadius.circular(28),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onOpen,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 172),
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final stacked = constraints.maxWidth < 300 || textScale > 1.35;
+        final stickerSize = stacked
+            ? 82.0
+            : (constraints.maxWidth * .39).clamp(118.0, 156.0);
+        final illustration = app.id == 'collage'
+            ? UtilitiesStationeryArt(size: stickerSize)
+            : SizedBox.square(
+                dimension: stickerSize,
                 child: Stack(
                   children: [
-                    PositionedDirectional(
-                      end: -stickerSize * 0.25,
-                      top: -stickerSize * 0.3,
-                      child: Container(
-                        width: stickerSize * 1.25,
-                        height: stickerSize * 1.25,
-                        decoration: BoxDecoration(
-                          color: pick.glow,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    PositionedDirectional(
-                      end: 4,
-                      top: 0,
+                    const PositionedDirectional(
+                      end: 0,
                       bottom: 0,
-                      child: Center(
-                        child: Transform.rotate(
-                          angle: -0.14,
-                          child: UtilityHubSticker(app: app, size: stickerSize),
-                        ),
-                      ),
+                      child: UtilitiesStationeryArt(size: 48, bouquet: true),
                     ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(
-                        20,
-                        18,
-                        stickerSize + 12,
-                        18,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 14,
-                                color: pick.accent,
-                              ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  context
-                                      .tr('utilities_daily_pick_label')
-                                      .toUpperCase(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: pick.accent,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            context.tr(pick.titleKey),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: pick.ink,
-                              height: 1.25,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr(pick.subtitleKey),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: pick.body,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            constraints: const BoxConstraints(minHeight: 40),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: pick.accent,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    context.tr('utilities_daily_pick_cta'),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: SLTheme.quicksand(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                  textDirection: Directionality.of(context),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    Center(
+                      child: UtilityHubSticker(
+                        app: app,
+                        size: stickerSize * .88,
                       ),
                     ),
                   ],
+                ),
+              );
+        final label = Text(
+          context.tr('utilities_daily_pick_label').toUpperCase(),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: SLTheme.quicksand(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: colors.muted,
+            letterSpacing: 1.3,
+          ),
+        );
+        final text = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (stacked)
+              Row(
+                children: [
+                  Expanded(child: label),
+                  const SizedBox(width: 8),
+                  illustration,
+                ],
+              )
+            else
+              label,
+            const SizedBox(height: 8),
+            Text(
+              context.tr(pick.titleKey),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                fontSize: 21,
+                fontWeight: FontWeight.w700,
+                color: colors.ink,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              context.tr(pick.subtitleKey),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              key: const ValueKey('utilities-daily-open'),
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colors.accent,
+                    Color.lerp(colors.accent, colors.ink, .12)!,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(99),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.accent.withValues(alpha: .16),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      context.tr('utilities_daily_pick_cta'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.onAccent,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: colors.onAccent,
+                    textDirection: Directionality.of(context),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+        return Semantics(
+          button: true,
+          label:
+              '${context.tr(pick.titleKey)}, ${context.tr('utilities_daily_pick_cta')}',
+          excludeSemantics: true,
+          onTap: onOpen,
+          child: UtilitiesScrapbookPaper(
+            color: app.id == 'collage' || colors.dark
+                ? colors.lilac
+                : Color.lerp(colors.paper, pick.surface, .6),
+            perforated: true,
+            child: Material(
+              type: MaterialType.transparency,
+              borderRadius: BorderRadius.circular(22),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onOpen,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: stacked
+                      ? text
+                      : Row(
+                          children: [
+                            Expanded(child: text),
+                            const SizedBox(width: 8),
+                            illustration,
+                          ],
+                        ),
                 ),
               ),
             ),

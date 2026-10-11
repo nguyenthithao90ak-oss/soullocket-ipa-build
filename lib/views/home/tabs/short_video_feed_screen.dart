@@ -17,9 +17,11 @@ import '../../ui_prefs.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../core/sl_theme.dart';
+import '../../../core/sl_route.dart';
 import '../../../utils/app_cache_manager.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
+import '../../../utils/screen_activity_mixin.dart';
 import 'short_video_cached_video_controller.dart'
     if (dart.library.html) 'short_video_cached_video_controller_web.dart';
 
@@ -39,6 +41,12 @@ class ShortVideoFeedScreen extends StatefulWidget {
   filterType; // 'global' | 'friends' | 'tophot' | 'house' | 'liked'
   final int initialIndex;
   final List<SocialPost>? initialPosts;
+  @visibleForTesting
+  final SocialService? socialService;
+  @visibleForTesting
+  final Stream<DatabaseEvent>? blockedUsersStream;
+  @visibleForTesting
+  final Widget Function(SocialPost post, bool active)? postBuilder;
 
   const ShortVideoFeedScreen({
     super.key,
@@ -47,6 +55,9 @@ class ShortVideoFeedScreen extends StatefulWidget {
     this.filterType = 'global',
     this.initialIndex = 0,
     this.initialPosts,
+    this.socialService,
+    this.blockedUsersStream,
+    this.postBuilder,
   });
 
   @override
@@ -55,13 +66,17 @@ class ShortVideoFeedScreen extends StatefulWidget {
 
 class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
   late final PageController _pageCtrl;
-  final SocialService _socialService = SocialService();
+  late final SocialService _socialService =
+      widget.socialService ?? SocialService();
+  static const _pageLoadTimeout = Duration(seconds: 20);
   late int _currentIndex;
 
   final List<_FlyingHeart> _flyingHearts = [];
   List<SocialPost> _posts = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isLoadingMore = false;
+  bool _initialLoadFailed = false;
+  bool _loadMoreFailed = false;
   bool _hasMore = true;
   Map<String, dynamic> _blockedUsers = {};
   StreamSubscription? _blockedSub;
@@ -81,24 +96,31 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
     }
 
     // Listen to blocked users to filter feed
-    _blockedSub = FirebaseDatabase.instance
-        .ref('houses/${widget.houseId}/blocked_users')
-        .onValue
-        .listen((event) {
-          if (!mounted) return;
-          final v = event.snapshot.value;
-          final next = <String, dynamic>{};
-          if (v is Map) {
-            v.forEach((k, val) => next[k.toString()] = val);
-          }
-          setState(() => _blockedUsers = next);
-        });
+    _blockedSub =
+        (widget.blockedUsersStream ??
+                FirebaseDatabase.instance
+                    .ref('houses/${widget.houseId}/blocked_users')
+                    .onValue)
+            .listen((event) {
+              if (!mounted) return;
+              final v = event.snapshot.value;
+              final next = <String, dynamic>{};
+              if (v is Map) {
+                v.forEach((k, val) => next[k.toString()] = val);
+              }
+              setState(() => _blockedUsers = next);
+            });
   }
 
   Future<void> _loadInitialFeed() async {
-    setState(() => _isLoading = true);
+    if (_isLoading || _isLoadingMore) return;
+    setState(() {
+      _isLoading = true;
+      _initialLoadFailed = false;
+      _loadMoreFailed = false;
+    });
     try {
-      final posts = await _fetchPage(null);
+      final posts = await _fetchPage(null).timeout(_pageLoadTimeout);
       if (mounted) {
         setState(() {
           _posts = posts;
@@ -107,6 +129,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
       }
     } catch (e) {
       debugPrint('Error loading initial feed: $e');
+      if (mounted) setState(() => _initialLoadFailed = true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -115,11 +138,14 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
   }
 
   Future<void> _loadMoreFeed() async {
-    if (_isLoadingMore || !_hasMore || _posts.isEmpty) return;
-    setState(() => _isLoadingMore = true);
+    if (_isLoading || _isLoadingMore || !_hasMore || _posts.isEmpty) return;
+    setState(() {
+      _isLoadingMore = true;
+      _loadMoreFailed = false;
+    });
     final oldestTs = _posts.last.timestamp.millisecondsSinceEpoch;
     try {
-      final olderPosts = await _fetchPage(oldestTs);
+      final olderPosts = await _fetchPage(oldestTs).timeout(_pageLoadTimeout);
 
       if (mounted) {
         setState(() {
@@ -133,6 +159,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
       }
     } catch (e) {
       debugPrint('Error loading more feed: $e');
+      if (mounted) setState(() => _loadMoreFailed = true);
     } finally {
       if (mounted) {
         setState(() => _isLoadingMore = false);
@@ -222,6 +249,8 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
             const Center(
               child: CircularProgressIndicator(color: Color(0xFFE91E8C)),
             )
+          else if (_initialLoadFailed)
+            _buildLoadAction(failed: true, onPressed: _loadInitialFeed)
           else if (_posts.isEmpty)
             _buildEmpty()
           else
@@ -246,7 +275,12 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                   return true;
                 }).toList();
 
-                if (mediaPosts.isEmpty) return _buildEmpty();
+                if (mediaPosts.isEmpty) {
+                  if (!_hasMore) return _buildEmpty();
+                  return _isLoadingMore
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFFE91E8C)))
+                      : _buildLoadAction(failed: _loadMoreFailed, onPressed: _loadMoreFeed);
+                }
 
                 return PageView.builder(
                   physics: const SLPagePhysics(),
@@ -255,19 +289,32 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                   itemCount: mediaPosts.length + (_hasMore ? 1 : 0),
                   onPageChanged: (i) {
                     setState(() => _currentIndex = i);
-                    if (i >= mediaPosts.length - 2) {
+                    if (i >= mediaPosts.length - 2 && !_loadMoreFailed) {
                       _loadMoreFeed();
                     }
                   },
                   itemBuilder: (context, index) {
                     if (index >= mediaPosts.length) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFE91E8C),
-                        ),
+                      return KeyedSubtree(
+                        key: const ValueKey('short-feed-load-more'),
+                        child: _isLoadingMore
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  key: ValueKey('short-feed-load-more-spinner'),
+                                  color: Color(0xFFE91E8C),
+                                ),
+                              )
+                            : _buildLoadAction(
+                                failed: _loadMoreFailed,
+                                onPressed: _loadMoreFeed,
+                              ),
                       );
                     }
                     final post = mediaPosts[index];
+                    final postBuilder = widget.postBuilder;
+                    if (postBuilder != null) {
+                      return postBuilder(post, index == _currentIndex);
+                    }
                     return _ShortVideoFeedPostCard(
                       key: ValueKey(
                         '${post.id}_${post.videoUrl}_${post.imageUrl}',
@@ -297,6 +344,50 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
       ),
     );
   }
+
+  Widget _buildLoadAction({
+    required bool failed,
+    required VoidCallback onPressed,
+  }) => SafeArea(
+    child: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (failed) ...[
+              const Icon(
+                Icons.cloud_off_outlined,
+                color: Colors.white54,
+                size: 48,
+              ),
+              SLSpacing.h16,
+              Text(
+                L10nService().translate('runtime_error_retry'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 15),
+              ),
+              SLSpacing.h16,
+            ],
+            TextButton.icon(
+              key: const ValueKey('short-feed-load-action'),
+              onPressed: onPressed,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                minimumSize: const Size(48, 48),
+              ),
+              icon: Icon(failed ? Icons.refresh : Icons.expand_more),
+              label: Text(
+                L10nService().translate(
+                  failed ? 'retry' : 'p3_continue',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Widget _buildEmpty() => Center(
     child: Column(

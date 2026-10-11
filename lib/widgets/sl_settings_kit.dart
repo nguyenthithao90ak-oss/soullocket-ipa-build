@@ -20,23 +20,23 @@ abstract final class SLSettingsColors {
   // Chữ
   static const ink = Color(0xFF2F2329);
   static const inkSecondary = Color(0xFF76656C);
-  static const inkTertiary = Color(0xFFA5949A);
+  static const inkTertiary = Color(0xFF77676E);
 
   // Nhấn thương hiệu
   static const accent = SLColors.primary;
-  static const accentStrong = Color(0xFFC9405F);
+  static const accentStrong = Color(0xFFB32F50);
   static const accentSoft = Color(0xFFFDE8ED);
 
   // Ngữ nghĩa
-  static const success = Color(0xFF2F9468);
+  static const success = Color(0xFF237750);
   static const successSoft = Color(0xFFE5F4EC);
-  static const warning = Color(0xFFB7791F);
+  static const warning = Color(0xFF92600E);
   static const warningSoft = Color(0xFFFBF0DC);
-  static const danger = Color(0xFFD1434F);
+  static const danger = Color(0xFFBB3341);
   static const dangerSoft = Color(0xFFFCE8E9);
-  static const info = Color(0xFF3C78BC);
+  static const info = Color(0xFF3269A5);
   static const infoSoft = Color(0xFFE7F0FA);
-  static const premium = Color(0xFFB98A2E);
+  static const premium = Color(0xFF88621A);
   static const premiumSoft = Color(0xFFFAF0D9);
 
   // Sắc độ cho ô biểu tượng: cùng độ sáng để danh sách nhìn đều mắt.
@@ -59,7 +59,7 @@ abstract final class SLSettingsColors {
   static const darkDivider = Color(0xFF2E2630);
   static const darkInk = Color(0xFFF6EFF3);
   static const darkInkSecondary = Color(0xFFBBAAB4);
-  static const darkInkTertiary = Color(0xFF85767F);
+  static const darkInkTertiary = Color(0xFF9B8992);
 }
 
 abstract final class SLSettingsRadius {
@@ -578,7 +578,7 @@ enum SLSettingsTone { neutral, accent, success, warning, danger, info, premium }
   };
   if (!isDark) return (fg: fg, bg: bg);
   return (
-    fg: Color.lerp(fg, Colors.white, 0.35)!,
+    fg: Color.lerp(fg, Colors.white, 0.4)!,
     bg: fg.withValues(alpha: 0.2),
   );
 }
@@ -761,7 +761,7 @@ class SLSettingsButton extends StatelessWidget {
       ),
       SLSettingsButtonVariant.tonal => (
         accent.withValues(alpha: isDark ? 0.2 : 0.1),
-        palette.tint(accent),
+        isDark ? Color.lerp(accent, Colors.white, 0.4)! : accent,
         BorderSide.none,
       ),
       SLSettingsButtonVariant.danger => (
@@ -771,7 +771,7 @@ class SLSettingsButton extends StatelessWidget {
       ),
       SLSettingsButtonVariant.ghost => (
         Colors.transparent,
-        palette.tint(accent),
+        isDark ? Color.lerp(accent, Colors.white, 0.4)! : accent,
         BorderSide.none,
       ),
     };
@@ -1088,7 +1088,7 @@ class SLSettingsSwitch extends StatelessWidget {
       inactiveTrackColor: isDark ? palette.border : const Color(0xFFE6DCD3),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       thumbIcon: const WidgetStatePropertyAll(null),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
     );
   }
 }

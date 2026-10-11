@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/sl_route.dart';
 
 import '../../utils/services/consent_service.dart';
 import '../home/screens/document_viewer_screen.dart';
@@ -23,10 +24,9 @@ Future<void> _openDoc(
   String title,
   String assetPath,
 ) async {
-  await Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => DocumentViewerScreen(title: title, assetPath: assetPath),
-    ),
+  await slPush<void>(
+    context,
+    DocumentViewerScreen(title: title, assetPath: assetPath),
   );
 }
 

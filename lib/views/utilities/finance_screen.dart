@@ -1,7 +1,8 @@
 import 'package:soullocket_app/utils/money_format.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
-import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'widgets/finance_dialog.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../utils/house_money_currency.dart';
 import '../../utils/finance_category.dart';
@@ -13,9 +14,11 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/sl_theme.dart';
 import '../../widgets/skeleton_container.dart';
+import '../../utils/initial_event_timeout.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'package:soullocket_app/widgets/sl_toast.dart';
+import 'widgets/finance_design.dart';
 
 /// Finance Screen - Visual parity 100% với Web gốc hhaaluutru5h49
 /// Card trắng glass, màu #d81b60, gradient hồng, list-item CSS
@@ -86,10 +89,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     _totalBalance = _totalIn = _totalOut = 0;
     _budgetPlan = null;
     _savingsGoal = null;
-    _budgetStream = _dbRef
-        .child('houses/$houseId/budget')
-        .limitToLast(200)
-        .onValue;
+    _budgetStream = _watchBudget();
     _loadBudgetPlan();
     _loadSavingsGoal();
     _currencySub?.cancel();
@@ -115,10 +115,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
           generation == _houseGeneration &&
           FirebaseAuth.instance.currentUser?.uid == uid,
     );
-    if (mounted && generation == _houseGeneration)
+    if (mounted && generation == _houseGeneration) {
       setState(() => _houseCurrency = code);
+    }
     return code;
   }
+
+  Stream<DatabaseEvent> _watchBudget() => withInitialEventTimeout(
+    _dbRef.child('houses/${widget.houseId}/budget').limitToLast(200).onValue,
+  );
 
   bool _isCurrentWrite(int generation, String? uid) =>
       mounted &&
@@ -127,6 +132,24 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   void _showWriteError(Object error) {
     SLToast.show(context, AppErrorMapper.resolve(error).message);
+  }
+
+  Color _financeFilterSurface(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? SLColors.darkBgElevated
+        : SLColors.bgSubtle;
+  }
+
+  Color _financeFilterBorder(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? SLColors.darkBorder
+        : SLColors.border;
+  }
+
+  Color _financeFilterText(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? SLColors.darkTextPrimary
+        : SLColors.textPrimary;
   }
 
   void _loadBudgetPlan() {
@@ -197,6 +220,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           _goalDaysController.text == daysText) {
         _goalAmountController.clear();
         _goalDaysController.clear();
+        if (!mounted) return;
         Navigator.pop(context);
       }
     } catch (error) {
@@ -230,6 +254,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           _savingsGoalNameController.text == nameText) {
         _savingsGoalAmountController.clear();
         _savingsGoalNameController.clear();
+        if (!mounted) return;
         Navigator.pop(context);
       }
     } catch (error) {
@@ -242,15 +267,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _resetSavingsGoal() {
     showDialog(
       context: context,
-      builder: (ctx) => SLAlertDialog(
+      builder: (ctx) => FinanceDialog(
         title: Text(context.tr('util_xaqu_086ff0')),
         content: Text(context.tr('util_bncchcchnm_fd1095')),
         actions: [
-          SLDialogAction(
+          FinanceDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          SLDialogAction(
+          FinanceDialogAction(
             primary: true,
             destructive: true,
 
@@ -268,15 +293,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _resetBudgetPlan() {
     showDialog(
       context: context,
-      builder: (ctx) => SLAlertDialog(
+      builder: (ctx) => FinanceDialog(
         title: Text(context.tr('util_xakhoch_ba0a75')),
         content: Text(context.tr('util_bncchcchnm_ed97cc')),
         actions: [
-          SLDialogAction(
+          FinanceDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          SLDialogAction(
+          FinanceDialogAction(
             primary: true,
             destructive: true,
 
@@ -315,6 +340,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       if (!_isCurrentWrite(generation, uid)) return;
       if (currentSnap.value is Map &&
           (currentSnap.value as Map).length >= 100) {
+        if (!mounted) return;
         SLToast.show(context, context.tr('p8_finance_transaction_limit'));
         return;
       }
@@ -333,6 +359,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       if (!_isCurrentWrite(generation, uid)) return;
       if (_amountController.text == amountText) _amountController.clear();
       if (_noteController.text == noteText) _noteController.clear();
+      if (!mounted) return;
       FocusScope.of(context).unfocus();
       HapticFeedback.mediumImpact();
     } catch (error) {
@@ -345,15 +372,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _deleteTransaction(String key) {
     showDialog(
       context: context,
-      builder: (ctx) => SLAlertDialog(
+      builder: (ctx) => FinanceDialog(
         title: Text(context.tr('p8_finance_delete_transaction_title')),
         content: Text(context.tr('p8_finance_delete_transaction_body')),
         actions: [
-          SLDialogAction(
+          FinanceDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('p8_finance_cancel')),
           ),
-          SLDialogAction(
+          FinanceDialogAction(
             primary: true,
             destructive: true,
 
@@ -375,94 +402,30 @@ class _FinanceScreenState extends State<FinanceScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            final mediaQuery = MediaQuery.of(dialogContext);
-            final availableHeight =
-                mediaQuery.size.height - mediaQuery.viewInsets.bottom;
             final amount =
                 MoneyFormat.parseWholeAmount(_splitAmountController.text) ?? 0;
             final people = int.tryParse(_splitPeopleController.text) ?? 2;
             final splitResult = people > 0 ? amount / people : 0;
 
-            return SLAlertDialog(
+            return FinanceDialog(
               insetPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 20,
               ),
               scrollable: true,
               title: Text(context.tr('util_chiatinspl_820857')),
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 360,
-                  maxHeight: (availableHeight * 0.45)
-                      .clamp(180.0, 320.0)
-                      .toDouble(),
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextField(
-                        controller: _splitAmountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        textInputAction: TextInputAction.next,
-                        autofocus: true,
-                        maxLength: 12,
-                        decoration: InputDecoration(
-                          labelText: context.tr('util_tngstinvnd_59805c'),
-                          counterText: '',
-                        ),
-                        scrollPadding: const EdgeInsets.only(bottom: 24),
-                        onChanged: (_) => setDialogState(() {}),
-                        onSubmitted: (_) =>
-                            FocusScope.of(dialogContext).nextFocus(),
-                      ),
-                      SLSpacing.h8,
-                      TextField(
-                        controller: _splitPeopleController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        textInputAction: TextInputAction.done,
-                        maxLength: 4,
-                        decoration: InputDecoration(
-                          labelText: context.tr('util_sngichia_91ed4e'),
-                          counterText: '',
-                        ),
-                        scrollPadding: const EdgeInsets.only(bottom: 24),
-                        onChanged: (_) => setDialogState(() {}),
-                        onSubmitted: (_) =>
-                            FocusScope.of(dialogContext).unfocus(),
-                      ),
-                      SLSpacing.h16,
-                      if (amount > 0 && people > 0)
-                        Container(
-                          width: double.infinity,
-                          padding: SLSpacing.all12,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF5F7),
-                            borderRadius: SLRadius.mdAll,
-                          ),
-                          child: Text(
-                            L10nService().format('util_finance_each_pays', {
-                              'amount': _fmt.format(splitResult),
-                            }),
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              color: SLTheme.primary,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+              content: FinanceSplitBillForm(
+                amountController: _splitAmountController,
+                peopleController: _splitPeopleController,
+                onChanged: () => setDialogState(() {}),
+                resultText: amount > 0 && people > 0
+                    ? L10nService().format('util_finance_each_pays', {
+                        'amount': _fmt.format(splitResult),
+                      })
+                    : null,
               ),
               actions: [
-                SLDialogAction(
+                FinanceDialogAction(
                   primary: true,
 
                   onPressed: () => Navigator.pop(ctx),
@@ -495,7 +458,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => SLAlertDialog(
+      builder: (context) => FinanceDialog(
         title: Text(context.tr('p8_finance_info_title')),
         content: SingleChildScrollView(
           child: Column(
@@ -504,34 +467,34 @@ class _FinanceScreenState extends State<FinanceScreen> {
             children: [
               Text(
                 context.tr('p8_finance_info_features_title'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: SLTheme.textMain,
-                ),
+                style: FinancePalette.text(context, weight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 context.tr('p8_finance_info_features_body'),
-                style: const TextStyle(color: SLTheme.textLight),
+                style: FinancePalette.text(
+                  context,
+                  color: FinancePalette.muted(context),
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 context.tr('p8_finance_info_how_to_title'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: SLTheme.textMain,
-                ),
+                style: FinancePalette.text(context, weight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 context.tr('p8_finance_info_how_to_body'),
-                style: const TextStyle(color: SLTheme.textLight),
+                style: FinancePalette.text(
+                  context,
+                  color: FinancePalette.muted(context),
+                ),
               ),
             ],
           ),
         ),
         actions: [
-          SLDialogAction(
+          FinanceDialogAction(
             primary: true,
 
             onPressed: () => Navigator.pop(context),
@@ -542,54 +505,432 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
+  String get _currencyCode => _houseCurrency.isEmpty ? 'VND' : _houseCurrency;
+
+  Widget _buildModernActions() {
+    final actions = [
+      FinanceActionCard(
+        title: context.tr('util_lpkhochchi_bc03dd'),
+        subtitle: context.tr('p8_finance_info_how_to_body'),
+        icon: Icons.track_changes_rounded,
+        color: FinancePalette.rose,
+        onTap: _showPlanDialog,
+      ),
+      FinanceActionCard(
+        title: context.tr('util_toquciqudu_2385ab'),
+        subtitle: context.tr('util_titkim_595e8b'),
+        icon: Icons.savings_outlined,
+        color: FinancePalette.gold,
+        onTap: _showSavingsGoalDialog,
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 355 ||
+            MediaQuery.textScalerOf(context).scale(14) > 21) {
+          return Column(
+            children: [actions[0], const SizedBox(height: 10), actions[1]],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: actions[0]),
+            const SizedBox(width: 10),
+            Expanded(child: actions[1]),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildModernBudgetPlan() {
+    final plan = _budgetPlan;
+    if (plan == null) return const SizedBox.shrink();
+
+    final target = (plan['targetAmount'] as num?)?.toInt() ?? 0;
+    final days = (plan['targetDays'] as num?)?.toInt() ?? 1;
+    final createdAt =
+        (plan['createdAt'] as num?)?.toInt() ??
+        DateTime.now().millisecondsSinceEpoch;
+    final startTime = DateTime.fromMillisecondsSinceEpoch(createdAt);
+    final passedDays = DateTime.now().difference(startTime).inDays;
+    final remainingDays = math.max(0, days - passedDays);
+    final expired = DateTime.now().isAfter(startTime.add(Duration(days: days)));
+    final percent = target > 0 ? (_totalOut / target).clamp(0.0, 1.0) : 0.0;
+    final over = _totalOut > target;
+    final status = expired
+        ? context.tr('util_ktthckhoch_635af9')
+        : over
+        ? context.tr('util_vtngnsch_937fb7')
+        : L10nService().format('util_finance_days_left', {
+            'remaining': remainingDays,
+            'days': days,
+          });
+    final hint = !expired && !over
+        ? L10nService().format('util_finance_can_spend_more_daily', {
+            'amount': _fmt.format(
+              ((target - _totalOut) / (remainingDays > 0 ? remainingDays : 1))
+                  .floor(),
+            ),
+          })
+        : null;
+
+    return FinanceGoalCard(
+      title: context.tr('util_khochchiti_f81032'),
+      eyebrow: context.tr('util_lpkhochchi_bc03dd'),
+      currentText: L10nService().format('util_finance_used_amount', {
+        'amount': _fmt.format(_totalOut),
+      }),
+      targetText: L10nService().format('util_finance_target_amount', {
+        'amount': _fmt.format(target),
+      }),
+      progress: percent,
+      status: status,
+      hint: hint,
+      color: over ? FinancePalette.rose : FinancePalette.sage,
+      icon: over ? Icons.warning_amber_rounded : Icons.track_changes_rounded,
+      onEdit: _showPlanDialog,
+      onDelete: _resetBudgetPlan,
+      editLabel: context.tr('p8_finance_edit_budget_plan'),
+      deleteLabel: context.tr('p8_finance_delete_budget_plan'),
+    );
+  }
+
+  Widget _buildModernSavingsGoal() {
+    final goal = _savingsGoal;
+    if (goal == null) return const SizedBox.shrink();
+
+    final target = (goal['targetAmount'] as num?)?.toInt() ?? 0;
+    final title = goal['name']?.toString().trim().isNotEmpty == true
+        ? goal['name'].toString()
+        : context.tr('util_quchung_1cd93f');
+    final saved = math.max(0, _totalBalance);
+    final progress = target > 0 ? (saved / target).clamp(0.0, 1.0) : 0.0;
+    final reached = target > 0 && saved >= target;
+
+    return FinanceGoalCard(
+      title: title,
+      eyebrow: context.tr('util_toqumi_e38258'),
+      currentText: L10nService().format('util_finance_saved_amount', {
+        'amount': _fmt.format(saved),
+      }),
+      targetText: L10nService().format('util_finance_target_amount', {
+        'amount': _fmt.format(target),
+      }),
+      progress: progress,
+      status: reached
+          ? context.tr('util_tmctiu_d4d469')
+          : L10nService().format('util_finance_goal_percent', {
+              'percent': (progress * 100).toStringAsFixed(1),
+            }),
+      color: FinancePalette.gold,
+      icon: Icons.savings_outlined,
+      onEdit: _showSavingsGoalDialog,
+      onDelete: _resetSavingsGoal,
+      editLabel: context.tr('p8_finance_edit_savings_goal'),
+      deleteLabel: context.tr('p8_finance_delete_savings_goal'),
+    );
+  }
+
+  Widget _buildModernChart() {
+    final totals = <String, int>{};
+    for (final transaction in _allTransactions.where(
+      (item) => item['type'] == 'out',
+    )) {
+      final category =
+          FinanceCategory.codeOf(transaction['category']) ??
+          transaction['category']?.toString() ??
+          'other';
+      totals[category] =
+          (totals[category] ?? 0) +
+          ((transaction['amount'] as num?)?.toInt() ?? 0);
+    }
+    if (totals.isEmpty) return const SizedBox.shrink();
+    final ordered = totals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final maxValue = ordered.first.value;
+    final colors = [
+      FinancePalette.rose,
+      FinancePalette.sage,
+      FinancePalette.lavender,
+      FinancePalette.gold,
+      const Color(0xFF5E8795),
+    ];
+
+    return FinanceCard(
+      tint: FinancePalette.lavender,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.tr('util_phntchchit_1737cd'),
+                  style: FinancePalette.text(
+                    context,
+                    size: 16,
+                    weight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.auto_graph_rounded,
+                color: FinancePalette.accent(context, FinancePalette.lavender),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          ...ordered.take(5).toList().asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final ratio = maxValue > 0 ? item.value / maxValue : 0.0;
+            final color = FinancePalette.accent(
+              context,
+              colors[index % colors.length],
+            );
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index == ordered.length - 1 ? 0 : 12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          FinanceCategory.label(item.key, context.tr),
+                          style: FinancePalette.text(
+                            context,
+                            size: 12,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _fmt.format(item.value),
+                        style: FinancePalette.text(
+                          context,
+                          size: 12,
+                          weight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: ratio),
+                    duration: FinancePalette.motion(context),
+                    builder: (context, value, child) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 7,
+                      borderRadius: BorderRadius.circular(7),
+                      backgroundColor: color.withValues(alpha: 0.12),
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernTransactionList() {
+    return StreamBuilder<DatabaseEvent>(
+      key: ValueKey('finance-modern-${widget.houseId}'),
+      stream: _budgetStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: SkeletonContainer.rounded(
+                width: double.infinity,
+                height: 92,
+              ),
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return SliverToBoxAdapter(
+            child: FinanceCard(
+              child: Column(
+                children: [
+                  Text(
+                    L10nService().format('util_finance_load_tx_error', {
+                      'error': AppErrorMapper.resolve(snapshot.error).message,
+                    }),
+                    textAlign: TextAlign.center,
+                    style: FinancePalette.text(context, size: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () =>
+                        setState(() => _budgetStream = _watchBudget()),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(context.tr('retry')),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        final raw = snapshot.data?.snapshot.value;
+        if (raw == null || raw is! Map) {
+          _syncTransactionSummary(
+            items: const <Map<String, dynamic>>[],
+            totalIn: 0,
+            totalOut: 0,
+          );
+          return const SliverToBoxAdapter(
+            child: FinanceCard(child: FinanceEmptyState()),
+          );
+        }
+
+        final items = raw.entries
+            .where((entry) => entry.value is Map)
+            .map(
+              (entry) => {
+                'key': entry.key,
+                ...Map<String, dynamic>.from(entry.value as Map),
+              },
+            )
+            .toList();
+        items.sort(
+          (a, b) => ((b['ts'] as num?)?.toInt() ?? 0).compareTo(
+            (a['ts'] as num?)?.toInt() ?? 0,
+          ),
+        );
+        var totalIn = 0;
+        var totalOut = 0;
+        for (final item in items) {
+          final amount = (item['amount'] as num?)?.toInt() ?? 0;
+          if (item['type'] == 'in') {
+            totalIn += amount;
+          } else {
+            totalOut += amount;
+          }
+        }
+        _syncTransactionSummary(
+          items: items,
+          totalIn: totalIn,
+          totalOut: totalOut,
+        );
+
+        return SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final item = items[index];
+            final income = item['type'] == 'in';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: FinanceTransactionTile(
+                key: ValueKey('finance-transaction-${item['key']}'),
+                category: item['category']?.toString() ?? 'other',
+                amount:
+                    '${income ? '+' : '-'}${_fmt.format((item['amount'] as num?)?.toInt() ?? 0)}',
+                author: item['from']?.toString() ?? '',
+                time: item['time']?.toString() ?? '',
+                note: item['note']?.toString() ?? '',
+                income: income,
+                onDelete: () => _deleteTransaction(item['key']),
+              ),
+            );
+          }, childCount: items.length),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: FinancePalette.canvas(context),
         elevation: 0,
         centerTitle: true,
+        foregroundColor: FinancePalette.ink(context),
         title: Text(
           context.tr('finance_title'),
           style: SLTheme.quicksand(
-            color: SLTheme.textMain,
+            color: FinancePalette.ink(context),
             fontWeight: FontWeight.w900,
-            fontSize: 20,
+            fontSize: 19,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: SLTheme.textMain),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
           tooltip: context.tr('p8_finance_back_tooltip'),
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.info_outline_rounded,
-              color: SLTheme.textMain,
-              size: 22,
-            ),
+            icon: const Icon(Icons.info_outline_rounded, size: 22),
             onPressed: () => _showInfoDialog(context),
             tooltip: context.tr('p8_finance_info_tooltip'),
           ),
           IconButton(
-            icon: const Icon(Icons.calculate_outlined, color: SLTheme.textMain),
+            icon: const Icon(Icons.calculate_outlined),
             onPressed: _showSplitBillDialog,
             tooltip: context.tr('util_chiatin_4685f5'),
           ),
         ],
       ),
-      body: SLTheme.background(
+      body: ColoredBox(
+        color: FinancePalette.canvas(context),
         child: SafeArea(
           child: CustomScrollView(
+            physics: SLResponsive.scrollPhysicsForPlatform(),
             slivers: [
-              SliverToBoxAdapter(child: _buildBalanceCard()),
-              SliverToBoxAdapter(child: _buildBudgetPlanSection()),
-              SliverToBoxAdapter(child: _buildSavingsGoalSection()),
-              SliverToBoxAdapter(child: _buildChartSection()),
-              SliverToBoxAdapter(child: _buildInputArea()),
-              _buildTransactionList(),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    FinanceBalanceCard(
+                      balance: _fmt.format(_totalBalance),
+                      income: _fmt.format(_totalIn),
+                      expense: _fmt.format(_totalOut),
+                      currency: _currencyCode,
+                      negative: _totalBalance < 0,
+                    ),
+                    _buildModernActions(),
+                    _buildModernBudgetPlan(),
+                    _buildModernSavingsGoal(),
+                    _buildModernChart(),
+                    FinanceSectionTitle(
+                      label: context.tr('finance_add_transaction_title'),
+                    ),
+                    FinanceComposer(
+                      type: _transactionType,
+                      category: _category,
+                      currency: _currencyCode,
+                      amountController: _amountController,
+                      noteController: _noteController,
+                      saving: _saving,
+                      onType: (type) => setState(() => _transactionType = type),
+                      onCategory: (category) =>
+                          setState(() => _category = category),
+                      onSave: _addTransaction,
+                    ),
+                    FinanceSectionTitle(
+                      label: context.tr('finance_recent_transactions_title'),
+                      count: _allTransactions.isEmpty
+                          ? null
+                          : _allTransactions.length.toString(),
+                    ),
+                  ]),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: _buildModernTransactionList(),
+              ),
             ],
           ),
         ),
@@ -611,13 +952,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
         child: IconButton(
           icon: Icon(icon, size: 20, color: color),
           onPressed: onPressed,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           padding: EdgeInsets.zero,
         ),
       ),
     );
   }
 
+  // ignore: unused_element, kept as a compatibility implementation for staged rollback.
   Widget _buildBudgetPlanSection() {
     if (_budgetPlan == null) {
       return Container(
@@ -814,6 +1156,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
+  // ignore: unused_element, kept as a compatibility implementation for staged rollback.
   Widget _buildSavingsGoalSection() {
     if (_savingsGoal == null) {
       return Container(
@@ -974,7 +1317,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _showSavingsGoalDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => SLAlertDialog(
+      builder: (ctx) => FinanceDialog(
         title: Text(context.tr('util_toqumi_e38258')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1002,11 +1345,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ],
         ),
         actions: [
-          SLDialogAction(
+          FinanceDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          SLDialogAction(
+          FinanceDialogAction(
             primary: true,
 
             onPressed: _saveSavingsGoal,
@@ -1018,6 +1361,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
+  // ignore: unused_element, kept as a compatibility implementation for staged rollback.
   Widget _buildChartSection() {
     if (_allTransactions.isEmpty) return const SizedBox.shrink();
 
@@ -1176,7 +1520,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _showPlanDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => SLAlertDialog(
+      builder: (ctx) => FinanceDialog(
         title: Text(context.tr('util_lpkhoch_eb08e6')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1207,11 +1551,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ],
         ),
         actions: [
-          SLDialogAction(
+          FinanceDialogAction(
             onPressed: () => Navigator.pop(ctx),
             child: Text(context.tr('util_hy_1e4050')),
           ),
-          SLDialogAction(
+          FinanceDialogAction(
             primary: true,
 
             onPressed: _saveBudgetPlan,
@@ -1223,6 +1567,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
+  // ignore: unused_element, kept as a compatibility implementation for staged rollback.
   Widget _buildBalanceCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(15, 12, 15, 0),
@@ -1330,6 +1675,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
+  // ignore: unused_element, kept as a compatibility implementation for staged rollback.
   Widget _buildInputArea() {
     return Container(
       margin: SLSpacing.all16,
@@ -1349,9 +1695,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
           // Thu/Chi toggle - clone .mood-wrap
           Row(
             children: [
-              _typeBtn('💚 ${context.tr('income')}', 'in', Colors.green),
+              _typeBtn('💚 ${context.tr('income')}', 'in', SLColors.success),
               SLSpacing.w8,
-              _typeBtn('❤️ ${context.tr('expense')}', 'out', SLTheme.primary),
+              _typeBtn('❤️ ${context.tr('expense')}', 'out', SLColors.primary),
             ],
           ),
           SLSpacing.h12,
@@ -1366,43 +1712,69 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ),
           SLSpacing.h8,
           SizedBox(
-            height: 36,
+            height: 56,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: _categories.length,
               itemBuilder: (ctx, i) {
                 final cat = _categories[i];
                 final isSelected = _category == cat;
-                return GestureDetector(
-                  onTap: () => setState(() => _category = cat),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: isSelected
-                          ? const LinearGradient(colors: SLTheme.btnGradient)
-                          : null,
-                      color: isSelected ? null : const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? Colors.transparent
-                            : const Color(0xFFE8D5DF),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      FinanceCategory.label(cat, context.tr),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isSelected ? Colors.white : SLTheme.textMuted,
-                        fontWeight: isSelected
-                            ? FontWeight.w800
-                            : FontWeight.w600,
+                final label = FinanceCategory.label(cat, context.tr);
+                return Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: label,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => setState(() => _category = cat),
+                        borderRadius: SLRadius.pillAll,
+                        child: AnimatedContainer(
+                          duration: SLDurations.fast,
+                          constraints: const BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? const LinearGradient(
+                                    colors: SLTheme.btnGradient,
+                                  )
+                                : null,
+                            color: isSelected
+                                ? null
+                                : _financeFilterSurface(context),
+                            borderRadius: SLRadius.pillAll,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.transparent
+                                  : _financeFilterBorder(context),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                height: 1.2,
+                                color: isSelected
+                                    ? Colors.white
+                                    : _financeFilterText(context),
+                                fontWeight: isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1506,34 +1878,48 @@ class _FinanceScreenState extends State<FinanceScreen> {
   Widget _typeBtn(String label, String type, Color color) {
     final isSelected = _transactionType == type;
     return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _transactionType = type),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? color : const Color(0xFFF5F5F5),
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _transactionType = type),
             borderRadius: SLRadius.lgAll,
-            border: Border.all(
-              color: isSelected ? color : const Color(0xFFE8D5DF),
-              width: 1.5,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: SLTheme.quicksand(
-              color: isSelected ? Colors.white : SLTheme.textMuted,
-              fontWeight: FontWeight.w800,
-              fontSize: 13,
+            child: AnimatedContainer(
+              duration: SLDurations.normal,
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? color : _financeFilterSurface(context),
+                borderRadius: SLRadius.lgAll,
+                border: Border.all(
+                  color: isSelected ? color : _financeFilterBorder(context),
+                  width: 1.5,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                        ),
+                      ]
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: isSelected
+                      ? Colors.white
+                      : _financeFilterText(context),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  height: 1.2,
+                ),
+              ),
             ),
           ),
         ),
@@ -1579,8 +1965,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
     });
   }
 
+  // ignore: unused_element, kept as a compatibility implementation for staged rollback.
   Widget _buildTransactionList() {
     return StreamBuilder(
+      key: ValueKey(widget.houseId),
       stream: _budgetStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1599,15 +1987,26 @@ class _FinanceScreenState extends State<FinanceScreen> {
         if (snapshot.hasError) {
           return SliverToBoxAdapter(
             child: Center(
-              child: Text(
-                L10nService().format('util_finance_load_tx_error', {
-                  'error': AppErrorMapper.resolve(snapshot.error).message,
-                }),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  color: SLTheme.textMain,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    L10nService().format('util_finance_load_tx_error', {
+                      'error': AppErrorMapper.resolve(snapshot.error).message,
+                    }),
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      color: SLTheme.textMain,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () =>
+                        setState(() => _budgetStream = _watchBudget()),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(context.tr('retry')),
+                  ),
+                ],
               ),
             ),
           );

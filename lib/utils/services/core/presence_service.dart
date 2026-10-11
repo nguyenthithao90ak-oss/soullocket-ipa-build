@@ -46,6 +46,29 @@ class PresenceService {
 
   String? get _currentUid => FirebaseAuth.instance.currentUser?.uid;
 
+  // goOffline() ngắt hẳn kết nối RTDB. Nếu sau đó có tài khoản đăng nhập lại (kể cả tài khoản mới
+  // chưa có nhà nên chưa gọi goOnline), mọi lệnh đọc RTDB ở màn khởi động/tạo nhà sẽ chờ tới hết
+  // hạn (5 giây mỗi lệnh). Chỉ nối lại khi thấy đăng xuất rồi có người đăng nhập.
+  StreamSubscription<User?>? _reconnectAfterSignIn;
+
+  void _reconnectOnNextSignIn() {
+    unawaited(_reconnectAfterSignIn?.cancel());
+    var signedOut = false;
+    _reconnectAfterSignIn = FirebaseAuth.instance.authStateChanges().listen(
+      (user) {
+        if (user == null) {
+          signedOut = true;
+          return;
+        }
+        if (!signedOut) return;
+        unawaited(_reconnectAfterSignIn?.cancel());
+        _reconnectAfterSignIn = null;
+        unawaited(FirebaseDatabase.instance.goOnline());
+      },
+      onError: (Object _) {},
+    );
+  }
+
   DatabaseReference _presenceRoleRef(String houseId, String role) {
     return _dbRef.child('houses/$houseId/presence/$role');
   }
@@ -708,6 +731,7 @@ class PresenceService {
     _mySessionId = null;
     _lastOnlineFingerprint = null;
     await FirebaseDatabase.instance.goOffline();
+    _reconnectOnNextSignIn();
   }
 
   Future<void> _cleanupPresence({

@@ -19,11 +19,13 @@ import '../utils/services/app_referral_service.dart';
 import '../utils/services/games/soul_block_memory_service.dart';
 import '../utils/services/market_service.dart';
 import '../utils/services/calendar_reminder_service.dart';
+import '../utils/services/habit_reminder_service.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
 import 'package:soullocket_app/utils/services/home_shared_note_service.dart';
+import 'package:soullocket_app/utils/services/home_couple_decor_sync_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
@@ -32,7 +34,6 @@ import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/cloudflare_data_service.dart';
 import 'package:soullocket_app/utils/services/notebook/notebook_d1_client.dart';
-import 'package:soullocket_app/utils/services/house_lists/house_list_d1_client.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
@@ -72,12 +73,17 @@ void setupLocator() {
   locator.registerLazySingleton(() => HouseService());
   locator.registerLazySingleton(() => HouseSettingsService());
   locator.registerLazySingleton(() => HomeSharedNoteService());
+  locator.registerLazySingleton(
+    () => HomeCoupleDecorSyncService(),
+    dispose: (service) => service.dispose(),
+  );
 
   // ── Realtime / Presence ─────────────────────────────────────────────────
   locator.registerLazySingleton(() => PresenceService());
   locator.registerLazySingleton(() => NotificationService());
   locator.registerLazySingleton(() => SoulEventReminderService.instance);
   locator.registerLazySingleton(() => CalendarReminderService.instance);
+  locator.registerLazySingleton(() => HabitReminderService.instance);
   locator.registerLazySingleton(() => LocationService());
 
   // ── Storage & Cache ─────────────────────────────────────────────────────
@@ -88,10 +94,6 @@ void setupLocator() {
   );
   locator.registerLazySingleton(
     () => NotebookD1Client(),
-    dispose: (client) => client.dispose(),
-  );
-  locator.registerLazySingleton(
-    () => HouseListD1Client(),
     dispose: (client) => client.dispose(),
   );
 

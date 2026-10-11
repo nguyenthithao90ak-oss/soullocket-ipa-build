@@ -117,13 +117,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       // Header
       rows.add([
         'ID',
-        'User1',
-        'User2',
-        'Role',
+        context.tr('admin_csv_user1'),
+        context.tr('admin_csv_user2'),
+        context.tr('admin_csv_role'),
         'PRO',
         context.tr('admin_bkha_fce0d8'),
         context.tr('admin_ldokha_495968'),
-        'Created At'
+        context.tr('admin_csv_created_at')
       ]);
 
       for (var h in filtered) {
@@ -140,8 +140,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           h['user1_name'] ?? '',
           h['user2_name'] ?? '',
           h['role'] ?? 'user',
-          isPro ? 'Yes' : 'No',
-          isBanned ? 'Yes' : 'No',
+          context.tr(isPro ? 'admin_csv_yes' : 'admin_csv_no'),
+          context.tr(isBanned ? 'admin_csv_yes' : 'admin_csv_no'),
           h['banReason'] ?? '',
           dateStr,
         ]);

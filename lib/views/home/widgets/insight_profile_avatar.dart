@@ -66,8 +66,12 @@ class InsightProfileAvatar extends StatelessWidget {
     }
 
     Widget buildNetworkImage() {
-      return Image.network(
-        url,
+      return Image(
+        image: HomeImagePolicy.resized(
+          NetworkImage(url),
+          width: HomeImagePolicy.avatarPixels,
+          height: HomeImagePolicy.avatarPixels,
+        ),
         fit: BoxFit.cover,
         gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) => cachedOr(failed),
@@ -95,8 +99,12 @@ class InsightProfileAvatar extends StatelessWidget {
             child: url.isEmpty
                 ? missing
                 : url.startsWith('assets/')
-                ? Image.asset(
-                    url,
+                ? Image(
+                    image: HomeImagePolicy.resized(
+                      AssetImage(url),
+                      width: HomeImagePolicy.avatarPixels,
+                      height: HomeImagePolicy.avatarPixels,
+                    ),
                     key: ValueKey(url),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => failed,

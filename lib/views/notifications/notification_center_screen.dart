@@ -4,13 +4,14 @@ import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../utils/locale_date_format.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/countdown_space_service.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/schedule_notification_presenter.dart';
+import '../../utils/services/notification_text_presenter.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
 
@@ -42,6 +43,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   _NotifCategory _cat = _NotifCategory.all;
   String _search = '';
   bool _isLoading = true;
+  bool _loadFailed = false;
   String _houseName = '';
   String _nameU1 = '';
   String _nameU2 = '';
@@ -49,6 +51,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   String _dobU1 = '';
   String _dobU2 = '';
   StreamSubscription<DatabaseEvent>? _notificationsSub;
+  Timer? _notificationsFirstEventTimer;
   Timer? _notificationsDebounce;
   String _lastNotificationsFingerprint = '';
 
@@ -80,16 +83,31 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   }
 
   Future<void> _init() async {
-    _houseId = await _houseService.getCurrentHouseId();
-    if (_houseId == null) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      NotificationBadgeCounter.instance.update(0);
-      return;
-    }
+    _detachNotificationsListener();
+    _isLoading = true;
+    _loadFailed = false;
+    try {
+      _houseId = await _houseService
+          .getCurrentHouseId()
+          .timeout(const Duration(seconds: 12));
+      if (_houseId == null || _houseId!.isEmpty) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        NotificationBadgeCounter.instance.update(0);
+        return;
+      }
 
-    await _loadHouseIdentity();
-    _syncNotificationsListener(forceRestart: true);
+      await _loadHouseIdentity();
+      _syncNotificationsListener(forceRestart: true);
+    } catch (error) {
+      debugPrint('[NotificationCenter] Cannot initialize: $error');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
+      });
+      NotificationBadgeCounter.instance.update(0);
+    }
   }
 
   void _attachNotificationsListener({bool forceRestart = false}) {
@@ -99,6 +117,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     }
 
     _detachNotificationsListener();
+    _notificationsFirstEventTimer = Timer(const Duration(seconds: 12), () {
+      if (!mounted || !_isLoading) return;
+      setState(() {
+        _isLoading = false;
+        _loadFailed = true;
+      });
+    });
     _notificationsSub = _db
         .ref('notifications/$_houseId')
         .limitToLast(_notificationsLimit)
@@ -106,16 +131,23 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         .listen(
           _handleNotificationsEvent,
           onError: (Object error) {
+            _notificationsFirstEventTimer?.cancel();
+            _notificationsFirstEventTimer = null;
             debugPrint(
               '[NotificationCenter] listener error: ${AppErrorMapper.resolve(error).message}',
             );
             if (!mounted) return;
-            setState(() => _isLoading = false);
+            setState(() {
+              _isLoading = false;
+              _loadFailed = true;
+            });
           },
         );
   }
 
   void _detachNotificationsListener() {
+    _notificationsFirstEventTimer?.cancel();
+    _notificationsFirstEventTimer = null;
     _notificationsDebounce?.cancel();
     _notificationsDebounce = null;
     _notificationsSub?.cancel();
@@ -147,12 +179,15 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
 
   void _handleNotificationsEvent(DatabaseEvent event) {
     if (!mounted) return;
+    _notificationsFirstEventTimer?.cancel();
+    _notificationsFirstEventTimer = null;
     if (!event.snapshot.exists || event.snapshot.value == null) {
       _lastNotificationsFingerprint = '';
       _notificationsDebounce?.cancel();
       setState(() {
         _all = <_NotifModel>[];
         _isLoading = false;
+          _loadFailed = false;
       });
       _updateBadge();
       return;
@@ -212,6 +247,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       setState(() {
         _all = items;
         _isLoading = false;
+        _loadFailed = false;
       });
       _updateBadge();
     });
@@ -220,6 +256,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   void _updateBadge() {
     final unread = _all.where((n) => !_isRead(n)).length;
     NotificationBadgeCounter.instance.update(unread);
+  }
+
+  Future<void> _retryLoad() async {
+    if (!mounted) return;
+    setState(() {
+      _all = <_NotifModel>[];
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    await _init();
   }
 
   String _buildSnapshotFingerprint(Map<String, dynamic> raw) {
@@ -259,7 +305,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
     final houseId = _houseId;
     if (houseId == null || houseId.isEmpty) return;
     try {
-      final snapshot = await _db.ref('houses/$houseId/settings').get();
+      final snapshot = await _db
+          .ref('houses/$houseId/settings')
+          .get()
+          .timeout(const Duration(seconds: 12));
       if (!mounted) return;
       final data = snapshot.value is Map
           ? Map<String, dynamic>.from(
@@ -621,6 +670,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
                       color: SLColors.primaryActive,
                     ),
                   )
+                : _loadFailed && _all.isEmpty
+                ? _buildLoadError()
                 : _filtered.isEmpty
                 ? _buildEmpty()
                 : ListView.builder(

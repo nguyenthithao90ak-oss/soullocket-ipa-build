@@ -8,7 +8,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final mm = dt.month.toString().padLeft(2, '0');
     final hh = dt.hour.toString().padLeft(2, '0');
     final min = dt.minute.toString().padLeft(2, '0');
-    return UiCopy.text('copy_03dc788a1b2c', {'value1': dd, 'value2': mm, 'value3': dt.year, 'value4': hh, 'value5': min});
+    return UiCopy.text('copy_03dc788a1b2c', {
+      'value1': dd,
+      'value2': mm,
+      'value3': dt.year,
+      'value4': hh,
+      'value5': min,
+    });
   }
 
   Future<void> _maybeShowPendingDeviceNotice() async {
@@ -34,8 +40,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       await SLNotice.showConfirmDialog(
         context,
         title: context.tr('home_thitbangch_91f2dd'),
-        message:
-            L10nScope.of(context).format('ui_home_this_device_is_in_standby_mode_you_cba650', {'value1': _formatPendingDeviceUnlockAt(trustState.autoApproveAtMs)}),
+        message: L10nScope.of(context).format(
+          'ui_home_this_device_is_in_standby_mode_you_cba650',
+          {'value1': _formatPendingDeviceUnlockAt(trustState.autoApproveAtMs)},
+        ),
         confirmText: context.tr('home_hiu_93c4c0'),
         cancelText: context.tr('home_ng_f63d1e'),
       );
@@ -83,10 +91,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
     if (!mounted || goNow != true) return;
 
-    Navigator.push(
-      context,
-      SLRoute(builder: (_) => CoupleConnectScreen(houseId: houseId)),
-    );
+    await slPush(context, CoupleConnectScreen(houseId: houseId));
   }
 
   Future<void> _maybeShowFirstSetupGuide() async {
@@ -262,7 +267,9 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.tr('ui_home_thank_you_for_creating_an_account_and_63c6e4'),
+                  context.tr(
+                    'ui_home_thank_you_for_creating_an_account_and_63c6e4',
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -273,19 +280,27 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 SLSpacing.h12,
                 _buildNewUserChecklistItem(
                   icon: Icons.cloud_done_rounded,
-                  text: context.tr('ui_home_check_synchronization_for_peace_of_mind_when_e76602'),
+                  text: context.tr(
+                    'ui_home_check_synchronization_for_peace_of_mind_when_e76602',
+                  ),
                 ),
                 _buildNewUserChecklistItem(
                   icon: Icons.photo_camera_rounded,
-                  text: context.tr('ui_home_create_your_first_memories_for_the_two_e504e3'),
+                  text: context.tr(
+                    'ui_home_create_your_first_memories_for_the_two_e504e3',
+                  ),
                 ),
                 _buildNewUserChecklistItem(
                   icon: Icons.notifications_active_rounded,
-                  text: context.tr('ui_home_turn_on_anniversary_reminders_and_love_messages_f3a849'),
+                  text: context.tr(
+                    'ui_home_turn_on_anniversary_reminders_and_love_messages_f3a849',
+                  ),
                 ),
                 _buildNewUserChecklistItem(
                   icon: Icons.palette_rounded,
-                  text: context.tr('ui_home_choose_a_theme_or_performance_mode_suitable_83448a'),
+                  text: context.tr(
+                    'ui_home_choose_a_theme_or_performance_mode_suitable_83448a',
+                  ),
                 ),
                 SLSpacing.h16,
                 SizedBox(
@@ -338,7 +353,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final month = dt.month.toString().padLeft(2, '0');
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
-    return UiCopy.text('copy_03dc788a1b2c', {'value1': day, 'value2': month, 'value3': dt.year, 'value4': hour, 'value5': minute});
+    return UiCopy.text('copy_03dc788a1b2c', {
+      'value1': day,
+      'value2': month,
+      'value3': dt.year,
+      'value4': hour,
+      'value5': minute,
+    });
   }
 
   Future<void> _maybeShowBreakupEntryNotice() async {
@@ -360,8 +381,14 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final message = request.isProcessing
         ? context.tr('home_hthngangxl_2041f8')
         : request.isScheduled
-        ? L10nService().format('ui_home_the_deletion_request_has_now_been_scheduled_3217f8', {'value1': _formatBreakupDateTime(request.deleteAt)})
-        : L10nService().format('ui_home_the_deletion_request_is_still_waiting_for_ef96d3', {'value1': _formatBreakupDateTime(request.expireAt)});
+        ? L10nService().format(
+            'ui_home_the_deletion_request_has_now_been_scheduled_3217f8',
+            {'value1': _formatBreakupDateTime(request.deleteAt)},
+          )
+        : L10nService().format(
+            'ui_home_the_deletion_request_is_still_waiting_for_ef96d3',
+            {'value1': _formatBreakupDateTime(request.expireAt)},
+          );
 
     try {
       await showDialog<void>(
@@ -429,13 +456,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                     SLSpacing.w12,
                     Expanded(
                       child: SLDialogAction(
-                      primary: true,
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _openSettings();
-                      },
-                      child: Text(context.tr('home_mcit_8f1f98')),
-                    ),
+                        primary: true,
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _openSettings();
+                        },
+                        child: Text(context.tr('home_mcit_8f1f98')),
+                      ),
                     ),
                   ],
                 ),
@@ -451,10 +478,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
   void _openSettings() {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      SLRoute(
-        builder: (_) => SettingsTab(
+    unawaited(
+      slPush(
+        context,
+        SettingsTab(
           showGuideOnOpen: true,
           onReplayFirstSetupGuide: _replayFirstSetupGuideFromSettings,
         ),
@@ -786,11 +813,16 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(child: Text(context.tr('ui_home_pro_package_has_expired_fbc43c'))),
+            Expanded(
+              child: Text(context.tr('ui_home_pro_package_has_expired_fbc43c')),
+            ),
           ],
         ),
         content: Text(
-          L10nScope.of(context).format('ui_home_your_pro_account_has_expired_you_currently_206a5e', {'value1': activeCount, 'value2': daysRemaining}),
+          L10nScope.of(context).format(
+            'ui_home_your_pro_account_has_expired_you_currently_206a5e',
+            {'value1': activeCount, 'value2': daysRemaining},
+          ),
         ),
         actions: [
           SLDialogAction(
@@ -802,10 +834,10 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
 
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                SLRoute<void>(
-                  builder: (_) => SettingsLinksManagerScreen(houseId: houseId),
+              unawaited(
+                slPush<void>(
+                  context,
+                  SettingsLinksManagerScreen(houseId: houseId),
                 ),
               );
             },
@@ -836,12 +868,14 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(child: Text(context.tr('ui_home_automatically_lock_the_link_7f54de'))),
+            Expanded(
+              child: Text(
+                context.tr('ui_home_automatically_lock_the_link_7f54de'),
+              ),
+            ),
           ],
         ),
-        content: Text(
-          context.tr('ui_home_it_s_been_more_than_1_day_0944c5'),
-        ),
+        content: Text(context.tr('ui_home_it_s_been_more_than_1_day_0944c5')),
         actions: [
           SLDialogAction(
             primary: true,

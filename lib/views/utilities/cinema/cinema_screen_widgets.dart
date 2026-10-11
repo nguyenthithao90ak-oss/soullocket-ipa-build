@@ -85,6 +85,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     final nextMilestone = _nextAnniversaryMilestone(DateTime.now(), _startDate);
     final nextShow = nextMilestone?.date;
     final l10n = L10nScope.of(context);
+    final cover = reel != null && reel.items.isNotEmpty
+        ? reel.items.first
+        : (_records.isEmpty ? null : _records.last);
     final metricValues = reel == null
         ? <Map<String, String>>[
             <String, String>{
@@ -106,14 +109,12 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           ]
         : <Map<String, String>>[
             <String, String>{
-              'label': context.tr('util_btu_3cb0f0'),
-              'value': _startDate == null
-                  ? '--/--/----'
-                  : _formatDate(_startDate!),
-            },
-            <String, String>{
               'label': context.tr('util_khunghnh_cba5af'),
               'value': '${reel.items.length}/$_kCinemaReelFrameLimit',
+            },
+            <String, String>{
+              'label': context.tr('util_thilng_77d9bd'),
+              'value': _formatDurationLabel(reel.items.length),
             },
             <String, String>{
               'label': context.tr('util_txalc_c19250'),
@@ -123,135 +124,166 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 380;
         final accent = reel == null
             ? const Color(0xFF8AD8FF)
             : Color(reel.accentValue);
         return Container(
-          padding: EdgeInsets.all(compact ? 16 : 18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: <Color>[
-                Color(0xCC122033),
-                Color(0xCC1B1732),
-                Color(0xCC2E1525),
-              ],
-            ),
+            color: const Color(0xFF101A2B),
+            borderRadius: BorderRadius.circular(28),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
             boxShadow: const <BoxShadow>[
               BoxShadow(
-                color: Color(0x5A000000),
-                blurRadius: 42,
-                offset: Offset(0, 22),
+                color: Color(0x35000000),
+                blurRadius: 24,
+                offset: Offset(0, 12),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    width: compact ? 50 : 56,
-                    height: compact ? 50 : 56,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: <Color>[
-                          accent.withValues(alpha: 0.26),
-                          Colors.white.withValues(alpha: 0.10),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.10),
-                      ),
-                    ),
-                    child: Icon(
-                      reel == null
-                          ? Icons.movie_filter_outlined
-                          : Icons.movie_creation_outlined,
-                      color: Colors.white,
-                      size: compact ? 27 : 30,
-                    ),
-                  ),
-                  SizedBox(width: compact ? 10 : 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: <Widget>[
-                            Text(
-                              context.tr('util_rpknim_d094b9'),
-                              style: SLTheme.quicksand(
-                                fontSize: compact ? 22 : 25,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                child: AspectRatio(
+                  aspectRatio: constraints.maxWidth < 380 ? 1.28 : 1.55,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: <Widget>[
+                      if (cover == null)
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: <Color>[
+                                accent.withValues(alpha: 0.72),
+                                const Color(0xFF18243B),
+                              ],
                             ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.movie_creation_outlined,
+                              color: Colors.white70,
+                              size: 54,
+                            ),
+                          ),
+                        )
+                      else
+                        _buildMemoryImage(cover),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: <Color>[
+                              Colors.black.withValues(alpha: 0.22),
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.82),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 16,
+                        left: 16,
+                        right: 16,
+                        child: Row(
+                          children: <Widget>[
                             _pill(
                               icon: reel == null
                                   ? Icons.schedule_rounded
-                                  : Icons.local_fire_department_rounded,
+                                  : Icons.local_movies_rounded,
                               label: reel == null
                                   ? context.tr('util_chmsut_dbc583')
                                   : context.tr('util_angsngn_6f20a4'),
                               color: accent,
                             ),
+                            const Spacer(),
+                            if (cover != null)
+                              _pill(
+                                icon: Icons.photo_library_outlined,
+                                label: l10n.format(
+                                  'p8_cinema_image_count',
+                                  <String, Object?>{'count': _records.length},
+                                ),
+                                color: Colors.white,
+                              ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _houseName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: compact ? 13 : 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.72),
-                          ),
+                      ),
+                      Positioned(
+                        left: 18,
+                        right: 18,
+                        bottom: 18,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              context.tr('util_rpknim_d094b9'),
+                              style: SLTheme.quicksand(
+                                fontSize: constraints.maxWidth < 380 ? 24 : 28,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _houseName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white.withValues(alpha: 0.82),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              SizedBox(height: compact ? 14 : 16),
-              Text(
-                reel == null
-                    ? context.tr('util_nngmcknimh_7b8732')
-                    : context.tr('util_sutchiuhmn_0b4972'),
-                style: SLTheme.quicksand(
-                  fontSize: compact ? 13.5 : 14.5,
-                  height: 1.48,
-                  color: Colors.white.withValues(alpha: 0.86),
                 ),
               ),
-              SizedBox(height: compact ? 14 : 16),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: List<Widget>.generate(metricValues.length, (index) {
-                  final metric = metricValues[index];
-                  return SizedBox(
-                    width: compact
-                        ? (constraints.maxWidth - 10) / 2
-                        : (constraints.maxWidth - 20) / 3,
-                    child: _metricCard(
-                      label: metric['label']!,
-                      value: metric['value']!,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      reel == null
+                          ? context.tr('util_nngmcknimh_7b8732')
+                          : context.tr('util_sutchiuhmn_0b4972'),
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        height: 1.45,
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
                     ),
-                  );
-                }),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List<Widget>.generate(metricValues.length, (
+                        index,
+                      ) {
+                        final metric = metricValues[index];
+                        return SizedBox(
+                          width: constraints.maxWidth < 380
+                              ? (constraints.maxWidth - 8) / 2
+                              : (constraints.maxWidth - 16) / 3,
+                          child: _metricCard(
+                            label: metric['label']!,
+                            value: metric['value']!,
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -281,76 +313,6 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 height: 1.45,
                 color: Colors.white.withValues(alpha: 0.9),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLockedShowtimeCard() {
-    final nextMilestone = _nextAnniversaryMilestone(DateTime.now(), _startDate);
-    final nextShow = nextMilestone?.date;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0x227FD3FF),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.schedule_rounded, color: Color(0xFF7FD3FF)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  nextShow == null
-                      ? context.tr('util_chaxcnhcmc_84ba6e')
-                      : L10nScope.of(context).format(
-                          'p8_cinema_next_show',
-                          <String, Object?>{'date': _formatDate(nextShow)},
-                        ),
-                  style: SLTheme.quicksand(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                if (nextMilestone != null) ...<Widget>[
-                  const SizedBox(height: 4),
-                  Text(
-                    nextMilestone.title,
-                    style: SLTheme.quicksand(
-                      fontSize: 12.6,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFFFFDFA2),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 4),
-                Text(
-                  L10nScope.of(context).format(
-                    'p8_cinema_locked_explanation',
-                    <String, Object?>{'count': _kCinemaReelFrameLimit},
-                  ),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    height: 1.42,
-                    color: Colors.white.withValues(alpha: 0.72),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -388,11 +350,18 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                   child: SizedBox(
                     key: ValueKey<String>('${reel.dateKey}_${item.id}'),
                     child: AspectRatio(
-                      aspectRatio: 16 / 10,
+                      aspectRatio: 4 / 5,
                       child: Stack(
                         fit: StackFit.expand,
                         children: <Widget>[
-                          _buildContainedImage(item.imageUrl),
+                          item.isPrivate
+                              ? PrivateDiaryImage(
+                                  houseId: widget.houseId,
+                                  memoryId: item.id,
+                                  fit: BoxFit.contain,
+                                  cacheWidth: 720,
+                                )
+                              : _buildContainedImage(item.imageUrl),
                           DecoratedBox(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -442,59 +411,28 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                           Positioned.fill(
                             child: IgnorePointer(
                               child: Center(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(42),
-                                  child: FastBackdropFilter(
-                                    filter: ImageFilter.blur(
-                                      sigmaX: 12,
-                                      sigmaY: 12,
-                                    ),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 14,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.15,
+                                child: Container(
+                                  width: 76,
+                                  height: 76,
+                                  decoration: BoxDecoration(
+                                    color: Color(
+                                      reel.accentValue,
+                                    ).withValues(alpha: 0.94),
+                                    shape: BoxShape.circle,
+                                    boxShadow: <BoxShadow>[
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.28,
                                         ),
-                                        borderRadius: BorderRadius.circular(42),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.35,
-                                          ),
-                                          width: 1.5,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                            blurRadius: 10,
-                                            spreadRadius: 2,
-                                          ),
-                                        ],
+                                        blurRadius: 18,
+                                        offset: const Offset(0, 8),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.play_arrow_rounded,
-                                            color: Colors.white,
-                                            size: 28,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            context.tr('p8_cinema_play_reel'),
-                                            style: SLTheme.quicksand(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 42,
                                   ),
                                 ),
                               ),
@@ -659,7 +597,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                       child: Stack(
                         fit: StackFit.expand,
                         children: <Widget>[
-                          _networkImage(item.displayUrl),
+                          _buildMemoryImage(item),
                           DecoratedBox(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -1001,6 +939,17 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     );
   }
 
+  Widget _buildMemoryImage(_CinemaMemoryRecord item) {
+    if (item.isPrivate) {
+      return PrivateDiaryImage(
+        houseId: widget.houseId,
+        memoryId: item.id,
+        cacheWidth: 360,
+      );
+    }
+    return _networkImage(item.displayUrl);
+  }
+
   Widget _networkImage(String url) {
     final isNetwork = url.startsWith('http://') || url.startsWith('https://');
 
@@ -1009,7 +958,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         maxWidthDiskCache: 720,
         imageUrl: url,
         fit: BoxFit.cover,
-        memCacheWidth: 600,
+        memCacheWidth: 360,
         filterQuality: FilterQuality.medium,
         placeholder: (_, _) => Container(
           color: const Color(0xFF182334),
@@ -1032,7 +981,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     } else {
       return Image.file(
         File(url),
-        cacheWidth: 1440,
+        cacheWidth: 360,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
         errorBuilder: (_, _, _) => Container(

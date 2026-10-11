@@ -1,9 +1,26 @@
 import 'package:flutter/material.dart';
+import '../../core/sl_route.dart';
+import '../../core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'package:soullocket_app/widgets/sticker_collection.dart';
 import '../home/widgets/soul_merge/sticker_bottom_sheet.dart';
+
+bool _stickerDark(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark;
+Color _stickerCanvas(BuildContext context) =>
+    _stickerDark(context) ? SLColors.darkBgMain : SLColors.paper;
+Color _stickerSurface(BuildContext context) =>
+    _stickerDark(context) ? SLColors.darkBgCard : SLColors.paperPeach;
+Color _stickerInk(BuildContext context) =>
+    _stickerDark(context) ? SLColors.darkTextPrimary : SLColors.ink;
+Color _stickerMuted(BuildContext context) =>
+    _stickerDark(context) ? SLColors.darkTextSecond : SLColors.textSecondary;
+Color _stickerAccent(BuildContext context) =>
+    _stickerDark(context) ? const Color(0xFFE7ADC1) : const Color(0xFF943F5B);
+Color _stickerLine(BuildContext context) =>
+    _stickerDark(context) ? SLColors.darkBorder : SLColors.border;
 
 /// Giữ cả hai phong cách và kho cũ; mở độc lập để xem, hoặc để chọn cho Home.
 class StickerLibraryScreen extends StatefulWidget {
@@ -31,30 +48,30 @@ class _StickerLibraryScreenState extends State<StickerLibraryScreen> {
       onSelected(reference);
       return;
     }
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _StickerPreviewScreen(reference: reference),
-      ),
-    );
+    slPush<void>(context, _StickerPreviewScreen(reference: reference));
   }
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
     length: 3,
     child: Scaffold(
-      backgroundColor: const Color(0xFFFFFCFD),
+      backgroundColor: _stickerCanvas(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFCFD),
+        backgroundColor: _stickerCanvas(context),
+        foregroundColor: _stickerInk(context),
+        surfaceTintColor: Colors.transparent,
         title: Text(context.tr('sticker_library_title')),
         bottom: TabBar(
           isScrollable: true,
           tabAlignment: TabAlignment.start,
-          labelColor: const Color(0xFFB74770),
-          indicatorColor: const Color(0xFFB74770),
+          labelColor: _stickerAccent(context),
+          unselectedLabelColor: _stickerMuted(context),
+          indicatorColor: _stickerAccent(context),
+          dividerColor: _stickerLine(context),
           tabs: [
-            Tab(text: context.tr('sticker_collection_new')),
-            Tab(text: context.tr('sticker_collection_active')),
-            Tab(text: context.tr('sticker_collection_archive')),
+            Tab(height: 56, text: context.tr('sticker_collection_new')),
+            Tab(height: 56, text: context.tr('sticker_collection_active')),
+            Tab(height: 56, text: context.tr('sticker_collection_archive')),
           ],
         ),
       ),
@@ -78,6 +95,10 @@ class _StickerLibraryScreenState extends State<StickerLibraryScreen> {
                 if (snapshot.hasError) {
                   return Center(
                     child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: _stickerAccent(context),
+                        minimumSize: const Size(48, 48),
+                      ),
                       onPressed: () => setState(() {
                         _archive = StickerCollection.loadArchive();
                       }),
@@ -87,7 +108,16 @@ class _StickerLibraryScreenState extends State<StickerLibraryScreen> {
                   );
                 }
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: MediaQuery.disableAnimationsOf(context)
+                        ? Icon(
+                            Icons.hourglass_top_rounded,
+                            color: _stickerMuted(context),
+                          )
+                        : CircularProgressIndicator(
+                            color: _stickerAccent(context),
+                          ),
+                  );
                 }
                 return _CollectionGrid(
                   references: snapshot.data!,
@@ -120,7 +150,11 @@ class _CollectionGrid extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Text(
           context.tr(descriptionKey),
-          style: const TextStyle(color: Color(0xFF766770), height: 1.4),
+          style: SLTheme.quicksand(
+            color: _stickerMuted(context),
+            fontSize: 14,
+            height: 1.45,
+          ),
         ),
       ),
       Expanded(
@@ -143,10 +177,14 @@ class _CollectionGrid extends StatelessWidget {
                   .tr('sticker_collection_item')
                   .replaceAll('{number}', '${index + 1}'),
               child: Material(
-                color: const Color(0xFFFFF4F0),
-                borderRadius: BorderRadius.circular(20),
+                color: _stickerSurface(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: _stickerLine(context)),
+                ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
+                  key: ValueKey('sticker-collection-item-$index'),
                   onTap: () => onSelected(reference),
                   child: Padding(
                     padding: const EdgeInsets.all(8),
@@ -174,9 +212,11 @@ class _StickerPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFFF5F8),
+    backgroundColor: _stickerCanvas(context),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFFFF5F8),
+      backgroundColor: _stickerCanvas(context),
+      foregroundColor: _stickerInk(context),
+      surfaceTintColor: Colors.transparent,
       title: Text(context.tr('sticker_library_title')),
     ),
     body: Center(

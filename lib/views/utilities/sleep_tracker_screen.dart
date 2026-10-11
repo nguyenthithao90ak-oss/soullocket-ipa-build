@@ -8,6 +8,7 @@ import '../../utils/sleep_history_query.dart';
 import '../../utils/services/house_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/screen_activity_mixin.dart';
 import '../../utils/sleep_tracking_toggle.dart';
 import '../../utils/services/core/background_tracking_service.dart';
 import '../../utils/services/l10n_service.dart';
@@ -29,9 +30,10 @@ class SleepTrackerScreen extends StatefulWidget {
 }
 
 class _SleepTrackerScreenState extends State<SleepTrackerScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, ScreenActivityMixin {
   final _subscriptions = <StreamSubscription<DatabaseEvent>>[];
   final _presence = <String, dynamic>{};
+  final _localPresence = <String, dynamic>{};
   final _history = <String, List<Map<String, dynamic>>>{};
   StreamSubscription<Map<String, List<Map<String, dynamic>>>>? _historySub;
   StreamSubscription<User?>? _authSub;
@@ -41,7 +43,9 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
   String _role = 'user1';
   bool _working = false, _loading = true, _confirming = false;
   Timer? _clock;
+  Timer? _loadDeadline;
   String? _errorMessage;
+  bool _serviceReady = false;
   late final SleepTrackingToggle _tracking;
   bool get _enabled => _tracking.enabled;
   bool get _busy => _working || _loading || _confirming || _tracking.busy;
@@ -65,9 +69,21 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
     _authSub = FirebaseAuth.instance.authStateChanges().listen((u) {
       if (mounted && u?.uid != _uid) unawaited(_init());
     });
-    _clock = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(() {});
-    });
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    _clock?.cancel();
+    _clock = active
+        ? Timer.periodic(const Duration(minutes: 1), (_) {
+            if (isScreenActive) setState(() {});
+          })
+        : null;
+    if (active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (isScreenActive) setState(() {});
+      });
+    }
   }
 
   Future<void> _init() async {
@@ -79,20 +95,34 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
         generation == _generation &&
         widget.houseId == houseId &&
         FirebaseAuth.instance.currentUser?.uid == uid;
+    _loadDeadline?.cancel();
+    _loadDeadline = Timer(const Duration(seconds: 15), () {
+      if (!current() || !_loading) return;
+      _generation++;
+      _tracking.reset();
+      setState(() {
+        _loading = false;
+        _errorMessage = context.tr('sleep_tracking_failed');
+      });
+    });
     _tracking.reset();
     setState(() {
       _loading = true;
+      _working = false;
+      _serviceReady = false;
       _errorMessage = null;
     });
     try {
       final previous = [..._subscriptions];
       _subscriptions.clear();
-      await Future.wait(previous.map((s) => s.cancel()));
-      await _historySub?.cancel();
+      final previousHistory = _historySub;
       _historySub = null;
+      await Future.wait(previous.map((s) => s.cancel()));
+      await previousHistory?.cancel();
       if (!current()) return;
       setState(() {
         _presence.clear();
+        _localPresence.clear();
         _history.clear();
         _names.clear();
       });
@@ -108,13 +138,17 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
       final prefs = await SharedPreferences.getInstance();
       if (!current()) return;
       await prefs.reload();
+      if (!current()) return;
       await _tracking.load();
       if (!current()) return;
-      setState(() {
-        _role = sleepRole(
-          prefs.getString('il_role') ?? prefs.getString('il_rel_role'),
-        )!;
-      });
+      // Vai có thể chỉ còn trong bộ nhớ bảo mật; không dùng `!` trên prefs.
+      final scope = await SleepTrackingService.readCachedScope(prefs);
+      if (!current()) return;
+      if (scope == null || scope.house != houseId) {
+        throw StateError('sleep_scope_missing');
+      }
+      setState(() => _role = scope.role);
+      await _loadLocalPresence();
       final db = FirebaseDatabase.instance.ref('houses/' + houseId);
       for (final role in ['user1', 'user2']) {
         final nameKey = role == 'user1' ? 'nameU1' : 'nameU2';
@@ -184,9 +218,54 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
     } catch (e) {
       if (current()) _error(e);
     } finally {
-      if (current()) setState(() => _loading = false);
+      if (current()) {
+        _loadDeadline?.cancel();
+        _loadDeadline = null;
+        setState(() => _loading = false);
+      }
+    }
+    if (current() && _enabled && _supported) {
+      unawaited(_ensureService(generation));
     }
     if (current() && _enabled && !kIsWeb && Platform.isIOS) await _refresh();
+  }
+
+  Future<void> _loadLocalPresence() async {
+    final uid = _uid;
+    if (uid == null || !mounted) return;
+    try {
+      final local = await BackgroundTrackingService.readLocalPresence(
+        sleepConsentScope(uid, widget.houseId, _role),
+      );
+      if (!mounted) return;
+      setState(() {
+        _localPresence
+          ..clear()
+          ..addAll(local);
+      });
+    } catch (_) {
+      // Cache native không đọc được không được biến thành lỗi dữ liệu mạng.
+    }
+  }
+
+  Future<void> _ensureService(int generation) async {
+    final uid = _uid;
+    if (uid == null || !_enabled || generation != _generation) return;
+    try {
+      await BackgroundTrackingService.ensureRunning(
+        houseId: widget.houseId,
+        uid: uid,
+      ).timeout(const Duration(seconds: 15));
+      if (mounted && generation == _generation) {
+        setState(() => _serviceReady = true);
+        await _loadLocalPresence();
+      }
+    } catch (error) {
+      if (mounted && generation == _generation) {
+        setState(() => _serviceReady = false);
+        _error(error);
+      }
+    }
   }
 
   void _error(Object error) {
@@ -214,19 +293,30 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
   Future<void> _refresh() async {
     if (_busy) return;
     final generation = _generation;
+    final houseId = widget.houseId;
     setState(() {
       _working = true;
       _errorMessage = null;
     });
     try {
       await _tracking.load();
+      if (!mounted || generation != _generation) return;
       if (!kIsWeb && Platform.isIOS && _enabled)
-        await SleepTrackingService.refreshHealth();
-      await WidgetService.syncSleepWidgetData(houseId: widget.houseId);
+        await SleepTrackingService.refreshHealth().timeout(
+          const Duration(seconds: 20),
+        );
+      if (!mounted || generation != _generation) return;
+      await WidgetService.syncSleepWidgetData(
+        houseId: houseId,
+      ).timeout(const Duration(seconds: 10));
+      await _loadLocalPresence();
+      if (_enabled && _supported) await _ensureService(generation);
     } catch (e) {
       if (generation == _generation) _error(e);
     } finally {
-      if (mounted) setState(() => _working = false);
+      if (mounted && generation == _generation) {
+        setState(() => _working = false);
+      }
     }
   }
 
@@ -270,6 +360,10 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
     await _tracking.setEnabled(value);
     if (mounted && generation == _generation && _tracking.error != null)
       _error(_tracking.error!);
+    else if (mounted && generation == _generation) {
+      setState(() => _serviceReady = false);
+      if (value) unawaited(_ensureService(generation));
+    }
   }
 
   Future<void> _manual(bool sleeping) async {
@@ -311,6 +405,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
     unawaited(_historySub?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     _clock?.cancel();
+    _loadDeadline?.cancel();
     for (final s in _subscriptions) {
       unawaited(s.cancel());
     }
@@ -327,7 +422,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final own = sleepRoleData(_presence, _role);
+    final own = _presenceFor(_role);
     final manualActive =
         own['sleep_source'] == 'manual' && own['sleep_mode'] == true;
     final ios = !kIsWeb && Platform.isIOS;
@@ -365,6 +460,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
                     ios: ios,
                     manualActive: manualActive,
                     error: _errorMessage,
+                    serviceReady: _serviceReady,
                     onToggle: () => _toggle(!_enabled),
                     onManual: () => _manual(!manualActive),
                   ),
@@ -376,11 +472,12 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
                     SleepStatusCard(
                       name: _name(role),
                       person: SleepPersonSnapshot.fromPresence(
-                        sleepRoleData(_presence, role),
+                        _presenceFor(role),
                         now.millisecondsSinceEpoch,
                       ),
                       avatarKey: role == 'user1' ? 'warm' : 'cream',
                       now: now,
+                      isOwn: role == _role,
                     ),
                     const SizedBox(height: 10),
                     _week(role, now),
@@ -393,6 +490,20 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
         ),
       ),
     );
+  }
+
+  Map<String, dynamic> _presenceFor(String role) {
+    final remote = sleepRoleData(_presence, role);
+    if (role != _role || _localPresence.isEmpty) return remote;
+    final localOff = sleepEpoch(_localPresence['last_screen_off']);
+    final localOn = sleepEpoch(_localPresence['last_screen_on']);
+    final remoteOff = sleepEpoch(remote['last_screen_off']);
+    final remoteOn = sleepEpoch(remote['last_screen_on']);
+    if (localOff <= remoteOff &&
+        localOn <= remoteOn &&
+        _localPresence['pending'] != true)
+      return remote;
+    return {...remote, ..._localPresence};
   }
 
   Widget _week(String role, DateTime now) {

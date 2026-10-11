@@ -39,7 +39,11 @@ class _AppReferralCardState extends State<AppReferralCard> {
     if (currentUser != null) unawaited(_refresh());
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (!mounted) return;
-      if (user?.uid == _uid && (_loading || _profile != null)) return;
+      if (user != null &&
+          user.uid == _uid &&
+          (_loading || _profile != null)) {
+        return;
+      }
       _request++;
       setState(() {
         _uid = user?.uid;
@@ -415,7 +419,8 @@ class _AppReferralCardState extends State<AppReferralCard> {
                     ? Icons.expand_less
                     : Icons.confirmation_number_outlined,
               ),
-              label: Flexible(child: Text(context.tr('referral_have_code'))),
+              // TextButton.icon đã tự bọc nhãn trong Flexible; bọc thêm gây lỗi ParentDataWidget.
+              label: Text(context.tr('referral_have_code')),
             ),
             if (_showInput) ...[
               Text(

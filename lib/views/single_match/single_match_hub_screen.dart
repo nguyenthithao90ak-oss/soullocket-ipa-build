@@ -10,6 +10,7 @@ import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../models/single_match_models.dart';
 import '../../utils/services/single_match_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -19,6 +20,7 @@ import '../visitors/visitor_profile_screen.dart';
 import 'tabs/single_match_chats_tab.dart';
 import 'tabs/single_match_calls_tab.dart';
 import 'dialogs/single_match_secret_code_dialog.dart';
+import 'widgets/single_match_hub_design.dart';
 import '../chat/chat_detail_screen.dart';
 
 part 'single_match/single_match_action_panels.dart';
@@ -30,17 +32,14 @@ part 'single_match/single_match_state_helpers.dart';
 class SingleMatchHubScreen extends StatefulWidget {
   final String houseId;
 
-  const SingleMatchHubScreen({
-    super.key,
-    required this.houseId,
-  });
+  const SingleMatchHubScreen({super.key, required this.houseId});
 
   @override
   State<SingleMatchHubScreen> createState() => _SingleMatchHubScreenState();
 }
 
 class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static final List<_MatchChoice> _goalOptions = <_MatchChoice>[
     _MatchChoice(
       value: 'meaningful',
@@ -115,7 +114,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   final TextEditingController _tagsController = TextEditingController();
   final Random _random = Random();
 
-  late final TabController _tabController;
+  late TabController _tabController;
+  bool? _reducedMotion;
   late final Stream<List<SingleMatchHistoryEntry>> _historyStream;
   late final Stream<List<SingleMatchCandidate>> _candidateStream;
   late final Stream<_SingleMatchDiscoverySnapshot> _discoveryStream;
@@ -142,23 +142,45 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     _historyStream = _service.streamHistory(widget.houseId).asBroadcastStream();
     _candidateStream = _service
         .streamCandidates(currentHouseId: widget.houseId)
         .asBroadcastStream();
-    _discoveryStream = _combineLatest2<List<SingleMatchHistoryEntry>,
-        List<SingleMatchCandidate>, _SingleMatchDiscoverySnapshot>(
-      _historyStream,
-      _candidateStream,
-      (history, candidates) => _SingleMatchDiscoverySnapshot(
-        history: history,
-        candidates: candidates,
-      ),
-    ).asBroadcastStream();
+    _discoveryStream =
+        _combineLatest2<
+              List<SingleMatchHistoryEntry>,
+              List<SingleMatchCandidate>,
+              _SingleMatchDiscoverySnapshot
+            >(
+              _historyStream,
+              _candidateStream,
+              (history, candidates) => _SingleMatchDiscoverySnapshot(
+                history: history,
+                candidates: candidates,
+              ),
+            )
+            .asBroadcastStream();
     _introController.addListener(_handleDraftTextChanged);
     _tagsController.addListener(_handleDraftTextChanged);
     _loadBootstrap();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    if (_reducedMotion == reducedMotion) {
+      return;
+    }
+
+    final previous = _reducedMotion == null ? null : _tabController;
+    _tabController = createSingleMatchHubTabController(
+      vsync: this,
+      reducedMotion: reducedMotion,
+      initialIndex: previous?.index ?? 0,
+    );
+    _reducedMotion = reducedMotion;
+    previous?.dispose();
   }
 
   @override
@@ -183,18 +205,13 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       _loadError = null;
     });
 
-    Future<T> guarded<T>(
-      Future<T> future,
-      T fallback,
-      String label,
-    ) async {
+    Future<T> guarded<T>(Future<T> future, T fallback, String label) async {
       try {
         return await future.timeout(const Duration(seconds: 8));
       } catch (error) {
-        debugPrint('[SingleMatch] $label failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
-        ).message}');
+        debugPrint(
+          '[SingleMatch] $label failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('match_khngthtidl_11f27c')).message}',
+        );
         return fallback;
       }
     }
@@ -222,13 +239,15 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       final preferences = results[1] as SingleMatchPreferences;
       final blocked = Set<String>.from(results[2] as Set);
 
-      final displayName = (settings['nameU1'] ??
-              settings['houseName'] ??
-              L10nService().translate('match_bn_1fd75b'))
+      final displayName =
+          (settings['nameU1'] ??
+                  settings['houseName'] ??
+                  L10nService().translate('match_bn_1fd75b'))
+              .toString()
+              .trim();
+      final houseName = (settings['houseName'] ?? widget.houseId)
           .toString()
           .trim();
-      final houseName =
-          (settings['houseName'] ?? widget.houseId).toString().trim();
       final avatarUrl = (settings['houseAvatar'] ?? settings['avtUser1'] ?? '')
           .toString()
           .trim();
@@ -321,7 +340,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Future<void> _pickDob() async {
-    final initial = DateTime.tryParse(_myDob) ??
+    final initial =
+        DateTime.tryParse(_myDob) ??
         DateTime.now().subtract(const Duration(days: 365 * 23));
     final picked = await showSLDatePicker(
       context: context,
@@ -401,12 +421,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Future<void> _openSettings() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SingleMatchSettingsScreen(houseId: widget.houseId),
-      ),
-    );
+    await slPush(context, SingleMatchSettingsScreen(houseId: widget.houseId));
     if (!mounted) {
       return;
     }
@@ -414,12 +429,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Future<void> _openCommunitySettings() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SingleMatchSettingsScreen(houseId: widget.houseId),
-      ),
-    );
+    await slPush(context, SingleMatchSettingsScreen(houseId: widget.houseId));
     if (!mounted) {
       return;
     }
@@ -491,7 +501,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       }
 
       if (candidate.age != null) {
-        final inRange = candidate.age! >= current.preferredAgeMin &&
+        final inRange =
+            candidate.age! >= current.preferredAgeMin &&
             candidate.age! <= current.preferredAgeMax;
         if (inRange) {
           score += 22;
@@ -524,7 +535,11 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           .toList(growable: false);
       if (sharedTags.isNotEmpty) {
         score += min(18, sharedTags.length * 6).toDouble();
-        reasons.add(L10nService().format('ui_single_similar_interests_value1_679dc4', {'value1': sharedTags.take(2).join(', ')}));
+        reasons.add(
+          L10nService().format('ui_single_similar_interests_value1_679dc4', {
+            'value1': sharedTags.take(2).join(', '),
+          }),
+        );
       }
 
       if (candidate.intro.trim().isNotEmpty) {
@@ -640,11 +655,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
 
   // ignore: unused_element
   Future<void> _openCandidateProfile(SingleMatchCandidate candidate) async {
-    await Navigator.push(
+    await slPush(
       context,
-      MaterialPageRoute(
-        builder: (_) => VisitorProfileScreen(targetHouseId: candidate.houseId),
-      ),
+      VisitorProfileScreen(targetHouseId: candidate.houseId),
     );
   }
 
@@ -675,10 +688,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           .timeout(const Duration(seconds: 8));
     } catch (error) {
       debugPrint(
-          '[SingleMatch] log skip history failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: L10nService().translate('match_khngthghil_4400ee'),
-      ).message}');
+        '[SingleMatch] log skip history failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('match_khngthghil_4400ee')).message}',
+      );
     }
     _showSnack(L10nService().translate('match_nhsnytrong_4f704d'));
   }
@@ -690,8 +701,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     final candidate = scored.candidate;
     if ((isVideo && !scored.canVideoCall) ||
         (!isVideo && !scored.canAudioCall)) {
-      _showSnack(L10nService().translate('match_hsnychammo_561339'),
-          isError: true);
+      _showSnack(
+        L10nService().translate('match_hsnychammo_561339'),
+        isError: true,
+      );
       return;
     }
     if (_callingHouseId != null) {
@@ -701,24 +714,22 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     final startedAt = DateTime.now().millisecondsSinceEpoch;
     setState(() => _callingHouseId = candidate.houseId);
     try {
-      await Navigator.push(
+      await slPush(
         context,
-        MaterialPageRoute(
-          builder: (_) => VideoCallScreen(
-            houseId: widget.houseId,
+        VideoCallScreen(
+          houseId: widget.houseId,
+          targetHouseId: candidate.houseId,
+          targetName: candidate.displayName,
+          targetAvatarUrl: candidate.avatarUrl,
+          isVideo: isVideo,
+          onRoomCreated: (roomId) => _service.attachOutgoingCallMetadata(
+            roomId: roomId,
+            callerHouseId: widget.houseId,
             targetHouseId: candidate.houseId,
-            targetName: candidate.displayName,
-            targetAvatarUrl: candidate.avatarUrl,
+            callerName: _displayName,
+            callerAvatar: _avatarUrl,
             isVideo: isVideo,
-            onRoomCreated: (roomId) => _service.attachOutgoingCallMetadata(
-              roomId: roomId,
-              callerHouseId: widget.houseId,
-              targetHouseId: candidate.houseId,
-              callerName: _displayName,
-              callerAvatar: _avatarUrl,
-              isVideo: isVideo,
-              source: 'single_match',
-            ),
+            source: 'single_match',
           ),
         ),
       );
@@ -742,10 +753,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             .timeout(const Duration(seconds: 8));
       } catch (error) {
         debugPrint(
-            '[SingleMatch] log call history failed: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('match_khngthghil_443f52'),
-        ).message}');
+          '[SingleMatch] log call history failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('match_khngthghil_443f52')).message}',
+        );
       }
       if (mounted) {
         setState(() => _callingHouseId = null);
@@ -755,161 +764,71 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
 
   @override
   Widget build(BuildContext context) {
+    final palette = SingleMatchHubPalette.of(context);
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFECE8FA),
-      body: Stack(
-        children: <Widget>[
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: <Color>[
-                  Color(0xFFF9EAF1),
-                  Color(0xFFF0EEFF),
-                  Color(0xFFE7F3FF),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: SizedBox.expand(),
-          ),
-          Positioned(
-            top: -84,
-            right: -36,
-            child: IgnorePointer(
-              child: Container(
-                width: 220,
-                height: 220,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: <Color>[
-                      Color(0x47A86EFF),
-                      Color(0x00A86EFF),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: -70,
-            top: 180,
-            child: IgnorePointer(
-              child: Container(
-                width: 210,
-                height: 210,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: <Color>[
-                      Color(0x2EFF7EAA),
-                      Color(0x00FF7EAA),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compactHeight = constraints.maxHeight < 680;
-                final compactWidth = constraints.maxWidth < 380;
+      backgroundColor: palette.canvas,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactHeight =
+                constraints.maxHeight < 680 ||
+                MediaQuery.textScalerOf(context).scale(14) > 20;
+            final compactWidth = constraints.maxWidth < 380;
 
-                return Column(
-                  children: <Widget>[
-                    _buildTopBar(),
-                    if (!compactHeight) _buildHeaderCard(),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        compactWidth ? 12 : 18,
-                        compactHeight ? 8 : 12,
-                        compactWidth ? 12 : 18,
-                        0,
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.94)),
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: const Color(0xFF7C61FF)
-                                  .withValues(alpha: 0.10),
-                              blurRadius: 20,
-                              offset: const Offset(0, 12),
-                            ),
-                          ],
-                        ),
-                        child: TabBar(
+            return Column(
+              children: <Widget>[
+                _buildTopBar(),
+                if (!compactHeight) _buildHeaderCard(),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    compactWidth ? 12 : 18,
+                    compactHeight ? 8 : 12,
+                    compactWidth ? 12 : 18,
+                    0,
+                  ),
+                  child: SingleMatchHubTabs(
+                    controller: _tabController,
+                    labels: [
+                      context.tr('match_ghpni_91676a'),
+                      context.tr('chat_tab'),
+                      context.tr('ui_single_call_b25622'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? Center(
+                          child: Semantics(
+                            label: context.tr('loading'),
+                            liveRegion: true,
+                            child: reducedMotion
+                                ? Icon(
+                                    Icons.hourglass_bottom_rounded,
+                                    color: palette.accent,
+                                    size: 28,
+                                  )
+                                : CircularProgressIndicator(
+                                    color: palette.accent,
+                                  ),
+                          ),
+                        )
+                      : _loadError != null
+                      ? _buildLoadError()
+                      : TabBarView(
+                          physics: const SLPagePhysics(),
                           controller: _tabController,
-                          isScrollable: false,
-                          dividerColor: Colors.transparent,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          indicator: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            gradient: const LinearGradient(
-                              colors: <Color>[
-                                Color(0xFFFF5A88),
-                                Color(0xFF7C61FF),
-                              ],
-                            ),
-                            boxShadow: <BoxShadow>[
-                              BoxShadow(
-                                color: const Color(0xFFAA68FF)
-                                    .withValues(alpha: 0.24),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          indicatorPadding: const EdgeInsets.all(5),
-                          splashBorderRadius: BorderRadius.circular(18),
-                          labelPadding: EdgeInsets.zero,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: const Color(0xFF6D5E78),
-                          labelStyle: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                            fontSize: compactWidth ? 12 : 13,
-                          ),
-                          tabs: <Tab>[
-                            Tab(
-                                text: L10nService()
-                                    .translate('match_ghpni_91676a')),
-                            Tab(text: context.tr('chat_tab')),
-                            Tab(text: context.tr('ui_single_call_b25622')),
+                          children: <Widget>[
+                            _buildDiscoveryTab(),
+                            _buildChatsTab(),
+                            _buildCallsTab(),
                           ],
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Color(0xFFFF5E7E),
-                              ),
-                            )
-                          : _loadError != null
-                              ? _buildLoadError()
-                              : TabBarView(
-                                  physics: const SLPagePhysics(),
-                                  controller: _tabController,
-                                  children: <Widget>[
-                                    _buildDiscoveryTab(),
-                                    _buildChatsTab(),
-                                    _buildCallsTab(),
-                                  ],
-                                ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -925,7 +844,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Widget _buildHeaderCard() {
     final ageText = _myAge == null
         ? L10nService().translate('match_chactui_a686b2')
-        : L10nService().format('ui_single_value1_age_750f44', {'value1': _myAge});
+        : L10nService().format('ui_single_value1_age_750f44', {
+            'value1': _myAge,
+          });
     final goalText = _choiceLabel(_goalOptions, _currentPreferences.goal);
     return _SingleMatchHeaderCard(
       avatarUrl: _avatarUrl,
@@ -988,7 +909,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         final historyPeers = history.map((entry) => entry.peerHouseId).toSet();
         final others = scored
             .where(
-                (item) => item.candidate.houseId != featured.candidate.houseId)
+              (item) => item.candidate.houseId != featured.candidate.houseId,
+            )
             .take(12)
             .toList(growable: false);
 
@@ -1018,16 +940,21 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     style: SLTheme.quicksand(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF32203B),
+                      color: SingleMatchHubPalette.of(context).ink,
                     ),
                   ),
                 ),
-                Text(
-                  L10nScope.of(context).format('ui_single_value1_profiles_07709c', {'value1': others.length + 1}),
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF8B7A90),
+                Flexible(
+                  child: Text(
+                    L10nScope.of(context).format(
+                      'ui_single_value1_profiles_07709c',
+                      {'value1': others.length + 1},
+                    ),
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: SingleMatchHubPalette.of(context).muted,
+                    ),
                   ),
                 ),
               ],
@@ -1121,8 +1048,10 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     final avgScore = history.isEmpty
         ? 0.0
         : history.fold<double>(
-                0, (sum, entry) => sum + entry.compatibilityScore) /
-            history.length;
+                0,
+                (sum, entry) => sum + entry.compatibilityScore,
+              ) /
+              history.length;
 
     return _SingleMatchStatStrip(
       totalCandidates: totalCandidates,
@@ -1194,8 +1123,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                         const SizedBox(height: 4),
                         Text(
                           (_mySettings['bio'] ?? '').toString().trim().isEmpty
-                              ? L10nService()
-                                  .translate('match_chacbiocng_f4c0b3')
+                              ? L10nService().translate(
+                                  'match_chacbiocng_f4c0b3',
+                                )
                               : (_mySettings['bio'] ?? '').toString().trim(),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1227,16 +1157,16 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 ),
                 child: Row(
                   children: <Widget>[
-                    const Icon(
-                      Icons.cake_rounded,
-                      color: Color(0xFFFF5E7E),
-                    ),
+                    const Icon(Icons.cake_rounded, color: Color(0xFFFF5E7E)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         _myAge == null
                             ? L10nService().translate('match_bnchathmng_98f34a')
-                            : L10nScope.of(context).format('ui_single_using_value1_age_for_recommendation_algorithm_c9e086', {'value1': _myAge}),
+                            : L10nScope.of(context).format(
+                                'ui_single_using_value1_age_for_recommendation_algorithm_c9e086',
+                                {'value1': _myAge},
+                              ),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1246,8 +1176,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     TextButton(
                       onPressed: _pickDob,
-                      child:
-                          Text(L10nService().translate('match_cpnht_3b7db4')),
+                      child: Text(
+                        L10nService().translate('match_cpnht_3b7db4'),
+                      ),
                     ),
                   ],
                 ),
@@ -1272,12 +1203,15 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 subtitle: Text(
                   L10nService().translate('match_khitthscab_87be09'),
                   style: SLTheme.quicksand(
-                      fontSize: 12, fontWeight: FontWeight.w700),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {
-                    _draftPreferences =
-                        _draftPreferences.copyWith(enabled: value);
+                    _draftPreferences = _draftPreferences.copyWith(
+                      enabled: value,
+                    );
                   });
                 },
               ),
@@ -1293,12 +1227,15 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 subtitle: Text(
                   L10nService().translate('match_gimodenhdb_dfbb74'),
                   style: SLTheme.quicksand(
-                      fontSize: 12, fontWeight: FontWeight.w700),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {
-                    _draftPreferences =
-                        _draftPreferences.copyWith(allowAudioCalls: value);
+                    _draftPreferences = _draftPreferences.copyWith(
+                      allowAudioCalls: value,
+                    );
                   });
                 },
               ),
@@ -1314,12 +1251,15 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 subtitle: Text(
                   L10nService().translate('match_chbtkhibnm_10d366'),
                   style: SLTheme.quicksand(
-                      fontSize: 12, fontWeight: FontWeight.w700),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {
-                    _draftPreferences =
-                        _draftPreferences.copyWith(allowVideoCalls: value);
+                    _draftPreferences = _draftPreferences.copyWith(
+                      allowVideoCalls: value,
+                    );
                   });
                 },
               ),
@@ -1334,7 +1274,12 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                L10nScope.of(context).format('ui_single_value1_value2_years_old_6c3f78', {'value1': current.preferredAgeMin, 'value2': current.preferredAgeMax}),
+                L10nScope.of(
+                  context,
+                ).format('ui_single_value1_value2_years_old_6c3f78', {
+                  'value1': current.preferredAgeMin,
+                  'value2': current.preferredAgeMax,
+                }),
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -1394,8 +1339,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     onSelected: (_) {
                       setState(() {
-                        _draftPreferences =
-                            _draftPreferences.copyWith(goal: option.value);
+                        _draftPreferences = _draftPreferences.copyWith(
+                          goal: option.value,
+                        );
                       });
                     },
                   ),
@@ -1432,7 +1378,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     onSelected: (_) {
                       setState(() {
                         _draftPreferences = _draftPreferences.copyWith(
-                            voiceStyle: option.value);
+                          voiceStyle: option.value,
+                        );
                       });
                     },
                   ),
@@ -1469,8 +1416,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                         label: Text(tag),
                         onPressed: () {
                           final tags = _parseTags(_tagsController.text);
-                          if (tags.any((value) =>
-                              value.toLowerCase() == tag.toLowerCase())) {
+                          if (tags.any(
+                            (value) => value.toLowerCase() == tag.toLowerCase(),
+                          )) {
                             return;
                           }
                           tags.add(tag);
@@ -1510,8 +1458,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         SizedBox(
           height: 54,
           child: FilledButton.icon(
-            onPressed:
-                (_isSaving || !_hasUnsavedChanges) ? null : _savePreferences,
+            onPressed: (_isSaving || !_hasUnsavedChanges)
+                ? null
+                : _savePreferences,
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFFF5E7E),
             ),
@@ -1547,12 +1496,13 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Widget _buildSecretCodeCard() {
+    final palette = SingleMatchHubPalette.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1E7F5)),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1562,17 +1512,19 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             style: SLTheme.quicksand(
               fontSize: 15,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF32203B),
+              color: palette.ink,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            context.tr('ui_single_enter_a_secret_code_to_connect_directly_08b004'),
+            context.tr(
+              'ui_single_enter_a_secret_code_to_connect_directly_08b004',
+            ),
             style: SLTheme.quicksand(
               fontSize: 12,
               height: 1.45,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF7E6C80),
+              color: palette.muted,
             ),
           ),
           const SizedBox(height: 12),
@@ -1586,23 +1538,29 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                       SingleMatchSecretCodeDialog(houseId: widget.houseId),
                 );
                 if (roomId != null && mounted) {
-                  Navigator.push(
+                  await slPush(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatDetailScreen(
-                        myHouseId: widget.houseId,
-                        targetHouseId: roomId,
-                        targetName: UiCopy.text('copy_145933221191'),
-                      ),
+                    ChatDetailScreen(
+                      myHouseId: widget.houseId,
+                      targetHouseId: roomId,
+                      targetName: UiCopy.text('copy_145933221191'),
                     ),
                   );
                 }
               },
               icon: const Icon(Icons.vpn_key_rounded, size: 18),
-              label: Text(context.tr('ui_single_enter_the_code_7ad20e'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
+              label: Text(
+                context.tr('ui_single_enter_the_code_7ad20e'),
+                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+              ),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF7C61FF),
+                backgroundColor: palette.action,
+                foregroundColor: palette.onAction,
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
             ),
           ),

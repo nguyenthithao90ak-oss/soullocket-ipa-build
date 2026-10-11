@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../utils/private_media_load_queue.dart';
+import '../../../../../utils/network_reachability.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../utils/services/storage/private_image_disk_cache.dart';
@@ -21,13 +22,17 @@ class PrivateDiaryImage extends StatefulWidget {
     required this.memoryId,
     this.fit = BoxFit.cover,
     this.cacheWidth,
+    this.retainCacheWidth,
     this.placeholderCacheWidth,
+    this.highPriority = false,
     this.resolve,
     this.authChanges,
     this.currentUid,
     this.imageProviderFactory,
     this.loadQueue,
     this.diskCache,
+    this.isOnline,
+    this.onlineChanges,
   });
 
   final String houseId;
@@ -35,9 +40,19 @@ class PrivateDiaryImage extends StatefulWidget {
   final BoxFit fit;
   final int? cacheWidth;
 
+  /// Giữ thêm bản bytes gốc đã nhận được ở cache đĩa mã hóa để viewer không
+  /// phải tải lại cùng ảnh khi người dùng mở từ lưới.
+  final int? retainCacheWidth;
+
   /// Cỡ ảnh nhỏ đã lưu (ví dụ ảnh ở lưới album). Khi bản [cacheWidth] chưa có,
   /// hiện tạm ảnh nhỏ này trong lúc tải thay vì màn chờ.
   final int? placeholderCacheWidth;
+
+  /// Số ô được xin link cùng lúc: hai lượt gộp đủ 12 ảnh (giới hạn mỗi lượt của máy chủ).
+  static const int urlResolveConcurrency = 24;
+
+  /// Ảnh đang xem toàn màn hình: xin link và tải chen lên đầu hàng đợi chung với lưới album.
+  final bool highPriority;
   final Future<PrivateMediaUrlResult> Function()? resolve;
   final Stream<String?>? authChanges;
   final String? Function()? currentUid;
@@ -45,13 +60,24 @@ class PrivateDiaryImage extends StatefulWidget {
   final PrivateMediaLoadQueue? loadQueue;
   final PrivateImageDiskCache? diskCache;
 
+  /// Trạng thái mạng hiện tại / thay đổi mạng. Mặc định dùng [NetworkReachability] ở luồng thật
+  /// (không có `resolve` tiêm vào); khi offline, ảnh chưa có trong cache báo lỗi ngay thay vì chờ
+  /// hết 25 giây xin link, và tự tải lại khi có mạng trở lại.
+  final bool Function()? isOnline;
+  final Stream<bool>? onlineChanges;
+
   @override
   State<PrivateDiaryImage> createState() => _PrivateDiaryImageState();
 }
 
 class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     with WidgetsBindingObserver {
-  static final _loadQueue = PrivateMediaLoadQueue();
+  // Xin link: máy chủ nhận tối đa 12 ảnh mỗi lượt gộp. Với 6 ô chạy cùng lúc mỗi lượt chỉ
+  // chở 6 ảnh nên lưới 200 ảnh cần ~34 lượt nối đuôi (~40 giây); 24 ô cho 2 lượt đủ 12 ảnh
+  // chạy song song. Tải tệp vẫn giới hạn 6 để không nghẽn mạng.
+  static final _loadQueue = PrivateMediaLoadQueue(
+    maxConcurrent: PrivateDiaryImage.urlResolveConcurrency,
+  );
   static final _downloadQueue = PrivateMediaLoadQueue();
   late final _urlService = PrivateMediaUrlService(
     currentUid: widget.currentUid,
@@ -65,13 +91,24 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   StreamSubscription<String?>? _auth;
   Timer? _expiry;
   Timer? _loadingDeadline;
+  StreamSubscription<bool>? _onlineSub;
   int _generation = 0;
   bool _failed = false;
+  // Lỗi do đang offline (khác lỗi đổi tài khoản): chỉ loại này mới tự tải lại khi có mạng.
+  bool _failedOffline = false;
   bool _appVisible = true;
   bool _tabVisible = false;
 
   bool get _visible => _appVisible && _tabVisible;
   String? _uid;
+
+  bool Function()? get _onlineCheck =>
+      widget.isOnline ??
+      (widget.resolve == null ? () => NetworkReachability.isOnline : null);
+
+  Stream<bool>? get _onlineStream =>
+      widget.onlineChanges ??
+      (widget.resolve == null ? NetworkReachability.changes : null);
 
   String? get currentUid =>
       widget.currentUid?.call() ??
@@ -88,6 +125,14 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.inactive;
     _uid = currentUid;
+    _onlineSub = _onlineStream?.listen((online) {
+      // ConnectivityService phát `true` cả ở trạng thái "đang kết nối lại" (mỗi 5 giây khi vẫn mất
+      // mạng); chỉ tải lại khi trạng thái hiện tại thật sự đã online.
+      final stillOffline = !(_onlineCheck?.call() ?? true);
+      if (online && !stillOffline && _failedOffline && _visible && mounted) {
+        unawaited(_load());
+      }
+    });
     _auth =
         (widget.authChanges ??
                 FirebaseAuth.instance.authStateChanges().map(
@@ -171,7 +216,12 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         generation == _generation &&
         uid != null &&
         uid == currentUid;
-    if (mounted) setState(() => _failed = false);
+    if (mounted) {
+      setState(() {
+        _failed = false;
+        _failedOffline = false;
+      });
+    }
     try {
       if (uid == null) throw StateError('Authentication required');
       _cache?.bindSession(
@@ -207,7 +257,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         if (!current()) return;
         if (bytes != null) {
           final entry = PrivateDiaryImageCacheEntry(
-            MemoryImage(bytes),
+            _providerFromBytes(bytes),
             DateTime.now().millisecondsSinceEpoch +
                 PrivateImageDiskCache.ttl.inMilliseconds,
           );
@@ -251,8 +301,36 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
           });
         }
       }
+      if (widget.highPriority &&
+          _placeholder == null &&
+          widget.imageProviderFactory == null) {
+        final bytes = await diskCache?.readPreview(
+          uid,
+          widget.houseId,
+          widget.memoryId,
+        );
+        if (!current()) return;
+        if (bytes != null) {
+          setState(() {
+            _placeholder = MemoryImage(bytes);
+            _ownsPlaceholder = true;
+          });
+        }
+      }
+      final isOnline = _onlineCheck;
+      if (isOnline != null && !isOnline()) {
+        // Offline và ảnh chưa có trong cache: báo ngay (giữ ảnh nhỏ nếu có), tải lại khi có mạng.
+        if (current()) {
+          setState(() {
+            _failed = true;
+            _failedOffline = true;
+          });
+        }
+        return;
+      }
       final result = await (widget.loadQueue ?? _loadQueue)
           .run<PrivateMediaUrlResult>(
+            priority: widget.highPriority,
             isCurrent: current,
             action: () {
               _loadingDeadline = Timer(const Duration(seconds: 25), () {
@@ -291,12 +369,40 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       );
       if (provider == null) {
         final bytes = await _downloadQueue.run<Uint8List>(
+          priority: widget.highPriority,
           isCurrent: current,
-          action: () => downloadPrivateImage(
-            result.url,
-            width: widget.cacheWidth,
-            isCurrent: current,
-          ),
+            action: () => downloadPrivateImage(
+              result.url,
+              width: widget.cacheWidth,
+              isCurrent: current,
+              onDownloadedOriginalBytes: (originalBytes) {
+                final retainedWidth = widget.retainCacheWidth;
+                if (diskCache == null ||
+                    retainedWidth == null ||
+                    retainedWidth == widget.cacheWidth ||
+                    !current()) {
+                  return;
+                }
+                unawaited(
+                  diskCache.write(
+                    uid,
+                    PrivateImageDiskCache.key(
+                      uid,
+                      widget.houseId,
+                      widget.memoryId,
+                      retainedWidth,
+                    ),
+                    originalBytes,
+                    current,
+                    memoryTag: PrivateImageDiskCache.memoryTag(
+                      uid,
+                      widget.houseId,
+                      widget.memoryId,
+                    ),
+                  ),
+                );
+              },
+            ),
         );
         if (!current() || bytes == null) return;
         final cacheWrite = diskCache?.write(
@@ -312,7 +418,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         );
         if (cacheWrite != null) unawaited(cacheWrite);
         if (!current()) return;
-        provider = MemoryImage(bytes);
+        provider = _providerFromBytes(bytes);
       }
       if (!current()) return;
       final entry = PrivateDiaryImageCacheEntry(
@@ -338,6 +444,14 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         setState(() => _failed = true);
       }
     }
+  }
+
+  ImageProvider<Object> _providerFromBytes(Uint8List bytes) {
+    final provider = MemoryImage(bytes);
+    final width = widget.cacheWidth;
+    return width == null
+        ? provider
+        : ResizeImage(provider, width: width, allowUpscaling: false);
   }
 
   void _show(PrivateDiaryImageCacheEntry entry) {
@@ -379,6 +493,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   void dispose() {
     _clear();
     _urlService.dispose();
+    unawaited(_onlineSub?.cancel());
     unawaited(_auth?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -389,6 +504,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     fit: widget.fit,
     width: double.infinity,
     height: double.infinity,
+    filterQuality: FilterQuality.high,
     gaplessPlayback: true,
     errorBuilder: (_, _, _) => const DiaryImageLoading(),
   );
@@ -431,6 +547,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       fit: widget.fit,
       width: double.infinity,
       height: double.infinity,
+      filterQuality: FilterQuality.high,
       gaplessPlayback: false,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
           wasSynchronouslyLoaded || frame != null

@@ -376,6 +376,14 @@ abstract final class MilestoneStickerCatalog {
     ...anniversaryKeys,
   ];
 
+  /// Giữ nguyên artwork và tiếng Việt của các dịp văn hóa Việt Nam.
+  static const vietnameseHolidayKeys = {
+    'holiday_vietnamese_women',
+    'holiday_tet',
+    'holiday_mid_autumn',
+    'holiday_teachers',
+  };
+
   static String holidayKey(DateTime date) =>
       'holiday_${solarHolidays['${date.month}-${date.day}'] ?? 'friendship'}';
 
@@ -407,19 +415,38 @@ abstract final class MilestoneStickerCatalog {
   }
 
   static LivingStickerScene? scene(String id) {
-    if (id.startsWith('holiday_')) return holidays[id.substring(8)];
-    if (id.startsWith('moment_')) return moments[id.substring(7)];
+    final occasion = id.startsWith('holiday_')
+        ? holidays[id.substring(8)]
+        : id.startsWith('moment_')
+        ? moments[id.substring(7)]
+        : null;
+    if (occasion != null) {
+      if (vietnameseHolidayKeys.contains(id)) return occasion;
+      return LivingStickerScene(
+        occasion.subject,
+        occasion.gesture,
+        prop: occasion.prop,
+        accent: occasion.accent,
+        detail: occasion.detail,
+        artworkId: 'milestone_$id',
+      );
+    }
     final match = RegExp(
       r'^(days|months|years)_([1-9][0-9]{0,5})$',
     ).firstMatch(id);
     if (match == null) return null;
     final unit = match.group(1)!;
     final value = match.group(2)!;
-    // Giữ số như sticker 500 ngày; tháng/năm có đạo cụ khác, không đổi số thành ngày.
+    // Cặp mèo dùng đúng số và đơn vị; không quy đổi tháng/năm thành ngày.
     return LivingStickerScene(
-      StickerSubject.calendar,
-      StickerGesture.celebrate,
+      StickerSubject.couple,
+      unit == 'months'
+          ? StickerGesture.hug
+          : unit == 'years'
+          ? StickerGesture.celebrate
+          : StickerGesture.love,
       detail: value,
+      artworkId: 'milestone_$unit',
       accent: unit == 'months'
           ? const Color(0xFFAB99D4)
           : unit == 'years'
@@ -429,7 +456,7 @@ abstract final class MilestoneStickerCatalog {
           ? StickerSubject.moon
           : unit == 'years'
           ? StickerSubject.rings
-          : null,
+          : StickerSubject.heart,
     );
   }
 }

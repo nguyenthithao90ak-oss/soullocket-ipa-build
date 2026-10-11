@@ -25,6 +25,7 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/widget_service.dart';
 import '../../utils/services/core/background_tracking_service.dart';
 import '../../utils/services/role_utils.dart';
+import 'signed_out_cleanup_coordinator.dart';
 
 class AppEntryAuthState {
   final bool isAuthenticated;
@@ -97,10 +98,32 @@ class AppEntryController {
   bool _isAuthenticating = false;
   Future<void>? _deviceRegistrationInFlight;
   DateTime? _lastDeviceRegistrationStartedAt;
+  late final _signedOutCleanupCoordinator = SignedOutCleanupCoordinator(
+    actions: [
+      () => _runSignedOutCleanupStep(
+        'stop sleep tracking after sign out',
+        BackgroundTrackingService.stop,
+      ),
+      () => _runSignedOutCleanupStep(
+        'reset widget state after sign out',
+        WidgetService.resetWidgetState,
+      ),
+      () => _runSignedOutCleanupStep(
+        'stop auto interstitial scheduler after sign out',
+        () => _adMobService.stopAutoInterstitialScheduler(clearPersisted: true),
+      ),
+      () => _runSignedOutCleanupStep(
+        'clear presence session after sign out',
+        clearPresenceSession,
+      ),
+    ],
+  );
 
   String? get currentHouseId => _currentHouseId;
   String? get currentRole => _currentRole;
   bool get hasPendingResume => _lastPausedAt != null;
+  Future<void>? get pendingSignedOutCleanup =>
+      _signedOutCleanupCoordinator.pending;
 
   Future<SharedPreferences> getPrefs() async {
     return _prefs ??=
@@ -274,6 +297,9 @@ class AppEntryController {
   Future<AppEntryResumeResult> handleAppResumed({
     required BuildContext context,
   }) async {
+    if (pendingSignedOutCleanup != null) {
+      return const AppEntryResumeResult();
+    }
     final compromisedState = await _resolveCompromisedAuthState();
     if (compromisedState != null) {
       _lastPausedAt = null;
@@ -322,6 +348,7 @@ class AppEntryController {
   }
 
   Future<void> refreshForegroundPresence() async {
+    if (pendingSignedOutCleanup != null) return;
     await _refreshPresenceContext();
     await _sessionConnectivityCoordinator.goOnlineNow();
   }
@@ -358,27 +385,27 @@ class AppEntryController {
     }
   }
 
-  Future<void> handleSignedOutSession() async {
+  Future<void> handleSignedOutSession() {
+    if (_houseService.currentUser != null) return waitForSignedOutCleanup();
+    return _signedOutCleanupCoordinator.run();
+  }
+
+  Future<void> waitForSignedOutCleanup() =>
+      _signedOutCleanupCoordinator.waitForPending();
+
+  Future<void> _runSignedOutCleanupStep(
+    String label,
+    Future<void> Function() action,
+  ) async {
     if (_houseService.currentUser != null) return;
-    await _runGuarded(
-      'stop sleep tracking after sign out',
-      BackgroundTrackingService.stop,
-    );
-    if (_houseService.currentUser != null) return;
-    await _runGuarded(
-      'reset widget state after sign out',
-      () => WidgetService.resetWidgetState(),
-    );
-    if (_houseService.currentUser != null) return;
-    await _runGuarded(
-      'stop auto interstitial scheduler after sign out',
-      () => _adMobService.stopAutoInterstitialScheduler(clearPersisted: true),
-    );
-    if (_houseService.currentUser != null) return;
-    await _runGuarded(
-      'clear presence session after sign out',
-      clearPresenceSession,
-    );
+    try {
+      await action();
+    } catch (error) {
+      debugPrint(
+        '[AppEntry] $label failed: ${AppErrorMapper.resolve(error).message}',
+      );
+      rethrow;
+    }
   }
 
   Future<void> handleMissingHouseSession() async {
@@ -393,6 +420,10 @@ class AppEntryController {
     required String houseId,
     required bool hasTriggeredInitialAppOpenAd,
   }) async {
+    await waitForSignedOutCleanup();
+    if (!context.mounted || _houseService.currentUser == null) {
+      return const AppEntryHouseSessionResult();
+    }
     var didScheduleInitialAppOpenAd = false;
 
     _scheduleDeviceRegistration();
@@ -467,11 +498,12 @@ class AppEntryController {
 
     if (!hasTriggeredInitialAppOpenAd) {
       didScheduleInitialAppOpenAd = true;
+      // Home đã hiển thị: chỉ preload cho lần resume, không mở App Open muộn.
       Future<void>.delayed(const Duration(seconds: 7), () async {
-        await _runGuarded(
-          'show startup app open ad while loading',
-          () => _adMobService.showAppOpenAdIfEligible(),
-        );
+        await _runGuarded('preload app open for the next resume', () async {
+          await _adMobService.initialize();
+          await _adMobService.loadAppOpenAd();
+        });
       });
     }
 

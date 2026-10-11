@@ -181,6 +181,34 @@ part of '../../main_home_tab.dart';
 //   }
 // }
 
+/// Provider avatar Home dùng chung cho bước làm nóng và lúc vẽ: khóa ImageCache
+/// phải trùng thì ảnh đã giải mã mới được dùng lại ngay, không tải lại.
+ImageProvider<Object>? _homeAvatarFileProvider(String url) {
+  final file = HomeStartupMediaCache.getFile(url);
+  if (file == null) return null;
+  return HomeImagePolicy.resized(
+    FileImage(file),
+    width: HomeImagePolicy.avatarPixels,
+    height: HomeImagePolicy.avatarPixels,
+  );
+}
+
+// Bộ tải mặc định (ImageCacheManager) mới hỗ trợ maxWidth/maxHeight; giống
+// CachedNetworkImage cũ nên dùng lại được file avatar đã lưu trên máy.
+ImageProvider<Object> _homeAvatarNetworkProvider(String url) =>
+    HomeImagePolicy.resized(
+      CachedNetworkImageProvider(
+        url,
+        maxWidth: HomeImagePolicy.avatarPixels,
+        maxHeight: HomeImagePolicy.avatarPixels,
+      ),
+      width: HomeImagePolicy.avatarPixels,
+      height: HomeImagePolicy.avatarPixels,
+    );
+
+ImageProvider<Object> _homeAvatarProvider(String url) =>
+    _homeAvatarFileProvider(url) ?? _homeAvatarNetworkProvider(url);
+
 class _StableAvatarNetworkImage extends StatelessWidget {
   final String imageUrl;
   final bool female;
@@ -202,37 +230,37 @@ class _StableAvatarNetworkImage extends StatelessWidget {
       return buildFallback();
     }
 
-    final startupFile = HomeStartupMediaCache.getFile(url);
+    // Đã có ảnh thật: lúc chờ chỉ hiện nền nhạt, không hiện avatar mặc định
+    // để Home không nháy "nền trống → avatar mặc định → ảnh thật" khi mở app.
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final waiting = ColoredBox(
+      color: dark ? const Color(0xFF2E2730) : const Color(0xFFF5EDEF),
+    );
+    Widget frame(BuildContext context, Widget child, int? frame, bool sync) =>
+        frame == null && !sync ? waiting : child;
 
-    return CachedNetworkImage(
-      imageUrl: url,
+    Widget network() => Image(
+      image: _homeAvatarNetworkProvider(url),
       fit: fit,
-      maxWidthDiskCache: HomeImagePolicy.avatarPixels,
-      maxHeightDiskCache: HomeImagePolicy.avatarPixels,
-      memCacheWidth: HomeImagePolicy.avatarPixels,
-      memCacheHeight: HomeImagePolicy.avatarPixels,
-      placeholder: (context, url) {
-        if (startupFile != null &&
-            startupFile.existsSync() &&
-            startupFile.lengthSync() > 0) {
-          return Image(
-            image: HomeImagePolicy.resized(
-              FileImage(startupFile),
-              width: HomeImagePolicy.avatarPixels,
-              height: HomeImagePolicy.avatarPixels,
-            ),
-            fit: fit,
-            gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => buildFallback(),
-          );
-        }
-        return buildFallback();
-      },
-      errorWidget: (context, url, error) {
+      gaplessPlayback: true,
+      frameBuilder: frame,
+      errorBuilder: (_, _, _) {
         // Tự động xóa file cache bị hỏng khi nạp lỗi để lần sau tải lại file sạch
         unawaited(_cleanCorruptedCache(url));
         return buildFallback();
       },
+    );
+
+    // File đã được tải và giải mã sẵn ở màn chờ (AppEntryHomeAssetPreparer)
+    // cùng provider này, nên khung hình đầu của Home có ảnh ngay.
+    final startupImage = _homeAvatarFileProvider(url);
+    if (startupImage == null) return network();
+    return Image(
+      image: startupImage,
+      fit: fit,
+      gaplessPlayback: true,
+      frameBuilder: frame,
+      errorBuilder: (_, _, _) => network(),
     );
   }
 

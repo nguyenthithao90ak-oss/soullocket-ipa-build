@@ -5,7 +5,72 @@ import 'package:soullocket_app/views/utilities/widgets/sleep_status_card.dart';
 import '../../../../../../utils/sleep_tracking_math.dart';
 import '../../../../../../utils/services/l10n_service.dart';
 import '../../../../../../core/sl_theme.dart';
+import 'widget_theme_surface.dart';
 import 'widget_utility_surface.dart';
+
+/// Chữ trong khung native xuống dòng/co cỡ chữ khi cần, không bỏ nội dung bằng dấu ba chấm.
+class WidgetPreviewLabel extends StatelessWidget {
+  const WidgetPreviewLabel(
+    this.value, {
+    super.key,
+    required this.color,
+    this.size = 12,
+    this.lines = 1,
+  });
+  final String value;
+  final Color color;
+  final double size;
+  final int lines;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final base = DefaultTextStyle.of(context).style.merge(
+        SLTheme.quicksand(
+          fontSize: size,
+          height: 1.12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      );
+      var fontSize = size;
+      if (constraints.maxWidth.isFinite && constraints.maxWidth > 0) {
+        final painter = TextPainter(
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: lines,
+          locale: Localizations.maybeLocaleOf(context),
+        );
+        painter.text = TextSpan(text: value, style: base);
+        painter.layout(maxWidth: constraints.maxWidth);
+        // Chọn cỡ lớn nhất vẫn hiện đủ chữ trong số dòng của mẫu nhỏ/vừa/lớn.
+        if (painter.didExceedMaxLines) {
+          var lower = 0.0, upper = size;
+          for (var i = 0; i < 16; i++) {
+            final candidate = (lower + upper) / 2;
+            painter.text = TextSpan(
+              text: value,
+              style: base.copyWith(fontSize: candidate),
+            );
+            painter.layout(maxWidth: constraints.maxWidth);
+            if (painter.didExceedMaxLines) {
+              upper = candidate;
+            } else {
+              lower = candidate;
+            }
+          }
+          fontSize = lower;
+        }
+        painter.dispose();
+      }
+      return Text(
+        value,
+        maxLines: lines,
+        style: base.copyWith(fontSize: fontSize),
+      );
+    },
+  );
+}
 
 /// Cùng tỷ lệ/màu/artwork với native; caller quyết định dữ liệu thật hay mẫu.
 class WidgetSleepEventPreview extends StatelessWidget {
@@ -33,20 +98,9 @@ class WidgetSleepEventPreview extends StatelessWidget {
   final List<String> names;
   final DateTime? now;
 
-  Color get _ink =>
-      sleep ? WidgetUtilityKind.sleep.ink : WidgetUtilityKind.event.ink;
+  Color get _ink => WidgetThemeDesign.ink(themeKey);
   Widget _line(String value, {double size = 12, int lines = 1, Color? color}) =>
-      Text(
-        value,
-        maxLines: lines,
-        overflow: TextOverflow.ellipsis,
-        style: SLTheme.quicksand(
-          fontSize: size,
-          height: 1.12,
-          fontWeight: FontWeight.w700,
-          color: color ?? _ink,
-        ),
-      );
+      WidgetPreviewLabel(value, lines: lines, size: size, color: color ?? _ink);
   Widget _art(String asset, double width, double height) => SizedBox(
     width: width,
     height: height,
@@ -61,7 +115,7 @@ class WidgetSleepEventPreview extends StatelessWidget {
       : context.tr(i == 0 ? 'p3_sleep_default_me' : 'p3_sleep_default_partner');
   Widget _avatar(int i, double width, double height) => Container(
     decoration: BoxDecoration(
-      color: const Color(0xFFF6EFDF),
+      color: WidgetThemeDesign.avatarColor(themeKey),
       borderRadius: BorderRadius.circular(8),
     ),
     child: _art(i == 0 ? 'avatar_warm' : 'avatar_cream', width, height),
@@ -70,9 +124,9 @@ class WidgetSleepEventPreview extends StatelessWidget {
     final p = _personData(i);
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(7),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .07),
+          color: WidgetThemeDesign.cardColor(themeKey),
           borderRadius: BorderRadius.circular(13),
         ),
         child: Row(
@@ -84,11 +138,12 @@ class WidgetSleepEventPreview extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _line(_name(context, i), size: 10),
-                  const SizedBox(height: 3),
-                  _line(context.tr(sleepStateKey(p.state)), size: 8),
+                  _line(_name(context, i), size: 9),
+                  const SizedBox(height: 1),
+                  _line(context.tr(sleepStateKey(p.state)), size: 7),
                   if (p.state == 'recorded')
-                    _line(sleepDurationText(p.duration), size: 12),
+                    _line(sleepDurationText(p.duration), size: 10),
+                  _line(sleepSourceLabel(p.source), size: 6),
                 ],
               ),
             ),
@@ -104,7 +159,7 @@ class WidgetSleepEventPreview extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(large ? 12 : 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: .07),
+          color: WidgetThemeDesign.cardColor(themeKey),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -141,18 +196,7 @@ class WidgetSleepEventPreview extends StatelessWidget {
     );
   }
 
-  Color get _eventAccent {
-    final rgb = accent.toARGB32();
-    final red = (rgb >> 16) & 255, green = (rgb >> 8) & 255, blue = rgb & 255;
-    final peak = math.max(1, math.max(red, math.max(green, blue)));
-    final factor = math.min(1.0, 112 / peak);
-    return Color.fromARGB(
-      255,
-      (red * factor).toInt(),
-      (green * factor).toInt(),
-      (blue * factor).toInt(),
-    );
-  }
+  Color get _eventAccent => WidgetThemeDesign.daysColor(themeKey, accent);
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +236,9 @@ class WidgetSleepEventPreview extends StatelessWidget {
                           children: [
                             _art(sleep ? 'moon' : 'gift', 24, 20),
                             const SizedBox(width: 6),
-                            Expanded(child: _line(heading)),
+                            Expanded(
+                              child: _line(heading, size: small ? 10 : 12),
+                            ),
                           ],
                         ),
                         SizedBox(height: large ? 12 : 6),
@@ -239,31 +285,50 @@ class WidgetSleepEventPreview extends StatelessWidget {
                           ],
                           _line(
                             title,
-                            size: large ? 20 : 14,
-                            lines: large ? 2 : 1,
+                            size: large
+                                ? 20
+                                : small
+                                ? 10
+                                : 14,
+                            lines: 2,
                           ),
                           SizedBox(height: large ? 12 : 6),
                           Expanded(
                             child: Row(
                               children: [
                                 Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _line(
-                                        days,
-                                        size: large
-                                            ? 50
-                                            : small
-                                            ? 28
-                                            : 33,
-                                        color: _eventAccent,
-                                      ),
-                                      const SizedBox(height: 3),
-                                      _line(label, size: 10, lines: 2),
-                                    ],
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) =>
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment:
+                                              AlignmentDirectional.centerStart,
+                                          child: SizedBox(
+                                            width: constraints.maxWidth,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _line(
+                                                  days,
+                                                  size: large
+                                                      ? 50
+                                                      : small
+                                                      ? 28
+                                                      : 33,
+                                                  color: _eventAccent,
+                                                ),
+                                                const SizedBox(height: 3),
+                                                _line(
+                                                  label,
+                                                  size: 10,
+                                                  lines: 2,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                                   ),
                                 ),
                                 if (!small) _art('gift', 54, 54),

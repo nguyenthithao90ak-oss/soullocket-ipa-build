@@ -10,8 +10,14 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
               scope: LockScope.chat,
               houseId: widget.myHouseId,
               title: MilitaryLockService.getScopeTitle(LockScope.chat),
-              reason:
-                  L10nService().format('ui_chat_unlock_to_review_the_conversation_with_value1_c2d8c8', {'value1': _nickname.trim().isEmpty ? widget.targetName : _nickname.trim()}),
+              reason: L10nService().format(
+                'ui_chat_unlock_to_review_the_conversation_with_value1_c2d8c8',
+                {
+                  'value1': _nickname.trim().isEmpty
+                      ? widget.targetName
+                      : _nickname.trim(),
+                },
+              ),
             )
           : false;
       if (mounted) {
@@ -61,11 +67,14 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           if (result.success) {
             final days = result.daysAdded ?? 0;
             if (days > 0) {
-              displayMessage =
-                  L10nService().format('ui_chat_congratulations_you_have_successfully_received_value1_vip_b6450f', {'value1': days});
+              displayMessage = L10nService().format(
+                'ui_chat_congratulations_you_have_successfully_received_value1_vip_b6450f',
+                {'value1': days},
+              );
             } else {
-              displayMessage =
-                  L10nService().translate('ui_chat_congratulations_you_have_successfully_activated_the_gift_2ccae4');
+              displayMessage = L10nService().translate(
+                'ui_chat_congratulations_you_have_successfully_activated_the_gift_2ccae4',
+              );
             }
           }
 
@@ -80,7 +89,11 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SLSnackBar(
-                content: Text(context.tr('ui_chat_an_error_occurred_while_activating_giftcode_4977e4')),
+                content: Text(
+                  context.tr(
+                    'ui_chat_an_error_occurred_while_activating_giftcode_4977e4',
+                  ),
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -284,8 +297,12 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
 
       if (sentCount >= limit) {
         final noticeMsg = vipAccess.isVip
-            ? L10nService().translate('ui_chat_you_have_reached_the_sending_limit_of_debc2f')
-            : L10nService().translate('ui_chat_oops_you_ve_sent_all_20_photos_372f19');
+            ? L10nService().translate(
+                'ui_chat_you_have_reached_the_sending_limit_of_debc2f',
+              )
+            : L10nService().translate(
+                'ui_chat_oops_you_ve_sent_all_20_photos_372f19',
+              );
         _showNotice(noticeMsg, error: true);
         return;
       }
@@ -340,7 +357,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
     } catch (e) {
       if (!mounted) return;
-      _showNotice(context.tr('ui_chat_can_t_send_photos_at_this_time_a8440f'), error: true);
+      _showNotice(
+        context.tr('ui_chat_can_t_send_photos_at_this_time_a8440f'),
+        error: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _isUploading = false);
@@ -370,9 +390,11 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     final roomId = msg.callRoomId;
     if (roomId == null || roomId.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SLSnackBar(content: Text(context.tr('ui_chat_call_room_not_found_7b6fe4'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(
+          content: Text(context.tr('ui_chat_call_room_not_found_7b6fe4')),
+        ),
+      );
       return;
     }
 
@@ -427,11 +449,17 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
     final message = AppErrorMapper.resolve(
       error,
-      fallbackMessage: context.tr('ui_chat_messages_cannot_be_sent_at_this_time_74fe87'),
+      fallbackMessage: context.tr(
+        'ui_chat_messages_cannot_be_sent_at_this_time_74fe87',
+      ),
     ).message;
     ScaffoldMessenger.of(context).showSnackBar(
       SLSnackBar(
-        content: Text(message.isEmpty ? context.tr('ui_chat_cannot_send_message_b931ba') : message),
+        content: Text(
+          message.isEmpty
+              ? context.tr('ui_chat_cannot_send_message_b931ba')
+              : message,
+        ),
       ),
     );
   }
@@ -455,8 +483,12 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       await _saveChatMute(nextValue);
       _showNotice(
         nextValue
-            ? context.tr('ui_chat_notifications_for_this_chat_have_been_turned_62a0d8')
-            : context.tr('ui_chat_notifications_have_been_turned_back_on_for_1e4a51'),
+            ? context.tr(
+                'ui_chat_notifications_for_this_chat_have_been_turned_62a0d8',
+              )
+            : context.tr(
+                'ui_chat_notifications_have_been_turned_back_on_for_1e4a51',
+              ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -472,36 +504,23 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       ? 'chat_backgrounds/internal'
       : 'chat_backgrounds/direct/$_roomId';
 
-  Future<XFile?> _cropChatBackgroundImage(XFile file) async {
-    if (kIsWeb || file.path.isEmpty) {
-      return file;
-    }
-
+  Future<XFile?> _cropChatBackgroundImage(
+    XFile file, {
+    required bool Function() isScopeCurrent,
+  }) {
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
     final cropHeight = (size.height - padding.top - padding.bottom - 76 - 88)
         .clamp(size.width * 1.2, size.height)
         .toDouble();
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: file.path,
-      aspectRatio: CropAspectRatio(ratioX: size.width, ratioY: cropHeight),
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 86,
-      maxWidth: 1440,
-      maxHeight: 2560,
-      uiSettings: [
-        IOSUiSettings(
-          title: context.tr('ui_chat_crop_chat_background_c0c52d'),
-          aspectRatioLockEnabled: true,
-          aspectRatioPickerButtonHidden: true,
-          resetAspectRatioEnabled: false,
-        ),
-      ],
+    return cropAndConfirmImage(
+      context: context,
+      image: file,
+      aspectRatio: size.width / cropHeight,
+      maxOutputSize: const Size(1440, 2560),
+      titleKey: 'ui_chat_crop_chat_background_c0c52d',
+      isScopeCurrent: isScopeCurrent,
     );
-    if (croppedFile == null) {
-      return null;
-    }
-    return XFile(croppedFile.path);
   }
 
   Future<void> _pickAndSaveChatBackground({
@@ -513,35 +532,43 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
 
-    XFile? file = presetFile ?? await _storageService.pickImage();
-    if (file == null) {
-      return;
-    }
-
-    if (presetFile == null) {
-      file = await _cropChatBackgroundImage(file);
-    }
-    if (file == null) {
-      return;
-    }
-
-    if (mounted) {
-      setState(() => _isUpdatingChatBackground = true);
-    }
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = widget.myHouseId;
+    final targetHouseId = widget.targetHouseId;
+    final isInternal = _isInternal;
+    final pendingKey = _pendingChatBackgroundUploadKey;
+    final folderName = _chatBackgroundFolderName;
+    bool isCurrent() =>
+        mounted &&
+        ownerUid != null &&
+        widget.myHouseId == houseId &&
+        widget.targetHouseId == targetHouseId &&
+        _isInternal == isInternal &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+    if (!isCurrent()) return;
+    setState(() => _isUpdatingChatBackground = true);
 
     StorageUploadResult? uploadResult;
     var didPersistNewBackground = false;
+    var commitAttempted = false;
     Object? cleanupError;
     try {
-      await PendingUploadService.instance
-          .save(_pendingChatBackgroundUploadKey, <String, dynamic>{
-            'filePath': file.path,
-            'currentBackgroundUrl': currentBackgroundUrl,
-            'currentBackgroundStoragePath': currentBackgroundStoragePath,
-          });
+      XFile? file =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
+      if (file == null || !isCurrent()) return;
+      if (presetFile == null) {
+        file = await _cropChatBackgroundImage(file, isScopeCurrent: isCurrent);
+      }
+      if (file == null || !isCurrent()) return;
+      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+        'filePath': file.path,
+        'currentBackgroundUrl': currentBackgroundUrl,
+        'currentBackgroundStoragePath': currentBackgroundStoragePath,
+      });
+      if (!isCurrent()) return;
       uploadResult = await _storageService.uploadManagedImage(
-        widget.myHouseId,
-        _chatBackgroundFolderName,
+        houseId,
+        folderName,
         file,
         quality: 82,
         minWidth: 1080,
@@ -550,17 +577,22 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       final nextUrl = uploadResult?.downloadUrl.trim() ?? '';
       final nextStoragePath = uploadResult?.storagePath.trim() ?? '';
       if (nextUrl.isEmpty || nextStoragePath.isEmpty) {
-        throw L10nService().translate('ui_chat_chat_background_cannot_be_uploaded_at_this_5d1a3c');
+        throw L10nService().translate(
+          'ui_chat_chat_background_cannot_be_uploaded_at_this_5d1a3c',
+        );
       }
 
+      if (!isCurrent()) throw StateError('Chat media scope changed');
+      commitAttempted = true;
       await _chatService.updateChatBackground(
-        myHouseId: widget.myHouseId,
-        isInternal: _isInternal,
+        myHouseId: houseId,
+        isInternal: isInternal,
         backgroundUrl: nextUrl,
         backgroundStoragePath: nextStoragePath,
-        targetHouseId: _isInternal ? null : widget.targetHouseId,
+        targetHouseId: isInternal ? null : targetHouseId,
       );
       didPersistNewBackground = true;
+      if (!isCurrent()) return;
       try {
         await _deletePreviousChatBackground(
           previousBackgroundUrl: currentBackgroundUrl,
@@ -580,19 +612,19 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         );
         return;
       }
-      await PendingUploadService.instance.clear(
-        _pendingChatBackgroundUploadKey,
-      );
+      await PendingUploadService.instance.clear(pendingKey);
+      await discardConfirmedCropImage(file);
+      if (!isCurrent()) return;
       _showNotice(context.tr('ui_chat_updated_chat_background_b3d37a'));
     } catch (e) {
-      if (!didPersistNewBackground) {
+      if (!didPersistNewBackground && !commitAttempted) {
         final uploadedPath = uploadResult?.storagePath.trim() ?? '';
         if (uploadedPath.isNotEmpty) {
           try {
             await _chatService.deleteChatBackgroundAsset(
-              myHouseId: widget.myHouseId,
-              isInternal: _isInternal,
-              targetHouseId: _isInternal ? null : widget.targetHouseId,
+              myHouseId: houseId,
+              isInternal: isInternal,
+              targetHouseId: isInternal ? null : targetHouseId,
               storagePath: uploadedPath,
             );
           } catch (cleanupError) {
@@ -602,6 +634,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           }
         }
       }
+      if (!isCurrent()) return;
       _showNotice(
         context.tr('ui_chat_chat_background_cannot_be_updated_at_this_5ccf1c'),
         error: true,
@@ -700,7 +733,11 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
 
     final deletedByUrl = await _storageService.deleteImageByUrl(oldUrl);
     if (!deletedByUrl) {
-      throw Exception(L10nService().translate('ui_chat_old_chat_background_files_cannot_be_deleted_c6e145'));
+      throw Exception(
+        L10nService().translate(
+          'ui_chat_old_chat_background_files_cannot_be_deleted_c6e145',
+        ),
+      );
     }
   }
 }

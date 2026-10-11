@@ -58,7 +58,10 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
       return;
     }
 
-    final houseId = await _houseService.getCurrentHouseId() ?? '';
+    final houseId = await _houseService
+            .getCurrentHouseId()
+            .timeout(const Duration(seconds: 12)) ??
+        '';
     String houseName = UiCopy.text('copy_6c0058015469');
     String loginId = '';
     String email = user.email ?? '';
@@ -69,33 +72,39 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
       try {
         final securitySnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/security')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 8));
         final security = securitySnap.exists && securitySnap.value is Map
             ? Map<String, dynamic>.from(securitySnap.value as Map)
             : <String, dynamic>{};
 
         final bannedSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/banned')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 8));
         final isBannedSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/isBanned')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 8));
         final banned =
             (bannedSnap.value == true) || (isBannedSnap.value == true);
 
         final bannedUntilSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/bannedUntil')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 8));
         final banUntilSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/banUntil')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 8));
         final bannedUntil =
             ((bannedUntilSnap.value ?? banUntilSnap.value) as num?)?.toInt() ??
             0;
 
         final houseNameSnap = await FirebaseDatabase.instance
             .ref('houses/$houseId/settings/houseName')
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 8));
         final houseNameVal = houseNameSnap.value?.toString().trim();
         if (houseNameVal != null && houseNameVal.isNotEmpty) {
           houseName = houseNameVal;

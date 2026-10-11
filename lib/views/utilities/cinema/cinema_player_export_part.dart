@@ -137,7 +137,7 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
       _showPlayerSnack(L10nService().translate('util_tivideokni_cab08d'));
     } catch (error) {
       _showPlayerSnack(
-        _normalizeError(error),
+        _normalizeError(error, fallbackKey: 'util_khngthluvi_ba4f4c'),
         backgroundColor: const Color(0xFFE53935),
       );
     } finally {
@@ -215,17 +215,17 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
     return 'soullocket_${safeBaseName}_${DateTime.now().millisecondsSinceEpoch}';
   }
 
-  String _normalizeError(Object error) {
-    var text = error.toString().trim();
-    if (text.startsWith('Bad state: ')) {
-      text = text.substring('Bad state: '.length);
+  String _normalizeError(
+    Object error, {
+    String fallbackKey = 'err_default_server',
+  }) {
+    if (error is UiCopyException) return error.message;
+    if (error is UnsupportedError) {
+      return L10nService().translate('util_tnhnngxutv_92e231');
     }
-    if (text.startsWith('Exception: ')) {
-      text = text.substring('Exception: '.length);
-    }
-    if (text.startsWith('Unsupported operation: ')) {
-      text = text.substring('Unsupported operation: '.length);
-    }
-    return text;
+    final mapped = AppErrorMapper.resolve(error);
+    if (mapped.isNetworkError) return AppErrorMapper.defaultNetworkMessage;
+    // Lỗi plugin có thể chứa câu tiếng Anh hoặc đường dẫn nội bộ.
+    return L10nService().translate(fallbackKey);
   }
 }

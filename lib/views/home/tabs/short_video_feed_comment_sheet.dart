@@ -22,7 +22,10 @@ class _CommentSheetState extends State<_CommentSheet> {
 
   List<Map<String, dynamic>> _comments = <Map<String, dynamic>>[];
   bool _loading = true;
+  bool _loadFailed = false;
+  int _commentsRequest = 0;
   StreamSubscription? _commentsSub;
+  Timer? _loadingDeadline;
 
   @override
   void initState() {
@@ -33,65 +36,99 @@ class _CommentSheetState extends State<_CommentSheet> {
   @override
   void dispose() {
     _commentsSub?.cancel();
+    _loadingDeadline?.cancel();
     _ctrl.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
   void _listenToComments() {
+    final request = ++_commentsRequest;
+    final fallbackAuthorName = L10nService().translate('home_ngidng_3bf886');
+    bool current() => mounted && request == _commentsRequest;
     _commentsSub?.cancel();
+    _loadingDeadline?.cancel();
+    if (mounted) {
+      setState(() {
+        _loading = _comments.isEmpty;
+        _loadFailed = false;
+      });
+    }
+    _loadingDeadline = Timer(const Duration(seconds: 10), () {
+      if (!current() || !_loading) return;
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+      });
+    });
     _commentsSub = FirebaseFirestore.instance
         .collection('social_posts')
         .doc(widget.postId)
         .collection('comments')
         .snapshots()
-        .listen((snapshot) {
-          if (!mounted) return;
-          final loaded = <Map<String, dynamic>>[];
-          for (final doc in snapshot.docs) {
-            final item = doc.data();
-            if (item['isHidden'] == true) continue;
+        .listen(
+          (snapshot) {
+            if (!current()) return;
+            _loadingDeadline?.cancel();
+            _loadingDeadline = null;
+            final loaded = <Map<String, dynamic>>[];
+            for (final doc in snapshot.docs) {
+              final item = doc.data();
+              if (item['isHidden'] == true) continue;
 
-            final authorId = (item['houseId'] ?? item['uid'] ?? '').toString();
-            if (authorId.isNotEmpty && widget.blockedUsers[authorId] == true) {
-              continue;
+              final authorId = (item['houseId'] ?? item['uid'] ?? '')
+                  .toString();
+              if (authorId.isNotEmpty &&
+                  widget.blockedUsers[authorId] == true) {
+                continue;
+              }
+
+              loaded.add(<String, dynamic>{
+                'id': doc.id,
+                'content': (item['content'] ?? item['c'] ?? item['text'] ?? '')
+                    .toString(),
+                'author_name':
+                    (item['authorName'] ??
+                            item['author_name'] ??
+                            item['author'] ??
+                            item['name'] ??
+                            item['u'] ??
+                            fallbackAuthorName)
+                        .toString(),
+                'author_id': authorId,
+                'author_avt':
+                    (item['authorAvt'] ??
+                            item['avt'] ??
+                            item['avatar'] ??
+                            item['houseAvt'] ??
+                            '')
+                        .toString(),
+                'created_at': item['ts'] ?? 0,
+              });
             }
 
-            loaded.add(<String, dynamic>{
-              'id': doc.id,
-              'content': (item['content'] ?? item['c'] ?? item['text'] ?? '')
-                  .toString(),
-              'author_name':
-                  (item['authorName'] ??
-                          item['author_name'] ??
-                          item['author'] ??
-                          item['name'] ??
-                          item['u'] ??
-                          context.tr('home_ngidng_3bf886'))
-                      .toString(),
-              'author_id': authorId,
-              'author_avt':
-                  (item['authorAvt'] ??
-                          item['avt'] ??
-                          item['avatar'] ??
-                          item['houseAvt'] ??
-                          '')
-                      .toString(),
-              'created_at': item['ts'] ?? 0,
+            loaded.sort((a, b) {
+              final left = (a['created_at'] as num?)?.toInt() ?? 0;
+              final right = (b['created_at'] as num?)?.toInt() ?? 0;
+              return right.compareTo(left);
             });
-          }
 
-          loaded.sort((a, b) {
-            final left = (a['created_at'] as num?)?.toInt() ?? 0;
-            final right = (b['created_at'] as num?)?.toInt() ?? 0;
-            return right.compareTo(left);
-          });
-
-          setState(() {
-            _comments = loaded;
-            _loading = false;
-          });
-        });
+            setState(() {
+              _comments = loaded;
+              _loading = false;
+              _loadFailed = false;
+            });
+          },
+          onError: (Object _) {
+            if (!current()) return;
+            _loadingDeadline?.cancel();
+            _loadingDeadline = null;
+            setState(() {
+              _loading = false;
+              _loadFailed = true;
+            });
+          },
+        );
   }
 
   Future<void> _postComment() async {
@@ -192,6 +229,36 @@ class _CommentSheetState extends State<_CommentSheet> {
               Expanded(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
+                    : _loadFailed && _comments.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cloud_off_rounded,
+                                size: 32,
+                                color: colors.onSurfaceVariant,
+                              ),
+                              SLSpacing.h12,
+                              Text(
+                                context.tr('p5_premium_load_failed'),
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  color: colors.onSurfaceVariant,
+                                ),
+                              ),
+                              SLSpacing.h8,
+                              TextButton.icon(
+                                onPressed: _listenToComments,
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: Text(context.tr('retry')),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                     : _comments.isEmpty
                     ? Center(
                         child: Text(
@@ -420,12 +487,9 @@ class _CommentSheetState extends State<_CommentSheet> {
           child: InkWell(
             onTap: canOpen
                 ? () {
-                    Navigator.push(
+                    slPush<void>(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            VisitorProfileScreen(targetHouseId: authorId),
-                      ),
+                      VisitorProfileScreen(targetHouseId: authorId),
                     );
                   }
                 : null,

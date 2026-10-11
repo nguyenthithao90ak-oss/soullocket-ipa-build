@@ -23,7 +23,7 @@ class _ShortVideoFeedPostCard extends StatefulWidget {
 }
 
 class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin, ScreenActivityMixin {
   late AnimationController _likeCtrl;
   late Animation<double> _likeAnim;
   bool _liked = false;
@@ -32,13 +32,10 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   VideoPlayerController? _videoCtrl;
   bool _isVideoInitialized = false;
   bool _isPreparingVideo = false;
+  bool _videoLoadFailed = false;
   int _videoLoadToken = 0;
 
-  bool get _canPlayVideo =>
-      mounted &&
-      widget.isActive &&
-      (WidgetsBinding.instance.lifecycleState == null ||
-          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed);
+  bool get _canPlayVideo => isScreenActive && widget.isActive;
 
   String get _mediaUrl => widget.post.videoUrl.isNotEmpty
       ? widget.post.videoUrl
@@ -51,7 +48,6 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _likeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -61,10 +57,6 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _likeCtrl, curve: Curves.elasticOut));
     _syncPostState();
-
-    if (_isVideo && widget.isActive) {
-      unawaited(_ensureVideoReady());
-    }
   }
 
   void _syncPostState() {
@@ -78,17 +70,28 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     _videoLoadToken++;
     _isPreparingVideo = false;
     _isVideoInitialized = false;
+    _videoLoadFailed = false;
     final controller = _videoCtrl;
     _videoCtrl = null;
     if (disposeController && controller != null) {
-      unawaited(controller.dispose());
+      unawaited(_releaseVideoController(controller));
+    }
+  }
+
+  Future<void> _releaseVideoController(VideoPlayerController controller) async {
+    try {
+      await controller.dispose().timeout(const Duration(seconds: 3));
+    } catch (error) {
+      debugPrint('Failed to release video controller: $error');
     }
   }
 
   Future<void> _ensureVideoReady() async {
-    if (!_isVideo ||
+    if (!_canPlayVideo ||
+        !_isVideo ||
         _mediaUrl.isEmpty ||
         _isVideoInitialized ||
+        _videoLoadFailed ||
         _isPreparingVideo) {
       return;
     }
@@ -97,51 +100,68 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     _isPreparingVideo = true;
 
     VideoPlayerController? cachedController;
+    var cachePending = true;
     try {
-      cachedController = await createCachedVideoController(mediaUrl);
+      final cacheRequest = createCachedVideoController(mediaUrl);
+      unawaited(cacheRequest.then<void>((result) {
+        if (!cachePending && result != null) {
+          unawaited(_releaseVideoController(result));
+        }
+      }, onError: (Object error, StackTrace stack) {}));
+      cachedController = await cacheRequest.timeout(const Duration(seconds: 2));
     } catch (e) {
       debugPrint('Failed to cache video: $e');
+    } finally {
+      cachePending = false;
     }
 
-    if (!mounted || loadToken != _videoLoadToken || !widget.isActive) {
-      await cachedController?.dispose();
+    if (!mounted || loadToken != _videoLoadToken || !_canPlayVideo) {
+      if (cachedController != null) {
+        unawaited(_releaseVideoController(cachedController));
+      }
       if (loadToken == _videoLoadToken) _isPreparingVideo = false;
       return;
     }
 
-    var controller =
-        cachedController ??
-        VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
-
+    VideoPlayerController? loadingController;
     try {
+      var controller = cachedController ??
+          VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
+      loadingController = controller;
       try {
-        await controller.initialize();
+        await controller.initialize().timeout(const Duration(seconds: 12));
       } catch (_) {
         // Cache có thể bị hỏng: giữ fallback mạng như luồng chưa có cache.
         if (cachedController == null) rethrow;
-        await controller.dispose();
+        unawaited(_releaseVideoController(controller));
         if (!mounted || loadToken != _videoLoadToken) return;
         cachedController = null;
         controller = VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
-        await controller.initialize();
+        loadingController = controller;
+        await controller.initialize().timeout(const Duration(seconds: 12));
       }
-      await controller.setLooping(true);
+      await controller.setLooping(true).timeout(const Duration(seconds: 3));
       if (!mounted || loadToken != _videoLoadToken) {
-        await controller.dispose();
+        unawaited(_releaseVideoController(controller));
         return;
       }
       final previousController = _videoCtrl;
       _videoCtrl = controller;
       _isVideoInitialized = true;
       if (previousController != null) {
-        unawaited(previousController.dispose());
+        unawaited(_releaseVideoController(previousController));
       }
       if (_canPlayVideo) {
         unawaited(controller.play());
       }
       setState(() {});
     } catch (_) {
-      await controller.dispose();
+      if (mounted && loadToken == _videoLoadToken) {
+        setState(() => _videoLoadFailed = true);
+      }
+      if (loadingController != null) {
+        unawaited(_releaseVideoController(loadingController));
+      }
     } finally {
       if (loadToken == _videoLoadToken) {
         _isPreparingVideo = false;
@@ -171,13 +191,13 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_isVideoInitialized || _videoCtrl == null) return;
-    if (state == AppLifecycleState.resumed && widget.isActive) {
-      unawaited(_videoCtrl!.play());
-      return;
+  void onScreenActivityChanged(bool active) {
+    if (_canPlayVideo) {
+      unawaited(_ensureVideoReady());
+      if (_isVideoInitialized) unawaited(_videoCtrl?.play());
+    } else {
+      unawaited(_videoCtrl?.pause());
     }
-    unawaited(_videoCtrl!.pause());
   }
 
   @override
@@ -222,10 +242,10 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _videoLoadToken++;
     _likeCtrl.dispose();
-    _videoCtrl?.dispose();
+    final controller = _videoCtrl;
+    if (controller != null) unawaited(_releaseVideoController(controller));
     super.dispose();
   }
 
@@ -390,9 +410,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                       context: context,
                       builder: (ctx) => SLAlertDialog(
                         title: Text(context.tr('home_xcnhnchn_ae00a6')),
-                        content: Text(
-                          context.tr('p5_profile_block_message'),
-                        ),
+                        content: Text(context.tr('p5_profile_block_message')),
                         actions: [
                           SLDialogAction(
                             onPressed: () => Navigator.pop(ctx, false),
@@ -464,9 +482,31 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
 
       return Container(
         color: const Color(0xFF120716),
-        child: const Center(
-          child: CircularProgressIndicator(color: Color(0xFFE91E8C)),
-        ),
+        child: _videoLoadFailed
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(context.tr('memory_video_play_error'), textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70)),
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() => _videoLoadFailed = false);
+                          unawaited(_ensureVideoReady());
+                        },
+                        style: TextButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size(48, 48)),
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(context.tr('retry')),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : const Center(
+                child: CircularProgressIndicator(color: Color(0xFFE91E8C)),
+              ),
       );
     }
 

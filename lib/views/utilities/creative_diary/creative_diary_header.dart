@@ -117,7 +117,7 @@ class CreativeDiaryHeader extends StatelessWidget {
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      activePage?.authorName ?? 'You',
+                      activePage?.authorName ?? context.tr('p3_sleep_default_me'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(

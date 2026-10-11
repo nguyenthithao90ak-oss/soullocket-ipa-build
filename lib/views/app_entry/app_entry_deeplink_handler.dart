@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -14,7 +16,11 @@ typedef AppEntrySnackBarCallback =
     void Function(String message, {bool isSuccess});
 
 class AppEntryDeeplinkHandler {
-  AppEntryDeeplinkHandler();
+  AppEntryDeeplinkHandler({LoveCardLinkService? loveCardLinkService})
+    : _loveCardLinkService = loveCardLinkService ?? const LoveCardLinkService();
+
+  final LoveCardLinkService _loveCardLinkService;
+  final SingleOpenGate _openGate = SingleOpenGate();
 
   bool _didInitializeDeeplink = false;
   String? _lastOpenedLoveCardKey;
@@ -34,14 +40,11 @@ class AppEntryDeeplinkHandler {
     }
 
     await DeeplinkService().initialize(
-      onJoinHouse: (houseId) {
-        if (!context.mounted) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CoupleConnectScreen(houseId: houseId),
-          ),
-        );
+      onJoinHouse: (houseId) async {
+        await _openGate.run(() async {
+          if (!context.mounted) return;
+          await slPush<void>(context, CoupleConnectScreen(houseId: houseId));
+        });
       },
       onOpenLoveCard: (loveCardUri) async {
         await openLoveCardFromUri(
@@ -51,10 +54,10 @@ class AppEntryDeeplinkHandler {
         );
       },
       onPasswordResetLink: (uri) async {
-        if (!context.mounted) return;
-        await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => AuthActionScreen(initialUri: uri)),
-        );
+        await _openGate.run(() async {
+          if (!context.mounted) return;
+          await slPush<void>(context, AuthActionScreen(initialUri: uri));
+        });
       },
     );
   }
@@ -75,33 +78,46 @@ class AppEntryDeeplinkHandler {
       return true;
     }
 
+    // Khóa cả bước tải thiệp. Chỉ khóa push sẽ bỏ sót request chậm về
+    // sau khi màn thiệp trước đã đóng, khiến app tự mở thêm một màn.
+    return await _openGate.runValue<bool>(
+          () => _openLoveCardInternal(
+            context: context,
+            loveCardUri: loveCardUri,
+            showSnackBar: showSnackBar,
+          ),
+        ) ??
+        true;
+  }
+
+  Future<bool> _openLoveCardInternal({
+    required BuildContext context,
+    required Uri loveCardUri,
+    required AppEntrySnackBarCallback showSnackBar,
+  }) async {
+    if (!context.mounted) return true;
+
     final msgNotFound = context.tr('app_entry_linktthipk_810b8f');
 
     var payload = LoveCardLinkService.payloadFromUri(loveCardUri);
     if (payload == null) {
       final shareId = LoveCardLinkService.shareIdFromUri(loveCardUri);
       if (shareId != null && shareId.isNotEmpty) {
-        payload = await const LoveCardLinkService().fetchPayloadByShareId(
-          shareId,
-        );
+        payload = await _loveCardLinkService.fetchPayloadByShareId(shareId);
       }
     }
+    if (!context.mounted) return true;
     if (payload == null) {
       showSnackBar(msgNotFound);
       return true;
     }
 
-    if (!context.mounted) {
-      return true;
-    }
-
     final resolvedPayload = payload;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LoveCardPublicViewerScreen(
-          payload: resolvedPayload,
-          sourceUri: loveCardUri,
-        ),
+    await slPush<void>(
+      context,
+      LoveCardPublicViewerScreen(
+        payload: resolvedPayload,
+        sourceUri: loveCardUri,
       ),
     );
     return true;

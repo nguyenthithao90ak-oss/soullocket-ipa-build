@@ -56,13 +56,11 @@ class _UpdateTabState extends State<UpdateTab>
   }
 
   void _openDocument(UpdateHubDocument document) {
-    Navigator.push(
+    slPush<void>(
       context,
-      SLRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: context.tr(document.key),
-          assetPath: document.asset,
-        ),
+      DocumentViewerScreen(
+        title: context.tr(document.key),
+        assetPath: document.asset,
       ),
     );
   }
@@ -134,27 +132,17 @@ class _UpdateTabState extends State<UpdateTab>
       body: UpdateHubBody(
         version: _version,
         invitation: const AppReferralCard(),
-        onSettings: () => Navigator.push(
-          context,
-          SLRoute(builder: (_) => const SettingsTab()),
-        ),
+        onSettings: () => slPush<void>(context, const SettingsTab()),
         onDocument: _openDocument,
-        onGuide: () => Navigator.push(
+        onGuide: () => slPush<void>(
           context,
-          SLRoute(
-            builder: (_) => AppHelpCenterScreen(
-              isStillValid: () => mounted,
-              onSupport: () => Navigator.push(
-                context,
-                SLRoute(builder: (_) => const UserSupportChatScreen()),
-              ),
-            ),
+          AppHelpCenterScreen(
+            isStillValid: () => mounted,
+            onSupport: () =>
+                slPush<void>(context, const UserSupportChatScreen()),
           ),
         ),
-        onSupport: () => Navigator.push(
-          context,
-          SLRoute(builder: (_) => const UserSupportChatScreen()),
-        ),
+        onSupport: () => slPush<void>(context, const UserSupportChatScreen()),
         onEmail: () => _openExternal(
           Uri(
             scheme: 'mailto',

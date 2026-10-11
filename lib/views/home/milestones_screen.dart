@@ -1,6 +1,7 @@
 import '../../utils/services/market_service.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'package:intl/intl.dart' show DateFormat;
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/widgets/milestone_embedded_sticker.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
@@ -12,6 +13,7 @@ import '../../utils/calendar/holiday_occurrence_resolver.dart';
 import '../../utils/calendar/calendar_time_zone.dart';
 import '../../utils/calendar/calendar_civil_date.dart';
 import 'milestone_sticker_gallery_screen.dart';
+import 'widgets/milestones/milestones_design.dart';
 
 class MilestoneEvent {
   final String title;
@@ -144,9 +146,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         );
         allEvents.add(
           MilestoneEvent(
-            title: L10nService().format('milestone_anniversary_days', {
-              'days': m.toString(),
-            }),
+            title: milestoneStickerLabel('days_$m'),
             date: milestoneDate,
             type: 'anniversary',
             stickerKey: 'days_$m',
@@ -167,9 +167,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           todayMidnight,
           milestoneDate,
         );
-        final title = L10nService().format('p4_milestone_anniversary_months', {
-          'months': m.toString(),
-        });
+        final title = milestoneStickerLabel('months_$m');
         allEvents.add(
           MilestoneEvent(
             title: title,
@@ -191,9 +189,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         final diff = CalendarCivilDate.daysBetween(todayMidnight, annivDate);
         allEvents.add(
           MilestoneEvent(
-            title: L10nService().format('milestone_anniversary_years', {
-              'years': y.toString(),
-            }),
+            title: milestoneStickerLabel('years_$y'),
             date: annivDate,
             type: 'anniversary',
             stickerKey: 'years_$y',
@@ -231,7 +227,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           final diff = CalendarCivilDate.daysBetween(todayMidnight, bdayDate);
           allEvents.add(
             MilestoneEvent(
-              title: L10nService().format('milestone_birthday', {'name': name}),
+              title: L10nService().format('sticker_love_birthday', {
+                'name': name,
+              }),
               date: bdayDate,
               type: 'birthday',
               stickerKey: stickerKey,
@@ -258,9 +256,16 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     );
     for (final occurrence in holidayOccurrences) {
       final h = occurrence.holiday;
+      final holidayStickerKey = h.stickerKey;
+      final useEnglishLabel =
+          !h.countries.contains('VN') &&
+          holidayStickerKey != null &&
+          MilestoneStickerCatalog.scene(holidayStickerKey) != null;
       allEvents.add(
         MilestoneEvent(
-          title: HolidayService.getLocalizedName(h),
+          title: useEnglishLabel
+              ? milestoneStickerLabel(holidayStickerKey)
+              : HolidayService.getLocalizedName(h),
           date: occurrence.date,
           type: 'holiday',
           stickerKey:
@@ -342,18 +347,16 @@ class _MilestonesScreenState extends State<MilestonesScreen>
   }
 
   void _openCalendar() {
-    Navigator.push(
+    slPush<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => CalendarScreen(
-          houseId: widget.houseId,
-          myName:
-              widget.houseSettings['nameU1']?.toString() ??
-              L10nService().translate('p4_default_you'),
-        ),
+      CalendarScreen(
+        houseId: widget.houseId,
+        myName:
+            widget.houseSettings['nameU1']?.toString() ??
+            L10nService().translate('p4_default_you'),
       ),
     ).then((_) {
-      _calculateEvents();
+      if (mounted) _calculateEvents();
     });
   }
 
@@ -382,434 +385,87 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       }
     }
 
+    final palette = MilestonePalette.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8FB),
-      body: Stack(
-        children: [
-          // Nền gradient ngọt ngào
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFFF4F8),
-                    Color(0xFFFFEEF5),
-                    Color(0xFFF6ECFF),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: [0.0, 0.5, 1.0],
+      backgroundColor: palette.canvas,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Column(
+              children: [
+                MilestoneNavigationBar(
+                  backLabel: context.tr('sticker_love_back'),
+                  libraryLabel: context.tr('sticker_love_library_title'),
+                  calendarLabel: context.tr('sticker_love_calendar'),
+                  onBack: () => Navigator.pop(context),
+                  onLibrary: () => slPush<void>(
+                    context,
+                    const MilestoneStickerGalleryScreen(),
+                  ),
+                  onCalendar: _openCalendar,
                 ),
-              ),
-            ),
-          ),
-          // Các Orb bồng bềnh làm nền sinh động
-          Positioned(
-            top: -40,
-            right: -50,
-            child: _buildBackdropOrb(
-              size: 240,
-              colors: const [Color(0xFFFFB3D1), Color(0xFFE5C3FF)],
-            ),
-          ),
-          Positioned(
-            left: -60,
-            top: 200,
-            child: _buildBackdropOrb(
-              size: 190,
-              colors: const [Color(0xFFFFC6D9), Color(0xFFFFB0C7)],
-              delay: 1500,
-            ),
-          ),
-          Positioned(
-            right: -20,
-            top: 480,
-            child: _buildBackdropOrb(
-              size: 150,
-              colors: const [Color(0xFFF0C8FF), Color(0xFFFFE0EC)],
-              delay: 800,
-            ),
-          ),
-          // Nội dung chính
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    children: [
-                      // Custom App Bar siêu đáng yêu
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              tooltip: context.tr('p4_back'),
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.04,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  color: Color(0xFFFF4D7D),
-                                  size: 18,
-                                ),
-                              ),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                L10nService().translate('milestone_title'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 21,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF2D3748),
-                                ),
+                Expanded(
+                  child: NestedScrollView(
+                    physics: SLResponsive.scrollPhysicsForPlatform(),
+                    headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                        sliver: SliverToBoxAdapter(
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              context.tr('sticker_love_events_title'),
+                              style: SLTheme.quicksand(
+                                fontSize: 27,
+                                fontWeight: FontWeight.w800,
+                                color: palette.ink,
+                                height: 1.3,
                               ),
                             ),
-                            IconButton(
-                              tooltip: context.tr('sticker_library_title'),
-                              icon: const Icon(
-                                Icons.collections_bookmark_outlined,
-                                color: Color(0xFFAB5C86),
-                              ),
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      const MilestoneStickerGalleryScreen(),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.04,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.calendar_month_rounded,
-                                  color: Color(0xFFFF4D7D),
-                                  size: 20,
-                                ),
-                              ),
-                              onPressed: _openCalendar,
-                              tooltip: L10nService().translate(
-                                'milestone_manage_calendar',
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                      // Banner số ngày yêu nhau xinh xắn
                       if (daysLove > 0)
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          width: double.infinity,
-                          constraints: const BoxConstraints(minHeight: 100),
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFFFF85A2),
-                                        Color(0xFFFF4D7D),
-                                        Color(0xFFFF6584),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(26),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.6,
-                                      ),
-                                      width: 1.2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFFFF4D7D,
-                                        ).withValues(alpha: 0.35),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // Soft highlight line top
-                              Positioned(
-                                top: 0,
-                                left: 20,
-                                right: 20,
-                                height: 1.5,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.white.withValues(alpha: 0.0),
-                                        Colors.white.withValues(alpha: 0.6),
-                                        Colors.white.withValues(alpha: 0.0),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Watermark cute hearts
-                              Positioned(
-                                right: -10,
-                                bottom: -10,
-                                child: Icon(
-                                  Icons.favorite,
-                                  size: 110,
-                                  color: Colors.white.withValues(alpha: 0.14),
-                                ),
-                              ),
-                              Positioned(
-                                left: 20,
-                                top: -20,
-                                child: Icon(
-                                  Icons.favorite_border,
-                                  size: 55,
-                                  color: Colors.white.withValues(alpha: 0.10),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 16,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 62,
-                                      height: 62,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.25,
-                                        ),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.6,
-                                          ),
-                                          width: 2,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.08,
-                                            ),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Center(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(3.0),
-                                          child: MilestoneEmbeddedSticker(
-                                            'fireworks_couple',
-                                            width: 54,
-                                            height: 54,
-                                            fallbackAssetPath:
-                                                'assets/images/anhtomau_stickers/sticker_2.gif',
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            L10nService().translate(
-                                              'milestone_together_for',
-                                            ),
-                                            style: SLTheme.quicksand(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.95,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            L10nService().format(
-                                              'milestone_love_days',
-                                              {'days': daysLove.toString()},
-                                            ),
-                                            style: SLTheme.quicksand(
-                                              fontSize: 19,
-                                              fontWeight: FontWeight.w900,
-                                              color: Colors.white,
-                                              shadows: [
-                                                const Shadow(
-                                                  color: Colors.black26,
-                                                  blurRadius: 6,
-                                                  offset: Offset(0, 2),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      // Custom TabBar kiểu bong bóng kẹo ngọt
-                      Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.white, width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFFCEBCD0,
-                              ).withValues(alpha: 0.12),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: TabBar(
-                          controller: _tabController,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          indicatorColor: Colors.transparent,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: const Color(0xFF7E6475),
-                          labelStyle: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13.5,
-                          ),
-                          unselectedLabelStyle: SLTheme.quicksand(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                          ),
-                          indicator: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF7E9B), Color(0xFFFF4D7D)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFFFF4D7D,
-                                ).withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          tabs: [
-                            Tab(
-                              height: 38,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.hourglass_empty_rounded,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    L10nService().translate(
-                                      'milestone_tab_upcoming',
-                                    ),
-                                  ),
-                                ],
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          sliver: SliverToBoxAdapter(
+                            child: MilestoneTogetherCard(
+                              caption: context.tr('sticker_love_together'),
+                              label: milestoneStickerLabel('days_$daysLove'),
+                              artwork: MilestoneEmbeddedSticker(
+                                'days_$daysLove',
                               ),
                             ),
-                            Tab(
-                              height: 38,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.favorite_rounded, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    L10nService().translate(
-                                      'milestone_tab_past',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      // Tab Views
-                      Expanded(
-                        child: TabBarView(
-                          physics: const SLPagePhysics(),
-                          controller: _tabController,
-                          children: [
-                            _buildEventsList(_upcomingList, isUpcoming: true),
-                            _buildEventsList(_pastList, isUpcoming: false),
-                          ],
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        sliver: SliverToBoxAdapter(
+                          child: MilestoneTabSelector(
+                            controller: _tabController,
+                            upcomingLabel: context.tr('sticker_love_upcoming'),
+                            pastLabel: context.tr('sticker_love_past'),
+                          ),
                         ),
                       ),
                     ],
+                    body: TabBarView(
+                      controller: _tabController,
+                      physics: MediaQuery.disableAnimationsOf(context)
+                          ? const NeverScrollableScrollPhysics()
+                          : const SLPagePhysics(),
+                      children: [
+                        _buildEventsList(_upcomingList, isUpcoming: true),
+                        _buildEventsList(_pastList, isUpcoming: false),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -822,393 +478,77 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     required bool isUpcoming,
   }) {
     if (list.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 76,
-                height: 76,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF0F5),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFFC0CB), width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFFC0CB).withValues(alpha: 0.2),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: R2StickerImage(
-                      'assets/images/anhtomau_stickers/sticker_25.gif',
-                    ), // Thỏ chờ đợi
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isUpcoming
-                    ? L10nService().translate('milestone_empty_upcoming')
-                    : L10nService().translate('milestone_empty_past'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7E6475),
-                  height: 1.4,
-                ),
-              ),
-              if (isUpcoming) ...[
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: _openCalendar,
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(
-                    L10nService().translate('milestone_plan_now'),
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4D7D),
-                    foregroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: const Color(
-                      0xFFFF4D7D,
-                    ).withValues(alpha: 0.35),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+      return ListView(
+        physics: SLResponsive.scrollPhysicsForPlatform(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          MilestoneEmptyCard(
+            label: context.tr(
+              isUpcoming
+                  ? 'sticker_love_empty_upcoming'
+                  : 'sticker_love_empty_past',
+            ),
+            artwork: const MilestoneEmbeddedSticker('moment_first_date'),
+            actionLabel: isUpcoming
+                ? context.tr('sticker_love_plan_now')
+                : null,
+            onAction: isUpcoming ? _openCalendar : null,
           ),
-        ),
+        ],
       );
     }
 
-    return ListView.builder(
+    return ListView.separated(
       physics: SLResponsive.scrollPhysicsForPlatform(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       itemCount: list.length,
-      itemBuilder: (context, index) {
-        final event = list[index];
-        return _buildEventItemCard(event, isUpcoming: isUpcoming);
-      },
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) =>
+          _buildEventItemCard(list[index], isUpcoming: isUpcoming),
     );
   }
 
   Widget _buildEventItemCard(MilestoneEvent event, {required bool isUpcoming}) {
-    final (
-      countdownText,
-      badgeBgColors,
-      badgeBorderColor,
-      badgeTextColor,
-    ) = switch ((isUpcoming, event.diffDays)) {
-      (true, 0) => (
-        L10nService().translate('milestone_today'),
-        const [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
-        const Color(0xFF86EFAC),
-        const Color(0xFF15803D),
-      ),
-      (true, 1) => (
-        L10nService().translate('milestone_tomorrow'),
-        const [Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
-        const Color(0xFF7DD3FC),
-        const Color(0xFF0369A1),
-      ),
-      (true, final d) => (
-        L10nService().format('milestone_days_left', {'days': d.toString()}),
-        const [Color(0xFFFFF0F5), Color(0xFFFFE4EC)],
-        const Color(0xFFFFC0CB),
-        const Color(0xFF9D174D),
-      ),
-      (false, -1) => (
-        L10nService().translate('milestone_yesterday'),
-        const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
-        const Color(0xFFE2E8F0),
-        const Color(0xFF475569),
-      ),
-      (false, _) => (
-        L10nService().format('milestone_days_passed', {
-          'days': event.diffDays.abs().toString(),
-        }),
-        const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
-        const Color(0xFFE2E8F0),
-        const Color(0xFF475569),
-      ),
+    final countdownText = switch ((isUpcoming, event.diffDays)) {
+      (true, 0) => context.tr('sticker_love_today'),
+      (true, 1) => context.tr('sticker_love_tomorrow'),
+      (true, final d) => L10nService().format('sticker_love_days_left', {
+        'days': d.toString(),
+      }),
+      (false, -1) => context.tr('sticker_love_yesterday'),
+      (false, _) => L10nService().format('sticker_love_days_passed', {
+        'days': event.diffDays.abs().toString(),
+      }),
     };
-
-    final (stickerPath, iconGradients) = switch (event.type) {
+    final (kind, fallbackAsset) = switch (event.type) {
       'birthday' => (
+        MilestoneCardKind.birthday,
         'assets/images/anhtomau_stickers/sticker_17.gif',
-        const [Color(0xFFFFF3C4), Color(0xFFFFE082)],
       ),
       'anniversary' => (
+        MilestoneCardKind.anniversary,
         'assets/images/anhtomau_stickers/sticker_14.gif',
-        const [Color(0xFFFFD1E1), Color(0xFFFFB2CC)],
       ),
       'holiday' => (
+        MilestoneCardKind.holiday,
         'assets/images/anhtomau_stickers/sticker_22.gif',
-        const [Color(0xFFE9D5FF), Color(0xFFD8B4FE)],
       ),
       _ => (
+        MilestoneCardKind.calendar,
         'assets/images/anhtomau_stickers/sticker_9.gif',
-        const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)],
       ),
     };
-    final stickerKey = _resolveMilestoneStickerKey(event);
-
-    final weekdays = [
-      L10nService().translate('milestone_weekday_1'),
-      L10nService().translate('milestone_weekday_2'),
-      L10nService().translate('milestone_weekday_3'),
-      L10nService().translate('milestone_weekday_4'),
-      L10nService().translate('milestone_weekday_5'),
-      L10nService().translate('milestone_weekday_6'),
-      L10nService().translate('milestone_weekday_7'),
-    ];
-    final weekdayStr = weekdays[event.date.weekday - 1];
-    final formattedDate =
-        '$weekdayStr, ${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.95),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF9EB7).withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Transform.rotate(
-                angle: -0.03,
-                child: Container(
-                  width: 62,
-                  height: 62,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: iconGradients,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: iconGradients.last.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2.5),
-                    child: MilestoneEmbeddedSticker(
-                      stickerKey,
-                      width: 56,
-                      height: 56,
-                      fallbackAssetPath: stickerPath,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      event.title,
-                      style: SLTheme.quicksand(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF2C3437),
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.event_outlined,
-                          size: 13,
-                          color: Color(0xFF94A3B8),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            formattedDate,
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF78909C),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: badgeBgColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: badgeBorderColor, width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: badgeTextColor.withValues(alpha: 0.08),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  countdownText,
-                  style: SLTheme.quicksand(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: badgeTextColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+    return MilestoneEventCard(
+      title: event.title,
+      dateLabel: DateFormat('EEE, dd MMM yyyy', 'en').format(event.date),
+      countdownLabel: countdownText,
+      kind: kind,
+      isPast: !isUpcoming,
+      isToday: isUpcoming && event.diffDays == 0,
+      artwork: MilestoneEmbeddedSticker(
+        _resolveMilestoneStickerKey(event),
+        fallbackAssetPath: fallbackAsset,
       ),
     );
   }
-
-  Widget _buildBackdropOrb({
-    required double size,
-    required List<Color> colors,
-    int delay = 0,
-  }) {
-    return _FloatingOrb(size: size, colors: colors, delayMilliseconds: delay);
-  }
-}
-
-class _FloatingOrbState extends State<_FloatingOrb>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3500),
-    );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-
-    if (widget.delayMilliseconds > 0) {
-      Future.delayed(Duration(milliseconds: widget.delayMilliseconds), () {
-        if (mounted) _controller.repeat(reverse: true);
-      });
-    } else {
-      _controller.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, -20.0 * _animation.value),
-          child: child,
-        );
-      },
-      child: IgnorePointer(
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                widget.colors.first.withValues(alpha: 0.8),
-                widget.colors.last.withValues(alpha: 0.0),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingOrb extends StatefulWidget {
-  final double size;
-  final List<Color> colors;
-  final int delayMilliseconds;
-
-  const _FloatingOrb({
-    required this.size,
-    required this.colors,
-    this.delayMilliseconds = 0,
-  });
-
-  @override
-  State<_FloatingOrb> createState() => _FloatingOrbState();
 }

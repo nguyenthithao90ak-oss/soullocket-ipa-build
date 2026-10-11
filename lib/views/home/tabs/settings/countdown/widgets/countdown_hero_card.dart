@@ -10,62 +10,40 @@ extension CountdownHeroCardExt on _CountdownModeIndependentScreenState {
   ) => LayoutBuilder(
     builder: (context, constraints) {
       final size = privateSpaceDialSize(
-        constraints.maxWidth - 16,
+        constraints.maxWidth - 34,
         _countdownSizePx,
       );
       final value = _anchorDate == null
           ? '--'
           : _daysSince(_anchorDate!).toString();
-      final basic = {
-        'default',
-        'plain',
-        'rose_wave',
-        '',
-      }.contains(_countdownStyleKey);
-      return Column(
-        children: [
-          if (basic)
-            PrivateSpaceDial(
+      return Theme(
+        data: Theme.of(context).copyWith(
+          brightness: themeData.isDark ? Brightness.dark : Brightness.light,
+        ),
+        child: Column(
+          children: [
+            // Dựng ở cỡ thật để giữ vùng chạm 48dp và hỗ trợ chữ hệ thống lớn.
+            _CountdownModeCircle(
+              size: size,
               value: value,
               topLabel: _topLabel(),
               bottomLabel: _bottomLabel(),
-              size: size,
-              dark: themeData.isDark,
+              styleData: styleData,
               fontKey: _fontKey,
-              transparent: _transparentMode,
-              onTop: () => _editCountdownLabel(editTopLabel: true),
-              onBottom: () => _editCountdownLabel(editTopLabel: false),
-              onDate: _pickAnchorDate,
-            )
-          else
-            SizedBox(
-              width: size,
-              height: size,
-              child: FittedBox(
-                child: MediaQuery.withNoTextScaling(
-                  child: _CountdownModeCircle(
-                    size: 320,
-                    value: value,
-                    topLabel: _topLabel(),
-                    bottomLabel: _bottomLabel(),
-                    styleData: styleData,
-                    fontKey: _fontKey,
-                    styleKey: _countdownStyleKey,
-                    countdownShapeKey: UiPrefs.notifier.value.countdownShapeKey,
-                    transparentMode: _transparentMode,
-                    enableMotion: !MediaQuery.disableAnimationsOf(context),
-                    onTopTap: () => _editCountdownLabel(editTopLabel: true),
-                    onValueTap: _pickAnchorDate,
-                    onBottomTap: () => _editCountdownLabel(editTopLabel: false),
-                  ),
-                ),
-              ),
+              styleKey: _countdownStyleKey,
+              countdownShapeKey: UiPrefs.notifier.value.countdownShapeKey,
+              transparentMode: _transparentMode,
+              enableMotion: !UiPrefs.notifier.value.liteMode,
+              onTopTap: () => _editCountdownLabel(editTopLabel: true),
+              onValueTap: _pickAnchorDate,
+              onBottomTap: () => _editCountdownLabel(editTopLabel: false),
             ),
-          if (_anchorDate != null) ...[
-            const SizedBox(height: 18),
-            _buildLoveTimeCounters(),
+            if (_anchorDate != null) ...[
+              const SizedBox(height: 18),
+              _buildLoveTimeCounters(),
+            ],
           ],
-        ],
+        ),
       );
     },
   );

@@ -13,6 +13,12 @@ analyzer:
     # Exclude generated build output.
     - .dart_tool/**
     - build/**
+    # Exclude backup/source archives (không thuộc source chính).
+    - libb_temp2/**
+    - libb_temp/**
+    - public_ipa_source/**
+    - backups/**
+    - SoulLocket_*/**
 
 linter:
   rules:

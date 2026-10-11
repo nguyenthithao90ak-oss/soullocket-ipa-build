@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../utils/locale_date_format.dart';
 import '../../../utils/services/activity_history_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../widgets/sl_detail_widgets.dart';
@@ -12,11 +12,15 @@ class ActivityHistoryContent extends StatelessWidget {
     super.key,
     required this.entries,
     required this.onRestore,
+    this.loading = false,
+    this.refreshing = false,
     this.restoringEntryId,
   });
 
   final List<ActivityHistoryEntry> entries;
   final ValueChanged<ActivityHistoryEntry> onRestore;
+  final bool loading;
+  final bool refreshing;
   final String? restoringEntryId;
 
   @override
@@ -26,14 +30,13 @@ class ActivityHistoryContent extends StatelessWidget {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             sliver: SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: SLDetailCard(
                 child: Row(
                   children: [
-                    const SLDetailIcon(icon: Icons.history_rounded, size: 36),
-                    const SizedBox(width: 14),
+                    const SLDetailIcon(icon: Icons.history_rounded, size: 38),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,19 +44,19 @@ class ActivityHistoryContent extends StatelessWidget {
                           Text(
                             context.tr('detail_history_recent'),
                             style: SLTheme.quicksand(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: SLDetailStyle.muted(context),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: SLDetailStyle.text(context),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 3),
                           Text(
                             L10nService().format('util_history_limit', {
                               'count': ActivityHistoryService.maxItems,
                             }),
                             style: SLTheme.quicksand(
                               fontSize: 11.5,
-                              height: 1.4,
+                              height: 1.35,
                               fontWeight: FontWeight.w500,
                               color: SLDetailStyle.muted(context),
                             ),
@@ -61,12 +64,22 @@ class ActivityHistoryContent extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (refreshing) ...[
+                      const SizedBox(width: 8),
+                      const SizedBox.square(
+                        dimension: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: SLDetailStyle.secondary,
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 12),
                     Text(
                       '${entries.length}',
                       style: SLTheme.quicksand(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
                         color: SLDetailStyle.text(context),
                       ),
                     ),
@@ -75,40 +88,56 @@ class ActivityHistoryContent extends StatelessWidget {
               ),
             ),
           ),
-          if (entries.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
+          if (loading)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              sliver: SliverList.builder(
+                itemCount: 3,
+                itemBuilder: (context, index) => const Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: _ActivityHistorySkeleton(),
+                ),
+              ),
+            )
+          else if (entries.isEmpty)
+            SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SLDetailIcon(
-                      icon: Icons.history_toggle_off_rounded,
-                      size: 64,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      context.tr('util_chaclchsho_b9320d'),
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: SLDetailStyle.text(context),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: SLDetailCard(
+                  child: Row(
+                    children: [
+                      const SLDetailIcon(
+                        icon: Icons.history_toggle_off_rounded,
+                        size: 48,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.tr('detail_history_empty_desc'),
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                        color: SLDetailStyle.muted(context),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr('util_chaclchsho_b9320d'),
+                              style: SLTheme.quicksand(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: SLDetailStyle.text(context),
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              context.tr('detail_history_empty_desc'),
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                height: 1.4,
+                                fontWeight: FontWeight.w500,
+                                color: SLDetailStyle.muted(context),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             )
@@ -258,9 +287,9 @@ class ActivityHistoryCard extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(
-                    DateFormat(
-                      'dd/MM/yyyy HH:mm',
-                    ).format(DateTime.fromMillisecondsSinceEpoch(entry.ts)),
+                    LocaleDateFormat.dateTime(
+                      DateTime.fromMillisecondsSinceEpoch(entry.ts),
+                    ),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       height: 1.4,
@@ -300,4 +329,54 @@ class ActivityHistoryCard extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _ActivityHistorySkeleton extends StatelessWidget {
+  const _ActivityHistorySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = SLDetailStyle.muted(context).withValues(alpha: 0.17);
+    return SLDetailCard(
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: muted,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 12,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: muted,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(height: 9),
+                FractionallySizedBox(
+                  widthFactor: 0.62,
+                  child: Container(
+                    height: 9,
+                    decoration: BoxDecoration(
+                      color: muted,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

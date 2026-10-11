@@ -23,17 +23,30 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
   }
 
   void _listenResetRequest() {
+    if (!_vaultScopeIsCurrent) return;
     _resetRequestSub?.cancel();
-    _resetRequestSub =
-        _vaultResetService.watchResetRequest(widget.houseId).listen((request) {
-      if (!mounted) return;
-      setState(() {
-        _pendingResetRequest = request;
-      });
-    });
+    _resetRequestSub = _vaultResetService
+        .watchResetRequest(widget.houseId)
+        .listen(
+          (request) {
+            if (!_vaultScopeIsCurrent) return;
+            setState(() {
+              _pendingResetRequest = request;
+            });
+          },
+          onError: (Object error) {
+            if (!_vaultScopeIsCurrent) return;
+            debugPrint(
+              'Secret vault reset listener failed: ${error.runtimeType}',
+            );
+          },
+        );
   }
 
-  void _showVaultSnack(String message, {SLToastVariant variant = SLToastVariant.info}) {
+  void _showVaultSnack(
+    String message, {
+    SLToastVariant variant = SLToastVariant.info,
+  }) {
     if (!mounted) return;
     SLToast.show(context, message, variant: variant);
   }
@@ -57,7 +70,9 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
       builder: (ctx) => SLAlertDialog(
         title: Text(context.tr('util_resetkhonh_7d2128')),
         content: Text(
-          context.tr('ui_utilities_this_request_will_delete_all_confidential_photos_7ede3a'),
+          context.tr(
+            'ui_utilities_this_request_will_delete_all_confidential_photos_7ede3a',
+          ),
         ),
         actions: [
           SLDialogAction(
@@ -105,7 +120,10 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
 
       final scheduledAt = _pendingResetRequest?.scheduledAt ?? 0;
       _showVaultSnack(
-        L10nScope.of(context).format('ui_utilities_scheduled_to_reset_secret_photo_vault_on_5dcbbf', {'value1': _formatResetSchedule(scheduledAt)}),
+        L10nScope.of(context).format(
+          'ui_utilities_scheduled_to_reset_secret_photo_vault_on_5dcbbf',
+          {'value1': _formatResetSchedule(scheduledAt)},
+        ),
         variant: SLToastVariant.warning,
       );
     } catch (error) {

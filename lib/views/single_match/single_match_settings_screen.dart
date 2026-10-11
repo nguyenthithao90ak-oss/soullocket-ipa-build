@@ -7,10 +7,12 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class SingleMatchSettingsScreen extends StatefulWidget {
   final String houseId;
+  final DatabaseReference? databaseRef;
 
   const SingleMatchSettingsScreen({
     super.key,
     required this.houseId,
+    this.databaseRef,
   });
 
   @override
@@ -19,8 +21,11 @@ class SingleMatchSettingsScreen extends StatefulWidget {
 }
 
 class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  late final DatabaseReference _dbRef =
+      widget.databaseRef ?? FirebaseDatabase.instance.ref();
   bool _isLoading = true;
+  bool _loadFailed = false;
+  bool _readInProgress = false;
 
   bool _enabled = true;
   bool _allowAudioCalls = true;
@@ -43,10 +48,19 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
+    if (_readInProgress) return;
+    _readInProgress = true;
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadFailed = false;
+      });
+    }
     try {
       final snap = await _dbRef
           .child('houses/${widget.houseId}/settings/singleMatch')
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10));
       if (!mounted) return;
 
       if (snap.exists && snap.value is Map) {
@@ -62,7 +76,11 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
       }
     } catch (e) {
       debugPrint('[SingleMatchSettingsScreen] Load error: $e');
+      if (mounted) {
+        setState(() => _loadFailed = true);
+      }
     } finally {
+      _readInProgress = false;
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -72,6 +90,7 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
   }
 
   Future<void> _saveSettings() async {
+    if (_isLoading || _loadFailed) return;
     try {
       await _dbRef
           .child('houses/${widget.houseId}/settings/singleMatch')
@@ -103,6 +122,34 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
       return const Scaffold(
         backgroundColor: SLColors.bgMain,
         body: Center(child: CircularProgressIndicator(color: SLColors.primary)),
+      );
+    }
+
+    if (_loadFailed) {
+      return Scaffold(
+        backgroundColor: SLColors.bgMain,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(SLSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_rounded, size: 42),
+                SLSpacing.h12,
+                Text(
+                  context.tr('settings_initial_load_error'),
+                  textAlign: TextAlign.center,
+                ),
+                SLSpacing.h8,
+                FilledButton.icon(
+                  onPressed: _loadSettings,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(context.tr('p5_retry')),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 

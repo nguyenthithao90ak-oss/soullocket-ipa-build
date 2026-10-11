@@ -9,6 +9,7 @@ import 'soul_merge_design.dart';
 import 'soul_merge_photo_tile.dart';
 import 'soul_merge_photo_viewer.dart';
 import 'soul_merge_reactions.dart';
+import 'soul_merge_message_visibility.dart';
 import 'soul_merge_message_actions.dart';
 import 'soul_merge_live_message.dart';
 
@@ -48,6 +49,15 @@ class SoulMergeChatBar extends StatelessWidget {
     this.watchMessage,
     this.shouldWatchMessage,
     this.onMessageChanged,
+    this.onMessageVisible,
+    this.onRetryMessage,
+    this.searchQuery,
+    this.onSearchChanged,
+    this.onCloseSearch,
+    this.pinnedMessages = const [],
+    this.onPinMessage,
+    this.onUnpinMessage,
+    this.isMessagePinned,
   });
 
   final List<Map<String, dynamic>> chatHistory;
@@ -83,6 +93,15 @@ class SoulMergeChatBar extends StatelessWidget {
   final Stream<Map<String, dynamic>?> Function(String)? watchMessage;
   final bool Function(String)? shouldWatchMessage;
   final void Function(String, Map<String, dynamic>?)? onMessageChanged;
+  final ValueChanged<Map<String, dynamic>>? onMessageVisible;
+  final ValueChanged<String>? onRetryMessage;
+  final String? searchQuery;
+  final ValueChanged<String>? onSearchChanged;
+  final VoidCallback? onCloseSearch;
+  final List<Map<String, dynamic>> pinnedMessages;
+  final Future<void> Function(Map<String, dynamic>)? onPinMessage;
+  final Future<void> Function(Map<String, dynamic>)? onUnpinMessage;
+  final bool Function(Map<String, dynamic>)? isMessagePinned;
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +139,20 @@ class SoulMergeChatBar extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (searchQuery != null) ...[
+              _MergeSearchBar(
+                query: searchQuery!,
+                onChanged: onSearchChanged,
+                onClose: onCloseSearch,
+              ),
+              const SizedBox(height: 8),
+            ],
             if (spamWarning != null) ...[
               _MergeWarning(message: spamWarning!),
+              const SizedBox(height: 8),
+            ],
+            if (pinnedMessages.isNotEmpty) ...[
+              _PinnedMessageStrip(messages: pinnedMessages),
               const SizedBox(height: 8),
             ],
             Expanded(
@@ -144,6 +175,12 @@ class SoulMergeChatBar extends StatelessWidget {
                 watchMessage: watchMessage,
                 shouldWatchMessage: shouldWatchMessage,
                 onMessageChanged: onMessageChanged,
+                onMessageVisible: onMessageVisible,
+                onRetryMessage: onRetryMessage,
+                onPinMessage: onPinMessage,
+                onUnpinMessage: onUnpinMessage,
+                isMessagePinned: isMessagePinned,
+                searchQuery: searchQuery,
               ),
             ),
             if (presets.isNotEmpty) ...[
@@ -167,6 +204,118 @@ class SoulMergeChatBar extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MergeSearchBar extends StatefulWidget {
+  const _MergeSearchBar({required this.query, this.onChanged, this.onClose});
+
+  final String query;
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onClose;
+
+  @override
+  State<_MergeSearchBar> createState() => _MergeSearchBarState();
+}
+
+class _MergeSearchBarState extends State<_MergeSearchBar> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.query);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MergeSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.query != widget.query && _controller.text != widget.query) {
+      _controller.value = TextEditingValue(
+        text: widget.query,
+        selection: TextSelection.collapsed(offset: widget.query.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          autofocus: true,
+          onChanged: widget.onChanged,
+          decoration: InputDecoration(
+            hintText: context.tr('p4_soul_search_hint'),
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: IconButton(
+              tooltip: context.tr('local_album_close_search'),
+              onPressed: widget.onClose,
+              icon: const Icon(Icons.close_rounded),
+            ),
+            filled: true,
+            fillColor: colors.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colors.line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colors.line),
+            ),
+          ),
+          controller: _controller,
+        ),
+        const SizedBox(height: 3),
+        Text(
+          context.tr('p4_soul_search_scope'),
+          style: TextStyle(color: colors.muted, fontSize: 10.5),
+        ),
+      ],
+    );
+  }
+}
+
+class _PinnedMessageStrip extends StatelessWidget {
+  const _PinnedMessageStrip({required this.messages});
+
+  final List<Map<String, dynamic>> messages;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: messages.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (context, index) {
+          final message = messages[index];
+          return Chip(
+            avatar: Icon(Icons.push_pin_rounded, size: 15, color: colors.rose),
+            label: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 190),
+              child: Text(
+                '${context.tr('p5_notif_pinned')} · ${soulMessagePreview(context, message)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            backgroundColor: colors.blush,
+            side: BorderSide(color: colors.line),
+          );
+        },
       ),
     );
   }
@@ -232,6 +381,12 @@ class _MergeChatHistory extends StatelessWidget {
     this.watchMessage,
     this.shouldWatchMessage,
     this.onMessageChanged,
+    this.onMessageVisible,
+    this.onRetryMessage,
+    this.onPinMessage,
+    this.onUnpinMessage,
+    this.isMessagePinned,
+    this.searchQuery,
   });
 
   final List<Map<String, dynamic>> history;
@@ -252,6 +407,12 @@ class _MergeChatHistory extends StatelessWidget {
   final Stream<Map<String, dynamic>?> Function(String)? watchMessage;
   final bool Function(String)? shouldWatchMessage;
   final void Function(String, Map<String, dynamic>?)? onMessageChanged;
+  final ValueChanged<Map<String, dynamic>>? onMessageVisible;
+  final ValueChanged<String>? onRetryMessage;
+  final Future<void> Function(Map<String, dynamic>)? onPinMessage;
+  final Future<void> Function(Map<String, dynamic>)? onUnpinMessage;
+  final bool Function(Map<String, dynamic>)? isMessagePinned;
+  final String? searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +443,11 @@ class _MergeChatHistory extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      context.tr('p4_soul_chat_empty'),
+                      context.tr(
+                        searchQuery == null || searchQuery!.trim().isEmpty
+                            ? 'p4_soul_chat_empty'
+                            : 'p4_soul_search_no_results',
+                      ),
                       style: SLTheme.quicksand(
                         color: const Color(0xFF8D7A82),
                         fontSize: 11.4,
@@ -378,16 +543,28 @@ class _MergeChatHistory extends StatelessWidget {
                         message['imageUrl']?.toString() ?? '',
                       ),
                       time: formatTime((message['timestamp'] as num?)?.toInt()),
-                      onLongPress: () => SoulMergeMessageActions.show(
+                      delivery: message['__delivery']?.toString(),
+                      onRetry: onRetryMessage == null
+                          ? null
+                          : () => onRetryMessage!(message['id'].toString()),
+                      onVisible: onMessageVisible == null
+                          ? null
+                          : () => onMessageVisible!(message),
+                      onLongPress: (anchor) => SoulMergeMessageActions.show(
                         context,
                         message,
                         uid: currentUid,
+                        anchor: anchor,
+                        isSelf: message['sender']?.toString() == myRole,
                         onReact: onReactMessage,
                         onRemoveReaction: onRemoveReaction,
                         onHide: onHideMessage,
                         onDelete: onDeleteMessage,
                         onReply: onReplyMessage,
                         canDelete: canDeleteMessage?.call(message) ?? false,
+                        isPinned: isMessagePinned?.call(message) ?? false,
+                        onPin: onPinMessage,
+                        onUnpin: onUnpinMessage,
                         onOpenPhoto: photoIndex < 0
                             ? null
                             : () => SoulMergePhotoViewer.show(
@@ -444,6 +621,9 @@ class _MergeMessageBubble extends StatelessWidget {
     required this.reactions,
     this.onLongPress,
     this.replyPreview,
+    this.delivery,
+    this.onRetry,
+    this.onVisible,
   });
 
   final bool isSelf;
@@ -454,8 +634,11 @@ class _MergeMessageBubble extends StatelessWidget {
   final String imageUrl;
   final String time;
   final Map<String, String> reactions;
-  final VoidCallback? onLongPress;
+  final ValueChanged<Rect>? onLongPress;
   final String? replyPreview;
+  final String? delivery;
+  final VoidCallback? onRetry;
+  final VoidCallback? onVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -467,120 +650,176 @@ class _MergeMessageBubble extends StatelessWidget {
     final isSticker = localSticker != null || isLegacySticker;
     final hasImage = imageUrl.isNotEmpty;
 
-    return Align(
+    final content = Align(
       alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
-        onLongPress: onLongPress,
-        child: Container(
-          margin: EdgeInsets.only(
-            top: grouped ? 2 : 12,
-            bottom: 3,
-            left: isSelf ? 42 : 0,
-            right: isSelf ? 0 : 42,
-          ),
-          padding: isSticker
-              ? EdgeInsets.zero
-              : hasImage
-              ? const EdgeInsets.all(5)
-              : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: isSticker
+      child: Builder(
+        builder: (bubbleContext) => GestureDetector(
+          onLongPress: onLongPress == null
               ? null
-              : BoxDecoration(
-                  color: isSelf ? colors.sent : colors.surface,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(18),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(isSelf ? 18 : 5),
-                    bottomRight: Radius.circular(isSelf ? 5 : 18),
-                  ),
-                  border: Border.all(color: isSelf ? colors.sent : colors.line),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF754653).withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+              : () {
+                  final box = bubbleContext.findRenderObject() as RenderBox;
+                  onLongPress!(box.localToGlobal(Offset.zero) & box.size);
+                },
+          child: Container(
+            margin: EdgeInsets.only(
+              top: grouped ? 2 : 12,
+              bottom: 3,
+              left: isSelf ? 42 : 0,
+              right: isSelf ? 0 : 42,
+            ),
+            padding: isSticker
+                ? EdgeInsets.zero
+                : hasImage
+                ? const EdgeInsets.all(5)
+                : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: isSticker
+                ? null
+                : BoxDecoration(
+                    color: isSelf ? colors.sent : colors.surface,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(18),
+                      topRight: const Radius.circular(18),
+                      bottomLeft: Radius.circular(isSelf ? 18 : 5),
+                      bottomRight: Radius.circular(isSelf ? 5 : 18),
                     ),
-                  ],
-                ),
-          child: Column(
-            crossAxisAlignment: isSelf
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (replyPreview != null)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 7),
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: isSelf
-                        ? Colors.white.withValues(alpha: .16)
-                        : colors.blush,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    replyPreview!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isSelf ? Colors.white : colors.ink,
-                      fontSize: 12,
+                    border: Border.all(
+                      color: isSelf ? colors.sent : colors.line,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF754653).withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                ),
-              if (hasImage)
-                _MergeMessageMedia(
-                  imageUrl: imageUrl,
-                  localSticker: localSticker,
-                  legacySticker: isLegacySticker,
-                  onOpenPhoto: onOpenPhoto,
-                  imageProvider: imageProvider,
-                ),
-              if (text.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.only(top: hasImage ? 5 : 0),
-                  child: Text(
-                    text,
-                    style: SLTheme.quicksand(
-                      color: isSelf ? Colors.white : colors.ink,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      height: 1.25,
-                    ),
-                  ),
-                ),
-              if (time.isNotEmpty && !isSticker)
-                Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Text(
-                    time,
-                    style: SLTheme.quicksand(
+            child: Column(
+              crossAxisAlignment: isSelf
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (replyPreview != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 7),
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
                       color: isSelf
-                          ? Colors.white.withValues(alpha: 0.78)
-                          : colors.muted,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
+                          ? Colors.white.withValues(alpha: .16)
+                          : colors.blush,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      replyPreview!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isSelf ? Colors.white : colors.ink,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                ),
-              if (reactions.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 5),
-                  child: Wrap(
-                    spacing: 3,
-                    runSpacing: 3,
-                    children: reactions.values
-                        .map(
-                          (reaction) => _SoulReactionChip(reference: reaction),
-                        )
-                        .toList(growable: false),
+                if (hasImage)
+                  _MergeMessageMedia(
+                    imageUrl: imageUrl,
+                    localSticker: localSticker,
+                    legacySticker: isLegacySticker,
+                    onOpenPhoto: onOpenPhoto,
+                    imageProvider: imageProvider,
                   ),
-                ),
-            ],
+                if (text.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: hasImage ? 5 : 0),
+                    child: Text(
+                      text,
+                      style: SLTheme.quicksand(
+                        color: isSelf ? Colors.white : colors.ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                  ),
+                if (time.isNotEmpty && !isSticker)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      time,
+                      style: SLTheme.quicksand(
+                        color: isSelf
+                            ? Colors.white.withValues(alpha: 0.78)
+                            : colors.muted,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                if (reactions.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Wrap(
+                      spacing: 3,
+                      runSpacing: 3,
+                      children: reactions.values
+                          .map(
+                            (reaction) =>
+                                _SoulReactionChip(reference: reaction),
+                          )
+                          .toList(growable: false),
+                    ),
+                  ),
+                if (delivery != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: delivery == 'failed'
+                        ? InkWell(
+                            onTap: onRetry,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.refresh_rounded,
+                                  size: 13,
+                                  color: colors.rose,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  context.tr('p4_soul_message_retry'),
+                                  style: TextStyle(
+                                    color: colors.rose,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Text(
+                            context.tr(
+                              delivery == 'seen'
+                                  ? 'p4_soul_message_seen'
+                                  : delivery == 'sending'
+                                  ? 'p4_soul_message_sending'
+                                  : 'p4_soul_message_sent',
+                            ),
+                            style: TextStyle(
+                              color: isSelf
+                                  ? Colors.white.withValues(alpha: .76)
+                                  : colors.muted,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
     );
+    if (onVisible == null) return content;
+    return SoulMergeMessageVisibility(onVisible: onVisible!, child: content);
   }
 }
 

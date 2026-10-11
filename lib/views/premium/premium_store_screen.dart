@@ -44,6 +44,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   String _storeHintKey = 'p5_premium_unavailable';
   // ignore: unused_field
   bool _storeConfigured = false;
+  int _loadRequest = 0;
 
   bool get _isAppleStorePlatform =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
@@ -340,8 +341,12 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   Future<void> _loadData() async {
+    final request = ++_loadRequest;
+
+    bool isCurrent() => mounted && request == _loadRequest;
+
     if (!AppConfig.isPurchaseEnabled) {
-      if (!mounted) return;
+      if (!isCurrent()) return;
       setState(() {
         _products = const <ProductDetails>[];
         _isVip = false;
@@ -353,25 +358,28 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     }
 
     try {
-      final available = await InAppPurchase.instance.isAvailable();
-      await _purchaseService.initialize();
-      final products = await _purchaseService.getProducts();
-      final isVip = await _purchaseService.isVip();
+      final result = await (() async {
+        final available = await InAppPurchase.instance.isAvailable();
+        await _purchaseService.initialize();
+        final products = await _purchaseService.getProducts();
+        final isVip = await _purchaseService.isVip();
+        return (available: available, products: products, isVip: isVip);
+      })().timeout(const Duration(seconds: 15));
       final storeHintKey = _buildStoreHintKey(
-        available: available,
-        products: products,
+        available: result.available,
+        products: result.products,
       );
 
-      if (!mounted) return;
+      if (!isCurrent()) return;
       setState(() {
-        _products = products;
-        _isVip = isVip;
+        _products = result.products;
+        _isVip = result.isVip;
         _storeHintKey = storeHintKey;
-        _storeConfigured = _isConfiguredStoreAvailable(available);
+        _storeConfigured = _isConfiguredStoreAvailable(result.available);
         _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!isCurrent()) return;
       setState(() {
         _products = const <ProductDetails>[];
         _storeHintKey = 'p5_premium_load_failed';
@@ -421,7 +429,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     if (_isLoading || _isPurchasing) return;
     setState(() => _isLoading = true);
     try {
-      await _purchaseService.restorePurchases();
+      await _purchaseService.restorePurchases().timeout(
+        const Duration(seconds: 15),
+      );
       await _loadData();
     } catch (_) {
       if (!mounted) return;

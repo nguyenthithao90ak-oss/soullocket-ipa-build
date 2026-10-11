@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import '../utils/sharing/external_share_links.dart';
 import '../utils/services/market_service.dart';
 import 'package:flutter/services.dart';
@@ -75,6 +76,14 @@ const _instagramSvg =
     '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg>';
 const _telegramSvg =
     '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>';
+const _whatsAppSvg =
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.5a10.4 10.4 0 0 0-9 15.62L1.7 22.4l5.42-1.27A10.5 10.5 0 1 0 12 1.5Zm0 18.35a8.05 8.05 0 0 1-4.1-1.12l-.3-.18-3.2.75.77-3.1-.2-.32A8.1 8.1 0 1 1 12 19.85Zm4.48-6.05c-.25-.13-1.48-.73-1.71-.81-.23-.08-.4-.13-.57.13-.17.25-.65.81-.8.98-.15.17-.3.19-.55.06-.25-.13-1.05-.39-2-1.24-.74-.65-1.24-1.45-1.39-1.7-.15-.25-.02-.39.11-.52.11-.11.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.36-.78-1.86-.2-.48-.41-.42-.57-.43h-.49c-.17 0-.45.06-.68.32-.23.25-.9.88-.9 2.15s.92 2.49 1.05 2.66c.13.17 1.81 2.76 4.38 3.87.61.26 1.09.42 1.46.54.61.19 1.16.16 1.6.1.49-.07 1.48-.61 1.69-1.19.21-.59.21-1.09.15-1.19-.06-.1-.23-.16-.48-.29Z"/></svg>';
+const _lineSvg =
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.48 3 2 6.47 2 10.76c0 3.83 3.4 7.05 8.02 7.66-.11.47-.4 1.52-.46 1.76-.07.29.1.28.2.21.08-.05 1.36-.91 1.9-1.28.11 0 .23.01.34.01 5.52 0 10-3.47 10-7.76S17.52 3 12 3Zm-4.3 9.6H5.54V8.2h1.11v3.41H7.7v.99Zm1.99 0H8.58V8.2h1.11v4.4Zm4.93 0h-1.08l-1.97-2.63v2.63h-1.05V8.2h1.08l1.97 2.64V8.2h1.05v4.4Zm3.84-3.4h-2.27v.67h2.1v.98h-2.1v.76h2.27v.99h-3.38V8.2h3.38v1Z"/></svg>';
+const _kakaoTalkSvg =
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.48 3 2 6.47 2 10.76c0 2.72 1.89 5.1 4.75 6.45-.2.75-.72 2.7-.83 3.12-.13.52.19.51.4.35.17-.11 2.43-1.65 3.48-2.37.7.13 1.43.2 2.2.2 5.52 0 10-3.47 10-7.75S17.52 3 12 3Zm-4.3 8.9a1.13 1.13 0 1 1 0-2.26 1.13 1.13 0 0 1 0 2.26Zm4.3 0a1.13 1.13 0 1 1 0-2.26 1.13 1.13 0 0 1 0 2.26Zm4.3 0a1.13 1.13 0 1 1 0-2.26 1.13 1.13 0 0 1 0 2.26Z"/></svg>';
+const _smsSvg =
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 4h17A1.5 1.5 0 0 1 22 5.5v10A1.5 1.5 0 0 1 20.5 17H9l-4.6 3.4c-.58.43-1.4.02-1.4-.7V5.5A1.5 1.5 0 0 1 4.5 4Zm1.1 2.1v8.98l3.7-2.73h12.1V6.1H4.6Zm2.15 2.1h10.5v1.05H6.75V8.2Zm0 2.25h7.4v1.05h-7.4v-1.05Z"/></svg>';
 
 Widget _buildModernSocialIcon({
   required double size,
@@ -301,9 +310,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SLSnackBar(content: Text(context.tr('share_send_failed'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SLSnackBar(content: Text(context.tr('share_send_failed'))),
+      );
     }
   }
 
@@ -558,7 +567,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ),
                               ),
                               itemCount: 4,
-                              separatorBuilder: (_, __) => SizedBox(
+                              separatorBuilder: (_, _) => SizedBox(
                                 width: SLResponsive.dp(12, screenWidth),
                               ),
                               itemBuilder: (ctx, i) {
@@ -777,13 +786,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
                                   onTap: () {
-                                    Navigator.push(
+                                    slPush<void>(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            SettingsLinksManagerScreen(
-                                              houseId: widget.myHouseId,
-                                            ),
+                                      SettingsLinksManagerScreen(
+                                        houseId: widget.myHouseId,
                                       ),
                                     );
                                   },
@@ -1079,7 +1085,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      context.tr('ui_common_the_content_you_are_sharing_a1e6ee'),
+                      context.tr(
+                        'ui_common_the_content_you_are_sharing_a1e6ee',
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: SLResponsive.sp(
                           compact ? 12.8 : 13.4,
@@ -1120,7 +1128,9 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                     cursor: SystemMouseCursors.click,
                     child: Text(
                       previewText.isEmpty
-                          ? context.tr('ui_common_there_is_no_content_to_display_b4efdc')
+                          ? context.tr(
+                              'ui_common_there_is_no_content_to_display_b4efdc',
+                            )
                           : previewText,
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
@@ -1280,7 +1290,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                     fit: BoxFit.cover,
                                     memCacheWidth: 400,
                                     filterQuality: FilterQuality.medium,
-                                    errorWidget: (_, __, ___) =>
+                                    errorWidget: (_, _, _) =>
                                         Icon(icon, color: accentColor),
                                   )
                                 : Icon(
@@ -1387,6 +1397,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
       'Messenger' => _messengerSvg,
       'Instagram' => _instagramSvg,
       'Telegram' => _telegramSvg,
+      'WhatsApp' => _whatsAppSvg,
+      'LINE' => _lineSvg,
+      'KakaoTalk' => _kakaoTalkSvg,
+      'SMS' => _smsSvg,
       _ => null,
     };
     final color = switch (channel) {

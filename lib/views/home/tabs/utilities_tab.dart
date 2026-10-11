@@ -267,88 +267,128 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final uid = _auth.currentUser?.uid;
     if (houseId == null || houseId.isEmpty || uid == null) return false;
     bool isCurrentScope() =>
-        mounted && _auth.currentUser?.uid == uid && _houseId?.trim() == houseId;
+        mounted &&
+        _auth.currentUser?.uid == uid &&
+        _houseId?.trim() == houseId &&
+        TickerMode.valuesOf(context).enabled &&
+        (ModalRoute.of(context)?.isCurrent ?? true);
 
-    final isPro = await _adMob.isProUser();
+    // Quyền Pro là bước phụ của việc mở tiện ích. Nếu dịch vụ mua hàng chậm
+    // hoặc lỗi mạng, bỏ qua quảng cáo thay vì giữ khóa điều hướng.
+    var isPro = true;
+    try {
+      isPro = await _adMob.isProUser().timeout(const Duration(seconds: 2));
+    } catch (error) {
+      debugPrint(
+        '[Utilities] Không đọc được quyền Pro, bỏ qua quảng cáo: $error',
+      );
+    }
     if (!isCurrentScope()) return false;
     if (!isPro && id != 'store') {
-      final now = DateTime.now();
-      final prefs =
-          OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
-      if (!isCurrentScope()) return false;
+      try {
+        final now = DateTime.now();
+        final prefs =
+            OfflineCacheService.getPrefsSync() ??
+            await SharedPreferences.getInstance().timeout(
+              const Duration(seconds: 2),
+            );
+        if (!isCurrentScope()) return false;
 
-      // 1. Tăng bộ đếm click
-      int tapCount = (prefs.getInt('utility_click_tap_count') ?? 0) + 1;
-      await prefs.setInt('utility_click_tap_count', tapCount);
+        // 1. Tăng bộ đếm click
+        int tapCount = (prefs.getInt('utility_click_tap_count') ?? 0) + 1;
+        await prefs
+            .setInt('utility_click_tap_count', tapCount)
+            .timeout(const Duration(seconds: 1));
 
-      // 2. Lấy mục tiêu ngẫu nhiên (nếu chưa có thì sinh mới 7-12)
-      int target = prefs.getInt('utility_click_tap_target') ?? 0;
-      if (target < 7 || target > 12) {
-        target = 7 + Random().nextInt(6); // 7 đến 12
-        await prefs.setInt('utility_click_tap_target', target);
-      }
-
-      debugPrint('UtilityClickAd: Tap count = $tapCount, Target = $target');
-
-      // 3. Nếu đạt mục tiêu
-      if (tapCount >= target) {
-        // Reset bộ đếm và sinh mục tiêu mới
-        final nextTarget = 7 + Random().nextInt(6);
-        await prefs.setInt('utility_click_tap_count', 0);
-        await prefs.setInt('utility_click_tap_target', nextTarget);
-
-        // Kiểm tra giới hạn 2 tiếng
-        final lastShownMs =
-            prefs.getInt('utility_click_ad_last_shown_time') ?? 0;
-        final timeDiff = now.millisecondsSinceEpoch - lastShownMs;
-        final has2HourCooldownPassed =
-            lastShownMs == 0 || timeDiff >= 2 * 60 * 60 * 1000;
-
-        // Kiểm tra giới hạn tối đa 3 cái một ngày
-        final todayStr = DateFormat('yyyy-MM-dd').format(now);
-        final savedDate = prefs.getString('utility_click_ad_shown_date') ?? '';
-        int shownToday =
-            prefs.getInt('utility_click_ad_shown_today_count') ?? 0;
-
-        if (savedDate != todayStr) {
-          shownToday = 0;
-          await prefs.setString('utility_click_ad_shown_date', todayStr);
-          await prefs.setInt('utility_click_ad_shown_today_count', 0);
+        // 2. Lấy mục tiêu ngẫu nhiên (nếu chưa có thì sinh mới 7-12)
+        int target = prefs.getInt('utility_click_tap_target') ?? 0;
+        if (target < 7 || target > 12) {
+          target = 7 + Random().nextInt(6); // 7 đến 12
+          await prefs
+              .setInt('utility_click_tap_target', target)
+              .timeout(const Duration(seconds: 1));
         }
 
-        final isUnderDailyLimit = shownToday < 3;
+        debugPrint('UtilityClickAd: Tap count = $tapCount, Target = $target');
 
-        debugPrint(
-          'UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit',
-        );
+        // 3. Nếu đạt mục tiêu
+        if (tapCount >= target) {
+          // Reset bộ đếm và sinh mục tiêu mới
+          final nextTarget = 7 + Random().nextInt(6);
+          await prefs
+              .setInt('utility_click_tap_count', 0)
+              .timeout(const Duration(seconds: 1));
+          await prefs
+              .setInt('utility_click_tap_target', nextTarget)
+              .timeout(const Duration(seconds: 1));
 
-        if (has2HourCooldownPassed && isUnderDailyLimit) {
-          debugPrint('UtilityClickAd: Target reached! Showing click-count ad.');
-          final shown = await _adMob.showInterstitialAd();
-          if (shown) {
-            await prefs.setInt(
-              'utility_click_ad_last_shown_time',
-              now.millisecondsSinceEpoch,
+          // Kiểm tra giới hạn 2 tiếng
+          final lastShownMs =
+              prefs.getInt('utility_click_ad_last_shown_time') ?? 0;
+          final timeDiff = now.millisecondsSinceEpoch - lastShownMs;
+          final has2HourCooldownPassed =
+              lastShownMs == 0 || timeDiff >= 2 * 60 * 60 * 1000;
+
+          // Kiểm tra giới hạn tối đa 3 cái một ngày
+          final todayStr = DateFormat('yyyy-MM-dd').format(now);
+          final savedDate =
+              prefs.getString('utility_click_ad_shown_date') ?? '';
+          int shownToday =
+              prefs.getInt('utility_click_ad_shown_today_count') ?? 0;
+
+          if (savedDate != todayStr) {
+            shownToday = 0;
+            await prefs
+                .setString('utility_click_ad_shown_date', todayStr)
+                .timeout(const Duration(seconds: 1));
+            await prefs
+                .setInt('utility_click_ad_shown_today_count', 0)
+                .timeout(const Duration(seconds: 1));
+          }
+
+          final isUnderDailyLimit = shownToday < 3;
+
+          debugPrint(
+            'UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit',
+          );
+
+          if (has2HourCooldownPassed && isUnderDailyLimit) {
+            debugPrint(
+              'UtilityClickAd: Target reached! Showing click-count ad.',
             );
-            await prefs.setInt(
-              'utility_click_ad_shown_today_count',
-              shownToday + 1,
+            final shown = await _showInterstitialAdWithoutBlocking(
+              isCurrentScope,
             );
-            _lastUtilityAdTime = now;
+            if (shown) {
+              await prefs
+                  .setInt(
+                    'utility_click_ad_last_shown_time',
+                    now.millisecondsSinceEpoch,
+                  )
+                  .timeout(const Duration(seconds: 1));
+              await prefs
+                  .setInt('utility_click_ad_shown_today_count', shownToday + 1)
+                  .timeout(const Duration(seconds: 1));
+              _lastUtilityAdTime = now;
+            }
+          }
+        } else {
+          // Nếu chưa đạt mục tiêu click ngẫu nhiên, vẫn kiểm tra hiển thị ad thường 5 phút như cũ
+          if ((_lastUtilityAdTime == null ||
+                  now.difference(_lastUtilityAdTime!) >
+                      const Duration(minutes: 5)) &&
+              !_adMob.hasRecentFullscreenAd()) {
+            final shown = await _showInterstitialAdWithoutBlocking(
+              isCurrentScope,
+            );
+            if (shown) {
+              _lastUtilityAdTime = now;
+            }
           }
         }
-      } else {
-        // Nếu chưa đạt mục tiêu click ngẫu nhiên, vẫn kiểm tra hiển thị ad thường 5 phút như cũ
-        if ((_lastUtilityAdTime == null ||
-                now.difference(_lastUtilityAdTime!) >
-                    const Duration(minutes: 5)) &&
-            !_adMob.hasRecentFullscreenAd()) {
-          final shown = await _adMob.showInterstitialAd();
-          if (shown) {
-            _lastUtilityAdTime = now;
-          }
-        }
+      } catch (error) {
+        // Preferences/quảng cáo là tối ưu phụ; không chặn màn hình chính.
+        debugPrint('[Utilities] Bỏ qua quảng cáo khi chuẩn bị lỗi: $error');
       }
     }
 
@@ -360,6 +400,22 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
     unawaited(_checkAndShowAppReviewForUtility());
     return isCurrentScope();
+  }
+
+  Future<bool> _showInterstitialAdWithoutBlocking(
+    bool Function() isCurrentScope,
+  ) async {
+    // Startup tự chuẩn bị SDK ở nền; cú chạm không mở thêm form khởi tạo.
+    if (!_adMob.canRequestAds || !isCurrentScope()) return false;
+    try {
+      return await _adMob.showInterstitialAd(
+        isCurrent: isCurrentScope,
+        preparationTimeout: const Duration(seconds: 3),
+      );
+    } catch (error) {
+      debugPrint('[Utilities] Không hiển thị được quảng cáo: $error');
+      return false;
+    }
   }
 
   Future<void> _persistRecentUtility(

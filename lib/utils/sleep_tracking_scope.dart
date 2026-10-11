@@ -25,3 +25,32 @@ class SleepTrackingScope {
     return SleepTrackingScope(uid, normalizedHouse, normalizedRole);
   }
 }
+
+/// Ưu tiên bản prefs; thiếu House thì dùng bản trong bộ nhớ bảo mật nếu bản đó
+/// thuộc đúng UID đang đăng nhập (một số luồng chỉ còn giữ ở đây).
+Future<SleepTrackingScope?> resolveSleepTrackingScope({
+  required String? uid,
+  required String? house,
+  required String? cachedUid,
+  required String? role,
+  required Future<String?> Function() secureHouse,
+  required Future<String?> Function() secureUid,
+  required Future<String?> Function() secureRole,
+}) async {
+  if (uid == null || uid.isEmpty) return null;
+  var resolvedHouse = house, resolvedUid = cachedUid, resolvedRole = role;
+  if (resolvedHouse == null || resolvedHouse.trim().isEmpty) {
+    resolvedHouse = await secureHouse();
+    resolvedUid = await secureUid();
+    if (resolvedUid != uid) return null;
+  }
+  if (sleepRole(resolvedRole?.trim()) == null) {
+    resolvedRole = await secureRole();
+  }
+  return SleepTrackingScope.fromCache(
+    uid: uid,
+    cachedUid: resolvedUid,
+    house: resolvedHouse,
+    role: resolvedRole,
+  );
+}

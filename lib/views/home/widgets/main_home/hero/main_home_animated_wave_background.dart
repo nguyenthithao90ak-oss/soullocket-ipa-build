@@ -4,12 +4,14 @@ class AnimatedWaveBackground extends StatefulWidget {
   final String styleKey;
   final bool enableMotion;
   final bool transparentMode;
+  final ValueListenable<bool>? isActiveListenable;
 
   const AnimatedWaveBackground({
     super.key,
     required this.styleKey,
     required this.enableMotion,
     this.transparentMode = false,
+    this.isActiveListenable,
   });
 
   static bool hasMotion(String styleKey) {
@@ -22,7 +24,7 @@ class AnimatedWaveBackground extends StatefulWidget {
 }
 
 class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
   StreamSubscription<AccelerometerEvent>? _sensorSubscription;
   double _tiltX = 0.0;
@@ -35,12 +37,20 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
   bool _isFirstEvent = true;
   double _shakeIntensity = 0.0;
   final List<_TapInteractionEffect> _tapEffects = [];
+  bool _isActive = true;
+  bool _isAppResumed = true;
   // Throttle sensor: chỉ xử lý 1 event mỗi 16ms (~60fps)
   int _lastSensorProcessedMs = 0;
 
   @override
   void initState() {
     super.initState();
+    _isActive = widget.isActiveListenable?.value ?? true;
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    _isAppResumed =
+        lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
+    widget.isActiveListenable?.addListener(_handleActivityChanged);
+    WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),
@@ -154,14 +164,30 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
   @override
   void didUpdateWidget(AnimatedWaveBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActiveListenable != widget.isActiveListenable) {
+      oldWidget.isActiveListenable?.removeListener(_handleActivityChanged);
+      widget.isActiveListenable?.addListener(_handleActivityChanged);
+      _isActive = widget.isActiveListenable?.value ?? true;
+    }
     if (oldWidget.styleKey != widget.styleKey ||
-        oldWidget.enableMotion != widget.enableMotion) {
+        oldWidget.enableMotion != widget.enableMotion ||
+        oldWidget.isActiveListenable != widget.isActiveListenable) {
       _syncAnimationState(_shouldAnimateFor());
     }
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final resumed = state == AppLifecycleState.resumed;
+    if (_isAppResumed == resumed) return;
+    _isAppResumed = resumed;
+    _syncAnimationState(_shouldAnimateFor());
+  }
+
+  @override
   void dispose() {
+    widget.isActiveListenable?.removeListener(_handleActivityChanged);
+    WidgetsBinding.instance.removeObserver(this);
     UiPrefs.notifier.removeListener(_onUiPrefsChanged);
     _sensorSubscription?.cancel();
     _controller.dispose();
@@ -173,9 +199,16 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
     _syncAnimationState(_shouldAnimateFor());
   }
 
+  void _handleActivityChanged() {
+    final nextActive = widget.isActiveListenable?.value ?? true;
+    if (_isActive == nextActive) return;
+    _isActive = nextActive;
+    _syncAnimationState(_shouldAnimateFor());
+  }
+
   bool _shouldAnimateFor() {
     if (!AnimatedWaveBackground.hasMotion(widget.styleKey)) return false;
-    return widget.enableMotion;
+    return widget.enableMotion && _isActive && _isAppResumed;
   }
 
   void _syncAnimationState(bool shouldAnimate) {

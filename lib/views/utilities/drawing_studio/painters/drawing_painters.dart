@@ -2,62 +2,98 @@ part of '../../drawing_studio_screen.dart';
 
 class _StickerPainter extends CustomPainter {
   final List<_DrawStroke> strokes;
+  final ui.Image? atlas;
 
-  const _StickerPainter({required this.strokes});
+  const _StickerPainter({required this.strokes, this.atlas});
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.saveLayer(Offset.zero & size, Paint());
     for (final stroke in strokes) {
-      _paintStickerStroke(canvas, stroke, size, stroke.width + 18,
-          Colors.black.withValues(alpha: 0.16));
+      if (stroke.isEraser) {
+        _paintStudioStroke(canvas, stroke, size);
+      } else if (stroke.stickerIndex != null) {
+        _paintStudioStamp(canvas, stroke, size, atlas);
+      } else {
+        _paintStudioStroke(
+          canvas,
+          stroke,
+          size,
+          width: stroke.width + 18,
+          color: Colors.black.withValues(alpha: 0.16),
+        );
+        _paintStudioStroke(
+          canvas,
+          stroke,
+          size,
+          width: stroke.width + 12,
+          color: Colors.white,
+        );
+        _paintStudioStroke(canvas, stroke, size);
+      }
     }
-    for (final stroke in strokes) {
-      _paintStickerStroke(
-          canvas, stroke, size, stroke.width + 12, Colors.white);
-    }
-    for (final stroke in strokes) {
-      _paintStickerStroke(canvas, stroke, size, stroke.width, stroke.color);
-    }
-  }
-
-  void _paintStickerStroke(
-    Canvas canvas,
-    _DrawStroke stroke,
-    Size size,
-    double width,
-    Color color,
-  ) {
-    final points = stroke.points;
-    if (points.isEmpty) {
-      return;
-    }
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = width
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..isAntiAlias = true;
-    if (points.length == 1) {
-      canvas.drawCircle(points.first, width / 2, paint);
-      return;
-    }
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length - 1; i++) {
-      final point = points[i];
-      final next = points[i + 1];
-      final midPoint = Offset(
-        (point.dx + next.dx) / 2,
-        (point.dy + next.dy) / 2,
-      );
-      path.quadraticBezierTo(point.dx, point.dy, midPoint.dx, midPoint.dy);
-    }
-    path.lineTo(points.last.dx, points.last.dy);
-    canvas.drawPath(path, paint);
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant _StickerPainter oldDelegate) => true;
+}
+
+Offset _studioPixelPoint(Offset point, Size size) =>
+    Offset(point.dx * size.width, point.dy * size.height);
+
+void _paintStudioStamp(
+  Canvas canvas,
+  _DrawStroke stroke,
+  Size size,
+  ui.Image? atlas,
+) {
+  if (atlas == null || stroke.points.isEmpty || stroke.stickerIndex == null) {
+    return;
+  }
+  _drawStudioSprite(
+    canvas,
+    atlas,
+    stroke.stickerIndex!,
+    Rect.fromCenter(
+      center: _studioPixelPoint(stroke.points.first, size),
+      width: stroke.width,
+      height: stroke.width,
+    ),
+  );
+}
+
+void _paintStudioStroke(
+  Canvas canvas,
+  _DrawStroke stroke,
+  Size size, {
+  double? width,
+  Color? color,
+}) {
+  if (stroke.points.isEmpty) return;
+  final points = stroke.points.map((p) => _studioPixelPoint(p, size)).toList();
+  final brushWidth = width ?? stroke.width;
+  final paint = Paint()
+    ..color = color ?? stroke.color
+    ..blendMode = stroke.isEraser ? BlendMode.clear : BlendMode.srcOver
+    ..strokeWidth = brushWidth
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round
+    ..isAntiAlias = true;
+  if (points.length == 1) {
+    canvas.drawCircle(points.first, brushWidth / 2, paint);
+    return;
+  }
+  paint.style = PaintingStyle.stroke;
+  final path = Path()..moveTo(points.first.dx, points.first.dy);
+  for (var i = 1; i < points.length - 1; i++) {
+    final point = points[i];
+    final next = points[i + 1];
+    final middle = (point + next) / 2;
+    path.quadraticBezierTo(point.dx, point.dy, middle.dx, middle.dy);
+  }
+  path.lineTo(points.last.dx, points.last.dy);
+  canvas.drawPath(path, paint);
 }
 
 class _DrawingBackgroundPreviewPainter extends CustomPainter {
@@ -82,44 +118,57 @@ class _DrawingBackgroundPreviewPainter extends CustomPainter {
 class _DrawingCanvasPainter extends CustomPainter {
   final String backgroundId;
   final List<_DrawStroke> strokes;
+  final ui.Image? atlas;
 
   const _DrawingCanvasPainter({
     required this.backgroundId,
     required this.strokes,
+    this.atlas,
     super.repaint,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     _paintBackground(canvas, size);
-
+    // Tẩy chỉ xóa lớp nét vẽ và sticker, giữ nguyên giấy nền bên dưới.
+    canvas.saveLayer(Offset.zero & size, Paint());
     for (final stroke in strokes) {
-      _paintStroke(canvas, stroke, size);
+      if (stroke.stickerIndex != null) {
+        _paintStudioStamp(canvas, stroke, size, atlas);
+      } else {
+        _paintStudioStroke(canvas, stroke, size);
+      }
     }
+    canvas.restore();
   }
 
   void _paintBackground(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     switch (backgroundId) {
       case 'blank_paper':
-        _paintGradient(
-            canvas, rect, const [Color(0xFFFFFBF3), Color(0xFFFFF0DF)]);
-        _paintVignette(
-            canvas, size, const Color(0xFFE8B98A).withValues(alpha: 0.16));
-        _paintPaperNoise(
-            canvas, size, const Color(0xFFE8C8A8).withValues(alpha: 0.22));
+        _paintGradient(canvas, rect, const [
+          Color(0xFFFFFEFD),
+          Color(0xFFFFFCF9),
+        ]);
+        const _StudioGrainPainter(paper: true).paint(canvas, size);
         break;
       case 'hearts':
-        _paintGradient(
-          canvas,
-          rect,
-          const [Color(0xFFFFECF5), Color(0xFFFF9BC3), Color(0xFFFFD6E7)],
-        );
+        _paintGradient(canvas, rect, const [
+          Color(0xFFFFECF5),
+          Color(0xFFFF9BC3),
+          Color(0xFFFFD6E7),
+        ]);
         _paintBokeh(
-            canvas, size, const Color(0xFFFFFFFF).withValues(alpha: 0.34));
+          canvas,
+          size,
+          const Color(0xFFFFFFFF).withValues(alpha: 0.34),
+        );
         _paintHearts(canvas, size);
         _paintSparkles(
-            canvas, size, const Color(0xFFFFFFFF).withValues(alpha: 0.72));
+          canvas,
+          size,
+          const Color(0xFFFFFFFF).withValues(alpha: 0.72),
+        );
         break;
       case 'night_stars':
         _paintGradient(
@@ -134,35 +183,49 @@ class _DrawingCanvasPainter extends CustomPainter {
         _paintStars(canvas, size);
         break;
       case 'blackboard':
-        _paintGradient(
-            canvas, rect, const [Color(0xFF102E29), Color(0xFF225C51)]);
-        _paintGrid(canvas, size, Colors.white.withValues(alpha: 0.08),
-            step: 34);
+        _paintGradient(canvas, rect, const [
+          Color(0xFF102E29),
+          Color(0xFF225C51),
+        ]);
+        _paintGrid(
+          canvas,
+          size,
+          Colors.white.withValues(alpha: 0.08),
+          step: 34,
+        );
         _paintChalkDust(canvas, size);
         break;
       case 'notebook':
-        _paintGradient(
-            canvas, rect, const [Color(0xFFFFFEFB), Color(0xFFF5FAFF)]);
+        _paintGradient(canvas, rect, const [
+          Color(0xFFFFFEFB),
+          Color(0xFFF5FAFF),
+        ]);
         _paintNotebook(canvas, size);
         _paintPaperNoise(
-            canvas, size, const Color(0xFFCADBFF).withValues(alpha: 0.18));
+          canvas,
+          size,
+          const Color(0xFFCADBFF).withValues(alpha: 0.18),
+        );
         break;
       case 'photo_frame':
-        _paintGradient(
-          canvas,
-          rect,
-          const [Color(0xFFFFEEF7), Color(0xFFEDE7FF), Color(0xFFFFFBFE)],
-        );
+        _paintGradient(canvas, rect, const [
+          Color(0xFFFFEEF7),
+          Color(0xFFEDE7FF),
+          Color(0xFFFFFBFE),
+        ]);
         _paintBokeh(
-            canvas, size, const Color(0xFFFFFFFF).withValues(alpha: 0.30));
+          canvas,
+          size,
+          const Color(0xFFFFFFFF).withValues(alpha: 0.30),
+        );
         _paintFrame(canvas, size);
         break;
       case 'pastel_dots':
-        _paintGradient(
-          canvas,
-          rect,
-          const [Color(0xFFFFF5FB), Color(0xFFEAF8FF), Color(0xFFFFF6D8)],
-        );
+        _paintGradient(canvas, rect, const [
+          Color(0xFFFFF5FB),
+          Color(0xFFEAF8FF),
+          Color(0xFFFFF6D8),
+        ]);
         _paintPastelDots(canvas, size);
         break;
       case 'sticker_sheet':
@@ -172,16 +235,27 @@ class _DrawingCanvasPainter extends CustomPainter {
         break;
       case 'paper_grid':
       default:
-        _paintGradient(
-            canvas, rect, const [Color(0xFFFFFEFC), Color(0xFFFFEAF3)]);
+        _paintGradient(canvas, rect, const [
+          Color(0xFFFFFEFC),
+          Color(0xFFFFEAF3),
+        ]);
         _paintGrid(
-            canvas, size, const Color(0xFFFFBFD7).withValues(alpha: 0.70),
-            step: 24);
+          canvas,
+          size,
+          const Color(0xFFFFBFD7).withValues(alpha: 0.70),
+          step: 24,
+        );
         _paintGrid(
-            canvas, size, const Color(0xFFFF82B0).withValues(alpha: 0.28),
-            step: 96);
+          canvas,
+          size,
+          const Color(0xFFFF82B0).withValues(alpha: 0.28),
+          step: 96,
+        );
         _paintPaperNoise(
-            canvas, size, const Color(0xFFFFC7DB).withValues(alpha: 0.25));
+          canvas,
+          size,
+          const Color(0xFFFFC7DB).withValues(alpha: 0.25),
+        );
         break;
     }
   }
@@ -216,17 +290,6 @@ class _DrawingCanvasPainter extends CustomPainter {
     }
   }
 
-  void _paintVignette(Canvas canvas, Size size, Color color) {
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [Colors.transparent, color],
-          stops: const [0.55, 1],
-        ).createShader(Offset.zero & size),
-    );
-  }
-
   void _paintBokeh(Canvas canvas, Size size, Color color) {
     final paint = Paint()..color = color;
     for (var i = 0; i < 18; i++) {
@@ -238,8 +301,11 @@ class _DrawingCanvasPainter extends CustomPainter {
 
   void _paintMoon(Canvas canvas, Size size) {
     final center = Offset(size.width * 0.78, size.height * 0.16);
-    canvas.drawCircle(center, size.shortestSide * 0.09,
-        Paint()..color = const Color(0xFFFFF2B8));
+    canvas.drawCircle(
+      center,
+      size.shortestSide * 0.09,
+      Paint()..color = const Color(0xFFFFF2B8),
+    );
     canvas.drawCircle(
       center.translate(size.shortestSide * 0.035, -size.shortestSide * 0.025),
       size.shortestSide * 0.085,
@@ -257,7 +323,9 @@ class _DrawingCanvasPainter extends CustomPainter {
       canvas.drawOval(
         Rect.fromCenter(
           center: Offset(
-              size.width * (0.25 + i * 0.18), size.height * (0.26 + i * 0.18)),
+            size.width * (0.25 + i * 0.18),
+            size.height * (0.26 + i * 0.18),
+          ),
           width: size.width * 0.56,
           height: size.height * 0.18,
         ),
@@ -402,41 +470,6 @@ class _DrawingCanvasPainter extends CustomPainter {
       ),
       paint,
     );
-  }
-
-  void _paintStroke(Canvas canvas, _DrawStroke stroke, Size size) {
-    if (stroke.points.isEmpty) {
-      return;
-    }
-
-    final points = stroke.points;
-
-    final paint = Paint()
-      ..color = stroke.color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke.width
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..isAntiAlias = true;
-
-    if (points.length == 1) {
-      canvas.drawCircle(points.first, stroke.width / 2, paint);
-      return;
-    }
-
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length - 1; i++) {
-      final point = points[i];
-      final next = points[i + 1];
-      final midPoint = Offset(
-        (point.dx + next.dx) / 2,
-        (point.dy + next.dy) / 2,
-      );
-      path.quadraticBezierTo(point.dx, point.dy, midPoint.dx, midPoint.dy);
-    }
-    final last = points.last;
-    path.lineTo(last.dx, last.dy);
-    canvas.drawPath(path, paint);
   }
 
   @override

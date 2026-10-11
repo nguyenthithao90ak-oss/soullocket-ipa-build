@@ -1,16 +1,16 @@
+import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge/sticker_bottom_sheet.dart';
 import '../../utils/services/l10n_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:image_cropper/image_cropper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/chat_message.dart';
 import '../../utils/services/chat_service.dart';
 import '../../utils/services/image_picker_recovery_service.dart';
@@ -138,14 +138,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     '\u{1F44F}',
     '\u{1F4AF}',
   ];
-  static ChatMessagePreviewLabels get _conversationPreviewLabels => ChatMessagePreviewLabels(
-    fallback:
-        L10nService().translate('ui_chat_text_to_start_chatting_dab6a3'),
-    callInvite: L10nService().translate('ui_chat_b_t_u_cu_c_g_i_f0e203'),
-    watchInvite: L10nService().translate('ui_chat_chia_s_ph_ng_xem_c_ng_a94571'),
-    image: L10nService().translate('ui_chat_g_i_h_nh_nh_a669bb'),
-    share: L10nService().translate('ui_chat_chia_s_m_t_b_i_vi_b78759'),
-  );
+  static ChatMessagePreviewLabels get _conversationPreviewLabels =>
+      ChatMessagePreviewLabels(
+        fallback: L10nService().translate(
+          'ui_chat_text_to_start_chatting_dab6a3',
+        ),
+        callInvite: L10nService().translate('ui_chat_b_t_u_cu_c_g_i_f0e203'),
+        watchInvite: L10nService().translate(
+          'ui_chat_chia_s_ph_ng_xem_c_ng_a94571',
+        ),
+        image: L10nService().translate('ui_chat_g_i_h_nh_nh_a669bb'),
+        share: L10nService().translate('ui_chat_chia_s_m_t_b_i_vi_b78759'),
+      );
   late final Stream<ChatRoomMeta> _roomMetaStream;
   StreamSubscription<ChatMessage>? _liveMessageSub;
   final List<ChatMessage> _messages = [];
@@ -385,165 +389,27 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         final currentBackgroundUrl = meta.backgroundUrl.trim();
         final currentBackgroundStoragePath = meta.backgroundStoragePath.trim();
         final hasChatBackground = currentBackgroundUrl.isNotEmpty;
-        final topInset = MediaQuery.paddingOf(context).top;
-        final appBarHeight = topInset + 74;
+        final palette = _ChatDetailPalette.of(context);
 
         return Scaffold(
-          backgroundColor: const Color(0xFFFFFFFF),
+          backgroundColor: palette.canvas,
           appBar: PreferredSize(
-            preferredSize: Size.fromHeight(appBarHeight),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: SLColors.paper,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x120F172A),
-                    blurRadius: 14,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final textScale = MediaQuery.textScalerOf(context).scale(1);
-                    final compactHeader =
-                        constraints.maxWidth < 390 || textScale > 1.05;
-                    final avatarRadius = compactHeader ? 20.0 : 22.0;
-                    final onlineDotSize = compactHeader ? 11.0 : 12.0;
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 960),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: compactHeader ? 6 : 8,
-                            vertical: compactHeader ? 8 : 10,
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                                constraints: BoxConstraints.tightFor(
-                                  width: compactHeader ? 36 : 40,
-                                  height: compactHeader ? 36 : 40,
-                                ),
-                                icon: const Icon(
-                                  Icons.arrow_back_ios_new,
-                                  size: 18,
-                                  color: SLColors.darkNavy,
-                                ),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                              Stack(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white,
-                                      border: Border.all(
-                                        color: const Color(0xFFD6E4FF),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: avatarRadius,
-                                      backgroundColor: Colors.pink[50],
-                                      backgroundImage: displayAvatar.isNotEmpty
-                                          ? CachedNetworkImageProvider(
-                                              displayAvatar,
-                                            )
-                                          : null,
-                                      child: displayAvatar.isEmpty
-                                          ? Text(
-                                              headerDisplayName.isNotEmpty
-                                                  ? headerDisplayName[0]
-                                                        .toUpperCase()
-                                                  : '?',
-                                              style: TextStyle(
-                                                color: const Color(0xFF0A7CFF),
-                                                fontSize: compactHeader
-                                                    ? 15
-                                                    : 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                  ),
-                                  if (!isChatClosed)
-                                    Positioned(
-                                      right: 2,
-                                      bottom: 2,
-                                      child: Container(
-                                        width: onlineDotSize,
-                                        height: onlineDotSize,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF4CAF50),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              SizedBox(width: compactHeader ? 8 : 10),
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      headerDisplayName.replaceAll('\n', ' '),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: SLTheme.quicksand(
-                                        color: SLColors.darkNavy,
-                                        fontSize: compactHeader ? 15 : 16,
-                                        fontWeight: FontWeight.w900,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      headerSubtitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: SLTheme.quicksand(
-                                        color: const Color(0xFF64748B),
-                                        fontSize: compactHeader ? 11 : 12,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              _buildAppBarAction(
-                                Icons.info_outline_rounded,
-                                () => _openChatSettingsSheet(
-                                  isChatClosed: isChatClosed,
-                                  displayName: headerDisplayName,
-                                  displayAvatar: displayAvatar,
-                                  headerPreview: headerPreview,
-                                  currentBackgroundUrl: currentBackgroundUrl,
-                                  currentBackgroundStoragePath:
-                                      currentBackgroundStoragePath,
-                                ),
-                                compact: compactHeader,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+            preferredSize: Size.fromHeight(ChatDetailHeader.heightFor(context)),
+            child: ChatDetailHeader(
+              displayName: headerDisplayName,
+              subtitle: headerSubtitle,
+              avatarUrl: displayAvatar,
+              showStatusDot: !isChatClosed,
+              backLabel: context.tr('messenger_back'),
+              infoLabel: context.tr('settings_menu_preferences'),
+              onBack: () => Navigator.pop(context),
+              onInfo: () => _openChatSettingsSheet(
+                isChatClosed: isChatClosed,
+                displayName: headerDisplayName,
+                displayAvatar: displayAvatar,
+                headerPreview: headerPreview,
+                currentBackgroundUrl: currentBackgroundUrl,
+                currentBackgroundStoragePath: currentBackgroundStoragePath,
               ),
             ),
           ),
@@ -624,4 +490,185 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       },
     );
   }
+}
+
+/// Header chỉ nhận dữ liệu/callback; không sở hữu listener hoặc nghiệp vụ chat.
+class ChatDetailHeader extends StatelessWidget {
+  const ChatDetailHeader({
+    super.key,
+    required this.displayName,
+    required this.subtitle,
+    required this.avatarUrl,
+    required this.showStatusDot,
+    required this.backLabel,
+    required this.infoLabel,
+    required this.onBack,
+    required this.onInfo,
+  });
+  final String displayName;
+  final String subtitle;
+  final String avatarUrl;
+  final bool showStatusDot;
+  final String backLabel;
+  final String infoLabel;
+  final VoidCallback onBack;
+  final VoidCallback onInfo;
+
+  static double heightFor(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    return (scaler.scale(16) * 1.3 * 2 + scaler.scale(13) * 1.3 + 22)
+        .clamp(74, double.infinity)
+        .toDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _ChatDetailPalette.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.surface,
+        border: Border(bottom: BorderSide(color: palette.line)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: backLabel,
+                    onPressed: onBack,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: palette.ink,
+                      size: 21,
+                    ),
+                  ),
+                  ExcludeSemantics(
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: palette.surface,
+                            border: Border.all(color: palette.line, width: 1.5),
+                          ),
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: palette.wash,
+                            backgroundImage: avatarUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(avatarUrl)
+                                : null,
+                            child: avatarUrl.isEmpty
+                                ? Text(
+                                    displayName.isNotEmpty
+                                        ? displayName[0].toUpperCase()
+                                        : '?',
+                                    style: SLTheme.quicksand(
+                                      color: palette.accent,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                        if (showStatusDot)
+                          PositionedDirectional(
+                            end: 1,
+                            bottom: 1,
+                            child: Container(
+                              width: 11,
+                              height: 11,
+                              decoration: BoxDecoration(
+                                color: SLColors.success,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: palette.surface,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            displayName.replaceAll('\n', ' '),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              color: palette.ink,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            color: palette.muted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: infoLabel,
+                    onPressed: onInfo,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                    icon: Icon(
+                      Icons.info_outline_rounded,
+                      color: palette.accent,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatDetailPalette {
+  _ChatDetailPalette.of(BuildContext context)
+    : dark = Theme.of(context).brightness == Brightness.dark;
+  final bool dark;
+  Color get canvas => dark ? SLColors.darkBgMain : Colors.white;
+  Color get surface => dark ? SLColors.darkBgCard : SLColors.paper;
+  Color get ink => dark ? SLColors.darkTextPrimary : SLColors.ink;
+  Color get muted => dark ? SLColors.darkTextSecond : SLColors.textSecond;
+  Color get line => dark ? SLColors.darkBorder : SLColors.borderLight;
+  Color get accent => dark ? const Color(0xFFE7B5C5) : const Color(0xFF864758);
+  Color get wash => Color.alphaBlend(accent.withValues(alpha: .12), surface);
 }

@@ -314,10 +314,10 @@ class _ErrorDetailsSectionState extends State<_ErrorDetailsSection> {
                   color: SLColors.danger,
                 ),
                 const SizedBox(width: 6),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Debug: Error Details',
-                    style: TextStyle(
+                    L10nService().translate('debug_error_details_title'),
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: SLColors.darkTextSecond,

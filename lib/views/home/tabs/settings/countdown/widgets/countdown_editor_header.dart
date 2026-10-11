@@ -52,9 +52,9 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.tr('appearance_page_title'),
+                  context.tr('p7_countdown_settings_title'),
                   style: SLTheme.quicksand(
-                    fontSize: 24,
+                    fontSize: 21,
                     fontWeight: FontWeight.w700,
                     color: themeData.foreground,
                   ),

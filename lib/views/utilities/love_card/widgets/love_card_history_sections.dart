@@ -2,7 +2,6 @@ part of '../../love_card_screen.dart';
 
 class _LoveCardHistoryView extends StatelessWidget {
   final _LoveCardScreenState state;
-
   const _LoveCardHistoryView({required this.state});
 
   @override
@@ -10,51 +9,55 @@ class _LoveCardHistoryView extends StatelessWidget {
     return ValueListenableBuilder<AsyncSnapshot<List<Map<dynamic, dynamic>>>>(
       valueListenable: state._cardsSnapshot,
       builder: (context, snapshot, _) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: _LoveCardPalette.of(context).accent,
+              strokeWidth: 2,
+            ),
+          );
         }
         final cards = snapshot.data ?? const <Map<dynamic, dynamic>>[];
-
-        if (snapshot.hasError) {
-          return ListView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-            children: [
-              _LoveCardHistoryHero(state: state, cards: cards),
-              const SizedBox(height: 18),
-              const _LoveCardHistoryErrorState(),
-            ],
-          );
-        }
-
-        if (cards.isEmpty) {
-          return ListView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-            children: [
-              _LoveCardHistoryHero(state: state, cards: cards),
-              const SizedBox(height: 18),
-              const _LoveCardHistoryEmptyState(),
-            ],
-          );
-        }
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final expiring = cards.where((card) {
+          final expiresAt = _timestampFromValue(card['expiresAt']);
+          final remaining = expiresAt - now;
+          return expiresAt > 0 &&
+              remaining > 0 &&
+              remaining <= const Duration(days: 7).inMilliseconds;
+        }).length;
 
         return ListView.separated(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
+          key: const PageStorageKey('love_card_history_scroll'),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            MediaQuery.paddingOf(context).bottom + 24,
           ),
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-          itemCount: cards.length + 1,
-          separatorBuilder: (_, __) => const SizedBox(height: 14),
+          itemCount:
+              1 + (snapshot.hasError || cards.isEmpty ? 1 : cards.length),
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             if (index == 0) {
-              return _LoveCardHistoryHero(state: state, cards: cards);
+              return LoveCardStudioHistorySummary(
+                total: cards.length,
+                expiring: expiring,
+              );
             }
-
+            if (snapshot.hasError) {
+              return _LoveCardHistoryPlaceholder(
+                isError: true,
+                onRetry: state._bindCards,
+              );
+            }
+            if (cards.isEmpty) {
+              return _LoveCardHistoryPlaceholder(
+                isError: false,
+                onCreate: state._showCreateTab,
+              );
+            }
             return _LoveCardHistoryItem(state: state, card: cards[index - 1]);
           },
         );
@@ -63,177 +66,130 @@ class _LoveCardHistoryView extends StatelessWidget {
   }
 }
 
-class _LoveCardHistoryErrorState extends StatelessWidget {
-  const _LoveCardHistoryErrorState();
+class LoveCardStudioHistorySummary extends StatelessWidget {
+  final int total;
+  final int expiring;
+  const LoveCardStudioHistorySummary({
+    super.key,
+    required this.total,
+    required this.expiring,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
-      child: Column(
-        children: [
-          const _LoveCardGlassIcon(
-            icon: Icons.history_toggle_off_rounded,
-            size: 52,
+    final palette = _LoveCardPalette.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.tr('util_kholinkthi_b841c6'),
+          style: SLTheme.quicksand(
+            color: palette.ink,
+            fontSize: 19,
+            fontWeight: FontWeight.w900,
           ),
-          const SizedBox(height: 14),
-          Text(
-            context.tr('util_chaticlchs_2c4d6b'),
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
+        ),
+        const SizedBox(height: 5),
+        Text(
+          context.tr('util_chhincclin_49d684'),
+          style: SLTheme.quicksand(
+            color: palette.muted,
+            fontSize: 12,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _LoveCardTag(
+              label: '$total · ${context.tr('util_linkto_430227')}',
+              icon: Icons.link_rounded,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.tr('util_dliuthipan_d76963'),
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              color: Colors.white.withValues(alpha: 0.72),
-              fontSize: 14,
-              height: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+            if (expiring > 0)
+              _LoveCardTag(
+                label: '$expiring · ${context.tr('util_sphthn_bb4223')}',
+                icon: Icons.schedule_rounded,
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+      ],
     );
   }
 }
 
-class _LoveCardHistoryHero extends StatelessWidget {
-  final _LoveCardScreenState state;
-  final List<Map<dynamic, dynamic>> cards;
-
-  const _LoveCardHistoryHero({required this.state, required this.cards});
-
-  @override
-  Widget build(BuildContext context) {
-    final mine = cards
-        .where((card) => card['fromUid'] == state.widget.myUid)
-        .length;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const _LoveCardGlassIcon(
-                icon: Icons.auto_stories_rounded,
-                size: 40,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('util_kholinkthi_b841c6'),
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.tr('util_chhincclin_49d684'),
-                      style: SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _LoveCardHistoryMetric(
-                  label: context.tr('util_linkto_430227'),
-                  value: '${cards.length}',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _LoveCardHistoryMetric(
-                  label: context.tr('util_sphthn_bb4223'),
-                  value:
-                      '${cards.where((card) {
-                        final expiresAt = _timestampFromValue(card['expiresAt']);
-                        if (expiresAt <= 0) {
-                          return false;
-                        }
-                        final remaining = expiresAt - DateTime.now().millisecondsSinceEpoch;
-                        return remaining > 0 && remaining <= const Duration(days: 7).inMilliseconds;
-                      }).length}',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _LoveCardHistoryMetric(
-                  label: context.tr('util_bnto_0ed670'),
-                  value: '$mine',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoveCardHistoryEmptyState extends StatelessWidget {
-  const _LoveCardHistoryEmptyState();
+class _LoveCardHistoryPlaceholder extends StatelessWidget {
+  final bool isError;
+  final VoidCallback? onCreate;
+  final VoidCallback? onRetry;
+  const _LoveCardHistoryPlaceholder({
+    required this.isError,
+    this.onCreate,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
+    final palette = _LoveCardPalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 42),
       child: Column(
         children: [
-          const _LoveCardGlassIcon(icon: Icons.mail_outline_rounded, size: 52),
-          const SizedBox(height: 14),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: palette.soft,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              isError
+                  ? Icons.cloud_off_outlined
+                  : Icons.mark_email_unread_outlined,
+              color: palette.accent,
+              size: 32,
+            ),
+          ),
+          const SizedBox(height: 18),
           Text(
-            context.tr('util_chacthipno_e7e271'),
+            context.tr(
+              isError ? 'util_chaticlchs_2c4d6b' : 'util_chacthipno_e7e271',
+            ),
+            textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
+              color: palette.ink,
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            context.tr('util_hytotmthip_4c0a66'),
+            context.tr(
+              isError ? 'util_dliuthipan_d76963' : 'util_hytotmthip_4c0a66',
+            ),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: Colors.white.withValues(alpha: 0.72),
-              fontSize: 14,
+              color: palette.muted,
+              fontSize: 13,
               height: 1.5,
-              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 18),
+          OutlinedButton.icon(
+            onPressed: isError ? onRetry : onCreate,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: palette.accent,
+              side: BorderSide(color: palette.line),
+              minimumSize: const Size(48, 48),
+            ),
+            icon: Icon(
+              isError ? Icons.refresh_rounded : Icons.edit_note_rounded,
+              size: 20,
+            ),
+            label: Text(
+              context.tr(isError ? 'core_retry' : 'util_tothip_b2b416'),
             ),
           ),
         ],
@@ -245,226 +201,249 @@ class _LoveCardHistoryEmptyState extends StatelessWidget {
 class _LoveCardHistoryItem extends StatelessWidget {
   final _LoveCardScreenState state;
   final Map<dynamic, dynamic> card;
-
   const _LoveCardHistoryItem({required this.state, required this.card});
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text(context.tr('util_xalinktthi_8b9f9b')),
+        content: Text(context.tr('util_linktnysbg_b62df1')),
+        actions: [
+          SLDialogAction(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.tr('util_hy_1e4050')),
+          ),
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(context.tr('util_xa_4ed187')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await state._deleteLoveCardLink(card);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isMine = card['fromUid'] == state.widget.myUid;
-    final isUnread = !isMine && card['isOpened'] == false;
-    final theme = state._themeOf((card['theme'] ?? 'love').toString());
-    final colors = state._themeColors(theme.key);
-    final timeStr = _formatTime(_timestampOf(card));
-    final hasImage = (card['imageUrl'] ?? '').toString().trim().isNotEmpty;
     final expiresAt = _timestampFromValue(card['expiresAt']);
-    final expiryText = expiresAt > 0
+    final expiry = expiresAt > 0
         ? _formatTime(expiresAt)
         : context.tr('util_khngchn_a4f770');
-    final previewText = context.tr('util_linktthipt_730c23');
+    return LoveCardStudioHistoryTile(
+      theme: state._themeOf((card['theme'] ?? 'love').toString()),
+      content: (card['content'] ?? '').toString(),
+      senderName: (card['senderName'] ?? '').toString(),
+      createdLabel: _formatTime(_timestampOf(card)),
+      expiryLabel: L10nService().format('love_card_expires_at', {
+        'time': expiry,
+      }),
+      hasImage: (card['imageUrl'] ?? '').toString().trim().isNotEmpty,
+      onShare: () async {
+        final link = await state._buildPublicLinkForCard(card);
+        await state._shareLoveCardLink(
+          link: link,
+          content: (card['content'] ?? '').toString(),
+        );
+      },
+      onDelete: () => _confirmDelete(context),
+    );
+  }
+}
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          final link = await state._buildPublicLinkForCard(card);
-          await state._shareLoveCardLink(
-            link: link,
-            content: (card['content'] ?? '').toString(),
-          );
-        },
-        onLongPress: () async {
-          final bool? shouldDelete = await showDialog<bool>(
-            context: context,
-            builder: (BuildContext dialogContext) {
-              return SLAlertDialog(
-                title: Text(context.tr('util_xalinktthi_8b9f9b')),
-                content: Text(context.tr('util_linktnysbg_b62df1')),
-                actions: <Widget>[
-                  SLDialogAction(
-                    onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: Text(context.tr('util_hy_1e4050')),
-                  ),
-                  SLDialogAction(
-                    primary: true,
-                    destructive: true,
+class LoveCardStudioHistoryTile extends StatelessWidget {
+  final LoveCardStudioTheme theme;
+  final String content;
+  final String senderName;
+  final String createdLabel;
+  final String expiryLabel;
+  final bool hasImage;
+  final VoidCallback onShare;
+  final VoidCallback onDelete;
 
-                    onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: Text(context.tr('util_xa_4ed187')),
-                  ),
-                ],
-              );
-            },
-          );
-          if (shouldDelete == true) {
-            await state._deleteLoveCardLink(card);
-          }
-        },
-        borderRadius: BorderRadius.circular(28),
-        child: Ink(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.first.withValues(alpha: isUnread ? 0.35 : 0.25),
-                colors.last.withValues(alpha: isUnread ? 0.25 : 0.15),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: isUnread ? 0.9 : 0.65),
-              width: isUnread ? 2.5 : 2.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colors.first.withValues(alpha: 0.12),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
+  const LoveCardStudioHistoryTile({
+    super.key,
+    required this.theme,
+    required this.content,
+    required this.senderName,
+    required this.createdLabel,
+    required this.expiryLabel,
+    this.hasImage = false,
+    required this.onShare,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _LoveCardPalette.of(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 660),
+        child: Material(
+          color: palette.paper,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: palette.line),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: InkWell(
+            onTap: onShare,
+            onLongPress: onDelete,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.14),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.14),
-                      ),
-                    ),
-                    child: Icon(
-                      isMine
-                          ? Icons.send_rounded
-                          : isUnread
-                          ? Icons.mark_email_unread_rounded
-                          : Icons.drafts_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          theme.chip,
-                          style: SLTheme.quicksand(
-                            color: Colors.white.withValues(alpha: 0.78),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          context.tr('util_linkthipto_ba42f9'),
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _LoveCardStatusPill(
-                    label: context.tr('util_anghotng_cfaecd'),
-                    background: isUnread
-                        ? Colors.redAccent
-                        : Colors.white.withValues(alpha: 0.16),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                previewText,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: isUnread
-                    ? GoogleFonts.dancingScript(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
-                      )
-                    : SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.86),
-                        fontSize: 14,
-                        height: 1.55,
-                        fontWeight: FontWeight.w700,
-                      ),
-              ),
-              if (hasImage) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Row(
                     children: [
-                      const Icon(
-                        Icons.photo_rounded,
-                        color: Colors.white,
-                        size: 14,
+                      Container(
+                        width: 42,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: palette.soft,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          theme.icon,
+                          color: palette.accent,
+                          size: 22,
+                        ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.tr('util_cnhcngkhai_091717'),
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              theme.chip,
+                              style: SLTheme.quicksand(
+                                color: palette.ink,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            if (senderName.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                senderName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                  color: palette.muted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        key: const ValueKey('love_card_history_delete'),
+                        tooltip: context.tr('util_xa_4ed187'),
+                        onPressed: onDelete,
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: palette.muted,
+                          size: 21,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Icon(
-                    Icons.schedule_rounded,
-                    color: Colors.white.withValues(alpha: 0.58),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      timeStr,
-                      style: SLTheme.quicksand(
-                        color: Colors.white.withValues(alpha: 0.66),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  const SizedBox(height: 13),
+                  Text(
+                    content,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      color: palette.ink,
+                      fontSize: 14,
+                      height: 1.55,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Text(
-                    L10nService().format('love_card_expires_at', {
-                      'time': expiryText,
-                    }),
-                    style: SLTheme.quicksand(
-                      color: Colors.white.withValues(alpha: 0.66),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _LoveCardTag(
+                        label: context.tr('util_anghotng_cfaecd'),
+                        icon: Icons.link_rounded,
+                      ),
+                      if (hasImage)
+                        _LoveCardTag(
+                          label: context.tr('util_cnhcngkhai_091717'),
+                          icon: Icons.image_outlined,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 13),
+                  Divider(height: 1, color: palette.line),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 15,
+                        color: palette.muted,
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              createdLabel,
+                              style: SLTheme.quicksand(
+                                color: palette.muted,
+                                fontSize: 11,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              expiryLabel,
+                              style: SLTheme.quicksand(
+                                color: palette.muted,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      key: const ValueKey('love_card_history_share'),
+                      onPressed: onShare,
+                      style: TextButton.styleFrom(
+                        foregroundColor: palette.accent,
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(Icons.ios_share_rounded, size: 18),
+                      label: Text(
+                        context.tr('share'),
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

@@ -5,141 +5,205 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/sl_theme.dart';
 import '../../../../../../utils/services/l10n_service.dart';
 import '../../../../../../utils/sleep_tracking_math.dart';
+import '../../../../../../widgets/cycle_flower.dart';
 import 'widget_sleep_event_preview.dart';
+import 'widget_theme_surface.dart';
 import 'widget_utility_surface.dart';
 
-/// Mẫu được gắn nhãn rõ ràng, không ghi dữ liệu minh họa vào widget/House.
+/// Loại đang xem tách khỏi style của widget đôi đã lưu trên màn hình chính.
+enum WidgetStudioTemplate {
+  classic('classic', 'home_mcnh_a57a8e', Icons.widgets_rounded),
+  countdown('countdown', 'home_mngy_5500cb', Icons.timer_outlined),
+  event('soulevent', 'p8_events_title', Icons.card_giftcard_rounded),
+  cycle('cycle', 'widget_type_cycle', Icons.local_florist_outlined),
+  sleep('sleep', 'widget_title_sleep', Icons.nightlight_round),
+  calendar('calendar', 'home_lchchung_ac8882', Icons.calendar_month_outlined);
+
+  const WidgetStudioTemplate(this.id, this.titleKey, this.icon);
+  final String id, titleKey;
+  final IconData icon;
+
+  bool get usesCoupleStyle => this == classic || this == countdown;
+  WidgetUtilityKind? get sampleKind => switch (this) {
+    sleep => WidgetUtilityKind.sleep,
+    cycle => WidgetUtilityKind.cycle,
+    calendar => WidgetUtilityKind.calendar,
+    _ => null,
+  };
+
+  static WidgetStudioTemplate fromId(String id) =>
+      values.firstWhere((item) => item.id == id, orElse: () => classic);
+}
+
+/// Một bộ chọn và một preview; mẫu minh họa không được ghi vào widget/House.
 class WidgetUtilityGallery extends StatefulWidget {
   const WidgetUtilityGallery({
     super.key,
     required this.sizeKey,
     required this.themeKey,
     required this.animated,
+    required this.selectedId,
+    required this.onChanged,
+    required this.previewBuilder,
   });
   final String sizeKey, themeKey;
   final bool animated;
+  final String selectedId;
+  final ValueChanged<String> onChanged;
+  final WidgetBuilder previewBuilder;
   @override
   State<WidgetUtilityGallery> createState() => _WidgetUtilityGalleryState();
 }
 
 class _WidgetUtilityGalleryState extends State<WidgetUtilityGallery> {
-  WidgetUtilityKind _kind = WidgetUtilityKind.sleep;
   bool _empty = false;
+
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      LayoutBuilder(
-        builder: (context, constraints) {
-          final itemWidth = (constraints.maxWidth - 8) / 2;
-          return Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final kind in WidgetUtilityKind.values)
-                SizedBox(
-                  width: itemWidth,
-                  child: _UtilityKindChoice(
-                    kind: kind,
-                    selected: _kind == kind,
-                    onTap: () => setState(() => _kind = kind),
+  void didUpdateWidget(WidgetUtilityGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedId != widget.selectedId) _empty = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = WidgetStudioTemplate.fromId(widget.selectedId);
+    final kind = selected.sampleKind;
+    return Column(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns =
+                constraints.maxWidth < 250 ||
+                    MediaQuery.textScalerOf(context).scale(12) > 18
+                ? 1
+                : 2;
+            final itemWidth =
+                (constraints.maxWidth - 8 * (columns - 1)) / columns;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final template in WidgetStudioTemplate.values)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _UtilityKindChoice(
+                      template: template,
+                      selected: selected == template,
+                      onTap: () => widget.onChanged(template.id),
+                    ),
                   ),
-                ),
-            ],
-          );
-        },
-      ),
-      const SizedBox(height: 12),
-      Center(
-        child:
-            _kind == WidgetUtilityKind.sleep || _kind == WidgetUtilityKind.event
-            ? WidgetSleepEventPreview(
-                sizeKey: widget.sizeKey,
-                heading: context.tr(_kind.titleKey),
-                sleep: _kind == WidgetUtilityKind.sleep,
-                themeKey: widget.themeKey,
-                animated: widget.animated,
-                people: _empty
-                    ? const []
-                    : const [
-                        SleepPersonSnapshot(
-                          state: 'recorded',
-                          source: 'healthkit',
-                          duration: 27300000,
-                        ),
-                        SleepPersonSnapshot(
-                          state: 'unknown',
-                          source: 'unknown',
-                        ),
-                      ],
-                title: context.tr('home_knim_4f6aeb'),
-                days: '12',
-                label: context.tr('p8_events_days_remaining_label'),
-                date: MaterialLocalizations.of(
-                  context,
-                ).formatMediumDate(DateTime(2026, 10, 15)),
-                hasEvent: !_empty,
-              )
-            : WidgetPlanPreview(
-                kind: _kind,
-                sizeKey: widget.sizeKey,
-                themeKey: widget.themeKey,
-                animated: widget.animated,
-                enabled: !_empty,
-                headline: context.tr(
-                  _kind == WidgetUtilityKind.cycle
-                      ? 'p3_health_phase_period'
-                      : 'milestone_tomorrow',
-                ),
-                detail: context.tr(
-                  _kind == WidgetUtilityKind.cycle
-                      ? 'p3_health_next_period'
-                      : 'p8_events_title',
-                ),
-                date: MaterialLocalizations.of(
-                  context,
-                ).formatMediumDate(DateTime(2026, 10, 15)),
-                progress: .65,
-              ),
-      ),
-      const SizedBox(height: 8),
-      SwitchListTile.adaptive(
-        contentPadding: EdgeInsets.zero,
-        title: Text(
-          context.tr('widget_preview_empty'),
-          style: SLTheme.quicksand(fontSize: 12),
+              ],
+            );
+          },
         ),
-        value: _empty,
-        onChanged: (value) => setState(() => _empty = value),
-      ),
-    ],
-  );
+        const SizedBox(height: 12),
+        if (kind != null) ...[
+          Text(
+            context.tr('widget_utility_examples_hint'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              color: SLSettingsColors.inkSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        Center(
+          child: KeyedSubtree(
+            key: ValueKey('widget-preview-${selected.id}'),
+            child: kind == null
+                ? widget.previewBuilder(context)
+                : kind == WidgetUtilityKind.sleep
+                ? WidgetSleepEventPreview(
+                    sizeKey: widget.sizeKey,
+                    heading: context.tr(kind.titleKey),
+                    sleep: true,
+                    themeKey: widget.themeKey,
+                    animated: widget.animated,
+                    accent: WidgetThemeDesign.accent(widget.themeKey),
+                    people: _empty
+                        ? const []
+                        : const [
+                            SleepPersonSnapshot(
+                              state: 'recorded',
+                              source: 'healthkit',
+                              duration: 27300000,
+                            ),
+                            SleepPersonSnapshot(
+                              state: 'unknown',
+                              source: 'unknown',
+                            ),
+                          ],
+                    title: context.tr('home_knim_4f6aeb'),
+                    days: '12',
+                    label: context.tr('p8_events_days_remaining_label'),
+                    date: MaterialLocalizations.of(
+                      context,
+                    ).formatMediumDate(DateTime(2026, 10, 15)),
+                    hasEvent: !_empty,
+                  )
+                : WidgetPlanPreview(
+                    kind: kind,
+                    sizeKey: widget.sizeKey,
+                    themeKey: widget.themeKey,
+                    animated: widget.animated,
+                    enabled: !_empty,
+                    headline: context.tr(
+                      kind == WidgetUtilityKind.cycle
+                          ? 'cycle_ui_phase_luteal'
+                          : 'milestone_tomorrow',
+                    ),
+                    detail: context.tr(
+                      kind == WidgetUtilityKind.cycle
+                          ? 'cycle_ui_until_next_period'
+                          : 'p8_events_title',
+                    ),
+                    date: MaterialLocalizations.of(
+                      context,
+                    ).formatMediumDate(DateTime(2026, 10, 15)),
+                    progress: .57,
+                  ),
+          ),
+        ),
+        if (kind != null) ...[
+          const SizedBox(height: 8),
+          Material(
+            color: Colors.transparent,
+            child: SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                context.tr('widget_preview_empty'),
+                style: SLTheme.quicksand(fontSize: 12),
+              ),
+              value: _empty,
+              onChanged: (value) => setState(() => _empty = value),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _UtilityKindChoice extends StatelessWidget {
   const _UtilityKindChoice({
-    required this.kind,
+    required this.template,
     required this.selected,
     required this.onTap,
   });
-  final WidgetUtilityKind kind;
+  final WidgetStudioTemplate template;
   final bool selected;
   final VoidCallback onTap;
-
-  IconData get _icon => switch (kind) {
-    WidgetUtilityKind.sleep => Icons.nightlight_round,
-    WidgetUtilityKind.event => Icons.card_giftcard_rounded,
-    WidgetUtilityKind.cycle => Icons.local_florist_outlined,
-    WidgetUtilityKind.calendar => Icons.calendar_month_outlined,
-  };
 
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
     selected: selected,
-    label: context.tr(kind.titleKey),
+    label: context.tr(template.titleKey),
     child: Material(
       color: Colors.transparent,
       child: InkWell(
+        key: ValueKey('widget-template-${template.id}'),
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: AnimatedContainer(
@@ -162,7 +226,7 @@ class _UtilityKindChoice extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                _icon,
+                template.icon,
                 size: 17,
                 color: selected
                     ? SLSettingsColors.accent
@@ -171,11 +235,9 @@ class _UtilityKindChoice extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  context.tr(kind.titleKey),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  context.tr(template.titleKey),
                   style: SLTheme.quicksand(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
                     color: selected
                         ? SLSettingsColors.accentStrong
@@ -214,24 +276,21 @@ class WidgetPlanPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final small = sizeKey == 'small', large = sizeKey == 'large';
     final w = small ? 155.0 : 329.0, h = large ? 345.0 : 155.0;
-    Widget line(String value, {double size = 12, int lines = 1}) => Text(
-      value,
-      maxLines: lines,
-      overflow: TextOverflow.ellipsis,
-      style: SLTheme.quicksand(
-        fontSize: size,
-        height: 1.2,
-        fontWeight: FontWeight.w700,
-        color: kind.ink,
-      ),
-    );
-    Widget art(double height) => SizedBox(
-      width: height * 1.2,
-      height: height,
-      child: SvgPicture.asset(
-        'assets/images/widget_stickers/${kind.artwork}.svg',
-      ),
-    );
+    final ink = WidgetThemeDesign.ink(themeKey);
+    final cardColor = WidgetThemeDesign.cardColor(themeKey);
+    final accent = WidgetThemeDesign.accent(themeKey);
+    final track = WidgetThemeDesign.progressTrack(themeKey);
+    Widget line(String value, {double size = 12, int lines = 1}) =>
+        WidgetPreviewLabel(value, lines: lines, size: size, color: ink);
+    Widget art(double height) => kind == WidgetUtilityKind.cycle
+        ? CycleFlower(width: height * 1.2, animated: animated)
+        : SizedBox(
+            width: height * 1.2,
+            height: height,
+            child: SvgPicture.asset(
+              'assets/images/widget_stickers/${kind.artwork}.svg',
+            ),
+          );
     return LayoutBuilder(
       builder: (context, constraints) {
         final display = math.min(
@@ -282,7 +341,7 @@ class WidgetPlanPreview extends StatelessWidget {
                           child: Container(
                             padding: EdgeInsets.all(small ? 8 : 10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .48),
+                              color: cardColor,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Column(
@@ -299,10 +358,31 @@ class WidgetPlanPreview extends StatelessWidget {
                                             _CycleDayRing(
                                               days: cycleDays,
                                               progress: progress,
-                                              diameter: 64,
+                                              diameter: 40,
+                                              accent: accent,
+                                              ink: ink,
+                                              track: track,
                                             ),
                                             const SizedBox(height: 4),
-                                            line(headline, size: 12),
+                                            line(
+                                              context.tr(
+                                                'cycle_ui_until_next_period',
+                                              ),
+                                              size: 9,
+                                            ),
+                                            const SizedBox(height: 3),
+                                            line(headline, size: 8),
+                                            const SizedBox(height: 3),
+                                            line(
+                                              date.isEmpty
+                                                  ? detail
+                                                  : L10nService().format(
+                                                      'cycle_ui_expected_on',
+                                                      {'date': date},
+                                                    ),
+                                              size: 7,
+                                              lines: 2,
+                                            ),
                                           ],
                                         ),
                                       )
@@ -315,6 +395,9 @@ class WidgetPlanPreview extends StatelessWidget {
                                             days: cycleDays,
                                             progress: progress,
                                             diameter: large ? 94 : 72,
+                                            accent: accent,
+                                            ink: ink,
+                                            track: track,
                                           ),
                                           const SizedBox(width: 10),
                                           Expanded(
@@ -323,14 +406,26 @@ class WidgetPlanPreview extends StatelessWidget {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 line(
+                                                  context.tr(
+                                                    'cycle_ui_until_next_period',
+                                                  ),
+                                                  size: large ? 12 : 10,
+                                                ),
+                                                const SizedBox(height: 5),
+                                                line(
                                                   headline,
                                                   size: large ? 22 : 18,
                                                   lines: 2,
                                                 ),
                                                 const SizedBox(height: 5),
                                                 line(
-                                                  detail,
-                                                  size: large ? 13 : 9,
+                                                  date.isEmpty
+                                                      ? detail
+                                                      : L10nService().format(
+                                                          'cycle_ui_expected_on',
+                                                          {'date': date},
+                                                        ),
+                                                  size: large ? 12 : 9,
                                                   lines: large ? 3 : 2,
                                                 ),
                                               ],
@@ -351,6 +446,15 @@ class WidgetPlanPreview extends StatelessWidget {
                                     const SizedBox(height: 6),
                                     line(date, size: 11),
                                     const SizedBox(height: 6),
+                                  ],
+                                  if (kind == WidgetUtilityKind.cycle &&
+                                      large) ...[
+                                    const SizedBox(height: 12),
+                                    line(
+                                      context.tr('cycle_ui_estimate'),
+                                      size: 10,
+                                      lines: 2,
+                                    ),
                                   ],
                                   if (kind != WidgetUtilityKind.cycle)
                                     line(
@@ -393,9 +497,13 @@ class _CycleDayRing extends StatelessWidget {
     required this.days,
     required this.progress,
     required this.diameter,
+    required this.accent,
+    required this.ink,
+    required this.track,
   });
   final String days;
   final double progress, diameter;
+  final Color accent, ink, track;
 
   @override
   Widget build(BuildContext context) {
@@ -417,7 +525,7 @@ class _CycleDayRing extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: 1,
                     strokeWidth: stroke,
-                    color: const Color(0xFFD7E2CA),
+                    color: track,
                   ),
                 ),
               ),
@@ -428,7 +536,7 @@ class _CycleDayRing extends StatelessWidget {
                     value: safeProgress,
                     strokeWidth: stroke,
                     strokeCap: StrokeCap.round,
-                    color: const Color(0xFF648269),
+                    color: accent,
                     backgroundColor: Colors.transparent,
                   ),
                 ),
@@ -438,30 +546,19 @@ class _CycleDayRing extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    WidgetPreviewLabel(
                       days,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: diameter >= 90
-                            ? 25
-                            : diameter >= 70
-                            ? 20
-                            : 16,
-                        height: 1,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF324D38),
-                      ),
+                      size: diameter >= 90
+                          ? 25
+                          : diameter >= 70
+                          ? 20
+                          : 16,
+                      color: ink,
                     ),
-                    Text(
+                    WidgetPreviewLabel(
                       context.tr('p3_health_days_remaining'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: diameter >= 90 ? 8 : 7,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF648269),
-                      ),
+                      size: diameter >= 90 ? 8 : 7,
+                      color: accent,
                     ),
                   ],
                 ),

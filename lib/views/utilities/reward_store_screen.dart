@@ -11,13 +11,16 @@ import 'package:intl/intl.dart';
 import '../../utils/services/admob_service.dart';
 import '../../utils/services/daily_quest_service.dart';
 import '../../core/constants/app_config.dart';
-import '../../core/sl_theme.dart';
 import '../../utils/services/security_service.dart';
+import '../../utils/screen_activity_mixin.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../models/reward_missions.dart';
 import '../../utils/services/consent_service.dart';
+import '../../utils/initial_event_timeout.dart';
 import 'reward_store_panels.dart';
+import 'reward_store_design.dart';
 import 'reward_pro_exchange.dart';
+import 'reward_companion_section.dart';
 import '../../models/reward_pro_plan.dart';
 
 class RewardStoreScreen extends StatefulWidget {
@@ -28,7 +31,7 @@ class RewardStoreScreen extends StatefulWidget {
 }
 
 class _RewardStoreScreenState extends State<RewardStoreScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, ScreenActivityMixin {
   final AdMobService _adMob = AdMobService();
   final DailyQuestService _dailyQuestService = DailyQuestService();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -36,12 +39,27 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
   late Stream<int> _proUntilStream;
   late Stream<int> _pointsStream;
   String? _boundUid;
+  int _proStreamGeneration = 0;
+  int _pointsStreamGeneration = 0;
+  int _questsStreamGeneration = 0;
+  int? _knownProUntil;
+  int? _knownPoints;
+  Map<String, dynamic> _knownQuests = const {};
+  bool _hasQuestData = false;
+  bool _proRefreshing = false;
+  bool _pointsRefreshing = false;
+  bool _questsRefreshing = false;
   StreamSubscription<User?>? _authSubscription;
   late Stream<Map<String, dynamic>> _questsStream;
   String _rewardDay = rewardDayKey();
   Timer? _dayTimer;
   StreamSubscription<DatabaseEvent>? _userSubscription;
   StreamSubscription<DatabaseEvent>? _adRewardsSubscription;
+  Timer? _checkinDeadline;
+  Timer? _adRewardsDeadline;
+  int _checkinGeneration = 0;
+  int _adRewardsGeneration = 0;
+  int _actionGeneration = 0;
   bool _isWatchingAd = false;
   bool _hasPendingAdReward = false;
   bool _isRedeeming = false;
@@ -50,6 +68,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
   Map<String, bool> _checkinDays = {};
   bool _checkedInToday = false;
   bool _isCheckinLoaded = false;
+  bool _checkinHasError = false;
+  bool _checkinRefreshing = false;
   int _streak = 0;
 
   // Daily ad limit tracking
@@ -57,6 +77,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
   final int _dailyAdLimit = AdMobService.dailyRewardedAdLimit;
   bool _isAdRewardsLoaded = false;
   bool _adRewardsHasError = false;
+  bool _hasKnownAdRewardCount = false;
+
+  static const _initialReadTimeout = Duration(seconds: 15);
 
   int _consecutiveAdsWatched = 0;
   bool _isAdCooldown = false;
@@ -71,9 +94,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     WidgetsBinding.instance.addObserver(this);
     ConsentService.adRequestsAllowed.addListener(_refreshPrivacy);
     _boundUid = _auth.currentUser?.uid;
-    _proUntilStream = _adMob.streamCurrentProUntil();
-    _pointsStream = _adMob.streamUserPoints();
-    _questsStream = _dailyQuestService.streamQuests();
+    _proUntilStream = _createProUntilStream();
+    _pointsStream = _createPointsStream();
+    _questsStream = _createQuestStream();
     _loadCheckinData();
     _listenAdRewardData();
     _scheduleRewardDayRefresh();
@@ -87,6 +110,14 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     ConsentService.adRequestsAllowed.removeListener(_refreshPrivacy);
     _dayTimer?.cancel();
     _cooldownTimer?.cancel();
+    _checkinDeadline?.cancel();
+    _adRewardsDeadline?.cancel();
+    _checkinGeneration++;
+    _adRewardsGeneration++;
+    _actionGeneration++;
+    _proStreamGeneration++;
+    _pointsStreamGeneration++;
+    _questsStreamGeneration++;
     _userSubscription?.cancel();
     _adRewardsSubscription?.cancel();
     _authSubscription?.cancel();
@@ -98,19 +129,37 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     _userSubscription?.cancel();
     _adRewardsSubscription?.cancel();
     _cooldownTimer?.cancel();
+    _checkinDeadline?.cancel();
+    _adRewardsDeadline?.cancel();
+    _checkinGeneration++;
+    _adRewardsGeneration++;
+    _actionGeneration++;
     setState(() {
       _boundUid = user?.uid;
-      _pointsStream = _adMob.streamUserPoints();
-      _proUntilStream = _adMob.streamCurrentProUntil();
-      _questsStream = _dailyQuestService.streamQuests();
+      _knownProUntil = null;
+      _knownPoints = null;
+      _knownQuests = const {};
+      _hasQuestData = false;
+      _proRefreshing = false;
+      _pointsRefreshing = false;
+      _questsRefreshing = false;
+      _pointsStream = _createPointsStream();
+      _proUntilStream = _createProUntilStream();
+      _questsStream = _createQuestStream();
       _checkinDays = {};
       _checkedInToday = false;
       _isCheckinLoaded = false;
+      _checkinHasError = false;
+      _checkinRefreshing = false;
       _streak = 0;
       _dailyAdCount = 0;
       _isAdRewardsLoaded = false;
       _adRewardsHasError = false;
+      _hasKnownAdRewardCount = false;
       _hasPendingAdReward = false;
+      _isWatchingAd = false;
+      _isRedeeming = false;
+      _isCheckingIn = false;
       _isAdCooldown = false;
       _adCooldownEndTimeMs = 0;
       _consecutiveAdsWatched = 0;
@@ -122,6 +171,22 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
 
   void _refreshPrivacy() {
     if (mounted) setState(() {});
+  }
+
+  bool _isCurrentAction(String uid, int generation) {
+    return mounted &&
+        generation == _actionGeneration &&
+        _auth.currentUser?.uid == uid;
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    _cooldownTimer?.cancel();
+    _cooldownTimer = null;
+    if (!active) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isScreenActive) _syncAdCooldownTicker();
+    });
   }
 
   @override
@@ -149,9 +214,14 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     if (!mounted || _rewardDay == day) return;
     setState(() {
       _rewardDay = day;
-      _questsStream = _dailyQuestService.streamQuests();
+      _knownQuests = const {};
+      _hasQuestData = false;
+      _questsRefreshing = false;
+      _questsStream = _createQuestStream();
       _dailyAdCount = 0;
       _isAdRewardsLoaded = false;
+      _adRewardsHasError = false;
+      _hasKnownAdRewardCount = false;
       _checkedInToday = _checkinDays[day] == true;
       _streak = _calculateStreak(_checkinDays);
     });
@@ -159,8 +229,130 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     _listenAdRewardData();
   }
 
+  void _reloadQuestStream() {
+    if (!mounted) return;
+    setState(() {
+      _questsRefreshing = true;
+      _questsStream = _createQuestStream();
+    });
+  }
+
+  Stream<int> _createPointsStream() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return const Stream<int>.empty();
+    final generation = ++_pointsStreamGeneration;
+    return _trackStream(
+      withInitialEventTimeout(
+        _adMob.streamUserPoints(),
+        timeout: _initialReadTimeout,
+      ),
+      onData: (points) {
+        if (mounted &&
+            generation == _pointsStreamGeneration &&
+            _auth.currentUser?.uid == uid) {
+          _knownPoints = points;
+          _pointsRefreshing = false;
+        }
+      },
+      onError: () {
+        if (mounted &&
+            generation == _pointsStreamGeneration &&
+            _auth.currentUser?.uid == uid) {
+          _pointsRefreshing = false;
+        }
+      },
+    );
+  }
+
+  Stream<int> _createProUntilStream() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return const Stream<int>.empty();
+    final generation = ++_proStreamGeneration;
+    return _trackStream(
+      withInitialEventTimeout(
+        _adMob.streamCurrentProUntil(),
+        timeout: _initialReadTimeout,
+      ),
+      onData: (proUntil) {
+        if (mounted &&
+            generation == _proStreamGeneration &&
+            _auth.currentUser?.uid == uid) {
+          _knownProUntil = proUntil;
+          _proRefreshing = false;
+        }
+      },
+      onError: () {
+        if (mounted &&
+            generation == _proStreamGeneration &&
+            _auth.currentUser?.uid == uid) {
+          _proRefreshing = false;
+        }
+      },
+    );
+  }
+
+  Stream<Map<String, dynamic>> _createQuestStream() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return const Stream<Map<String, dynamic>>.empty();
+    final generation = ++_questsStreamGeneration;
+    return _trackStream(
+      withInitialEventTimeout(
+        _dailyQuestService.streamQuests(),
+        timeout: _initialReadTimeout,
+      ),
+      onData: (data) {
+        if (mounted &&
+            generation == _questsStreamGeneration &&
+            _auth.currentUser?.uid == uid) {
+          _knownQuests = Map<String, dynamic>.from(data);
+          _hasQuestData = true;
+          _questsRefreshing = false;
+        }
+      },
+      onError: () {
+        if (mounted &&
+            generation == _questsStreamGeneration &&
+            _auth.currentUser?.uid == uid) {
+          _questsRefreshing = false;
+        }
+      },
+    );
+  }
+
+  Stream<T> _trackStream<T>(
+    Stream<T> source, {
+    required void Function(T data) onData,
+    required void Function() onError,
+  }) {
+    return source.transform(
+      StreamTransformer<T, T>.fromHandlers(
+        handleData: (data, sink) {
+          onData(data);
+          sink.add(data);
+        },
+        handleError: (error, stack, sink) {
+          onError();
+          sink.addError(error, stack);
+        },
+      ),
+    );
+  }
+
+  void _retryRewardStreams() {
+    if (!mounted) return;
+    setState(() {
+      _pointsRefreshing = true;
+      _proRefreshing = true;
+      _pointsStream = _createPointsStream();
+      _proUntilStream = _createProUntilStream();
+    });
+  }
+
   void _listenAdRewardData() {
     final user = _auth.currentUser;
+    _adRewardsSubscription?.cancel();
+    _adRewardsDeadline?.cancel();
+    final generation = ++_adRewardsGeneration;
     if (user == null) return;
 
     _adRewardsSubscription = _dbRef
@@ -168,7 +360,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         .onValue
         .listen(
           (event) {
-            if (_auth.currentUser?.uid != user.uid) return;
+            if (!_isCurrentRewardListener(user.uid, generation)) return;
+            _adRewardsDeadline?.cancel();
             final rawValue = event.snapshot.value;
             final data = rawValue is Map
                 ? Map<dynamic, dynamic>.from(rawValue)
@@ -180,26 +373,55 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
             if (!mounted) return;
             setState(() {
               _dailyAdCount = count.clamp(0, _dailyAdLimit);
+              _hasKnownAdRewardCount = true;
               _isAdRewardsLoaded = true;
               _adRewardsHasError = false;
             });
           },
           onError: (Object error) {
-            if (_auth.currentUser?.uid != user.uid) return;
-            debugPrint(
-              'Reward ad quota listener failed: ${AppErrorMapper.resolve(error).message}',
-            );
-            if (!mounted) return;
-            setState(() {
-              _isAdRewardsLoaded = true;
-              _adRewardsHasError = true;
-            });
+            _markAdRewardsError(user.uid, generation, error);
           },
         );
+    _adRewardsDeadline = Timer(
+      _initialReadTimeout,
+      () => _markAdRewardsError(
+        user.uid,
+        generation,
+        TimeoutException('initial_event_timeout', _initialReadTimeout),
+      ),
+    );
+  }
+
+  bool _isCurrentRewardListener(String uid, int generation) {
+    return mounted &&
+        generation == _adRewardsGeneration &&
+        _auth.currentUser?.uid == uid;
+  }
+
+  void _markAdRewardsError(String uid, int generation, Object error) {
+    if (!_isCurrentRewardListener(uid, generation)) return;
+    _adRewardsDeadline?.cancel();
+    debugPrint(
+      'Reward ad quota listener failed: ${AppErrorMapper.resolve(error).message}',
+    );
+    setState(() {
+      _adRewardsHasError = true;
+    });
+  }
+
+  void _retryAdRewardData() {
+    if (!mounted) return;
+    setState(() {
+      _adRewardsHasError = false;
+    });
+    _listenAdRewardData();
   }
 
   void _loadCheckinData() {
     final user = _auth.currentUser;
+    _userSubscription?.cancel();
+    _checkinDeadline?.cancel();
+    final generation = ++_checkinGeneration;
     if (user == null) return;
 
     _userSubscription = _dbRef
@@ -207,7 +429,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         .onValue
         .listen(
           (event) {
-            if (_auth.currentUser?.uid != user.uid) return;
+            if (!_isCurrentCheckinListener(user.uid, generation)) return;
+            _checkinDeadline?.cancel();
             final rawData = event.snapshot.value;
             final data = rawData is Map
                 ? Map<dynamic, dynamic>.from(rawData)
@@ -218,6 +441,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
               final nextStreak = _calculateStreak(nextDays);
 
               if (!_isCheckinLoaded ||
+                  _checkinHasError ||
+                  _checkinRefreshing ||
                   _checkedInToday != nextCheckedInToday ||
                   _streak != nextStreak ||
                   !_sameCheckinDays(_checkinDays, nextDays)) {
@@ -226,16 +451,51 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
                   _checkedInToday = nextCheckedInToday;
                   _streak = nextStreak;
                   _isCheckinLoaded = true;
+                  _checkinHasError = false;
+                  _checkinRefreshing = false;
                 });
               }
             }
           },
           onError: (Object error) {
-            debugPrint(
-              'Reward check-in listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('util_khngththeo_fed732')).message}',
-            );
+            _markCheckinError(user.uid, generation, error);
           },
         );
+    _checkinDeadline = Timer(
+      _initialReadTimeout,
+      () => _markCheckinError(
+        user.uid,
+        generation,
+        TimeoutException('initial_event_timeout', _initialReadTimeout),
+      ),
+    );
+  }
+
+  bool _isCurrentCheckinListener(String uid, int generation) {
+    return mounted &&
+        generation == _checkinGeneration &&
+        _auth.currentUser?.uid == uid;
+  }
+
+  void _markCheckinError(String uid, int generation, Object error) {
+    if (!_isCurrentCheckinListener(uid, generation)) return;
+    _checkinDeadline?.cancel();
+    debugPrint(
+      'Reward check-in listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('util_khngththeo_fed732')).message}',
+    );
+    setState(() {
+      _checkinHasError = true;
+      _checkinRefreshing = false;
+    });
+  }
+
+  void _retryCheckinData() {
+    if (!mounted) return;
+    setState(() {
+      _checkinHasError = false;
+      _checkinRefreshing = true;
+    });
+    _loadCheckinData();
   }
 
   String _todayKey([DateTime? date]) {
@@ -278,9 +538,16 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
 
   Future<void> _executeCheckin() async {
     _refreshRewardDay();
-    if (_isCheckingIn || !_isCheckinLoaded || _checkedInToday) return;
+    if (_isCheckingIn ||
+        !_isCheckinLoaded ||
+        _checkinHasError ||
+        _checkinRefreshing ||
+        _checkedInToday) {
+      return;
+    }
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
+    final actionGeneration = _actionGeneration;
     setState(() => _isCheckingIn = true);
     try {
       if (!await SecurityService().guardAction(
@@ -289,9 +556,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       )) {
         return;
       }
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       final result = await _adMob.claimDailyCheckinReward();
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(
@@ -306,7 +573,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         ),
       );
     } catch (error) {
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(
@@ -318,7 +585,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         ),
       );
     } finally {
-      if (mounted) setState(() => _isCheckingIn = false);
+      if (mounted && _isCurrentAction(uid, actionGeneration)) {
+        setState(() => _isCheckingIn = false);
+      }
     }
   }
 
@@ -426,18 +695,35 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       _isAdCooldown = true;
     });
 
+    _syncAdCooldownTicker();
+  }
+
+  void _syncAdCooldownTicker() {
     _cooldownTimer?.cancel();
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
+    _cooldownTimer = null;
+    if (!isScreenActive || !_isAdCooldown) return;
+
+    void updateRemaining() {
+      if (!isScreenActive) return;
       setState(() {
         _adCooldownSeconds = _remainingAdCooldownSeconds();
         if (_adCooldownSeconds == 0) {
           _isAdCooldown = false;
           _adCooldownEndTimeMs = 0;
-          timer.cancel();
+          _cooldownTimer?.cancel();
+          _cooldownTimer = null;
         }
       });
-    });
+    }
+
+    // Tính từ mốc kết thúc để thời gian chờ vẫn đúng sau khi app ở nền.
+    updateRemaining();
+    if (_isAdCooldown) {
+      _cooldownTimer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => updateRemaining(),
+      );
+    }
   }
 
   int _remainingAdCooldownSeconds() {
@@ -451,12 +737,13 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     if (_isWatchingAd || !mounted) return;
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
+    final actionGeneration = _actionGeneration;
     setState(() => _isWatchingAd = true);
     try {
       final result = await _adMob.recoverPendingAdReward();
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       final pending = await _adMob.pendingAdRewardPurpose();
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       setState(() => _hasPendingAdReward = pending != null);
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -474,7 +761,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     } catch (_) {
       // Giữ pending; lần mở lại/nút kiểm tra sẽ đọc receipt server.
     } finally {
-      if (mounted) setState(() => _isWatchingAd = false);
+      if (mounted && _isCurrentAction(uid, actionGeneration)) {
+        setState(() => _isWatchingAd = false);
+      }
     }
   }
 
@@ -497,20 +786,30 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     }
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
+    final actionGeneration = _actionGeneration;
     setState(() => _isWatchingAd = true);
     try {
       if (!await SecurityService().guardAction(context, 'reward_watch_ad')) {
         return;
       }
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       if (await _adMob.pendingAdRewardPurpose() != null) {
-        if (!mounted || _auth.currentUser?.uid != uid) return;
+        if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
         setState(() => _hasPendingAdReward = true);
         return;
       }
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
+      // VIP không có quảng cáo: báo rõ thay vì lỗi "không tải được quảng cáo".
+      if (await _adMob.isProUser()) {
+        if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('reward_ad_vip_no_ads'))),
+        );
+        return;
+      }
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       final worked = await _adMob.showRewardedAd(verifiedPurpose: 'points');
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       if (!worked) {
         final failure = _adMob.lastRewardedAdFailure;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -526,9 +825,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       }
       _startAdCooldown();
       final result = await _adMob.claimRewardedAdPoints();
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       final pending = await _adMob.pendingAdRewardPurpose();
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       setState(() => _hasPendingAdReward = pending != null);
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
@@ -542,7 +841,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         ),
       );
     } catch (error) {
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(
@@ -554,7 +853,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         ),
       );
     } finally {
-      if (mounted) setState(() => _isWatchingAd = false);
+      if (mounted && _isCurrentAction(uid, actionGeneration)) {
+        setState(() => _isWatchingAd = false);
+      }
     }
   }
 
@@ -568,6 +869,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       );
       return;
     }
+    final actionGeneration = _actionGeneration;
     setState(() => _isRedeeming = true);
     try {
       if (!await SecurityService().guardAction(
@@ -576,9 +878,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       )) {
         return;
       }
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       final latestPoints = await _adMob.getUserPoints();
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       if (latestPoints < plan.points) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
@@ -592,7 +894,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         planId: plan.id,
         expectedUid: uid,
       );
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(
@@ -603,12 +905,14 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         ),
       );
     } catch (error) {
-      if (!mounted || _auth.currentUser?.uid != uid) return;
+      if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(content: Text(context.tr('util_khngktnicm_155696'))),
       );
     } finally {
-      if (mounted) setState(() => _isRedeeming = false);
+      if (mounted && _isCurrentAction(uid, actionGeneration)) {
+        setState(() => _isRedeeming = false);
+      }
     }
   }
 
@@ -653,8 +957,16 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFFF7F8),
-    appBar: SLTheme.appBar(context, context.tr('util_cahngvtphm_a6a4f6')),
+    backgroundColor: RewardStorePalette.of(context).canvas,
+    appBar: AppBar(
+      backgroundColor: RewardStorePalette.of(context).canvas,
+      foregroundColor: RewardStorePalette.of(context).ink,
+      surfaceTintColor: Colors.transparent,
+      title: Text(
+        context.tr('util_cahngvtphm_a6a4f6'),
+        style: RewardStorePalette.of(context).text(18, bold: true),
+      ),
+    ),
     body: SafeArea(
       child: Center(
         child: ConstrainedBox(
@@ -666,13 +978,16 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
               key: ValueKey('points-$_boundUid'),
               stream: _pointsStream,
               builder: (context, pointSnapshot) {
-                final proUntil = proSnapshot.data ?? 0;
+                final proUntil = proSnapshot.data ?? _knownProUntil;
+                final proHasError = proSnapshot.hasError && !_proRefreshing;
+                final proLoading = proUntil == null && !proHasError;
                 final isPro =
+                    proUntil != null &&
                     AppConfig.isPurchaseEnabled &&
                     proUntil > DateTime.now().millisecondsSinceEpoch;
-                final status = proSnapshot.hasError
+                final status = proHasError
                     ? context.tr('reward_store_error')
-                    : !proSnapshot.hasData
+                    : proLoading
                     ? context.tr('reward_store_loading')
                     : !isPro
                     ? context.tr('util_thng_c10b85')
@@ -681,42 +996,79 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
                     : context
                           .tr('reward_store_pro_until')
                           .replaceAll('{date}', _formatDateTime(proUntil));
-                final points = pointSnapshot.data ?? 0;
+                final points = pointSnapshot.data ?? _knownPoints;
+                final pointsHasError =
+                    pointSnapshot.hasError && !_pointsRefreshing;
+                final pointsLoading = points == null && !pointsHasError;
+                final rewardRetry = _adRewardsHasError
+                    ? _retryAdRewardData
+                    : proHasError
+                    ? _retryRewardStreams
+                    : null;
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                   children: [
                     RewardWalletCard(
-                      balance: pointSnapshot.hasError
+                      balance: pointsHasError && points == null
                           ? context.tr('reward_store_error')
-                          : pointSnapshot.hasData
+                          : points != null
                           ? _formatPointAmount(points)
                           : '—',
                       status: status,
-                      streak: _streak,
+                      streak: _isCheckinLoaded && !_checkinHasError
+                          ? _streak
+                          : null,
+                      loading: pointsLoading || proLoading,
+                      hasError: pointsHasError || proHasError,
+                      onRetry: pointsHasError || proHasError
+                          ? _retryRewardStreams
+                          : null,
+                    ),
+                    const SizedBox(height: 20),
+                    RewardCompanionSection(
+                      key: ValueKey('reward-companions-$_boundUid'),
+                      balance: points,
                     ),
                     const SizedBox(height: 20),
                     RewardCheckinCard(
                       days: _checkinDays,
                       loaded: _isCheckinLoaded,
+                      hasError: _checkinHasError,
+                      refreshing: _checkinRefreshing,
                       busy: _isCheckingIn,
                       streak: _streak,
                       onCheckin: _executeCheckin,
+                      onRetry: _retryCheckinData,
                     ),
                     const SizedBox(height: 24),
                     StreamBuilder<Map<String, dynamic>>(
                       key: ValueKey('$_boundUid/$_rewardDay'),
                       stream: _questsStream,
                       builder: (context, snapshot) => RewardMissionsPanel(
-                        data: snapshot.data ?? const {},
-                        loading: !snapshot.hasData && !snapshot.hasError,
-                        hasError: snapshot.hasError,
+                        data: _hasQuestData
+                            ? _knownQuests
+                            : snapshot.data ?? const {},
+                        loading:
+                            _questsRefreshing ||
+                            (!_hasQuestData && !snapshot.hasError),
+                        hasError: snapshot.hasError && !_questsRefreshing,
+                        hasData: _hasQuestData,
+                        refreshing: _questsRefreshing,
+                        onRetry: _reloadQuestStream,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildVideoCard(proSnapshot, isPro),
+                    _buildVideoCard(
+                      proUntil: proUntil,
+                      isPro: isPro,
+                      hasError: proHasError,
+                      onRetry: rewardRetry,
+                    ),
                     if (AppConfig.isPurchaseEnabled &&
-                        pointSnapshot.hasData &&
-                        !pointSnapshot.hasError) ...[
+                        points != null &&
+                        !pointsHasError &&
+                        !proHasError &&
+                        !proLoading) ...[
                       const SizedBox(height: 24),
                       _buildProRedeemSection(points),
                     ],
@@ -730,13 +1082,19 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     ),
   );
 
-  Widget _buildVideoCard(AsyncSnapshot<int> proSnapshot, bool isPro) {
+  Widget _buildVideoCard({
+    required int? proUntil,
+    required bool isPro,
+    required bool hasError,
+    required VoidCallback? onRetry,
+  }) {
     final seconds = _remainingAdCooldownSeconds();
     final privacyAllowed = ConsentService.adRequestsAllowed.value;
-    final limitReached = _dailyAdCount >= _dailyAdLimit;
+    final limitReached =
+        _hasKnownAdRewardCount && _dailyAdCount >= _dailyAdLimit;
     final unavailable =
-        !proSnapshot.hasData ||
-        proSnapshot.hasError ||
+        proUntil == null ||
+        hasError ||
         !_isAdRewardsLoaded ||
         _adRewardsHasError;
     final message = _hasPendingAdReward
@@ -747,7 +1105,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         ? context.tr('reward_store_web')
         : !privacyAllowed
         ? context.tr('reward_store_consent')
-        : _adRewardsHasError || proSnapshot.hasError
+        : _adRewardsHasError || hasError
         ? context.tr('reward_store_error')
         : unavailable
         ? context.tr('reward_store_loading')
@@ -769,12 +1127,13 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
               .tr('reward_store_watch')
               .replaceAll('{points}', '${AdMobService.rewardedMainPoints}');
     return RewardVideoCard(
-      count: _dailyAdCount,
+      count: _hasKnownAdRewardCount ? _dailyAdCount : null,
       limit: _dailyAdLimit,
       points: AdMobService.rewardedMainPoints,
       buttonLabel: label,
       message: message,
       busy: _isWatchingAd,
+      onRetry: onRetry ?? (_adRewardsHasError ? _retryAdRewardData : null),
       onWatch: _hasPendingAdReward && !_isWatchingAd
           ? _recoverAdReward
           : unavailable ||
@@ -785,7 +1144,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
                 _isWatchingAd ||
                 seconds > 0
           ? null
-          : () => _watchAd(proSnapshot.data!),
+          : () => _watchAd(proUntil),
     );
   }
 

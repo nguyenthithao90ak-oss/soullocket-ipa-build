@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 
 import '../storage/storage_upload_result.dart';
+import '../storage/storage_upload_progress.dart';
 import 'r2_upload_policy.dart';
 
 typedef R2UploadSessionCreator =
@@ -59,11 +60,11 @@ class R2MediaTransport {
       fileSize: bytes,
       providedHeaders: data['requiredHeaders'],
     );
-    onProgress?.call(0);
     Future<http.Response> send() async {
       if (useBytes) {
         final body = await file.readAsBytes();
         if (body.length != bytes) throw StateError('Upload file changed');
+        onProgress?.call(0);
         final put = http.Request('PUT', target)
           ..followRedirects = false
           ..headers.addAll(headers)
@@ -76,13 +77,14 @@ class R2MediaTransport {
         ..contentLength = bytes;
       // Bắt đầu đọc response trước khi bơm stream để không chờ buffer vô hạn.
       final response = client.send(put).then(http.Response.fromStream);
-      final producer = () async {
-        try {
-          await put.sink.addStream(file.openRead());
-        } finally {
-          await put.sink.close();
-        }
-      }();
+      final producer = StorageUploadProgress.pumpStream(
+        sink: put.sink,
+        source: file.openRead(),
+        totalBytes: bytes,
+        onProgress: onProgress == null
+            ? null
+            : (progress) => onProgress(progress * 0.95),
+      );
       final results = await Future.wait<Object?>([response, producer]);
       return results.first as http.Response;
     }
@@ -91,6 +93,10 @@ class R2MediaTransport {
     if (uploaded.statusCode != 200 && uploaded.statusCode != 201) {
       throw StateError('Upload failed (${uploaded.statusCode})');
     }
+    // 5% cuối dành cho finalize; request PUT đã gửi đủ byte ở mốc này.
+    // Native stream đã phát mốc này từ chunk cuối, còn Web không có upload
+    // progress nên chỉ phát một lần sau khi Request hoàn tất.
+    if (useBytes) onProgress?.call(0.95);
     final finalized = await finalizeUpload(uploadId);
     final downloadUrl = finalized['publicUrl']?.toString().trim() ?? '';
     final finalizedPath = finalized['path']?.toString().trim() ?? '';

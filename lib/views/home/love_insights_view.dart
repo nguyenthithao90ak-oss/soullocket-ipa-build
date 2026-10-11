@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +14,28 @@ part 'widgets/love_insights/insight_offline_contribution_cards.dart';
 part 'widgets/love_insights/insight_mood_habit_cards.dart';
 part 'widgets/love_insights/insight_timeline_section.dart';
 part 'widgets/love_insights/insight_shared_widgets.dart';
+part 'widgets/love_insights/insight_companion_art.dart';
+
+/// Giữ màu pastel ở light, dùng token chung cho độ tương phản ở dark.
+abstract final class _InsightStyle {
+  static bool dark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+  static Color canvas(BuildContext context) =>
+      dark(context) ? SLColors.darkBgMain : const Color(0xFFFFFAF7);
+  static Color surface(BuildContext context) =>
+      dark(context) ? SLColors.darkBgCard : Colors.white;
+  static Color ink(BuildContext context) =>
+      dark(context) ? SLColors.darkTextPrimary : const Color(0xFF492E3A);
+  static Color muted(BuildContext context) =>
+      dark(context) ? SLColors.darkTextSecond : const Color(0xFF806C73);
+  static Color line(BuildContext context) =>
+      dark(context) ? SLColors.darkBorder : const Color(0xFFF0E5DF);
+  static Color accent(BuildContext context, Color light) => dark(context)
+      ? Color.lerp(light, SLColors.darkTextPrimary, 0.55)!
+      : light;
+  static Color wash(BuildContext context, Color light) =>
+      dark(context) ? Color.lerp(SLColors.darkBgCard, light, 0.08)! : light;
+}
 
 class LoveInsightsView extends StatelessWidget {
   final LoveInsightData? data;
@@ -44,9 +68,9 @@ class LoveInsightsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBF6F2),
+      backgroundColor: _InsightStyle.canvas(context),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFBF6F2),
+        backgroundColor: _InsightStyle.canvas(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: MediaQuery.textScalerOf(context).scale(20) > 28
@@ -59,8 +83,8 @@ class LoveInsightsView extends StatelessWidget {
             child: IconButton.filledTonal(
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF492E3A),
+                backgroundColor: _InsightStyle.surface(context),
+                foregroundColor: _InsightStyle.ink(context),
                 minimumSize: const Size(48, 48),
               ),
               icon: const BackButtonIcon(),
@@ -78,7 +102,7 @@ class LoveInsightsView extends StatelessWidget {
           style: SLTheme.quicksand(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF492E3A),
+            color: _InsightStyle.ink(context),
           ),
         ),
       ),
@@ -96,8 +120,27 @@ class LoveInsightsView extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     if (isLoading && data == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFFFF4F87)),
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Semantics(
+            liveRegion: true,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  context.tr('loading'),
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(color: _InsightStyle.muted(context)),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -111,7 +154,9 @@ class LoveInsightsView extends StatelessWidget {
               Icon(
                 Icons.favorite_rounded,
                 size: 42,
-                color: const Color(0xFFFF4F87).withValues(alpha: 0.8),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.8),
               ),
               SLSpacing.h12,
               Text(
@@ -120,15 +165,16 @@ class LoveInsightsView extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF5A4656),
+                  color: _InsightStyle.ink(context),
                 ),
               ),
               SLSpacing.h16,
               FilledButton(
                 onPressed: onRefresh,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF4F87),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  minimumSize: const Size(48, 48),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 12,
@@ -148,7 +194,7 @@ class LoveInsightsView extends StatelessWidget {
 
     final insight = data!;
     return RefreshIndicator(
-      color: const Color(0xFFFF4F87),
+      color: Theme.of(context).colorScheme.primary,
       onRefresh: onRefresh,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -156,7 +202,7 @@ class LoveInsightsView extends StatelessWidget {
         children: [
           _buildHeaderCard(context, insight),
           SLSpacing.h16,
-          _buildDailyTipCard(insight),
+          _buildDailyTipCard(context, insight),
           SLSpacing.h16,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
@@ -165,32 +211,35 @@ class LoveInsightsView extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF492E3A),
+                color: _InsightStyle.ink(context),
               ),
             ),
           ),
           SLSpacing.h12,
-          _buildStatsGrid(insight),
+          _buildStatsGrid(context, insight),
           SLSpacing.h16,
-          if (!_isSingle) ...[_buildContributionCard(insight), SLSpacing.h20],
-          _buildHabitCard(insight),
+          if (!_isSingle) ...[
+            _buildContributionCard(context, insight),
+            SLSpacing.h20,
+          ],
+          _buildHabitCard(context, insight),
           SLSpacing.h20,
-          _buildAdvisorCard(insight),
+          _buildAdvisorCard(context, insight),
           SLSpacing.h20,
-          _buildTimelineSection(insight),
+          _buildTimelineSection(context, insight),
         ],
       ),
     );
   }
 
-  BoxDecoration _softCardDecoration() {
+  BoxDecoration _softCardDecoration(BuildContext context) {
     return BoxDecoration(
-      color: Colors.white,
+      color: _InsightStyle.surface(context),
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFFF0E5DF)),
+      border: Border.all(color: _InsightStyle.line(context)),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF492E3A).withValues(alpha: 0.035),
+          color: _InsightStyle.ink(context).withValues(alpha: 0.035),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),

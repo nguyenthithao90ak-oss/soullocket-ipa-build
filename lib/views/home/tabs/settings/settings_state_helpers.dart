@@ -131,9 +131,7 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                   controller: otpCtrl,
                   enabled: canConfirm,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   maxLength: 6,
                   textAlign: TextAlign.center,
                   onChanged: (_) {
@@ -326,9 +324,7 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                     controller: otpCtrl,
                     enabled: canConfirm,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     maxLength: 6,
                     textAlign: TextAlign.center,
                     onChanged: (_) {
@@ -492,7 +488,13 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     final mm = dt.month.toString().padLeft(2, '0');
     final hh = dt.hour.toString().padLeft(2, '0');
     final min = dt.minute.toString().padLeft(2, '0');
-    return UiCopy.text('copy_03dc788a1b2c', {'value1': dd, 'value2': mm, 'value3': dt.year, 'value4': hh, 'value5': min});
+    return UiCopy.text('copy_03dc788a1b2c', {
+      'value1': dd,
+      'value2': mm,
+      'value3': dt.year,
+      'value4': hh,
+      'value5': min,
+    });
   }
 
   Future<void> _loadPendingAccountDeletionState() async {
@@ -594,6 +596,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       _settingsIdentityLoadFailed = failed;
       if (!failed) _settingsIdentityReady = true;
     });
+    _settingsPanelNavigation.completeBootstrap(succeeded: !failed);
   }
 
   /// Vai chỉ dùng cho khung hình đầu; dữ liệu server vẫn ghi đè sau đó.
@@ -633,11 +636,16 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
   }
 
   Future<void> _fetchSettingsData() async {
+    var bootstrapGeneration = _settingsPanelNavigation.generation;
     final user = _auth.currentUser;
     if (user == null) {
       _markSettingsBootstrapComplete();
       return;
     }
+    bool valid() =>
+        mounted &&
+        _auth.currentUser?.uid == user.uid &&
+        _settingsPanelNavigation.generation == bootstrapGeneration;
 
     final loveDaysUnitMsg = context.tr('home_ngyyu_722b21');
     final loveHouseDefaultName = context.tr('home_nginhtnhyu_dbebce');
@@ -647,14 +655,17 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     try {
       if (!_settingsIdentityReady) {
         await OfflineCacheService.initialize();
-        if (!mounted || _auth.currentUser?.uid != user.uid) return;
+        if (!valid()) return;
         setState(_restoreSettingsInitialIdentity);
       }
-      final resolvedHouseId = await _houseService.getCurrentHouseId()
-          .timeout(const Duration(seconds: 10));
-      if (!mounted || _auth.currentUser?.uid != user.uid) return;
+      final resolvedHouseId = await _houseService.getCurrentHouseId().timeout(
+        const Duration(seconds: 10),
+      );
+      if (!valid()) return;
       if (_houseId != resolvedHouseId) {
         // Cache cũ không được tiếp tục hiển thị khi ngôi nhà đã đổi.
+        _settingsPanelNavigation.restartBootstrap();
+        bootstrapGeneration = _settingsPanelNavigation.generation;
         setState(() {
           _settingsIdentityReady = false;
           _avatarUrl1 = '';
@@ -671,7 +682,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
         // House đã resolve local (prefs/secure storage): dựng ngay từ cache
         // Home thay vì chờ các truy vấn mạng bên dưới.
         final roleHint = await _readSettingsRoleHint();
-        if (!mounted || _auth.currentUser?.uid != user.uid) return;
+        if (!valid()) return;
         if (!_settingsIdentityReady && _houseId == resolvedHouseId) {
           setState(
             () => _restoreSettingsInitialIdentity(
@@ -687,7 +698,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       final syncedRelationshipMode = await _authService
           .syncRelationshipModeForCurrentUser(user: user, houseId: _houseId)
           .timeout(const Duration(seconds: 10));
-      if (!mounted || _auth.currentUser?.uid != user.uid) return;
+      if (!valid()) return;
       _bindBreakupRequestWatcher();
 
       if (_houseId != null) {
@@ -695,6 +706,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
             .child('houses/$_houseId/settings')
             .get()
             .timeout(const Duration(seconds: 3));
+        if (!valid()) return;
         if (houseSnapshot.exists && houseSnapshot.value is Map) {
           final data = Map<String, dynamic>.from(
             Map<dynamic, dynamic>.from(houseSnapshot.value as Map),
@@ -703,6 +715,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               (data['relationshipMode'] ?? syncedRelationshipMode ?? 'single')
                   .toString();
           final localPrefs = await SharedPreferences.getInstance();
+          if (!valid()) return;
           var storedRole = localPrefs.getString('il_role');
           if (storedRole != 'user1' && storedRole != 'user2') {
             try {
@@ -710,6 +723,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   .child('houses/$_houseId/members/${user.uid}')
                   .get()
                   .timeout(const Duration(seconds: 3));
+              if (!valid()) return;
               if (memberSnap.exists && memberSnap.value is Map) {
                 final memberData = Map<String, dynamic>.from(
                   memberSnap.value as Map,
@@ -719,10 +733,12 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   final cleanRole = role == 'user2' ? 'user2' : 'user1';
                   storedRole = cleanRole;
                   await localPrefs.setString('il_role', cleanRole);
+                  if (!valid()) return;
                   await SecureStorageService.instance.write(
                     SecureStorageService.keyRole,
                     cleanRole,
                   );
+                  if (!valid()) return;
                   RoleUtils.roleNotifier.value = cleanRole;
                 }
               }
@@ -749,7 +765,8 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                       loveDaysUnitMsg)
                   .toString()
                   .trim();
-          if (mounted && _auth.currentUser?.uid == user.uid) {
+          if (!valid()) return;
+          if (valid()) {
             setState(() {
               _houseIdChanged = data['houseIdChanged'] == true;
               _houseName = data['houseName'] ?? loveHouseDefaultName;
@@ -803,12 +820,13 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   ? null
                   : (data['homeBlockTone'] ?? '').toString().trim();
 
-              _draftCustomBackgroundUrl ??=
-                  (data['customBackgroundUrl'] ??
-                          data['customHomeBackground'] ??
-                          '')
-                      .toString()
-                      .trim();
+              final primaryBackgroundUrl =
+                  data['customBackgroundUrl']?.toString().trim() ?? '';
+              final legacyBackgroundUrl =
+                  data['customHomeBackground']?.toString().trim() ?? '';
+              _draftCustomBackgroundUrl ??= primaryBackgroundUrl.isNotEmpty
+                  ? primaryBackgroundUrl
+                  : legacyBackgroundUrl;
               _draftTransparentMode =
                   (data['transparentMode'] is bool
                       ? data['transparentMode'] as bool
@@ -879,11 +897,11 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                 _houseSettingsService.isCoupleConnected(_houseId!).then((
                   connected,
                 ) {
-                  if (mounted) setState(() => _isCoupleConnected = connected);
+                  if (valid()) setState(() => _isCoupleConnected = connected);
                 })
               else
                 Future(() {
-                  if (mounted) setState(() => _isCoupleConnected = false);
+                  if (valid()) setState(() => _isCoupleConnected = false);
                 }),
               _loadSecurityDetails(),
               _refreshBreakupRequestState(),
@@ -924,6 +942,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
         await _loadVipStatus();
       }
     } catch (e) {
+      if (!valid()) return;
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -931,7 +950,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       }
       _markSettingsBootstrapComplete(failed: true);
     }
-    if (_houseId != null && mounted) {
+    if (_houseId != null && valid()) {
       unawaited(_promptPendingThemeBackgroundRetryIfNeeded());
     }
   }
@@ -950,7 +969,13 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
     final mm = dt.month.toString().padLeft(2, '0');
     final hh = dt.hour.toString().padLeft(2, '0');
     final min = dt.minute.toString().padLeft(2, '0');
-    return UiCopy.text('copy_03dc788a1b2c', {'value1': dd, 'value2': mm, 'value3': dt.year, 'value4': hh, 'value5': min});
+    return UiCopy.text('copy_03dc788a1b2c', {
+      'value1': dd,
+      'value2': mm,
+      'value3': dt.year,
+      'value4': hh,
+      'value5': min,
+    });
   }
 
   String _buildManagedPendingDeviceMessage([DeviceTrustState? trustState]) {
@@ -966,7 +991,10 @@ extension _SettingsTabSecurityStateHelpers on _SettingsTabState {
     final unlockAtMs = trustState.autoApproveAtMs;
     final unlockLabel = _formatManagedPendingUnlockDate(unlockAtMs);
     final waitMessage = unlockLabel.isNotEmpty
-        ? L10nService().format('ui_home_please_browse_on_a_trusted_device_or_c815cc', {'value1': unlockLabel})
+        ? L10nService().format(
+            'ui_home_please_browse_on_a_trusted_device_or_c815cc',
+            {'value1': unlockLabel},
+          )
         : context.tr('home_hyduyttrnt_a5b595');
     return '${context.tr('home_thitbnyang_94c8c6')}${context.tr('home_ccmckhctro_11e074')}$waitMessage';
   }

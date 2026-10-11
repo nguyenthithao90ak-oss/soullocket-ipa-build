@@ -9,13 +9,16 @@ extension _StickerCharacters on LivingStickerPainter {
     StickerGesture gesture,
     double t, {
     bool second = false,
+    Color? furColor,
   }) {
     c.save();
     c.translate(center.dx, center.dy);
     c.scale(scale);
-    final color = kind == StickerSubject.bunny
-        ? LivingStickerPainter.pink
-        : LivingStickerPainter.cream;
+    final color =
+        furColor ??
+        (kind == StickerSubject.bunny
+            ? LivingStickerPainter.pink
+            : LivingStickerPainter.cream);
     final activity = LivingStickerPainter.bump(t, 0.3, 0.85);
     final blink = LivingStickerPainter.bump(
       t,

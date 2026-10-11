@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/sl_route.dart';
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
 import 'sensitive_content_guard.dart';
@@ -64,7 +65,8 @@ class PinPadSetupModal extends StatefulWidget {
     bool enableBiometrics = false,
     VoidCallback? onBiometricPressed,
   }) async {
-    return Navigator.of(context, rootNavigator: true).push<String>(
+    return slPushRoute<String>(
+      context,
       PageRouteBuilder<String>(
         opaque: true,
         fullscreenDialog: true,
@@ -107,6 +109,8 @@ class PinPadSetupModal extends StatefulWidget {
           );
         },
       ),
+      identity: PinPadSetupModal,
+      rootNavigator: true,
     );
   }
 
@@ -1589,7 +1593,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                       foregroundColor: Colors.black54,
                                     ),
                                     child: Text(context.tr('ui_common_cancel_247d4b'),
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 15,
                                             letterSpacing: 1.1)),

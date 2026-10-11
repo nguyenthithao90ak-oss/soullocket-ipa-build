@@ -371,10 +371,20 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
   }
 
   Future<void> _pickThemeBackgroundImage({XFile? presetFile}) async {
+    if (_isUploadingThemeBackground) return;
+    final houseId = _houseId;
+    final ownerUid = _auth.currentUser?.uid;
+    bool isCurrent() =>
+        mounted &&
+        ownerUid != null &&
+        _houseId == houseId &&
+        _auth.currentUser?.uid == ownerUid;
     if (_houseId == null || _houseId!.trim().isEmpty) {
       _showToast(context.tr('theme_err_need_house_for_bg'), success: false);
       return;
     }
+
+    if (!isCurrent()) return;
 
     if (mounted) {
       setState(() {
@@ -383,8 +393,11 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       });
     }
 
+    String? uploadedUrl;
+    var backgroundCommitStarted = false;
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (!isCurrent()) return;
       final lastAdStr = prefs.getString('last_bg_ad_time');
       final bool requiresAd = !_isVipActive;
       bool shouldShowAd = requiresAd;
@@ -407,9 +420,9 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
           ignoreCooldown: true,
           loadTimeout: const Duration(seconds: 12),
         );
-        if (!mounted) return;
+        if (!isCurrent()) return;
         if (!adSuccess) {
-          if (mounted) {
+          if (isCurrent()) {
             setState(() {
               _isUploadingThemeBackground = false;
             });
@@ -423,41 +436,26 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         );
       }
 
-      final pickedFile = presetFile ?? await _storageService.pickImage();
-      if (pickedFile == null || !mounted) return;
+      final pickedFile =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
+      if (pickedFile == null || !isCurrent()) return;
       XFile file = pickedFile;
 
-      bool cropCancelled = false;
-      if (presetFile == null && !kIsWeb) {
-        try {
-          final croppedFile = await ImageCropper().cropImage(
-            sourcePath: file.path,
-            aspectRatio: _themeBackgroundAspectRatio,
-            compressFormat: ImageCompressFormat.jpg,
-            compressQuality: 82,
-            maxWidth: 1440,
-            maxHeight: 3200,
-            uiSettings: [
-              IOSUiSettings(
-                title: context.tr('p7_edit_background_image'),
-                aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],
-                aspectRatioLockEnabled: true,
-                aspectRatioPickerButtonHidden: true,
-                resetAspectRatioEnabled: false,
-              ),
-            ],
-          );
-          if (croppedFile != null) {
-            file = XFile(croppedFile.path);
-          } else {
-            cropCancelled = true;
-          }
-        } catch (e) {
-          debugPrint('Lỗi cắt ảnh (dùng ảnh gốc): $e');
-        }
+      if (presetFile == null) {
+        final confirmedFile = await cropAndConfirmImage(
+          context: context,
+          image: file,
+          aspectRatio:
+              _themeBackgroundAspectRatio.ratioX /
+              _themeBackgroundAspectRatio.ratioY,
+          maxOutputSize: const Size(1440, 3200),
+          titleKey: 'p7_edit_background_image',
+          isScopeCurrent: isCurrent,
+        );
+        if (confirmedFile == null) return;
+        file = confirmedFile;
       }
-
-      if (cropCancelled || !mounted) return;
+      if (!isCurrent()) return;
 
       if (mounted) {
         setState(() {
@@ -466,6 +464,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       }
 
       final previousDraftUrl = _draftCustomBackgroundUrl;
+      final persistedBackgroundUrl =
+          (_lastPersistedCustomBackgroundUrl ??
+                  UiPrefs.notifier.value.customBackgroundUrl)
+              .trim();
       final pendingKey = _pendingThemeBackgroundUploadKey;
       if (pendingKey != null) {
         await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
@@ -473,15 +475,16 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         });
       }
 
+      if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
-        _houseId!,
+        houseId!,
         'themes',
         file,
-        quality: 95,
+        quality: 86,
         minWidth: 1440,
         minHeight: 1440,
         onProgress: (progress) {
-          if (mounted) {
+          if (isCurrent()) {
             setState(() {
               _themeUploadProgress = progress;
             });
@@ -489,31 +492,73 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         },
       );
       if (!mounted || url == null || url.trim().isEmpty) {
-        if (!mounted) return;
+        if (!isCurrent()) return;
         _showToast(context.tr('theme_err_upload_bg'), success: false);
         return;
       }
 
-      if (previousDraftUrl != null &&
-          previousDraftUrl.isNotEmpty &&
-          previousDraftUrl != UiPrefs.notifier.value.customBackgroundUrl) {
+      uploadedUrl = url.trim();
+      if (!isCurrent()) throw StateError('Image upload scope changed');
+      _updateThemeDraft(() => _draftCustomBackgroundUrl = uploadedUrl!);
+      // Upload xong chưa đủ: chờ local + RTDB commit trước khi xóa URL cũ.
+      // Nếu commit lỗi, catch sẽ dọn object mới và giữ object cũ.
+      await _saveThemeSettings(
+        silent: true,
+        rethrowOnError: true,
+        onBackgroundCommitStarted: () => backgroundCommitStarted = true,
+        isScopeCurrent: isCurrent,
+      );
+      // Từ đây URL mới đã được commit; các bước cleanup phụ không được phép
+      // xóa nhầm object đang được RTDB tham chiếu.
+      uploadedUrl = null;
+      if (!isCurrent()) return;
+      // Nếu draft trước đó là một object chưa từng commit, dọn nó sau khi
+      // upload mới thành công. URL đã commit được xử lý sau autosave.
+      final staleDraftUrl = previousDraftUrl?.trim() ?? '';
+      if (staleDraftUrl.isNotEmpty &&
+          staleDraftUrl != uploadedUrl &&
+          staleDraftUrl != persistedBackgroundUrl) {
         try {
-          _storageService.deleteImageByUrl(previousDraftUrl);
+          final deleted = await _storageService.deleteImageByUrl(staleDraftUrl);
+          if (!deleted) {
+            debugPrint(
+              '[Background] Không xác nhận được xóa draft ảnh nền cũ: $staleDraftUrl',
+            );
+          }
         } catch (error) {
           debugPrint(
             '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart: $error',
           );
         }
       }
-
-      _updateThemeDraft(() => _draftCustomBackgroundUrl = url.trim());
       if (pendingKey != null) {
-        await PendingUploadService.instance.clear(pendingKey);
+        try {
+          await PendingUploadService.instance.clear(pendingKey);
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart pending cleanup: $error',
+          );
+        }
       }
-      if (!mounted) return;
+      if (!isCurrent()) return;
+      await discardConfirmedCropImage(file);
+      if (!isCurrent()) return;
       _showToast(context.tr('theme_success_bg_saved'), success: true);
     } catch (e) {
-      if (!mounted) return;
+      if (uploadedUrl != null && !backgroundCommitStarted) {
+        try {
+          await _storageService.deleteImageByUrl(uploadedUrl);
+        } catch (cleanupError) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart cleanup: $cleanupError',
+          );
+        }
+      } else if (uploadedUrl != null) {
+        debugPrint(
+          '[Background] Giữ object mới để retry vì commit server chưa xác định kết quả.',
+        );
+      }
+      if (!isCurrent()) return;
       _showToast(context.tr('err_upload_background'), success: false);
     } finally {
       if (mounted) {
@@ -525,20 +570,33 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
     }
   }
 
-  void _clearThemeBackgroundImage() {
+  Future<void> _clearThemeBackgroundImage() async {
     final oldDraft = _draftCustomBackgroundUrl;
-    if (oldDraft != null &&
-        oldDraft.isNotEmpty &&
-        oldDraft != UiPrefs.notifier.value.customBackgroundUrl) {
-      try {
-        _storageService.deleteImageByUrl(oldDraft);
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart: $error',
-        );
+    final previousPersistedUrl =
+        (_lastPersistedCustomBackgroundUrl ??
+                UiPrefs.notifier.value.customBackgroundUrl)
+            .trim();
+    _updateThemeDraft(() => _draftCustomBackgroundUrl = '');
+    try {
+      await _saveThemeSettings(silent: true, rethrowOnError: true);
+    } catch (error) {
+      if (mounted) {
+        _showToast(context.tr('err_upload_background'), success: false);
+      }
+      return;
+    }
+    if (oldDraft != null && oldDraft.trim().isNotEmpty) {
+      if (oldDraft.trim() != previousPersistedUrl) {
+        try {
+          await _storageService.deleteImageByUrl(oldDraft.trim());
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart: $error',
+          );
+        }
       }
     }
-    _updateThemeDraft(() => _draftCustomBackgroundUrl = '');
+    if (!mounted) return;
     _showToast(context.tr('theme_success_bg_removed'), success: true);
   }
 

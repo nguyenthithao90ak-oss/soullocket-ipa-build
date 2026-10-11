@@ -19,10 +19,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../utils/services/admob_service.dart';
 import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/screen_activity_mixin.dart';
 import '../premium/premium_store_screen.dart';
 import '../../utils/services/games/soul_block_memory_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
@@ -62,6 +64,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     with
         TickerProviderStateMixin,
         WidgetsBindingObserver,
+        ScreenActivityMixin,
         _SoulBlockStrategyLogic {
   int _boardSize = 8;
   _SoulPieceOption? _holdPiece;
@@ -250,7 +253,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _playPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 980),
-    )..repeat(reverse: true);
+    );
 
     _shakeController = AnimationController(
       vsync: this,
@@ -346,6 +349,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     if (state == AppLifecycleState.resumed) {
       _appActive = true;
+      if (_view != _SoulGameView.gameplay) {
+        _resumeMenuPulse();
+      }
       final pausedAtMs = _pausedAtMs;
       _pausedAtMs = null;
       unawaited(_syncBgmWithSound());
@@ -356,6 +362,16 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
       unawaited(_maybeShowResumeInterstitial(pausedAtMs));
     }
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    if (active && _view != _SoulGameView.gameplay) {
+      _resumeMenuPulse();
+    } else {
+      _pauseMenuPulse();
+    }
+    _syncAutoTrayShuffleTimer();
   }
 
   Future<void> _maybeShowResumeInterstitial(int pausedAtMs) async {
@@ -395,12 +411,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PremiumStoreScreen(
-          houseId: houseId,
-          myName: context.tr('util_bn_1fd75b'),
-        ),
+    await slPush<void>(
+      context,
+      PremiumStoreScreen(
+        houseId: houseId,
+        myName: context.tr('util_bn_1fd75b'),
       ),
     );
 
@@ -459,6 +474,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     final DateTime now = DateTime.now();
+    if (!_appActive || !isScreenActive) return;
     if (resetWindow || _autoTrayShuffleNextAt == null) {
       _autoTrayShuffleNextAt = now.add(_autoTrayShuffleInterval);
     }
@@ -472,6 +488,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   Future<void> _handleAutoTrayShuffleTick() async {
     _autoTrayShuffleTimer = null;
+    if (!_appActive || !isScreenActive) return;
 
     if (!_canRunAutoTrayShuffle) {
       _autoTrayShuffleNextAt = null;
@@ -570,6 +587,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _resumeMenuPulse() {
+    if (!isScreenActive || !_appActive || _view == _SoulGameView.gameplay)
+      return;
     if (!_playPulseController.isAnimating) {
       _playPulseController.repeat(reverse: true);
     }

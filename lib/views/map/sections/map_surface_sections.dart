@@ -60,12 +60,13 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               defaultTargetPlatform == TargetPlatform.linux));
 
   Widget _buildMapSurfaceTintOverlay() {
+    final palette = MapPalette.of(context);
     return IgnorePointer(
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              SLColors.bgMain.withValues(alpha: 0.32),
+              palette.canvas.withValues(alpha: 0.55),
               Colors.transparent,
               Colors.transparent,
               Colors.transparent,
@@ -81,11 +82,11 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
 
   Widget _buildMapStatusChips() {
     return Positioned(
-      top: MediaQuery.paddingOf(context).top + 74,
+      top: MediaQuery.paddingOf(context).top + 82,
       left: 16,
-      right: 78,
+      right: 16,
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: ValueListenableBuilder<_LiveUiSnapshot>(
           valueListenable: _liveUiVN,
           builder: (context, data, _) {
@@ -97,7 +98,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                     ? 'map_refresh_positions_available'
                     : 'map_refresh_no_positions',
               ),
-              accent: mapRose,
+              accent: hasPoints ? mapSage : mapBlue,
             );
           },
         ),
@@ -109,104 +110,20 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
     required IconData icon,
     required String label,
     required Color accent,
-    bool expand = false,
   }) {
-    return ClipRRect(
-      borderRadius: SLRadius.pillAll,
-      child: FastBackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: expand ? double.infinity : null,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: SLColors.bgElevated.withValues(alpha: 0.9),
-            borderRadius: SLRadius.pillAll,
-            border: Border.all(color: accent.withValues(alpha: 0.24)),
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.12),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: accent),
-              const SizedBox(width: 6),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 160),
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
-                    height: 1.12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    return MapStatusPill(icon: icon, label: label, accent: accent);
   }
 
   Widget _buildMapInitializingBanner() {
     return Positioned(
-      top: MediaQuery.paddingOf(context).top + 130,
+      top: _mapOverlayActionTop,
       left: 16,
-      right: 16,
+      right: 80,
       child: Center(
-        child: ClipRRect(
-          borderRadius: SLRadius.pillAll,
-          child: FastBackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-              decoration: BoxDecoration(
-                color: SLColors.bgElevated.withValues(alpha: 0.9),
-                borderRadius: SLRadius.pillAll,
-                border: Border.all(
-                  color: _kMapPinkDeep.withValues(alpha: 0.20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _kMapPinkDeep.withValues(alpha: 0.12),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: _kMapPinkDeep,
-                    ),
-                  ),
-                  SLSpacing.w8,
-                  Text(
-                    context.tr('map_angdngbn_8460a8'),
-                    style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: SLColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        child: MapStatusPill(
+          icon: Icons.hourglass_top_rounded,
+          label: context.tr('map_angdngbn_8460a8'),
+          accent: mapBlue,
         ),
       ),
     );
@@ -215,22 +132,45 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
   Widget _buildMapActionButtons() {
     return Positioned(
       right: 16,
-      top: MediaQuery.paddingOf(context).top + 74,
-      child: Column(
-        children: [
-          _buildFloatingAction(
-            heroTag: 'map_checkin_btn',
-            icon: Icons.add_location_alt_rounded,
-            color: _kMapPinkDeep,
-            onTap: _showCheckinSheet,
-          ),
-        ],
+      top: _mapOverlayActionTop,
+      child: ValueListenableBuilder<double>(
+        valueListenable: _panelExtent,
+        builder: (context, extent, _) {
+          if (extent > .65) return const SizedBox.shrink();
+          return Column(
+            children: [
+              MapToolbarButton(
+                key: const ValueKey('map_locate_button'),
+                icon: Icons.my_location_rounded,
+                tooltip: context.tr('map_vvtrcabn_bc0bdb'),
+                onPressed: _handleMyLocationTap,
+                accent: mapBlue,
+              ),
+              const SizedBox(height: 10),
+              MapToolbarButton(
+                key: const ValueKey('map_checkin_btn'),
+                icon: Icons.add_location_alt_rounded,
+                tooltip: context.tr('map_tocheckin_6fcea2'),
+                onPressed: _showCheckinSheet,
+                accent: mapRose,
+                primary: true,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
+  double get _mapOverlayActionTop =>
+      MediaQuery.paddingOf(context).top +
+      82 +
+      18 +
+      MediaQuery.textScalerOf(context).scale(11.5) * 1.3 * 2 +
+      12;
+
   Widget _buildMapBottomSheet() {
-    final colors = Theme.of(context).colorScheme;
+    final palette = MapPalette.of(context);
     return MapSlidingPanel(
       controller: _panelController,
       extent: _panelExtent,
@@ -242,15 +182,16 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         const SizedBox(height: 14),
         _buildLocationAccessCard(),
         const SizedBox(height: 14),
-        Divider(color: colors.outlineVariant.withValues(alpha: .6)),
         MapDetailsSection(
           title: context.tr('map_lchsdichuy_2cc14d'),
           icon: Icons.route_outlined,
+          accent: mapBlue,
           child: _buildHistoryCard(),
         ),
         MapDetailsSection(
           title: context.tr('map_refresh_memories'),
           icon: Icons.bookmark_border_rounded,
+          accent: mapLavender,
           child: _buildMemoryAndCheckinCard(),
         ),
         MapDetailsSection(
@@ -268,11 +209,15 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.6,
-                  color: colors.onSurfaceVariant,
+                  color: palette.muted,
                 ),
               ),
               if (!kIsWeb)
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: palette.accent(mapSage),
+                    minimumSize: const Size(48, 48),
+                  ),
                   onPressed: _openLocationAppSettings,
                   icon: const Icon(Icons.settings_outlined, size: 18),
                   label: Text(context.tr('map_refresh_open_settings')),
@@ -547,7 +492,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                             OutlinedButton.icon(
                               onPressed: () => app_permission.openAppSettings(),
                               icon: const Icon(Icons.settings_rounded),
-                              label: Text(context.tr('ui_map_permission_settings_fffa2a')),
+                              label: Text(
+                                context.tr('ui_map_permission_settings_fffa2a'),
+                              ),
                             ),
                         ],
                       ),

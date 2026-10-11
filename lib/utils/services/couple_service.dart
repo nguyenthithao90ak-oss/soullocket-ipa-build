@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'l10n_service.dart';
 import 'offline_cache_service.dart';
 import 'secure_storage_service.dart';
 
@@ -47,17 +48,17 @@ class CoupleService {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        return const JoinHouseResult.fail(
+        return JoinHouseResult.fail(
           JoinHouseError.notLoggedIn,
-          'Bạn cần đăng nhập trước.',
+          L10nService().translate('auth_sign_in_required_message'),
         );
       }
 
       final normalizedTargetHouseId = targetHouseId.trim();
       if (normalizedTargetHouseId.isEmpty) {
-        return const JoinHouseResult.fail(
+        return JoinHouseResult.fail(
           JoinHouseError.notFound,
-          'Mã nhà không tồn tại. Vui lòng kiểm tra lại.',
+          UiCopy.text('copy_43edd218b766'),
         );
       }
 

@@ -1,5 +1,6 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import '../core/rtdb_read_coalescer.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -325,8 +326,17 @@ class AuthHouseContextService {
         return 'user1';
       }
 
-      final presenceSnap = await _db.child('houses/$houseId/presence').get();
-      final presence = _asStringDynamicMap(presenceSnap.value);
+      // Khi mở app nhiều service cùng đọc presence: gộp lượt trùng (DB thật); test cắm DB
+      // giả thì đọc thẳng để không dùng nhầm kết quả giữa các test.
+      Future<Object?> loadPresence() async =>
+          (await _db.child('houses/$houseId/presence').get()).value;
+      final presenceValue = _databaseRef == null
+          ? await RtdbReadCoalescer.shared.read(
+              '${_auth.currentUser?.uid}|houses/$houseId/presence',
+              loadPresence,
+            )
+          : await loadPresence();
+      final presence = _asStringDynamicMap(presenceValue);
       if (presence != null) {
         final u1Map = _asStringDynamicMap(presence['user1']);
         final u2Map = _asStringDynamicMap(presence['user2']);

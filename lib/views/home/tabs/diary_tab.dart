@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 import 'diary/widgets/diary_memory_video_controls.dart';
 import 'diary/widgets/diary_memory_video_player.dart';
 import 'diary/widgets/private_diary_image.dart';
+import 'diary/widgets/diary_public_memory_image.dart';
 import 'diary/utils/private_memory_link_policy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
@@ -14,11 +15,14 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:intl/intl.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../core/constants/app_config.dart';
 import '../../../models/diary_post.dart';
 import '../../../utils/services/interaction_metrics_service.dart';
 import '../../../utils/app_error_mapper.dart';
@@ -97,6 +101,7 @@ class _DiaryTabState extends State<DiaryTab>
   String _currentTab = 'memory';
   String? _lastSyncedMemoryHouseId;
   bool _isAnimatingTabSwitch = false;
+  final SingleOpenGate _memoryViewerGate = SingleOpenGate();
 
   bool get _isLoading => _feedController.isLoading;
   bool get _isAuthenticated => _guardController.isAuthenticated;
@@ -259,6 +264,7 @@ class _DiaryTabState extends State<DiaryTab>
         loadTimeout: const Duration(seconds: 10),
       );
       if (!watched) {
+        if (!mounted) return;
         _showDiarySnackBar(
           context.tr('memory_share_ad_required'),
           backgroundColor: const Color(0xFFE53935),
@@ -368,11 +374,7 @@ class _DiaryTabState extends State<DiaryTab>
       cancelText: context.tr('core_close'),
     ).then((confirmed) {
       if (confirmed == true && mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => SettingsLinksManagerScreen(houseId: houseId),
-          ),
-        );
+        slPush<void>(context, SettingsLinksManagerScreen(houseId: houseId));
       }
     });
   }
@@ -894,14 +896,21 @@ class _DiaryTabState extends State<DiaryTab>
         selectedDate: selectedDate,
         photos: photos,
       );
+      if (!mounted) return;
       _showDiarySnackBar(
-        L10nScope.of(context).format('ui_home_changed_album_date_to_value1_4e2baf', {'value1': LocaleDateFormat.date(selectedDate)}),
+        L10nScope.of(context).format(
+          'ui_home_changed_album_date_to_value1_4e2baf',
+          {'value1': LocaleDateFormat.date(selectedDate)},
+        ),
       );
     } catch (error) {
+      if (!mounted) return;
       _showDiarySnackBar(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('ui_home_album_dates_cannot_be_changed_at_this_f2a489'),
+          fallbackMessage: context.tr(
+            'ui_home_album_dates_cannot_be_changed_at_this_f2a489',
+          ),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );
@@ -993,6 +1002,15 @@ class _DiaryTabState extends State<DiaryTab>
     Map<String, dynamic> initialItem,
     List<Map<String, dynamic>> allPhotos,
   ) {
+    unawaited(
+      _memoryViewerGate.run(() => _showMemoryZoomFlow(initialItem, allPhotos)),
+    );
+  }
+
+  Future<void> _showMemoryZoomFlow(
+    Map<String, dynamic> initialItem,
+    List<Map<String, dynamic>> allPhotos,
+  ) async {
     // Refresh signed URL cho item hiện tại trước khi mở viewer
     if (!PrivateMemoryLinkPolicy.isPrivate(initialItem)) {
       unawaited(
@@ -1010,21 +1028,23 @@ class _DiaryTabState extends State<DiaryTab>
     final pageController = PageController(initialPage: currentIndex);
     _warmMemoryViewerAroundIndex(allPhotos, currentIndex);
 
-    Navigator.push<void>(
+    await Navigator.push<void>(
       context,
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.transparent,
-        transitionDuration: const Duration(milliseconds: 240),
-        reverseTransitionDuration: const Duration(milliseconds: 240),
+        transitionDuration: const Duration(milliseconds: 150),
+        reverseTransitionDuration: const Duration(milliseconds: 180),
         pageBuilder: (dialogContext, animation, secondaryAnimation) {
           final bgOpacityNotifier = ValueNotifier<double>(1.0);
           final isZoomedInNotifier = ValueNotifier<bool>(false);
           final dragOffsetNotifier = ValueNotifier<Offset>(Offset.zero);
           final dragScaleNotifier = ValueNotifier<double>(1.0);
           // Video của trang đang xem; lớp giao diện dùng để hiện thanh tua.
-          final activeVideoNotifier = ValueNotifier<VideoPlayerController?>(null);
+          final activeVideoNotifier = ValueNotifier<VideoPlayerController?>(
+            null,
+          );
 
           return StatefulBuilder(
             builder: (context, setState) {
@@ -1100,6 +1120,10 @@ class _DiaryTabState extends State<DiaryTab>
                                     dialogContext,
                                     allPhotos[index],
                                   ),
+                                  previewCacheWidth:
+                                      _memoryThumbnailCacheWidthFor(
+                                        MediaQuery.of(context),
+                                      ),
                                   imageProviderBuilder: _memoryImageProvider,
                                 );
                               },
@@ -1116,6 +1140,10 @@ class _DiaryTabState extends State<DiaryTab>
                                   dialogContext,
                                   initialItem,
                                 ),
+                                previewCacheWidth:
+                                    _memoryThumbnailCacheWidthFor(
+                                      MediaQuery.of(context),
+                                    ),
                                 imageProviderBuilder: _memoryImageProvider,
                               ),
                             ),
@@ -1170,52 +1198,43 @@ class _DiaryTabState extends State<DiaryTab>
                                             left: 0,
                                             right: 0,
                                             bottom: 0,
-                                            child: ValueListenableBuilder<
-                                              VideoPlayerController?
-                                            >(
+                                            child: ValueListenableBuilder<VideoPlayerController?>(
                                               valueListenable:
                                                   activeVideoNotifier,
-                                              builder: (context, video, _) =>
-                                                  Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .stretch,
-                                                    children: [
-                                                      if (video != null)
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                horizontal: 12,
-                                                              ),
-                                                          child:
-                                                              DiaryMemoryVideoControls(
-                                                                controller:
-                                                                    video,
-                                                              ),
-                                                        ),
-                                                      IgnorePointer(
-                                                        child: MemoryViewerFooter(
-                                                          position:
-                                                              currentIndex + 1,
-                                                          total:
-                                                              allPhotos.isEmpty
-                                                              ? 1
-                                                              : allPhotos
-                                                                    .length,
-                                                          timestamp:
-                                                              _formatMemoryTimestamp(
-                                                                currentItem,
-                                                              ),
-                                                          topPadding:
-                                                              video != null
-                                                              ? 12
-                                                              : 48,
-                                                        ),
-                                                      ),
-                                                    ],
+                                              builder: (context, video, _) => Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children: [
+                                                  if (video != null)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 12,
+                                                          ),
+                                                      child:
+                                                          DiaryMemoryVideoControls(
+                                                            controller: video,
+                                                          ),
+                                                    ),
+                                                  IgnorePointer(
+                                                    child: MemoryViewerFooter(
+                                                      position:
+                                                          currentIndex + 1,
+                                                      total: allPhotos.isEmpty
+                                                          ? 1
+                                                          : allPhotos.length,
+                                                      timestamp:
+                                                          _formatMemoryTimestamp(
+                                                            currentItem,
+                                                          ),
+                                                      topPadding: video != null
+                                                          ? 12
+                                                          : 48,
+                                                    ),
                                                   ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                           Positioned(
@@ -1427,12 +1446,18 @@ class _DiaryTabState extends State<DiaryTab>
       if (url.isEmpty) {
         continue;
       }
-      final key = '2200|$url';
+      final key = '${AppConfig.diaryImageViewerCacheWidth}|$url';
       if (!_warmedMemoryViewerKeys.add(key)) {
         continue;
       }
       unawaited(
-        precacheImage(_memoryImageProvider(url, maxWidth: 2200), context),
+        precacheImage(
+          _memoryImageProvider(
+            url,
+            maxWidth: AppConfig.diaryImageViewerCacheWidth,
+          ),
+          context,
+        ),
       );
     }
   }
@@ -1561,6 +1586,7 @@ class _MemoryViewerPage extends StatefulWidget {
   final ValueNotifier<double> dragScaleNotifier;
   final ValueNotifier<bool> isZoomedInNotifier;
   final VoidCallback onLongPress;
+  final int previewCacheWidth;
   final ImageProvider<Object> Function(String, {int? maxWidth})
   imageProviderBuilder;
 
@@ -1572,6 +1598,7 @@ class _MemoryViewerPage extends StatefulWidget {
     required this.dragScaleNotifier,
     required this.isZoomedInNotifier,
     required this.onLongPress,
+    required this.previewCacheWidth,
     required this.imageProviderBuilder,
   });
 
@@ -1584,6 +1611,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
   late final ValueNotifier<bool> _panEnabledVN;
   String _lastResolvedUrl = '';
   ImageProvider<Object>? _imageProvider;
+  ImageProvider<Object>? _previewImageProvider;
 
   @override
   void initState() {
@@ -1597,19 +1625,41 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
   void _resolveImageProvider() {
     if (PrivateMemoryLinkPolicy.isPrivate(widget.item)) {
       _imageProvider = null;
+      _previewImageProvider = null;
       _lastResolvedUrl = '';
       return;
     }
     if (isDiaryMemoryVideo(widget.item)) {
       _lastResolvedUrl = '';
       _imageProvider = null;
+      _previewImageProvider = null;
       return;
     }
-    final url = widget.item['url']?.toString() ?? '';
-    if (url.isNotEmpty && url != _lastResolvedUrl) {
-      _lastResolvedUrl = url;
-      _imageProvider = widget.imageProviderBuilder(url, maxWidth: 2200);
+    final url = resolveDiaryMemoryMediaUrl(widget.item) ?? '';
+    if (url.isEmpty) {
+      _lastResolvedUrl = '';
+      _imageProvider = null;
+      _previewImageProvider = null;
+      return;
     }
+    if (url != _lastResolvedUrl) {
+      _lastResolvedUrl = url;
+      _imageProvider = widget.imageProviderBuilder(
+        url,
+        maxWidth: AppConfig.diaryImageViewerCacheWidth,
+      );
+      _previewImageProvider = widget.imageProviderBuilder(
+        url,
+        maxWidth: widget.previewCacheWidth,
+      );
+    }
+  }
+
+  Widget _buildPublicImage() {
+    return DiaryPublicMemoryImage(
+      imageProvider: _imageProvider,
+      previewImageProvider: _previewImageProvider,
+    );
   }
 
   void _handleTransformChanged() {
@@ -1634,7 +1684,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final url = widget.item['url']?.toString() ?? '';
+    final url = resolveDiaryMemoryMediaUrl(widget.item) ?? '';
 
     // Cập nhật imageProvider nếu URL đã thay đổi (do ensureMemoryPhotoUrl refresh)
     _resolveImageProvider();
@@ -1681,40 +1731,23 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                         ? Hero(
                             tag: 'memory_image_${widget.item['id']}',
                             child: PrivateDiaryImage(
+                              highPriority: true,
                               houseId:
                                   widget.item['houseId']?.toString() ??
                                   widget.item['house_id']?.toString() ??
                                   '',
                               memoryId: widget.item['id']?.toString() ?? '',
                               fit: BoxFit.contain,
-                              cacheWidth: 2200,
+                              cacheWidth: AppConfig.diaryImageViewerCacheWidth,
                               placeholderCacheWidth:
                                   _memoryThumbnailCacheWidthFor(
                                     MediaQuery.of(context),
                                   ),
                             ),
                           )
-                        : _imageProvider != null
-                        ? Hero(
+                        : Hero(
                             tag: 'memory_image_${widget.item['id']}',
-                            child: Image(
-                              image: _imageProvider!,
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                              filterQuality: FilterQuality.medium,
-                              gaplessPlayback: true,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                    Icons.broken_image,
-                                    color: Colors.grey,
-                                  ),
-                            ),
-                          )
-                        : const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
+                            child: _buildPublicImage(),
                           ),
                   ),
                 ),

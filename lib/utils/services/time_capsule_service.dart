@@ -76,7 +76,18 @@ class TimeCapsuleService {
     }
 
     yield await load();
-    yield* Stream.periodic(const Duration(seconds: 30)).asyncMap((_) => load());
+    // Lượt làm mới định kỳ lỗi (mất mạng, máy chủ bận) thì giữ danh sách đang hiện, không phát lỗi:
+    // trước đây cứ 30 giây lại hiện thông báo lỗi khi offline.
+    yield* Stream.periodic(const Duration(seconds: 60))
+        .asyncMap<List<Map<String, dynamic>>?>((_) async {
+          try {
+            return await load();
+          } catch (_) {
+            return null;
+          }
+        })
+        .where((capsules) => capsules != null)
+        .cast<List<Map<String, dynamic>>>();
   }
 
   /// Lấy danh sách các rương chưa mở (Dùng cho check notification)

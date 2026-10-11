@@ -1,7 +1,6 @@
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/sleep_tracking_math.dart';
 import '../../../utils/services/l10n_service.dart';
@@ -29,20 +28,30 @@ String sleepDurationText(int duration) => L10nService().format(
   {'hours': duration ~/ 3600000, 'minutes': duration ~/ 60000 % 60},
 );
 String sleepPersonDetail(SleepPersonSnapshot p, DateTime now) {
-  if (p.state == 'recorded')
-    return sleepDurationText(p.duration) +
-        ' · ' +
-        DateFormat(
-          'dd/MM HH:mm',
-        ).format(DateTime.fromMillisecondsSinceEpoch(p.end));
-  if (p.state == 'manual' || p.state == 'estimated')
-    return L10nService().format('p3_sleep_started_at', {
-          'time': DateFormat(
-            'HH:mm',
-          ).format(DateTime.fromMillisecondsSinceEpoch(p.start)),
-        }) +
-        ' · ' +
-        sleepDurationText(now.millisecondsSinceEpoch - p.start);
+  if (p.state == 'recorded') {
+    final start = LocaleDateFormat.dayMonthTime(
+      DateTime.fromMillisecondsSinceEpoch(p.start),
+    );
+    final end = LocaleDateFormat.dayMonthTime(
+      DateTime.fromMillisecondsSinceEpoch(p.end),
+    );
+    return '${sleepDurationText(p.duration)} · $start → $end';
+  }
+  if (p.state == 'manual' || p.state == 'estimated') {
+    final startedAt = L10nService().format('p3_sleep_started_at', {
+      'time': LocaleDateFormat.timeFormat().format(
+        DateTime.fromMillisecondsSinceEpoch(p.start),
+      ),
+    });
+    return '$startedAt · ${sleepDurationText(now.millisecondsSinceEpoch - p.start)}';
+  }
+  if (p.screenOff > p.screenOn && p.screenOff > 0) {
+    return L10nService().format('sleep_screen_off_at', {
+      'time': LocaleDateFormat.timeFormat().format(
+        DateTime.fromMillisecondsSinceEpoch(p.screenOff),
+      ),
+    });
+  }
   return L10nService().translate('sleep_sync_hint');
 }
 
@@ -53,10 +62,14 @@ class SleepStatusCard extends StatelessWidget {
     required this.person,
     required this.now,
     required this.avatarKey,
+    this.isOwn = false,
   });
   final String name, avatarKey;
   final SleepPersonSnapshot person;
   final DateTime now;
+
+  /// Thẻ của chính máy này; nhãn "trên điện thoại này" không dùng cho người ấy.
+  final bool isOwn;
   @override
   Widget build(BuildContext context) {
     final night = avatarKey == 'warm';
@@ -66,16 +79,43 @@ class SleepStatusCard extends StatelessWidget {
         person.state == 'recorded' ||
         person.state == 'manual' ||
         person.state == 'estimated';
+    final disabled = person.state == 'disabled';
+    final stateLabelKey =
+        isOwn && person.state == 'unknown' && person.trackingEnabled
+        ? 'sleep_tracking_on'
+        : sleepStateKey(person.state);
+    final pendingScreenOff =
+        person.screenOff > person.screenOn && person.screenOff > 0;
+    // Chỉ máy này biết có sự kiện chưa đồng bộ; thẻ người ấy hiện nguồn dữ liệu.
+    final pillText = isOwn && pendingScreenOff && !active
+        ? context.tr('sleep_sync_pending')
+        : person.source != 'unknown'
+        ? sleepSourceLabel(person.source)
+        : null;
     final duration = person.state == 'recorded'
         ? person.duration
         : (now.millisecondsSinceEpoch - person.start).clamp(0, 86400000);
+    final recordedStart = LocaleDateFormat.dayMonthTime(
+      DateTime.fromMillisecondsSinceEpoch(person.start),
+    );
+    final recordedEnd = LocaleDateFormat.dayMonthTime(
+      DateTime.fromMillisecondsSinceEpoch(person.end),
+    );
     final detail = person.state == 'recorded'
-          ? LocaleDateFormat.dayMonthTime(DateTime.fromMillisecondsSinceEpoch(person.end))
-        : L10nService().format('p3_sleep_started_at', {
-            'time': DateFormat(
-              'HH:mm',
-            ).format(DateTime.fromMillisecondsSinceEpoch(person.start)),
-          });
+        ? '$recordedStart → $recordedEnd'
+        : person.state == 'manual' || person.state == 'estimated'
+        ? L10nService().format('p3_sleep_started_at', {
+            'time': LocaleDateFormat.timeFormat().format(
+              DateTime.fromMillisecondsSinceEpoch(person.start),
+            ),
+          })
+        : pendingScreenOff
+        ? L10nService().format('sleep_screen_off_at', {
+            'time': LocaleDateFormat.timeFormat().format(
+              DateTime.fromMillisecondsSinceEpoch(person.screenOff),
+            ),
+          })
+        : L10nService().translate('sleep_sync_hint');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -127,49 +167,95 @@ class SleepStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            context.tr(sleepStateKey(person.state)),
+            context.tr(stateLabelKey),
             style: SLTheme.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: muted,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            active
-                ? sleepDurationText(duration)
-                : context.tr('sleep_sync_hint'),
-            style: SLTheme.quicksand(
-              fontSize: active ? 25 : 14,
-              fontWeight: FontWeight.w800,
-              color: ink,
+          // Người chưa bật theo dõi: nhãn trạng thái là đủ, không hiện "đang chờ".
+          if (!disabled) ...[
+            const SizedBox(height: 8),
+            Text(
+              active
+                  ? sleepDurationText(duration)
+                  : person.screenOff > person.screenOn
+                  ? context.tr('sleep_state_estimated')
+                  : context.tr('sleep_sync_hint'),
+              style: SLTheme.quicksand(
+                fontSize: active ? 25 : 14,
+                fontWeight: FontWeight.w800,
+                color: ink,
+              ),
             ),
-          ),
-          if (active)
+          ],
+          if (active || pendingScreenOff)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                detail,
-                style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+              child: person.state == 'recorded'
+                  ? Semantics(
+                      label: detail,
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 7,
+                        runSpacing: 4,
+                        children: [
+                          Icon(Icons.bedtime_rounded, color: muted, size: 14),
+                          Text(
+                            recordedStart,
+                            style: TextStyle(
+                              color: muted,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            key: const ValueKey('sleep-recorded-time-arrow'),
+                            color: muted,
+                            size: 16,
+                          ),
+                          Icon(Icons.wb_sunny_rounded, color: muted, size: 14),
+                          Text(
+                            recordedEnd,
+                            style: TextStyle(
+                              color: muted,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Text(
+                      detail,
+                      style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+                    ),
+            ),
+          // Không lặp lại câu "đang chờ" khi chưa có nguồn dữ liệu.
+          if (!disabled && pillText != null) ...[
+            const SizedBox(height: 16),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: night
+                      ? Colors.white.withValues(alpha: .08)
+                      : Colors.white.withValues(alpha: .55),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  pillText,
+                  style: TextStyle(color: muted, fontSize: 11, height: 1.4),
+                ),
               ),
             ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: night
-                    ? Colors.white.withValues(alpha: .08)
-                    : Colors.white.withValues(alpha: .55),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                sleepSourceLabel(person.source),
-                style: TextStyle(color: muted, fontSize: 11, height: 1.4),
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );

@@ -17,29 +17,9 @@ extension WidgetUtilityDesign on WidgetUtilityKind {
     WidgetUtilityKind.cycle => 'cycle',
     WidgetUtilityKind.calendar => 'calendar',
   };
-  List<Color> get colors => switch (this) {
-    WidgetUtilityKind.sleep => const [Color(0xFF292943), Color(0xFF44425F)],
-    WidgetUtilityKind.event => const [Color(0xFFFFF9ED), Color(0xFFFBE4D7)],
-    WidgetUtilityKind.cycle => const [
-      Color(0xFFFFF7DB),
-      Color(0xFFE4F2D5),
-      Color(0xFFC9E7E0),
-    ],
-    WidgetUtilityKind.calendar => const [
-      Color(0xFFF0F9FF),
-      Color(0xFFDCEAFF),
-      Color(0xFFD9DDFB),
-    ],
-  };
-  Color get ink => switch (this) {
-    WidgetUtilityKind.sleep => const Color(0xFFFFF8E8),
-    WidgetUtilityKind.event => const Color(0xFF654339),
-    WidgetUtilityKind.cycle => const Color(0xFF324D38),
-    WidgetUtilityKind.calendar => const Color(0xFF294C74),
-  };
 }
 
-/// Nền từng loại cố định để dễ nhận diện; theme chỉ đổi họa tiết, không thêm halo/viền.
+/// Nền dùng đúng palette theme của widget đôi; artwork vẫn giữ nét riêng từng loại.
 class WidgetUtilitySurface extends StatelessWidget {
   const WidgetUtilitySurface({
     super.key,
@@ -56,7 +36,7 @@ class WidgetUtilitySurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) => WidgetThemeSurface(
     themeKey: themeKey,
-    colors: kind.colors,
+    colors: WidgetThemeDesign.palette(themeKey),
     animated: animated,
     artworkOpacity: kind == WidgetUtilityKind.sleep ? .22 : .18,
     drawBorder: false,

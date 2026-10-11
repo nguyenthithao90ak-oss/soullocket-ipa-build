@@ -1,5 +1,8 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:io';
+import 'dart:convert';
+import '../storage/secret_vault_put.dart';
+import '../encryption_service.dart';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,6 +33,7 @@ import 'package:soullocket_app/utils/services/storage/storage_managed_upload_hel
 import 'package:soullocket_app/utils/services/storage/storage_media_constants.dart';
 import 'package:soullocket_app/utils/services/storage/storage_path_policy.dart';
 import 'package:soullocket_app/utils/services/storage/private_r2_put.dart';
+import 'package:soullocket_app/utils/services/storage/storage_upload_progress.dart';
 import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_raw_upload_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_upload_result.dart';
@@ -37,6 +41,7 @@ import 'package:soullocket_app/utils/services/storage/storage_upload_session_hel
 import 'package:soullocket_app/utils/services/storage/storage_upload_result_mapper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_web_picker_guard.dart';
 import 'package:soullocket_app/utils/services/storage/storage_private_memory_upload_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_video_optimizer.dart';
 
 class StorageService {
   StorageService();
@@ -48,13 +53,6 @@ class StorageService {
   static const int pickerImageQuality = StoragePickerService.pickerImageQuality;
   static const double pickerMaxWidth = StoragePickerService.pickerMaxWidth;
   static const double pickerMaxHeight = StoragePickerService.pickerMaxHeight;
-  static const int secretVaultDailyLimitFree =
-      secret_vault_policy.secretVaultDailyLimitFree;
-  static const int secretVaultDailyLimitVip =
-      secret_vault_policy.secretVaultDailyLimitVip;
-  static const int secretVaultTotalCap =
-      secret_vault_policy.secretVaultTotalCap;
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
   final StoragePickerService _pickerService = StoragePickerService();
@@ -103,11 +101,17 @@ class StorageService {
     );
   }
 
-  Future<List<XFile>> pickImages({int? limit}) =>
-      _pickerService.pickImages(limit: limit);
+  Future<List<XFile>> pickImages({int? limit, bool preserveOriginal = false}) =>
+      _pickerService.pickImages(
+        limit: limit,
+        preserveOriginal: preserveOriginal,
+      );
 
-  Future<List<XFile>> pickMedia({int? limit}) =>
-      _pickerService.pickMedia(limit: limit);
+  Future<List<XFile>> pickMedia({int? limit, bool preserveOriginal = false}) =>
+      _pickerService.pickMedia(
+        limit: limit,
+        preserveOriginal: preserveOriginal,
+      );
 
   Future<List<XFile>> pickMultipleMusicFiles({int maxFiles = 5}) =>
       _pickerService.pickMultipleMusicFiles(maxFiles: maxFiles);
@@ -119,7 +123,8 @@ class StorageService {
     );
   }
 
-  Future<XFile?> pickImage() => _pickerService.pickImage();
+  Future<XFile?> pickImage({bool preserveOriginal = false}) =>
+      _pickerService.pickImage(preserveOriginal: preserveOriginal);
 
   Future<File?> getCachedNetworkFile(
     String url, {
@@ -1288,6 +1293,9 @@ class StorageService {
     required String authorName,
     required bool Function() scopeIsCurrent,
     int quality = 78,
+    int minWidth = 1080,
+    int minHeight = 1920,
+    bool requestIsFresh = false,
     Future<void> Function(int bytes, bool isVideo)? beforeUpload,
     double? latitude,
     double? longitude,
@@ -1318,6 +1326,7 @@ class StorageService {
           return result.data;
         },
         client: client,
+        requestIsFresh: requestIsFresh,
         beforeUpload: beforeUpload,
         latitude: latitude,
         longitude: longitude,
@@ -1329,6 +1338,16 @@ class StorageService {
             resolvedContentType: contentType,
             originalFileName: name,
           );
+          if (!kIsWeb && contentType.startsWith('video/')) {
+            final optimized = await StorageVideoOptimizer.prepareVideoForUpload(
+              file,
+            );
+            compressedPath = optimized.temporaryPath;
+            return (
+              file: optimized.videoFile,
+              contentType: optimized.isOptimized ? 'video/mp4' : contentType,
+            );
+          }
           if (!kIsWeb &&
               file.path.isNotEmpty &&
               contentType.startsWith('image/') &&
@@ -1342,8 +1361,8 @@ class StorageService {
               final compressed = await FlutterImageCompress.compressAndGetFile(
                 file.path,
                 compressedPath!,
-                minWidth: 1080,
-                minHeight: 1920,
+                minWidth: minWidth,
+                minHeight: minHeight,
                 quality: quality.clamp(70, 100),
                 format: CompressFormat.webp,
               );
@@ -1557,6 +1576,7 @@ class StorageService {
     }
 
     try {
+      onProgress?.call(0);
       final input = StorageImageUploadInput.fromFile(file);
       final originalFileName = input.fileName;
       var fileExtension = p.extension(originalFileName).toLowerCase();
@@ -1568,7 +1588,6 @@ class StorageService {
           contentType.startsWith('image/') &&
           fileExtension != '.gif') {
         try {
-          onProgress?.call(0.05);
           final tempDir = await getTemporaryDirectory();
           tempCompressedPath = p.join(
             tempDir.path,
@@ -1607,7 +1626,13 @@ class StorageService {
       if (bytes.isEmpty) throw StateError('Empty upload file');
       await beforeUpload?.call(bytes.length);
       requireUploadOwner();
-      onProgress?.call(0.4);
+      var lastByteProgress = 0.0;
+      void reportByteProgress(double progress) {
+        final next = progress.clamp(0.0, 0.95).toDouble();
+        if (next <= lastByteProgress) return;
+        lastByteProgress = next;
+        onProgress?.call(next);
+      }
 
       final session = await sessionBuilder(
         contentType,
@@ -1624,16 +1649,26 @@ class StorageService {
           folder: r2Folder,
           houseId: r2HouseId,
           ownerUid: uploadUid,
+          onProgress: onProgress == null || kIsWeb
+              ? null
+              : (progress) => reportByteProgress(progress * 0.95),
         );
       } else {
         await _putFirebaseSignedImage(
           session: session,
           bytes: bytes,
           contentType: contentType,
+          onProgress: onProgress == null || kIsWeb
+              ? null
+              : (progress) => reportByteProgress(progress * 0.95),
         );
       }
 
       requireUploadOwner();
+      // Byte progress kết thúc ở 95%; 5% cuối là finalize server và kiểm tra
+      // scope. Trên Web, BrowserClient không có upload progress nên chỉ nhảy
+      // tới mốc này sau khi PUT hoàn tất.
+      reportByteProgress(0.95);
       await finalizeSession?.call(session);
       requireUploadOwner();
       final mapped = mapResult(session);
@@ -1671,6 +1706,7 @@ class StorageService {
     required String? folder,
     required String? houseId,
     required String ownerUid,
+    StorageUploadProgressCallback? onProgress,
   }) async {
     final request = PrivateR2Put.buildRequest(
       session: session,
@@ -1684,7 +1720,7 @@ class StorageService {
     );
     final client = http.Client();
     try {
-      await PrivateR2Put.send(client, request);
+      await PrivateR2Put.send(client, request, onProgress: onProgress);
     } finally {
       client.close();
     }
@@ -1695,6 +1731,7 @@ class StorageService {
     required Map<String, dynamic> session,
     required Uint8List bytes,
     required String contentType,
+    StorageUploadProgressCallback? onProgress,
   }) async {
     final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
     final rawHeaders = session['headers'];
@@ -1730,16 +1767,40 @@ class StorageService {
       throw StateError('Upload content type mismatch');
     }
 
-    final request = http.Request('PUT', uploadUri)
-      ..followRedirects = false
-      ..headers.addAll(headers)
-      ..bodyBytes = bytes;
     final client = http.Client();
     try {
-      final response = await client
+      if (kIsWeb || onProgress == null) {
+        final request = http.Request('PUT', uploadUri)
+          ..followRedirects = false
+          ..headers.addAll(headers)
+          ..bodyBytes = bytes;
+        final response = await client
+            .send(request)
+            .then(http.Response.fromStream)
+            .timeout(const Duration(minutes: 2));
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw StateError('Upload failed (${response.statusCode})');
+        }
+        return;
+      }
+
+      final request = http.StreamedRequest('PUT', uploadUri)
+        ..followRedirects = false
+        ..headers.addAll(headers)
+        ..contentLength = bytes.length;
+      final responseFuture = client
           .send(request)
-          .then(http.Response.fromStream)
-          .timeout(const Duration(minutes: 2));
+          .then(http.Response.fromStream);
+      final producer = StorageUploadProgress.pumpBytes(
+        sink: request.sink,
+        bytes: bytes,
+        onProgress: onProgress,
+      );
+      final results = await Future.wait<Object?>([
+        responseFuture,
+        producer,
+      ]).timeout(const Duration(minutes: 2));
+      final response = results.first as http.Response;
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw StateError('Upload failed (${response.statusCode})');
       }
@@ -1751,116 +1812,207 @@ class StorageService {
   Future<StorageUploadResult?> uploadSecretVaultImage(
     String houseId,
     XFile file, {
+    required String requestId,
+    required String encryptedCaption,
     int minWidth = 960,
     int minHeight = 960,
     int quality = 62,
   }) async {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty) {
-      throw const UiCopyException('copy_57a524aa6dd1');
+    final uploadUid = _requireCurrentUid();
+    if (!RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(normalizedHouseId) ||
+        !RegExp(r'^[a-f0-9]{32}$').hasMatch(requestId)) {
+      throw const FormatException('Invalid Secret Vault upload scope');
     }
-    _requireCurrentUid();
-
+    var scopeChanged = false;
+    final authSubscription = _auth.authStateChanges().listen((user) {
+      if (user?.uid != uploadUid) scopeChanged = true;
+    }, onError: (_) => scopeChanged = true);
     try {
-      final originalName = file.name.trim().isNotEmpty
-          ? file.name.trim()
-          : p.basename(file.path);
-      var uploadName = originalName.isEmpty ? 'vault_image.jpg' : originalName;
-      var contentType = detectContentType(uploadName, fallback: 'image/jpeg');
-      var bytes = await file.readAsBytes();
-
-      final extension = p.extension(uploadName).toLowerCase();
-      if (!kIsWeb &&
-          file.path.isNotEmpty &&
-          contentType.startsWith('image/') &&
-          extension != '.gif') {
-        try {
-          final compressed = await FlutterImageCompress.compressWithFile(
-            file.path,
-            minWidth: minWidth,
-            minHeight: minHeight,
-            quality: quality,
-            format: CompressFormat.webp,
-          );
-          if (compressed != null && compressed.isNotEmpty) {
-            bytes = compressed;
-            contentType = 'image/webp';
-            uploadName = '${p.basenameWithoutExtension(uploadName)}.webp';
-          }
-        } catch (error) {
-          debugPrint(
-            'Secret Vault compression skipped: ${AppErrorMapper.resolve(error).message}',
-          );
+      final prefs = await SharedPreferences.getInstance();
+      final journalKey =
+          'vault_private_upload_v2_${uploadUid}_${normalizedHouseId}_$requestId';
+      void requireScope() {
+        if (scopeChanged ||
+            _auth.currentUser?.uid != uploadUid ||
+            (prefs.getString('il_house_id')?.isNotEmpty == true &&
+                prefs.getString('il_house_id') != normalizedHouseId)) {
+          throw StateError('Secret Vault upload scope changed');
         }
       }
 
-      final sessionResult = await _callWithAppCheckRetry(
-        () => _functions.httpsCallable('generateUploadUrl').call({
-          'folder': 'secret_vault',
-          'houseId': normalizedHouseId,
-          'fileName': uploadName,
-          'contentType': contentType,
-          'fileSize': bytes.length,
-        }),
-        allowUnauthenticatedWithoutMarkers: true,
-      );
-      final rawSession = sessionResult.data;
-      if (rawSession is! Map) {
-        throw const UiCopyException('copy_dd1fed82cddc');
+      requireScope();
+      var journal = <String, dynamic>{};
+      final saved = prefs.getString(journalKey);
+      if (saved != null) {
+        final decoded = jsonDecode(saved);
+        if (decoded is Map) journal = Map<String, dynamic>.from(decoded);
       }
-      final session = Map<String, dynamic>.from(rawSession);
-      final uploadId = session['uploadId']?.toString().trim() ?? '';
-      final uploadUrl = session['url']?.toString().trim() ?? '';
-      final storagePath = session['path']?.toString().trim() ?? '';
-      if (uploadId.isEmpty || uploadUrl.isEmpty || storagePath.isEmpty) {
-        throw const UiCopyException('copy_3081f058c454');
+      if (journal.isNotEmpty &&
+          (journal['uid'] != uploadUid ||
+              journal['houseId'] != normalizedHouseId ||
+              journal['caption'] != encryptedCaption)) {
+        throw StateError('Secret Vault journal does not match this request');
+      }
+      Future<Map<String, dynamic>> finalize(String uploadId) async {
+        requireScope();
+        final result = await _callWithAppCheckRetry(
+          () => _functions
+              .httpsCallable(
+                'finalizeR2Upload',
+                options: HttpsCallableOptions(
+                  timeout: const Duration(seconds: 120),
+                ),
+              )
+              .call({'uploadId': uploadId}),
+        );
+        requireScope();
+        if (result.data is! Map || result.data['success'] != true) {
+          throw const FormatException('Invalid Secret Vault upload receipt');
+        }
+        return Map<String, dynamic>.from(result.data as Map);
       }
 
-      final headers = <String, String>{};
-      final rawHeaders = session['requiredHeaders'];
-      if (rawHeaders is Map) {
-        rawHeaders.forEach((key, value) {
-          if (key != null && value != null) {
-            headers[key.toString()] = value.toString();
+      Future<StorageUploadResult> complete(Map<String, dynamic> receipt) async {
+        requireScope();
+        final mediaId = receipt['mediaId']?.toString() ?? '';
+        final path = receipt['path']?.toString() ?? '';
+        if (mediaId.isEmpty ||
+            !path.startsWith(
+              'users/$uploadUid/secret_vault/$normalizedHouseId/',
+            )) {
+          throw const FormatException('Invalid Secret Vault media receipt');
+        }
+        await prefs.remove(journalKey);
+        final prepared = journal['preparedPath']?.toString() ?? '';
+        if (prepared.isNotEmpty) await _deleteHelper.deleteLocalFile(prepared);
+        requireScope();
+        return StorageUploadResult(
+          downloadUrl: '',
+          storagePath: path,
+          mediaId: mediaId,
+          sessionId: journal['uploadId']?.toString(),
+          uploadedBytes: (journal['size'] as num?)?.toInt(),
+        );
+      }
+
+      final savedUploadId = journal['uploadId']?.toString() ?? '';
+      if (savedUploadId.isNotEmpty) {
+        try {
+          return await complete(await finalize(savedUploadId));
+        } on FirebaseFunctionsException catch (error) {
+          // Chỉ PUT khi object chưa tới server. Các lỗi quyền/quota/reset giữ
+          // journal để thử lại đúng phiên, không phát sinh ảnh thứ hai.
+          if (error.code != 'not-found') rethrow;
+        }
+      }
+      Uint8List bytes;
+      var contentType = journal['contentType']?.toString() ?? '';
+      final preparedPath = journal['preparedPath']?.toString() ?? '';
+      if (!kIsWeb && preparedPath.isNotEmpty) {
+        final encrypted = await File(preparedPath).readAsString();
+        bytes = base64Decode(
+          await EncryptionService().decryptMessage(
+            normalizedHouseId,
+            encrypted,
+          ),
+        );
+      } else {
+        bytes = await file.readAsBytes();
+        final originalName = file.name.isNotEmpty
+            ? file.name
+            : p.basename(file.path);
+        contentType = detectContentType(originalName, fallback: 'image/jpeg');
+        if (!kIsWeb &&
+            contentType.startsWith('image/') &&
+            p.extension(originalName).toLowerCase() != '.gif') {
+          try {
+            final compressed = await FlutterImageCompress.compressWithFile(
+              file.path,
+              minWidth: minWidth,
+              minHeight: minHeight,
+              quality: quality,
+              format: CompressFormat.webp,
+            );
+            if (compressed != null && compressed.isNotEmpty) {
+              bytes = compressed;
+              contentType = 'image/webp';
+            }
+          } catch (_) {
+            debugPrint('[SecretVault] Giữ ảnh gốc khi không nén được.');
           }
-        });
+        }
+        requireScope();
+        journal = {
+          'uid': uploadUid,
+          'houseId': normalizedHouseId,
+          'caption': encryptedCaption,
+          'contentType': contentType,
+          'size': bytes.length,
+          'md5': md5.convert(bytes).toString(),
+        };
+        if (!kIsWeb) {
+          final directory = await getApplicationSupportDirectory();
+          final prepared = File(
+            p.join(
+              directory.path,
+              'vault_${uploadUid}_${normalizedHouseId}_$requestId.bin',
+            ),
+          );
+          final encrypted = await EncryptionService().encryptMessage(
+            normalizedHouseId,
+            base64Encode(bytes),
+          );
+          await prepared.writeAsString(encrypted, flush: true);
+          journal['preparedPath'] = prepared.path;
+        }
+        requireScope();
+        await prefs.setString(journalKey, jsonEncode(journal));
       }
-      headers.putIfAbsent('Content-Type', () => contentType);
-
-      final uploadResponse = await http
-          .put(Uri.parse(uploadUrl), headers: headers, body: bytes)
-          .timeout(const Duration(minutes: 2));
-      if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-        throw UiCopyException('copy_f36e2a41b72a', {'value1': uploadResponse.statusCode});
+      requireScope();
+      final created = await _callWithAppCheckRetry(
+        () => _functions
+            .httpsCallable(
+              'generateUploadUrl',
+              options: HttpsCallableOptions(
+                timeout: const Duration(seconds: 120),
+              ),
+            )
+            .call({
+              'folder': 'secret_vault',
+              'houseId': normalizedHouseId,
+              'requestId': requestId,
+              'contentType': contentType,
+              'fileSize': bytes.length,
+              'md5': md5.convert(bytes).toString(),
+              'encryptedCaption': encryptedCaption,
+            }),
+      );
+      requireScope();
+      if (created.data is! Map)
+        throw const FormatException('Invalid Secret Vault session');
+      final session = Map<String, dynamic>.from(created.data as Map);
+      journal['uploadId'] = session['uploadId'];
+      await prefs.setString(journalKey, jsonEncode(journal));
+      requireScope();
+      if (session['complete'] == true) return complete(session);
+      final request = SecretVaultPut.buildRequest(
+        session: session,
+        bytes: bytes,
+        uid: uploadUid,
+        houseId: normalizedHouseId,
+        contentType: contentType,
+      );
+      final client = http.Client();
+      try {
+        await PrivateR2Put.send(client, request);
+      } finally {
+        client.close();
       }
-
-      final finalized = await _callWithAppCheckRetry(
-        () => _functions.httpsCallable('finalizeR2Upload').call({
-          'uploadId': uploadId,
-        }),
-        allowUnauthenticatedWithoutMarkers: true,
-      );
-      final finalizeData = finalized.data;
-      if (finalizeData is! Map || finalizeData['success'] != true) {
-        throw const UiCopyException('copy_a72d2688a7b4');
-      }
-
-      return StorageUploadResult(
-        downloadUrl: '',
-        storagePath: storagePath,
-        sessionId: uploadId,
-        uploadedBytes: bytes.length,
-      );
-    } catch (error) {
-      debugPrint(
-        'Secret Vault private upload failed: ${AppErrorMapper.resolve(error).message}',
-      );
-      throw Exception(
-        AppErrorMapper.resolve(
-          error,
-          fallbackMessage: UiCopy.text('copy_8b4ec9270935'),
-        ).message,
-      );
+      requireScope();
+      return complete(await finalize(session['uploadId'].toString()));
+    } finally {
+      await authSubscription.cancel();
     }
   }
 
@@ -1928,9 +2080,7 @@ class StorageService {
     final normalizedHouseId = houseId.trim();
     final normalizedMediaId = mediaId.trim();
     final normalizedPath = storagePath.trim();
-    if (normalizedHouseId.isEmpty ||
-        normalizedMediaId.isEmpty ||
-        normalizedPath.isEmpty) {
+    if (normalizedHouseId.isEmpty || normalizedMediaId.isEmpty) {
       return false;
     }
     try {
@@ -1938,7 +2088,7 @@ class StorageService {
         () => _functions.httpsCallable('deleteR2Object').call({
           'houseId': normalizedHouseId,
           'mediaId': normalizedMediaId,
-          'objectKey': normalizedPath,
+          if (normalizedPath.isNotEmpty) 'objectKey': normalizedPath,
         }),
         allowUnauthenticatedWithoutMarkers: true,
       );
@@ -1958,5 +2108,68 @@ class StorageService {
 
   Future<bool> deleteImageByUrl(String url) {
     return _deleteHelper.deleteImageByUrl(url: url);
+  }
+
+  Future<void> syncHomeBackground(String houseId, String url) async {
+    final requestId = 'bg_${DateTime.now().microsecondsSinceEpoch}';
+    final result = await _callWithAppCheckRetry(
+      () => _functions.httpsCallable('syncHomeBackground').call({
+        'houseId': houseId.trim(),
+        'url': url.trim(),
+        'requestId': requestId,
+      }),
+      allowUnauthenticatedWithoutMarkers: true,
+    );
+    if (result.data is! Map || result.data['success'] != true) {
+      throw StateError('Home background sync not confirmed');
+    }
+  }
+
+  /// Xóa ảnh public cũ sau khi đã commit URL mới.
+  ///
+  /// Ảnh Home avatar legacy/public nằm trên Firebase Storage, còn một số
+  /// avatar cũ có thể nằm trên R2. Chọn backend theo URL để không gọi nhầm
+  /// helper R2 cho object Firebase.
+  Future<bool> deletePublicImageByUrl(String houseId, String url) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedUrl = url.trim();
+    if (normalizedHouseId.isEmpty || normalizedUrl.isEmpty) {
+      return false;
+    }
+
+    try {
+      CloudflareR2Service.instance.init();
+      if (CloudflareR2Service.instance.isR2Url(normalizedUrl)) {
+        return await CloudflareR2Service.instance.deleteFile(normalizedUrl);
+      }
+
+      // Server xác minh cả bucket, host và đường dẫn trước khi xóa.
+      final uri = Uri.tryParse(normalizedUrl);
+      if (uri == null ||
+          uri.scheme != 'https' ||
+          uri.host != 'firebasestorage.googleapis.com' ||
+          uri.userInfo.isNotEmpty ||
+          (uri.hasPort && uri.port != 443)) {
+        return false;
+      }
+      final storagePath = extractStoragePathFromUrl(normalizedUrl);
+      if (storagePath == null || storagePath.isEmpty) {
+        return false;
+      }
+
+      final result = await _callWithAppCheckRetry(
+        () => _functions.httpsCallable('deletePublicImageAsset').call({
+          'houseId': normalizedHouseId,
+          'storagePath': storagePath,
+          'url': normalizedUrl,
+        }),
+        allowUnauthenticatedWithoutMarkers: true,
+      );
+      final data = result.data;
+      return data is Map && data['success'] == true;
+    } catch (error) {
+      debugPrint('Failed to delete public image: ${error.runtimeType}');
+      return false;
+    }
   }
 }

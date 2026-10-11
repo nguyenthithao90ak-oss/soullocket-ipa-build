@@ -11,15 +11,6 @@ extension _MainHomeFormatters on _MainHomeTabState {
     return _relationshipDuration(dateString).totalDays.toString();
   }
 
-  Map<String, String> _getLoveTimeDetail(String? dateString) {
-    final duration = _relationshipDuration(dateString);
-    return {
-      'h': duration.hours.toString().padLeft(2, '0'),
-      'm': duration.minutes.toString().padLeft(2, '0'),
-      's': duration.seconds.toString().padLeft(2, '0'),
-    };
-  }
-
   Map<String, String> _getLoveYmdDetail(String? dateString) {
     final duration = _relationshipDuration(dateString);
     return {
@@ -51,10 +42,9 @@ extension _MainHomeFormatters on _MainHomeTabState {
     final days = int.tryParse(ageDays) ?? 0;
     if (days == 0) return L10nService().translate('home_0tui_707cd4');
     if (days >= 365) {
-      return L10nService().format(
-        'util_age_years',
-        {'count': (days / 365).floor()},
-      ).trim();
+      return L10nService().format('util_age_years', {
+        'count': (days / 365).floor(),
+      }).trim();
     }
     return '$days ${L10nService().translate('home_ngy_48e4b0')}';
   }
@@ -76,8 +66,10 @@ extension _MainHomeFormatters on _MainHomeTabState {
   }
 
   String? _knownCountdownDefaultKey(String value) {
-    final normalized =
-        value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    final normalized = value.trim().toLowerCase().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
     switch (normalized) {
       case 'ngày yêu':
       case 'ngay yeu':

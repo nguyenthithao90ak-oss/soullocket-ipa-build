@@ -21,8 +21,27 @@ extension _HomeScreenShellBackground on _HomeScreenState {
       );
     }
 
-    // Nền mặc định cho tất cả các tab: màu kem trơn theo bản phác thảo.
-    return const ColoredBox(color: Color(0xFFF8EEE3));
+    // Nền canvas mặc định; ảnh nền riêng vẫn được ưu tiên ở nhánh phía trên.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/home/home_default_canvas_couple.webp',
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.low,
+          cacheWidth: 1080,
+          excludeFromSemantics: true,
+          errorBuilder: (_, _, _) => const ColoredBox(color: Color(0xFFF8EEE3)),
+        ),
+        // Giữ màu tranh sáng dịu, giảm độ sáng khi dùng giao diện tối.
+        ColoredBox(
+          color: isDark
+              ? Colors.black.withValues(alpha: 0.18)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
+      ],
+    );
   }
 
   Widget _buildPinnedCustomShellBackground({
@@ -107,9 +126,11 @@ class _StableShellBackgroundImageState
     _diskCachedProvider = startupFile != null
         ? _buildFileProvider(startupFile)
         : null;
+    // Render ngay provider mới (hoặc fallback cũ) trong lúc precache/network
+    // còn chờ; nếu đợi precache mới rebuild thì nền có thể đứng ở placeholder.
+    if (mounted) setState(() {});
 
     if (startupFile != null) {
-      if (mounted) setState(() {});
       return;
     }
 
@@ -168,7 +189,7 @@ class _StableShellBackgroundImageState
     final fallback = _diskCachedProvider ?? _retainedProvider;
     final current = _networkProvider;
     if (current == null) {
-      return const SizedBox.shrink();
+      return const ColoredBox(color: Color(0xFFF8EEE3));
     }
 
     // Chỉ hiển thị 1 image tại 1 thời điểm để tránh GPU composite 2 full-screen
@@ -191,15 +212,16 @@ class _StableShellBackgroundImageState
         }
         return child;
       },
-      errorBuilder: (_, __, ___) => fallback != null
+      errorBuilder: (context, child, error) => fallback != null
           ? Image(
               image: fallback,
               fit: BoxFit.cover,
               gaplessPlayback: true,
               filterQuality: FilterQuality.low,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              errorBuilder: (context, child, error) =>
+                  const ColoredBox(color: Color(0xFFF8EEE3)),
             )
-          : const SizedBox.shrink(),
+          : const ColoredBox(color: Color(0xFFF8EEE3)),
     );
   }
 

@@ -89,16 +89,18 @@ class _MessengerScreenState extends State<MessengerScreen>
   static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 5);
   static const Duration _realtimeUiDebounce = Duration(milliseconds: 140);
   static const int _friendRealtimeWarmupCount = 3;
-  static ChatMessagePreviewLabels get _lastMessagePreviewLabels => ChatMessagePreviewLabels(
-    fallback:
-        L10nService().translate('messenger_start_conversation'),
-    callInvite:
-        L10nService().translate('ui_chat_b_t_u_m_t_cu_c_9ec67f'),
-    watchInvite: L10nService().translate('ui_chat_chia_s_ph_ng_xem_chung_d1656b'),
-    image: L10nService().translate('ui_chat_g_i_m_t_h_nh_nh_141621'),
-    share: L10nService().translate('ui_chat_chia_s_m_t_b_i_vi_b78759'),
-  );
-  static String get _deletedUserLabel => L10nService().translate('chat_deleted_user');
+  static ChatMessagePreviewLabels get _lastMessagePreviewLabels =>
+      ChatMessagePreviewLabels(
+        fallback: L10nService().translate('messenger_start_conversation'),
+        callInvite: L10nService().translate('ui_chat_b_t_u_m_t_cu_c_9ec67f'),
+        watchInvite: L10nService().translate(
+          'ui_chat_chia_s_ph_ng_xem_chung_d1656b',
+        ),
+        image: L10nService().translate('ui_chat_g_i_m_t_h_nh_nh_141621'),
+        share: L10nService().translate('ui_chat_chia_s_m_t_b_i_vi_b78759'),
+      );
+  static String get _deletedUserLabel =>
+      L10nService().translate('chat_deleted_user');
 
   @override
   void initState() {
@@ -608,7 +610,11 @@ class _MessengerScreenState extends State<MessengerScreen>
     final houseName = info?['houseName']?.toString().trim() ?? '';
     return houseName.isNotEmpty
         ? repairMojibakeText(houseName)
-        : repairMojibakeText(L10nScope.of(context).format('ui_chat_ng_i_nh_value1_1a3fb0', {'value1': friendId}));
+        : repairMojibakeText(
+            L10nScope.of(
+              context,
+            ).format('ui_chat_ng_i_nh_value1_1a3fb0', {'value1': friendId}),
+          );
   }
 
   String _internalPartnerName({bool allowFallback = true}) {
@@ -712,7 +718,11 @@ class _MessengerScreenState extends State<MessengerScreen>
       );
     }
 
-    addMate(nameKey: 'nameU1', avatarKey: 'avtUser1', fallbackName: L10nService().translate('ui_chat_person_1_498b95'));
+    addMate(
+      nameKey: 'nameU1',
+      avatarKey: 'avtUser1',
+      fallbackName: L10nService().translate('ui_chat_person_1_498b95'),
+    );
     if (!_isSingleHouse(friendId)) {
       addMate(
         nameKey: 'nameU2',
@@ -892,10 +902,7 @@ class _MessengerScreenState extends State<MessengerScreen>
         : const Color(0xFF94A3B8);
   }
 
-  String _formatLastMessage(
-    Map<dynamic, dynamic>? raw, {
-    String? fallback,
-  }) {
+  String _formatLastMessage(Map<dynamic, dynamic>? raw, {String? fallback}) {
     final fallbackText =
         fallback ?? L10nService().translate('messenger_start_conversation');
     return formatChatMessagePreview(
@@ -1040,9 +1047,18 @@ class _MessengerScreenState extends State<MessengerScreen>
       return repairMojibakeText(context.tr('ui_chat_new_group_558bb2'));
     }
     if (others.length == 1) {
-      return repairMojibakeText(L10nScope.of(context).format('ui_chat_group_with_value1_6fe2a6', {'value1': others.first}));
+      return repairMojibakeText(
+        L10nScope.of(
+          context,
+        ).format('ui_chat_group_with_value1_6fe2a6', {'value1': others.first}),
+      );
     }
-    return repairMojibakeText(L10nScope.of(context).format('ui_chat_nh_m_value1_value2_e3bb1b', {'value1': others.first, 'value2': others.last}));
+    return repairMojibakeText(
+      L10nScope.of(context).format('ui_chat_nh_m_value1_value2_e3bb1b', {
+        'value1': others.first,
+        'value2': others.last,
+      }),
+    );
   }
 
   void _showMessengerNotice(String message, {bool error = false}) {

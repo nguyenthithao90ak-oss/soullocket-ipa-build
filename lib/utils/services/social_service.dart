@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:soullocket_app/models/social_post.dart';
 import 'local_database_service.dart';
 
@@ -17,6 +18,7 @@ import 'local_database_service.dart';
 /// nhiều lần như check block, profile lookup — giảm tới 50% reads.
 class SocialService {
   static final SocialService instance = SocialService();
+  static const Duration _readDeadline = Duration(seconds: 10);
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -25,9 +27,17 @@ class SocialService {
     DocumentReference<Map<String, dynamic>> docRef,
   ) async {
     try {
-      return await docRef.get(const GetOptions(source: Source.server));
-    } catch (_) {
-      return await docRef.get(const GetOptions(source: Source.cache));
+      return await docRef
+          .get(const GetOptions(source: Source.server))
+          .timeout(_readDeadline);
+    } catch (error) {
+      if (error is FirebaseException &&
+          (error.code == 'permission-denied' || error.code == 'unauthenticated')) {
+        rethrow;
+      }
+      return await docRef
+          .get(const GetOptions(source: Source.cache))
+          .timeout(_readDeadline);
     }
   }
 
@@ -35,9 +45,17 @@ class SocialService {
     cf.Query<Map<String, dynamic>> query,
   ) async {
     try {
-      return await query.get(const GetOptions(source: Source.server));
-    } catch (_) {
-      return await query.get(const GetOptions(source: Source.cache));
+      return await query
+          .get(const GetOptions(source: Source.server))
+          .timeout(_readDeadline);
+    } catch (error) {
+      if (error is FirebaseException &&
+          (error.code == 'permission-denied' || error.code == 'unauthenticated')) {
+        rethrow;
+      }
+      return await query
+          .get(const GetOptions(source: Source.cache))
+          .timeout(_readDeadline);
     }
   }
 
@@ -860,7 +878,11 @@ class SocialService {
 
     final posts = <SocialPost>[];
     final futures = likedDocs.docs.map(
-      (likeDoc) => _firestore.collection('social_posts').doc(likeDoc.id).get(),
+      (likeDoc) => _firestore
+          .collection('social_posts')
+          .doc(likeDoc.id)
+          .get()
+          .timeout(_readDeadline),
     );
     final docSnaps = await Future.wait(futures);
 
@@ -882,7 +904,7 @@ class SocialService {
       for (final reference in staleLikeRefs) {
         batch.delete(reference);
       }
-      await batch.commit();
+      await batch.commit().timeout(_readDeadline);
     }
     posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return posts;

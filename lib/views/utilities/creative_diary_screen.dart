@@ -30,8 +30,15 @@ part 'creative_diary/creative_diary_export_flow.dart';
 
 class CreativeDiaryScreen extends StatefulWidget {
   final String? houseId;
+  final Future<String?> Function()? houseIdLoader;
+  final Stream<List<Map<dynamic, dynamic>>> Function(String)? pagesLoader;
 
-  const CreativeDiaryScreen({super.key, this.houseId});
+  const CreativeDiaryScreen({
+    super.key,
+    this.houseId,
+    this.houseIdLoader,
+    this.pagesLoader,
+  });
 
   @override
   State<CreativeDiaryScreen> createState() => _CreativeDiaryScreenState();
@@ -43,14 +50,20 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
       'creative_diary_rewarded_save_unlocked_until_ms_v1';
 
   final PageController _pageController = PageController(viewportFraction: 0.96);
-  final CreativeDiaryService _creativeDiaryService = CreativeDiaryService();
-  final StorageService _storageService = StorageService();
-  final HouseService _houseService = HouseService();
-  final DiaryGuardController _guardController = DiaryGuardController();
+  late final CreativeDiaryService _creativeDiaryService = CreativeDiaryService();
+  late final StorageService _storageService = StorageService();
+  late final HouseService _houseService = HouseService();
+  DiaryGuardController? _diaryGuard;
+  DiaryGuardController get _guardController =>
+      _diaryGuard ??= DiaryGuardController();
   final GlobalKey _exportBoundaryKey = GlobalKey();
   final List<_DiaryPageData> _pages = [];
 
   StreamSubscription<List<Map<dynamic, dynamic>>>? _pagesSubscription;
+  Timer? _firstPageDeadline;
+  int _loadGeneration = 0;
+  bool _initializing = false;
+  bool _loadFailed = false;
 
   int _currentIndex = 0;
   int _exportPageIndex = 0;
@@ -66,40 +79,65 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(AdMobService().initialize());
+    if (widget.pagesLoader == null) {
+      unawaited(AdMobService().initialize());
+    }
     _init();
   }
 
   Future<void> _init() async {
-    final resolvedHouseId =
-        widget.houseId ?? await _houseService.getCurrentHouseId();
-    if (!mounted) {
-      return;
-    }
-
-    if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
+    if (_initializing) return;
+    _initializing = true;
+    final generation = ++_loadGeneration;
+    _firstPageDeadline?.cancel();
+    setState(() {
+      _loadFailed = false;
+      _isLoading = _pages.isEmpty;
+      _isRefreshing = _pages.isNotEmpty;
+    });
+    void fail() {
+      if (!mounted || generation != _loadGeneration) return;
+      _firstPageDeadline?.cancel();
       setState(() {
-        _houseId = null;
+        _loadFailed = true;
         _isLoading = false;
+        _isRefreshing = false;
       });
-      return;
     }
 
-    _houseId = resolvedHouseId;
-    await _pagesSubscription?.cancel();
-    _pagesSubscription =
-        _creativeDiaryService.listenToDiaryPages(resolvedHouseId).listen(
-      (rawPages) {
-        final nextPages = <_DiaryPageData>[];
-        for (var index = 0; index < rawPages.length; index++) {
-          nextPages.add(_DiaryPageData.fromMap(rawPages[index], index));
-        }
-
-        if (!mounted) {
-          return;
-        }
-        final hasExistingPages = _pages.isNotEmpty;
+    try {
+      final resolvedHouseId = widget.houseId ??
+          await (widget.houseIdLoader?.call() ??
+                  _houseService.getCurrentHouseId()).timeout(
+            const Duration(seconds: 12),
+          );
+      if (!mounted || generation != _loadGeneration) return;
+      if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
         setState(() {
+          _houseId = null;
+          _isLoading = false;
+          _isRefreshing = false;
+        });
+        return;
+      }
+
+      _houseId = resolvedHouseId;
+      unawaited(_pagesSubscription?.cancel());
+      _pagesSubscription = null;
+      if (!mounted || generation != _loadGeneration) return;
+      _firstPageDeadline = Timer(const Duration(seconds: 12), fail);
+      _pagesSubscription =
+          (widget.pagesLoader?.call(resolvedHouseId) ??
+                  _creativeDiaryService.listenToDiaryPages(resolvedHouseId)).listen(
+      (rawPages) {
+        if (!mounted || generation != _loadGeneration) return;
+        try {
+          final nextPages = <_DiaryPageData>[];
+          for (var index = 0; index < rawPages.length; index++) {
+            nextPages.add(_DiaryPageData.fromMap(rawPages[index], index));
+          }
+          _firstPageDeadline?.cancel();
+          setState(() {
           _pages
             ..clear()
             ..addAll(nextPages);
@@ -108,33 +146,49 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
           } else if (_currentIndex >= _pages.length) {
             _currentIndex = _pages.length - 1;
           }
-          _isLoading = false;
-          _isRefreshing = hasExistingPages;
-        });
-        if (hasExistingPages) {
-          Future<void>.delayed(const Duration(milliseconds: 300), () {
-            if (!mounted) return;
-            setState(() => _isRefreshing = false);
-          });
-        }
-      },
-      onError: (_) {
-        if (!mounted) {
-          return;
-        }
-        setState(() {
+          _loadFailed = false;
           _isLoading = false;
           _isRefreshing = false;
-        });
+          });
+        } catch (_) {
+          fail();
+        }
+      },
+      onError: (_) => fail(),
+      onDone: () {
+        if (_isLoading || _isRefreshing) fail();
       },
     );
+    } catch (_) {
+      fail();
+    } finally {
+      if (generation == _loadGeneration) _initializing = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CreativeDiaryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.houseId != widget.houseId) {
+      _loadGeneration++;
+      _firstPageDeadline?.cancel();
+      unawaited(_pagesSubscription?.cancel());
+      _pagesSubscription = null;
+      _houseId = null;
+      _pages.clear();
+      _currentIndex = 0;
+      _initializing = false;
+      unawaited(_init());
+    }
   }
 
   @override
   void dispose() {
+    _loadGeneration++;
+    _firstPageDeadline?.cancel();
     _pagesSubscription?.cancel();
     _pageController.dispose();
-    _guardController.dispose();
+    _diaryGuard?.dispose();
     super.dispose();
   }
 
@@ -213,13 +267,25 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: SLTheme.defaultGradient,
+            colors: [
+              SLColors.paperCanvas,
+              SLColors.primaryLight,
+              SLColors.tertiarySoft,
+              SLColors.secondarySoft,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: Stack(
           children: [
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _DiaryBackdropPainter(),
+                ),
+              ),
+            ),
             SafeArea(
               child: Column(
                 children: [
@@ -362,7 +428,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                                     );
                                   },
                                 )
-                              else
+                              else if (!_loadFailed)
                                 Padding(
                                   padding: EdgeInsets.fromLTRB(
                                     compact ? 12 : 14,
@@ -385,6 +451,36 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                                   left: 0,
                                   right: 0,
                                   child: LinearProgressIndicator(minHeight: 2),
+                                ),
+                              if (_loadFailed)
+                                Align(
+                                  alignment: hasPages
+                                      ? Alignment.topCenter
+                                      : Alignment.center,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Material(
+                                      color: SLColors.bgCard,
+                                      borderRadius: SLRadius.lgAll,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              context.tr('p5_premium_load_failed'),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            TextButton.icon(
+                                              onPressed: _init,
+                                              icon: const Icon(Icons.refresh_rounded),
+                                              label: Text(context.tr('retry')),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
@@ -629,18 +725,23 @@ class _DiaryPageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      decoration: BoxDecoration(
-        color: SLTheme.glassCardStrong,
-        borderRadius: BorderRadius.circular(32),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
-        boxShadow: SLTheme.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(18, 23, 18, 16),
+          decoration: BoxDecoration(
+            color: SLTheme.glassCardStrong,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: page.accent.withValues(alpha: 0.22),
+              width: 1.5,
+            ),
+            boxShadow: SLTheme.cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           Row(
             children: [
               Container(
@@ -689,58 +790,96 @@ class _DiaryPageCard extends StatelessWidget {
             _DiaryAttachmentStrip(page: page),
             const SizedBox(height: 14),
           ],
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-              decoration: BoxDecoration(
-                color: page.surface.withValues(alpha: 0.75),
-                borderRadius: SLRadius.xlAll,
-              ),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Text(
-                  page.memory,
-                  style: SLTheme.quicksand(
-                    fontSize: 18,
-                    height: 1.7,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textPrimary,
-                    fontStyle: FontStyle.italic,
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: page.surface.withValues(alpha: 0.75),
+                    borderRadius: SLRadius.xlAll,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _DiaryPaperPainter(
+                              accent: page.accent,
+                              seed: page.title.hashCode,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 48, 18),
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Text(
+                              page.memory,
+                              style: SLTheme.quicksand(
+                                fontSize: 18,
+                                height: 1.7,
+                                fontWeight: FontWeight.w700,
+                                color: SLColors.textPrimary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      PositionedDirectional(
+                        end: 10,
+                        bottom: 10,
+                        child: IgnorePointer(
+                          child: _DiarySticker(
+                            icon: _diaryStickerIcon(page),
+                            color: page.accent,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ),
-          SLSpacing.h16,
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _DiaryMetaChip(
-                icon: Icons.event_note_rounded,
-                label: LocaleDateFormat.date(page.createdAt),
-                color: page.accent,
-                background: page.surface,
+              SLSpacing.h16,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _DiaryMetaChip(
+                    icon: Icons.event_note_rounded,
+                    label: LocaleDateFormat.date(page.createdAt),
+                    color: page.accent,
+                    background: page.surface,
+                  ),
+                  _DiaryMetaChip(
+                    icon: Icons.short_text_rounded,
+                    label: L10nService().format(
+                        'util_diary_word_count', {'count': page.wordCount}),
+                    color: SLColors.primaryActive,
+                    background: SLColors.primaryLight,
+                  ),
+                  if (page.prompt.trim().isNotEmpty)
+                    _DiaryMetaChip(
+                      icon: Icons.lightbulb_rounded,
+                      label: context.tr('util_cginh_a4a92b'),
+                      color: SLColors.accentPurpleDark,
+                      background: SLColors.accentPurple.withValues(alpha: 0.16),
+                    ),
+                ],
               ),
-              _DiaryMetaChip(
-                icon: Icons.short_text_rounded,
-                label: L10nService()
-                    .format('util_diary_word_count', {'count': page.wordCount}),
-                color: SLColors.primaryActive,
-                background: SLColors.primaryLight,
-              ),
-              if (page.prompt.trim().isNotEmpty)
-                _DiaryMetaChip(
-                  icon: Icons.lightbulb_rounded,
-                  label: context.tr('util_cginh_a4a92b'),
-                  color: SLColors.accentPurpleDark,
-                  background: SLColors.accentPurple.withValues(alpha: 0.16),
-                ),
             ],
           ),
-        ],
-      ),
+        ),
+        PositionedDirectional(
+          top: -8,
+          start: 52,
+          child: IgnorePointer(
+            child: _DiaryTape(color: page.accent),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -778,7 +917,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                 fit: BoxFit.cover,
                 memCacheWidth: 800,
                 filterQuality: FilterQuality.medium,
-                errorWidget: (_, __, ___) => Container(
+                errorWidget: (_, _, _) => Container(
                   color: page.surface,
                   alignment: Alignment.center,
                   child: Icon(Icons.broken_image_rounded, color: page.accent),
@@ -819,6 +958,17 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                   ),
                 ),
               ),
+              PositionedDirectional(
+                top: 8,
+                end: 12,
+                child: IgnorePointer(
+                  child: _DiarySticker(
+                    icon: Icons.photo_camera_rounded,
+                    color: page.accent,
+                    size: 28,
+                  ),
+                ),
+              ),
               const Positioned(
                 right: 12,
                 bottom: 10,
@@ -845,7 +995,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
               fit: BoxFit.contain,
               memCacheWidth: 600,
               filterQuality: FilterQuality.medium,
-              errorWidget: (_, __, ___) => Container(
+              errorWidget: (_, _, _) => Container(
                 height: 260,
                 color: Colors.white,
                 alignment: Alignment.center,
@@ -857,6 +1007,185 @@ class _DiaryAttachmentStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DiaryBackdropPainter extends CustomPainter {
+  const _DiaryBackdropPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pink = Paint()
+      ..color = SLColors.primary.withValues(alpha: .08)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
+    final purple = Paint()
+      ..color = SLColors.accentPurple.withValues(alpha: .11)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
+    canvas.drawCircle(
+      Offset(size.width * .94, size.height * .12),
+      size.shortestSide * .25,
+      pink,
+    );
+    canvas.drawCircle(
+      Offset(size.width * .06, size.height * .76),
+      size.shortestSide * .22,
+      purple,
+    );
+
+    final dot = Paint()..color = SLColors.thread.withValues(alpha: .18);
+    for (var row = 0; row < 5; row++) {
+      for (var column = 0; column < 4; column++) {
+        final x = size.width - 30 - column * 13.0;
+        final y = 112 + row * 13.0;
+        canvas.drawCircle(Offset(x, y), row.isEven ? 1.8 : 1.2, dot);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DiaryBackdropPainter oldDelegate) => false;
+}
+
+class _DiaryPaperPainter extends CustomPainter {
+  const _DiaryPaperPainter({required this.accent, required this.seed});
+
+  final Color accent;
+  final int seed;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rule = Paint()
+      ..color = accent.withValues(alpha: .10)
+      ..strokeWidth = 1;
+    for (var y = 34.0; y < size.height - 14; y += 28) {
+      canvas.drawLine(Offset(12, y), Offset(size.width - 12, y), rule);
+    }
+
+    final dots = Paint()..color = accent.withValues(alpha: .18);
+    final safeSeed = seed.abs();
+    for (var index = 0; index < 6; index++) {
+      final x = 18.0 + ((safeSeed + index * 17) % 8) * 13.0;
+      final y = 22.0 + index * 31.0;
+      if (x < size.width - 12 && y < size.height - 12) {
+        canvas.drawCircle(Offset(x, y), index.isEven ? 1.8 : 1.2, dots);
+      }
+    }
+
+    final sparkle = Paint()
+      ..color = accent.withValues(alpha: .28)
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    final center = Offset(size.width - 24, size.height - 26);
+    canvas.drawLine(center.translate(-5, 0), center.translate(5, 0), sparkle);
+    canvas.drawLine(center.translate(0, -5), center.translate(0, 5), sparkle);
+    canvas.drawCircle(center, 2.2, dots);
+  }
+
+  @override
+  bool shouldRepaint(_DiaryPaperPainter oldDelegate) =>
+      oldDelegate.accent != accent || oldDelegate.seed != seed;
+}
+
+IconData _diaryStickerIcon(_DiaryPageData page) {
+  if (page.accent == SLColors.primaryActive) return Icons.pets_rounded;
+  if (page.accent == SLColors.info) return Icons.cloud_rounded;
+  if (page.accent == SLColors.success) return Icons.local_florist_rounded;
+  if (page.accent == SLColors.warning) return Icons.wb_sunny_rounded;
+  if (page.accent == SLColors.accentPurpleDark) {
+    return Icons.auto_awesome_rounded;
+  }
+  return Icons.cake_rounded;
+}
+
+class _DiarySticker extends StatelessWidget {
+  const _DiarySticker({
+    required this.icon,
+    required this.color,
+    this.size = 34,
+  });
+
+  final IconData icon;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Transform.rotate(
+      angle: .08,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .82),
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: .34)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: .20),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: size * .5, color: color),
+      ),
+    ),
+  );
+}
+
+class _DiaryTape extends StatelessWidget {
+  const _DiaryTape({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Transform.rotate(
+      angle: -.06,
+      child: SizedBox(
+        width: 52,
+        height: 20,
+        child: CustomPaint(painter: _DiaryTapePainter(color)),
+      ),
+    ),
+  );
+}
+
+class _DiaryTapePainter extends CustomPainter {
+  const _DiaryTapePainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(1, 2, size.width - 2, size.height - 4),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(
+      rect,
+      Paint()..color = color.withValues(alpha: .43),
+    );
+    canvas.drawRRect(
+      rect,
+      Paint()
+        ..color = color.withValues(alpha: .58)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+    for (var x = 8.0; x < size.width; x += 9) {
+      canvas.drawLine(
+        Offset(x, 3),
+        Offset(x - 4, size.height - 3),
+        Paint()
+          ..color = color.withValues(alpha: .17)
+          ..strokeWidth = 1,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DiaryTapePainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _DiaryExportPageCard extends StatelessWidget {
@@ -1384,6 +1713,16 @@ class _DiaryPageData {
       accent: SLColors.warning,
       surface: SLColors.warningLight,
       icon: Icons.wb_sunny_rounded,
+    ),
+    (
+      accent: SLColors.accentPurpleDark,
+      surface: SLColors.tertiarySoft,
+      icon: Icons.auto_awesome_rounded,
+    ),
+    (
+      accent: SLColors.secondary,
+      surface: SLColors.secondarySoft,
+      icon: Icons.local_cafe_rounded,
     ),
   ];
   return palettes[index % palettes.length];

@@ -1,3 +1,4 @@
+import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
@@ -14,6 +15,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
+import 'package:soullocket_app/widgets/utility_vip_badge.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import '../../../widgets/lossless_sticker_assets.dart';
 import 'package:flutter/foundation.dart';
@@ -48,6 +50,7 @@ import 'settings/widget/widget_content_controls.dart';
 import 'settings/widget/widget_utility_gallery.dart';
 import 'settings/settings_initial_identity.dart';
 import 'settings/settings_initial_content.dart';
+import 'settings/settings_panel_navigation.dart';
 import 'settings/settings_menu_widgets.dart';
 import 'settings/settings_gps_mode_dialog.dart';
 import '../../../widgets/sl_detail_widgets.dart';
@@ -59,6 +62,7 @@ import 'dart:io';
 import '../../../utils/services/notification_service.dart';
 import '../../../utils/services/soul_event_reminder_service.dart';
 import '../../../utils/services/calendar_reminder_service.dart';
+import '../../../utils/services/habit_reminder_service.dart';
 import '../../../utils/services/push_notification_helper.dart';
 import '../../../utils/services/core/presence_service.dart';
 import '../../../utils/services/core/rtdb_settled_read.dart';
@@ -67,6 +71,7 @@ import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/sl_route.dart';
 import '../../../utils/services/house_settings_service.dart';
+import '../../../utils/initial_event_timeout.dart';
 import '../../../utils/services/location_service.dart';
 import '../../../utils/services/music_service.dart';
 import '../../../utils/services/purchase_service.dart';
@@ -85,7 +90,6 @@ import '../../../utils/services/friends_service.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../premium/premium_store_screen.dart';
 
-import '../../utilities/bucket_list_screen.dart';
 import '../../utilities/calendar_screen.dart';
 import '../../utilities/capsule_screen.dart';
 import '../../utilities/cinema_screen.dart';
@@ -104,7 +108,6 @@ import '../../utilities/shared_notes_screen.dart';
 import '../../../views/utilities/tarot/tarot_screen.dart';
 import '../../utilities/voice_screen.dart';
 import '../../../views/utilities/wheel/wheel_screen.dart';
-import '../../utilities/wishlist_screen.dart';
 import '../../utilities/diary_export_screen.dart';
 import '../../utilities/device_manager_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
@@ -139,6 +142,10 @@ import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
 import '../../../widgets/keepsake_frame.dart';
 import '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
+import '../widgets/main_home/hero/countdown_artwork_surface.dart';
+import '../widgets/main_home/hero/relationship_day_counter_content.dart';
+import '../widgets/main_home/hero/balanced_countdown_style.dart';
+import '../../../widgets/home_interaction_stickers.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
 import '../../../utils/services/widget_service.dart';
 import '../../../models/house_settings.dart';
@@ -360,6 +367,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isCoupleConnected = false;
   bool _isLoading = false;
   bool _isBootstrappingSettings = true;
+  final SettingsPanelNavigation _settingsPanelNavigation =
+      SettingsPanelNavigation();
+  bool _isWaitingForSettingsPanel = false;
   bool _settingsIdentityReady = false;
   bool _settingsIdentityLoadFailed = false;
   bool _isCheckingBackupStatus = false;
@@ -472,9 +482,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _widgetDiaryLayoutKey = 'single';
   String _widgetSeasonModeKey = 'auto';
   String? _draftCustomBackgroundUrl;
+  // URL cuối cùng đã được ghi thành công vào local + RTDB. Draft preview có
+  // thể thay đổi trước autosave nên không dùng UiPrefs hiện tại làm mốc xóa.
+  String? _lastPersistedCustomBackgroundUrl;
   bool? _draftTransparentMode;
   bool _draftLiteMode = false;
   Timer? _widgetDiaryPreviewTimer;
+  bool _widgetPreviewRequested = false;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
 
   // Custom Widget Event
@@ -695,12 +709,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       return;
     }
     _didAutoOpenCountdownMode = true;
-    await _openCountdownMode();
+    await _togglePanel('countdownMode');
   }
 
   Future<void> _maybeShowSettingsGuideOnOpen({bool replay = false}) async {
     if ((!replay && (!widget.showGuideOnOpen || _didShowGuideOnOpen)) ||
-        !mounted) {
+        !mounted ||
+        (!replay && _settingsPanelNavigation.isBusy)) {
       return;
     }
     final houseId = (_houseId ?? '').trim();
@@ -715,9 +730,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       SetupGuideProgress.scopedKey(uid, houseId, 'settings'),
     );
     if (!replay && !progress.shouldOffer) return;
-    _didShowGuideOnOpen = true;
     await Future<void>.delayed(const Duration(milliseconds: 280));
-    if (!mounted) return;
+    if (!mounted ||
+        (!replay && _settingsPanelNavigation.isBusy) ||
+        !(ModalRoute.of(context)?.isCurrent ?? true)) {
+      return;
+    }
+    _didShowGuideOnOpen = true;
 
     await FirstSetupSpotlightGuide.show(
       context,
@@ -737,11 +756,11 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
           color: const Color(0xFF648575),
         ),
         FirstSetupSpotlightStep(
-          targetKey: _securityGuideKey,
-          title: L10nService().translate('home_bomtvxcmin_0ad4a8'),
-          description: L10nService().translate('home_kimtratrng_f23b01'),
-          icon: Icons.shield_rounded,
-          color: const Color(0xFFD63F67),
+          targetKey: _countdownGuideKey,
+          title: L10nService().translate('home_khnggianmn_5b94a7'),
+          description: L10nService().translate('home_chnhgiaodi_5dfb72'),
+          icon: Icons.timelapse_rounded,
+          color: const Color(0xFFB85A2B),
         ),
         FirstSetupSpotlightStep(
           targetKey: _themeGuideKey,
@@ -758,11 +777,11 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
           color: const Color(0xFF0D7D81),
         ),
         FirstSetupSpotlightStep(
-          targetKey: _countdownGuideKey,
-          title: L10nService().translate('home_khnggianmn_5b94a7'),
-          description: L10nService().translate('home_chnhgiaodi_5dfb72'),
-          icon: Icons.timelapse_rounded,
-          color: const Color(0xFFB85A2B),
+          targetKey: _securityGuideKey,
+          title: L10nService().translate('home_bomtvxcmin_0ad4a8'),
+          description: L10nService().translate('home_kimtratrng_f23b01'),
+          icon: Icons.shield_rounded,
+          color: const Color(0xFFD63F67),
         ),
         FirstSetupSpotlightStep(
           targetKey: _dataGuideKey,
@@ -783,10 +802,15 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   }
 
   void _startWidgetPreviewTicker() {
+    _widgetPreviewRequested = true;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (!mounted ||
+        (lifecycle != null && lifecycle != AppLifecycleState.resumed)) {
+      return;
+    }
     if (_widgetDiaryPreviewTimer != null) {
       return;
     }
-    _widgetPreviewTickNotifier.value = 0;
     _widgetDiaryPreviewTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted) return;
       _widgetPreviewTickNotifier.value = _widgetPreviewTickNotifier.value + 1;
@@ -794,6 +818,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   }
 
   void _stopWidgetPreviewTicker() {
+    _widgetPreviewRequested = false;
     _widgetDiaryPreviewTimer?.cancel();
     _widgetDiaryPreviewTimer = null;
     if (_widgetPreviewTickNotifier.value != 0) {
@@ -803,6 +828,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      _widgetDiaryPreviewTimer?.cancel();
+      _widgetDiaryPreviewTimer = null;
+    } else if (_widgetPreviewRequested) {
+      _startWidgetPreviewTicker();
+    }
     if (state == AppLifecycleState.resumed) {
       unawaited(
         _refreshMainEmailVerificationStatus(
@@ -816,6 +847,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   void dispose() {
     _rememberSettingsInitialIdentity();
+    _settingsPanelNavigation.dispose();
     UiPrefs.notifier.removeListener(_syncDraftsFromUiPrefs);
     AdMobService().disposeBanner(_bottomBannerAd);
     // ✅ FIX: Cancel auto-save timer to ensure settings persist

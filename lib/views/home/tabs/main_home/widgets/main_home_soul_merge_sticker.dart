@@ -8,7 +8,8 @@ class SoulMergeSticker extends StatefulWidget {
   State<SoulMergeSticker> createState() => SoulMergeStickerState();
 }
 
-class SoulMergeStickerState extends State<SoulMergeSticker> {
+class SoulMergeStickerState extends State<SoulMergeSticker>
+    with ScreenActivityMixin {
   Offset? _position;
   Offset _dragOffset = Offset.zero;
   bool _isSingle = true;
@@ -27,6 +28,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
 
   bool _showHeartNotif = false;
+  bool _listening = false;
+  int _activityGeneration = 0;
+  bool get _isStickerActive => isScreenActive && widget.activeIndex == 0;
 
   static const List<String> _appTips = [
     'copy_75353c695990',
@@ -76,7 +80,43 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   @override
   void didUpdateWidget(covariant SoulMergeSticker oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _loadSettings();
+    if (oldWidget.activeIndex != widget.activeIndex) {
+      if (widget.activeIndex == 0) unawaited(_loadSettings());
+      _syncActiveWork();
+    }
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    _syncActiveWork();
+    if (active) unawaited(_loadSettings());
+  }
+
+  void _syncActiveWork() {
+    if (!_isStickerActive || _isSingle) {
+      _activityGeneration++;
+      _listening = false;
+      unawaited(_messagesSub?.cancel());
+      _messagesSub = null;
+      unawaited(_interactiveEventsSub?.cancel());
+      _interactiveEventsSub = null;
+      _tipsTimer?.cancel();
+      _tipsTimer = null;
+      _bubbleHideTimer?.cancel();
+      _bubbleHideTimer = null;
+      _showBubble = false;
+      return;
+    }
+    if (!_listening) {
+      _listening = true;
+      unawaited(_initChatListening(++_activityGeneration));
+    }
+    if (_showHeartNotif) {
+      _startTipsTimer();
+    } else {
+      _tipsTimer?.cancel();
+      _tipsTimer = null;
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -88,11 +128,13 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
           _showBubble = false;
         }
       });
+      _syncActiveWork();
     }
   }
 
   @override
   void dispose() {
+    _activityGeneration++;
     _messagesSub?.cancel();
     _interactiveEventsSub?.cancel();
     _tipsTimer?.cancel();
@@ -106,11 +148,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       setState(() {
         _isSingle = (houseId == null || houseId.isEmpty);
       });
-      if (!_isSingle) {
-        _initChatListening();
-        _initInteractiveEventsListening();
-        _startTipsTimer();
-      }
+      _syncActiveWork();
     }
   }
 
@@ -119,7 +157,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     _interactiveEventsSub = SoulMergeService().watchInteractiveEvents().listen((
       event,
     ) async {
-      if (event.isEmpty || _isSingle || !mounted) return;
+      if (event.isEmpty || _isSingle || !_isStickerActive) return;
+      final generation = _activityGeneration;
       final sender = event['sender']?.toString();
       if (sender == _myRole) return; // ignore my own
 
@@ -127,7 +166,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       if (type == 'photo_shot') {
         // 1. Hiển thị thông báo bằng chữ nếu được bật
         if (_showHeartNotif) {
-          _showFloatingMessage(context.tr('ui_home_he_just_gave_you_his_heart_460cf6'));
+          _showFloatingMessage(
+            context.tr('ui_home_he_just_gave_you_his_heart_460cf6'),
+          );
         }
 
         // 2. Hiển thị hiệu ứng tim bay nếu:
@@ -135,12 +176,14 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
         if (widget.activeIndex == 0) {
           final prefs = await SharedPreferences.getInstance();
           final style = prefs.getString('soul_merge_heart_style') ?? 'basic';
-          if (mounted) {
+          if (_isStickerActive && generation == _activityGeneration) {
             setState(() {
               _globalHeartStyle = style;
             });
             // Trì hoãn nhẹ 50ms để widget cập nhật style mới rồi bắn tim
             Future.delayed(const Duration(milliseconds: 50), () {
+              if (!_isStickerActive || generation != _activityGeneration)
+                return;
               _globalHeartsKey.currentState?.spawnLocalExplosion(
                 const Offset(26, 26),
                 count: 6,
@@ -152,12 +195,15 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     });
   }
 
-  Future<void> _initChatListening() async {
+  Future<void> _initChatListening(int generation) async {
     final prefs = await SharedPreferences.getInstance();
+    if (!_isStickerActive || _isSingle || generation != _activityGeneration)
+      return;
     _myRole = prefs.getString('il_role') ?? 'user1';
+    _initInteractiveEventsListening();
 
     _messagesSub = SoulMergeService().watchSoulMessages().listen((messages) {
-      if (messages.isEmpty || _isSingle) return;
+      if (messages.isEmpty || _isSingle || !_isStickerActive) return;
       final isVisible = widget.activeIndex == 0;
       if (!isVisible) return;
       final lastMsg = messages.last;
@@ -181,8 +227,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   }
 
   void _startTipsTimer() {
-    _tipsTimer?.cancel();
-    _tipsTimer = Timer.periodic(const Duration(seconds: 20), (timer) {
+    if (!_isStickerActive || _isSingle || !_showHeartNotif) return;
+    _tipsTimer ??= Timer.periodic(const Duration(seconds: 20), (timer) {
       _showRandomTip();
     });
   }
@@ -195,7 +241,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   }
 
   void _showFloatingMessage(String text) {
-    if (!mounted) return;
+    if (!_isStickerActive) return;
     if (!_showHeartNotif) return;
 
     // [Fix] Chỉ hiển thị thông báo bong bóng khi ở màn hình chính (tab 0)
@@ -345,9 +391,10 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   if (_isSingle) {
                     _showPairingBottomSheet(context);
                   } else {
-                    await Navigator.push(
+                    await slPush(
                       context,
-                      SLRoute(builder: (_) => const SoulMergeScreen()),
+                      const SoulMergeScreen(),
+                      fullscreenDialog: true,
                     );
                     _loadSettings();
                   }
@@ -408,7 +455,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
               ),
               const SizedBox(height: 12),
               Text(
-                context.tr('ui_home_please_pair_with_your_other_half_to_680016'),
+                context.tr(
+                  'ui_home_please_pair_with_your_other_half_to_680016',
+                ),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 14,
@@ -419,12 +468,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PairingDashboardScreen(),
-                    ),
-                  );
+                  unawaited(slPush(context, const PairingDashboardScreen()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF15BB5),

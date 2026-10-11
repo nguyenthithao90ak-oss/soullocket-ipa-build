@@ -262,65 +262,112 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
         ? 'circle'
         : ui.avatarFrameKey.trim();
     final rawDate =
-        prefs.getString(_prefKey('anchor_date', scope: scope)) ?? '';
+        _readCountdownPrefString(
+          prefs,
+          _prefKey('anchor_date', scope: scope),
+        ) ??
+        '';
     final parsedDate =
         DateInputUtils.parse(rawDate) ??
         _resolveInitialAnchorDate(defaultSingleMode);
 
     return _CountdownSpaceSnapshot(
       singleMode:
-          prefs.getBool(_prefKey('single_mode', scope: scope)) ??
+          _readCountdownPrefBool(
+            prefs,
+            _prefKey('single_mode', scope: scope),
+          ) ??
           defaultSingleMode,
       anchorDate: parsedDate,
       themeKey:
-          prefs.getString(_prefKey('theme_key', scope: scope)) ??
+          _readCountdownPrefString(
+            prefs,
+            _prefKey('theme_key', scope: scope),
+          ) ??
           defaultThemeKey,
       styleKey: _sanitizeCountdownSpaceStyle(
-        prefs.getString(_prefKey('style_key', scope: scope)) ?? defaultStyleKey,
+        _readCountdownPrefString(prefs, _prefKey('style_key', scope: scope)) ??
+            defaultStyleKey,
       ),
       frameKey:
-          prefs.getString(_prefKey('avatar_frame_key', scope: scope)) ??
+          _readCountdownPrefString(
+            prefs,
+            _prefKey('avatar_frame_key', scope: scope),
+          ) ??
           defaultFrameKey,
       fontKey:
-          prefs.getString(_prefKey('font_key', scope: scope)) ??
+          _readCountdownPrefString(prefs, _prefKey('font_key', scope: scope)) ??
           SLTheme.normalizeFontKey(ui.fontKey),
       transparentMode:
-          prefs.getBool(_prefKey('transparent_mode', scope: scope)) ??
+          _readCountdownPrefBool(
+            prefs,
+            _prefKey('transparent_mode', scope: scope),
+          ) ??
           ui.transparentMode,
       sizePx:
-          (prefs.getDouble(_prefKey('size_px', scope: scope)) ??
+          // Cấu hình cũ có thể lưu số nguyên/chuỗi. Không ép kiểu double
+          // trực tiếp vì lỗi một trường sẽ làm gián đoạn tải cả không gian.
+          (_readSerializedDouble(
+                    prefs.get(_prefKey('size_px', scope: scope)),
+                  ) ??
                   ui.countdownSizePx)
               .clamp(200.0, UiPrefs.maxCountdownSizePx)
               .toDouble(),
       topLabel:
-          prefs.getString(_prefKey('top_label', scope: scope)) ??
+          _readCountdownPrefString(
+            prefs,
+            _prefKey('top_label', scope: scope),
+          ) ??
           defaultTopLabel,
       bottomLabel:
-          prefs.getString(_prefKey('bottom_label', scope: scope)) ??
+          _readCountdownPrefString(
+            prefs,
+            _prefKey('bottom_label', scope: scope),
+          ) ??
           defaultBottomLabel,
       nameU1: scope == _selfSpaceHouseId
           ? defaultNameU1
-          : (prefs.getString(_prefKey('name_u1', scope: scope)) ??
+          : (_readCountdownPrefString(
+                  prefs,
+                  _prefKey('name_u1', scope: scope),
+                ) ??
                 defaultNameU1),
       nameU2: scope == _selfSpaceHouseId
           ? defaultNameU2
-          : (prefs.getString(_prefKey('name_u2', scope: scope)) ??
+          : (_readCountdownPrefString(
+                  prefs,
+                  _prefKey('name_u2', scope: scope),
+                ) ??
                 defaultNameU2),
       avatarUrl1: scope == _selfSpaceHouseId
           ? widget.avatarUrl1.trim()
-          : (prefs.getString(_prefKey('avatar_1', scope: scope)) ??
+          : (_readCountdownPrefString(
+                  prefs,
+                  _prefKey('avatar_1', scope: scope),
+                ) ??
                 widget.avatarUrl1.trim()),
       avatarUrl2: scope == _selfSpaceHouseId
           ? widget.avatarUrl2.trim()
-          : (prefs.getString(_prefKey('avatar_2', scope: scope)) ??
+          : (_readCountdownPrefString(
+                  prefs,
+                  _prefKey('avatar_2', scope: scope),
+                ) ??
                 widget.avatarUrl2.trim()),
       customBackgroundUrl:
-          prefs.getString(_prefKey('bg_url', scope: scope)) ??
+          _readCountdownPrefString(prefs, _prefKey('bg_url', scope: scope)) ??
           ui.customBackgroundUrl.trim(),
       centerIconType:
-          prefs.getString(_prefKey('center_icon_type', scope: scope)) ??
+          _readCountdownPrefString(
+            prefs,
+            _prefKey('center_icon_type', scope: scope),
+          ) ??
           'heart',
-      updatedAtMs: prefs.getInt(_prefKey('updated_at_ms', scope: scope)) ?? 0,
+      updatedAtMs:
+          _readCountdownPrefInt(
+            prefs,
+            _prefKey('updated_at_ms', scope: scope),
+          ) ??
+          0,
     );
   }
 
@@ -368,4 +415,39 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _customBackgroundUrl = ui.customBackgroundUrl.trim();
     _spaceSnapshots[_selfSpaceHouseId] = _captureCurrentSnapshot();
   }
+}
+
+/// SharedPreferences đời cũ có thể giữ cùng một khóa dưới dạng String, int,
+/// double hoặc bool tùy phiên bản app. Đọc qua `get<T>` sẽ ném TypeError khi
+/// kiểu không khớp; các helper này giữ cấu hình hợp lệ và bỏ qua giá trị hỏng.
+String? _readCountdownPrefString(SharedPreferences prefs, String key) {
+  final value = prefs.get(key);
+  if (value == null) return null;
+  return value is String ? value : value.toString();
+}
+
+bool? _readCountdownPrefBool(SharedPreferences prefs, String key) {
+  final value = prefs.get(key);
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  final normalized = value?.toString().trim().toLowerCase();
+  if (normalized == 'true' || normalized == '1') return true;
+  if (normalized == 'false' || normalized == '0') return false;
+  return null;
+}
+
+int? _readCountdownPrefInt(SharedPreferences prefs, String key) {
+  final value = prefs.get(key);
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString().trim() ?? '');
+}
+
+List<String> _readCountdownPrefStringList(SharedPreferences prefs, String key) {
+  final value = prefs.get(key);
+  if (value is! List) return const <String>[];
+  return value
+      .map((item) => item?.toString() ?? '')
+      .where((item) => item.isNotEmpty)
+      .toList(growable: false);
 }

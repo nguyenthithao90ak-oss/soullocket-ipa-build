@@ -2,7 +2,6 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'dart:async';
 import 'dart:convert';
-import '../../utils/app_cache_manager.dart';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -18,6 +17,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/ad_suppression_guard.dart';
 import '../../utils/services/sound_service.dart';
+import 'package:soullocket_app/views/home/tabs/short_video_cached_video_controller.dart'
+    if (dart.library.html) 'package:soullocket_app/views/home/tabs/short_video_cached_video_controller_web.dart';
 
 class WatchTogetherScreen extends StatefulWidget {
   final String myHouseId;
@@ -51,7 +52,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   String? _currentUrl;
 
   VideoPlayerController? _videoPlayerController;
+  VideoPlayerController? _loadingVideoController;
   bool _isVideoPlayer = false;
+  int _videoLoadGeneration = 0;
   bool _isHost = false;
   bool _isApplyingRemoteSync = false;
   int? _lastSyncedPositionBucket;
@@ -128,6 +131,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
 
   @override
   void dispose() {
+    _videoLoadGeneration++;
     _releaseSoundQuiet();
     AdSuppressionGuard.instance.resumeAds();
     _localSyncDebounce?.cancel();
@@ -137,6 +141,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
 
     _videoPlayerController?.removeListener(_handleVideoPlayerSyncTick);
     _videoPlayerController?.dispose();
+    _loadingVideoController?.dispose();
     _remoteRenderer.dispose();
     if (_isCallingVN.value) _webrtc.hangUp();
     super.dispose();
@@ -415,7 +420,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   Future<void> _shareCurrentUrl() async {
     final normalized = _normalizeUrl(_urlController.text);
     if (normalized == null) {
-      _showSnack(context.tr('ui_chat_the_link_is_not_valid_87babc'), isError: true);
+      _showSnack(
+        context.tr('ui_chat_the_link_is_not_valid_87babc'),
+        isError: true,
+      );
       return;
     }
 
@@ -435,7 +443,12 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       url: normalized,
     );
     await _loadUrl(normalized);
-    _showSnack(L10nScope.of(context).format('ui_chat_invited_value1_to_watch_together_0a1b58', {'value1': widget.targetName}));
+    _showSnack(
+      L10nScope.of(context).format(
+        'ui_chat_invited_value1_to_watch_together_0a1b58',
+        {'value1': widget.targetName},
+      ),
+    );
   }
 
   Future<void> _toggleVoiceCall() async {
@@ -493,6 +506,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   }
 
   Future<void> _loadUrl(String url) async {
+    if (!mounted) return;
+    final generation = ++_videoLoadGeneration;
+    _loadingVideoController?.dispose();
+    _loadingVideoController = null;
     _currentUrl = url;
     _urlController.text = url;
     _resetPlaybackSyncCache();
@@ -513,24 +530,44 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
         );
       }
       final oldController = _videoPlayerController;
+      _videoPlayerController = null;
+      oldController?.removeListener(_handleVideoPlayerSyncTick);
+      oldController?.dispose();
 
-      VideoPlayerController newController;
+      VideoPlayerController? newController;
       try {
-        final fileInfo = await AppCacheManager.instance.getFileFromCache(url);
-        final cachedFile =
-            fileInfo?.file ?? await AppCacheManager.instance.getSingleFile(url);
-        newController = VideoPlayerController.file(cachedFile);
+        // Chỉ dùng file đã có trong cache; cache miss phát trực tiếp URL để
+        // tránh kéo cả video về máy trước khi trình phát cần dữ liệu.
+        newController = await createCachedVideoController(url);
+        if (!mounted || generation != _videoLoadGeneration) {
+          newController?.dispose();
+          return;
+        }
+        newController ??= VideoPlayerController.networkUrl(Uri.parse(url));
+        _loadingVideoController = newController;
+        await newController.initialize().timeout(const Duration(seconds: 20));
       } catch (_) {
-        newController = VideoPlayerController.networkUrl(Uri.parse(url));
+        newController?.dispose();
+        if (mounted && generation == _videoLoadGeneration) {
+          _loadingVideoController = null;
+          setState(() => _isVideoPlayer = false);
+        }
+        return;
       }
 
+      if (!mounted || generation != _videoLoadGeneration) {
+        newController.dispose();
+        return;
+      }
       _videoPlayerController = newController;
-      await _videoPlayerController!.initialize();
-      _videoPlayerController!.addListener(_handleVideoPlayerSyncTick);
-      oldController?.dispose();
+      _loadingVideoController = null;
+      newController.addListener(_handleVideoPlayerSyncTick);
     } else {
       _isVideoPlayer = false;
-      _videoPlayerController?.pause();
+      final oldController = _videoPlayerController;
+      _videoPlayerController = null;
+      oldController?.removeListener(_handleVideoPlayerSyncTick);
+      oldController?.dispose();
       if (!kIsWeb) {
         await _webViewController?.loadRequest(Uri.parse(url));
       }
@@ -576,7 +613,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
               backgroundColor: isCalling ? Colors.red : const Color(0xFF2E7D32),
               icon: Icon(isCalling ? Icons.call_end : Icons.call),
               label: Text(
-                isCalling ? context.tr('ui_chat_end_call_005e85') : context.tr('p4_soul_voice_call'),
+                isCalling
+                    ? context.tr('ui_chat_end_call_005e85')
+                    : context.tr('p4_soul_voice_call'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w800),
               ),
             );
@@ -587,7 +626,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
             child: Padding(
               padding: SLSpacing.all24,
               child: Text(
-                context.tr('ui_chat_the_view_together_feature_is_not_currently_0d69a2'),
+                context.tr(
+                  'ui_chat_the_view_together_feature_is_not_currently_0d69a2',
+                ),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
@@ -624,7 +665,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
             backgroundColor: isCalling ? Colors.red : const Color(0xFF2E7D32),
             icon: Icon(isCalling ? Icons.call_end : Icons.call),
             label: Text(
-              isCalling ? context.tr('ui_chat_end_call_005e85') : context.tr('p4_soul_voice_call'),
+              isCalling
+                  ? context.tr('ui_chat_end_call_005e85')
+                  : context.tr('p4_soul_voice_call'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
           );
@@ -675,7 +718,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              L10nScope.of(context).format('ui_chat_watch_with_value1_c3b958', {'value1': widget.targetName}),
+                              L10nScope.of(context).format(
+                                'ui_chat_watch_with_value1_c3b958',
+                                {'value1': widget.targetName},
+                              ),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 18,
@@ -684,7 +730,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                             ),
                             SLSpacing.gapH(2),
                             Text(
-                              context.tr('ui_chat_paste_a_video_or_website_link_for_c070b4'),
+                              context.tr(
+                                'ui_chat_paste_a_video_or_website_link_for_c070b4',
+                              ),
                               style: SLTheme.quicksand(
                                 color: const Color(0xFF6D5C63),
                                 fontWeight: FontWeight.w700,
@@ -703,11 +751,15 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     children: [
                       _buildInfoChip(
                         Icons.sync_rounded,
-                        context.tr('ui_chat_automatically_synchronize_the_current_link_18dedc'),
+                        context.tr(
+                          'ui_chat_automatically_synchronize_the_current_link_18dedc',
+                        ),
                       ),
                       _buildInfoChip(
                         Icons.favorite_rounded,
-                        context.tr('ui_chat_please_quickly_join_the_chat_d6d57c'),
+                        context.tr(
+                          'ui_chat_please_quickly_join_the_chat_d6d57c',
+                        ),
                       ),
                       _buildInfoChip(
                         Icons.smart_display_rounded,
@@ -744,7 +796,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                 SLSpacing.w8,
                                 Expanded(
                                   child: Text(
-                                    context.tr('ui_chat_on_a_voice_call_please_talk_directly_3d3bff'),
+                                    context.tr(
+                                      'ui_chat_on_a_voice_call_please_talk_directly_3d3bff',
+                                    ),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w700,
                                       color: Colors.green.shade800,
@@ -778,8 +832,12 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     keyboardType: TextInputType.url,
                     style: SLTheme.quicksand(fontWeight: FontWeight.w700),
                     decoration: InputDecoration(
-                      labelText: context.tr('ui_chat_paste_the_video_or_website_link_c57bcb'),
-                      hintText: context.tr('ui_chat_youtube_com_tiktok_com_vnexpress_net_774b33'),
+                      labelText: context.tr(
+                        'ui_chat_paste_the_video_or_website_link_c57bcb',
+                      ),
+                      hintText: context.tr(
+                        'ui_chat_youtube_com_tiktok_com_vnexpress_net_774b33',
+                      ),
                       labelStyle: SLTheme.quicksand(
                         fontWeight: FontWeight.w800,
                       ),
@@ -812,7 +870,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        context.tr('ui_chat_paste_a_video_or_website_link_to_1c7cc5'),
+                        context.tr(
+                          'ui_chat_paste_a_video_or_website_link_to_1c7cc5',
+                        ),
                         style: SLTheme.quicksand(
                           fontWeight: FontWeight.w700,
                           color: Colors.black54,
@@ -866,8 +926,13 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                         Expanded(
                           child: Text(
                             hasUrl
-                                ? L10nScope.of(context).format('ui_chat_sharing_value1_0fb070', {'value1': _currentUrl})
-                                : context.tr('ui_chat_no_links_have_been_shared_in_this_144603'),
+                                ? L10nScope.of(context).format(
+                                    'ui_chat_sharing_value1_0fb070',
+                                    {'value1': _currentUrl},
+                                  )
+                                : context.tr(
+                                    'ui_chat_no_links_have_been_shared_in_this_144603',
+                                  ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: SLTheme.quicksand(
@@ -980,7 +1045,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                               ),
                               SLSpacing.h16,
                               Text(
-                                context.tr('ui_chat_there_is_no_content_to_view_yet_ec972c'),
+                                context.tr(
+                                  'ui_chat_there_is_no_content_to_view_yet_ec972c',
+                                ),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w900,
@@ -990,7 +1057,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                               ),
                               SLSpacing.h8,
                               Text(
-                                L10nScope.of(context).format('ui_chat_paste_a_link_and_tap_share_link_594080', {'value1': widget.targetName}),
+                                L10nScope.of(context).format(
+                                  'ui_chat_paste_a_link_and_tap_share_link_594080',
+                                  {'value1': widget.targetName},
+                                ),
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
                                   color: const Color(0xFF94A3B8),
@@ -1051,7 +1121,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                   valueListenable: _progressVN,
                                   builder: (context, value, _) {
                                     return Text(
-                                      L10nScope.of(context).format('ui_chat_loading_value1_0250bc', {'value1': (value * 100).toInt()}),
+                                      L10nScope.of(context).format(
+                                        'ui_chat_loading_value1_0250bc',
+                                        {'value1': (value * 100).toInt()},
+                                      ),
                                       style: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: const Color(0xFF6D5C63),

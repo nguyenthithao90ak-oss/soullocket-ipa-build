@@ -2,20 +2,43 @@ part of '../../home_screen.dart';
 
 extension _HomeScreenShellSyncFlows on _HomeScreenState {
   Future<void> _checkScheduleNotifs() async {
+    if (!mounted) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    // Home được dựng lại theo UID/House; tác vụ cũ phải dừng khi phiên đổi.
+    bool isCurrentSession() =>
+        mounted && FirebaseAuth.instance.currentUser?.uid == uid;
+    final now = DateTime.now();
+    final lastCheck = _lastScheduleNotifsCheckAt;
+    if (_isCheckingScheduleNotifs ||
+        (lastCheck != null &&
+            now.difference(lastCheck) <
+                _HomeScreenState._scheduleNotifsCooldown)) {
+      return;
+    }
+    _isCheckingScheduleNotifs = true;
+    _lastScheduleNotifsCheckAt = now;
+
     final msgFail = context.tr('home_chathkimtr_425245');
-    await _checkAccountDeletionStatus();
-    final houseId = await _houseService.getCurrentHouseId();
-    if (houseId == null || houseId.isEmpty) return;
     try {
+      await _checkAccountDeletionStatus();
+      if (!isCurrentSession()) return;
+      final houseId = await _houseService.getCurrentHouseId();
+      if (!isCurrentSession() || houseId == null || houseId.isEmpty) return;
       await ScheduleNotifService().checkAndNotify(houseId);
+      if (!isCurrentSession()) return;
 
       // Check Time Capsules for today
       await NotificationService().checkTimeCapsules(houseId);
+      if (!isCurrentSession()) return;
       await NotificationService().checkAutoSleepGreetings(houseId);
     } catch (e) {
       debugPrint(
         'Failed to check schedule notifs: ${AppErrorMapper.resolve(e, fallbackMessage: msgFail).message}',
       );
+    } finally {
+      _isCheckingScheduleNotifs = false;
     }
   }
 
@@ -125,33 +148,34 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     FriendsService().initGlobalSync(houseId);
 
     _pairingSub?.cancel();
-    _pairingSub = PairingService.instance.listenToIncomingRequests(houseId).listen((
-      requests,
-    ) {
-      if (!mounted) return;
-      final pendingRequests = requests
-          .where((r) => r.status == 'pending')
-          .toList();
-      if (pendingRequests.isNotEmpty) {
-        // Show a dialog for the first pending request
-        final request = pendingRequests.first;
-        SLNotice.showConfirmDialog(
-          context,
-          title: context.tr('home_yucughpni_6a3807'),
-          message:
-              L10nScope.of(context).format('ui_home_there_is_a_pairing_request_from_value1_654afe', {'value1': request.guestName}),
-          confirmText: context.tr('ui_home_xem_c088a9'),
-          cancelText: context.tr('Đóng'),
-        ).then((value) {
-          if (value == true && mounted) {
-            Navigator.push(
+    _pairingSub = PairingService.instance
+        .listenToIncomingRequests(houseId)
+        .listen((requests) {
+          if (!mounted) return;
+          final pendingRequests = requests
+              .where((r) => r.status == 'pending')
+              .toList();
+          if (pendingRequests.isNotEmpty) {
+            // Show a dialog for the first pending request
+            final request = pendingRequests.first;
+            SLNotice.showConfirmDialog(
               context,
-              MaterialPageRoute(builder: (_) => const PairingDashboardScreen()),
-            );
+              title: context.tr('home_yucughpni_6a3807'),
+              message: L10nScope.of(context).format(
+                'ui_home_there_is_a_pairing_request_from_value1_654afe',
+                {'value1': request.guestName},
+              ),
+              confirmText: context.tr('ui_home_xem_c088a9'),
+              cancelText: context.tr('Đóng'),
+            ).then((value) {
+              if (value == true && mounted) {
+                unawaited(
+                  slPush<void>(context, const PairingDashboardScreen()),
+                );
+              }
+            });
           }
         });
-      }
-    });
 
     _settingsSub = _houseSettingsService.streamSettings(houseId).listen((
       settings,
@@ -165,6 +189,9 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
         final hasCountdownBottomLabel =
             source.containsKey('countdownBottomLabel') ||
             source.containsKey('dayUnit');
+        final hasCustomBackground =
+            source.containsKey('customBackgroundUrl') ||
+            source.containsKey('customHomeBackground');
         final nextUi = currentUi.copyWith(
           themeKey:
               !source.containsKey('theme') || settings.theme.trim().isEmpty
@@ -213,7 +240,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
           transparentMode: source.containsKey('transparentMode')
               ? settings.transparentMode
               : currentUi.transparentMode,
-          customBackgroundUrl: source.containsKey('customBackgroundUrl')
+          customBackgroundUrl: hasCustomBackground
               ? settings.customBackgroundUrl.trim()
               : currentUi.customBackgroundUrl,
           countdownTextColor: source.containsKey('countdownTextColor')

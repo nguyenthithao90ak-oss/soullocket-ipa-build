@@ -6,7 +6,10 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     final sessionHouseId = _houseId;
     final prefs = await SharedPreferences.getInstance();
     await UiPrefs.ensureLoaded();
-    if (!mounted || _auth.currentUser?.uid != sessionUid || _houseId != sessionHouseId) return;
+    if (!mounted ||
+        _auth.currentUser?.uid != sessionUid ||
+        _houseId != sessionHouseId)
+      return;
     final ui = UiPrefs.notifier.value;
     final currentUid = _auth.currentUser?.uid ?? 'guest';
     final houseIdKey = _houseId ?? 'local';
@@ -18,7 +21,10 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
             .trim();
     final localLoveUnit = (prefs.getString('il_love_unit_text') ?? '').trim();
     final localGpsMode = await LocationService.getGpsUpdateMode();
-    if (!mounted || _auth.currentUser?.uid != sessionUid || _houseId != sessionHouseId) return;
+    if (!mounted ||
+        _auth.currentUser?.uid != sessionUid ||
+        _houseId != sessionHouseId)
+      return;
     setState(() {
       _gpsMode = localGpsMode;
       _musicAutoplay = prefs.getBool('il_music_autoplay') ?? false;
@@ -115,9 +121,13 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
             _defaultWidgetHeartStyleKey,
       );
       _widgetStickerKey = WidgetAppearance.normalizeSticker(
-        prefs.getString('il_widget_sticker_$accountKey') ?? prefs.getString('il_widget_sticker'));
+        prefs.getString('il_widget_sticker_$accountKey') ??
+            prefs.getString('il_widget_sticker'),
+      );
       _widgetPhotoFrameKey = WidgetAppearance.normalizePhotoFrame(
-        prefs.getString('il_widget_photo_frame_$accountKey') ?? prefs.getString('il_widget_photo_frame'));
+        prefs.getString('il_widget_photo_frame_$accountKey') ??
+            prefs.getString('il_widget_photo_frame'),
+      );
       _widgetHeartColorKey =
           prefs.getString('il_widget_heart_color_$accountKey') ??
           prefs.getString('il_widget_heart_color') ??
@@ -135,6 +145,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           prefs.getString('il_widget_season_mode') ??
           'auto';
       _draftCustomBackgroundUrl ??= ui.customBackgroundUrl;
+      _lastPersistedCustomBackgroundUrl ??= ui.customBackgroundUrl.trim();
       _draftTransparentMode ??= ui.transparentMode;
       _draftLiteMode = ui.liteMode;
 
@@ -249,7 +260,19 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         draftBackground != ui.customBackgroundUrl;
   }
 
-  Future<void> _saveThemeSettings({bool silent = false}) async {
+  Future<void> _saveThemeSettings({
+    bool silent = false,
+    bool rethrowOnError = false,
+    VoidCallback? onBackgroundCommitStarted,
+    bool Function()? isScopeCurrent,
+  }) async {
+    void checkMediaScope() {
+      if (isScopeCurrent != null && !isScopeCurrent()) {
+        throw StateError('Theme media scope changed');
+      }
+    }
+
+    checkMediaScope();
     final missingDataMsg = context.tr('home_thiudliugi_e5d4ed');
     final notDirtyMsg = context.tr('home_giaodinhin_c0fb51');
     final successMsg = context.tr('home_lugiaodint_742be7');
@@ -264,6 +287,7 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       return;
     }
     await UiPrefs.ensureLoaded();
+    checkMediaScope();
     final ui = UiPrefs.notifier.value;
     final themeKey = (_draftThemeKey ?? ui.themeKey).trim();
     final effectKey = (_draftEffectKey ?? ui.fallingEffectKey).trim();
@@ -282,7 +306,12 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     final customBackgroundUrl =
         (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim();
     final transparentMode = _draftTransparentMode ?? ui.transparentMode;
-    final oldSavedUrl = ui.customBackgroundUrl;
+    final oldSavedUrl =
+        (_lastPersistedCustomBackgroundUrl ?? ui.customBackgroundUrl).trim();
+    final backgroundChanged = oldSavedUrl != customBackgroundUrl;
+    // UiPrefs có thể đang chứa bản preview mới. Khi RTDB lỗi, chỉ khôi phục
+    // nền về URL đã commit trước đó để không biến preview thành dữ liệu đã lưu.
+    final previousUiState = ui.copyWith(customBackgroundUrl: oldSavedUrl);
 
     if (themeKey.isEmpty ||
         effectKey.isEmpty ||
@@ -322,8 +351,12 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           transparentMode: transparentMode,
         ),
       );
-      if (_houseId != null) {
-        final updateFuture = _dbRef.child('houses/$_houseId/settings').update({
+      checkMediaScope();
+      if (houseId != null) {
+        // Hai key ảnh nền phải được commit qua callable để backend khóa theo
+        // House, kiểm tra session upload và dọn object cũ sau commit. Không
+        // ghi trực tiếp các key này rồi xóa R2 ở client.
+        final settingsUpdates = <String, dynamic>{
           'theme': themeKey,
           'fallingEffect': effectKey,
           'avatarSizePx': avatarSizePx,
@@ -332,25 +365,26 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           'countdownStyle': countdownStyleKey,
           'font': fontKey,
           'homeBlockTone': homeBlockToneKey,
-          'customBackgroundUrl': customBackgroundUrl,
-          'customHomeBackground': customBackgroundUrl,
           'transparentMode': transparentMode,
           'updatedAt': ServerValue.timestamp,
-        });
-        if (!silent) {
-          await updateFuture;
-        }
-      }
-
-      if (oldSavedUrl.isNotEmpty && oldSavedUrl != customBackgroundUrl) {
-        try {
-          _storageService.deleteImageByUrl(oldSavedUrl);
-        } catch (error) {
-          debugPrint(
-            '[SuppressedError] lib/views/home/tabs/settings/settings_identity_helpers_part.dart: $error',
+        };
+        // Silent autosave must be durable too. Otherwise the old object could
+        // be deleted while RTDB still has the previous URL.
+        await _dbRef.child('houses/$houseId/settings').update(settingsUpdates);
+        checkMediaScope();
+        if (backgroundChanged) {
+          // Callable có thể đã commit dù client mất response; báo cho caller
+          // để không xóa object mới trong trường hợp kết quả không chắc chắn.
+          onBackgroundCommitStarted?.call();
+          await _storageService.syncHomeBackground(
+            houseId,
+            customBackgroundUrl,
           );
         }
       }
+
+      checkMediaScope();
+      _lastPersistedCustomBackgroundUrl = customBackgroundUrl;
 
       if (!mounted) return;
       if (!silent) {
@@ -385,10 +419,20 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
         _draftTransparentMode = transparentMode;
       }
     } catch (e) {
-      if (!mounted) return;
-      if (!silent) {
+      try {
+        if (isScopeCurrent == null || isScopeCurrent()) {
+          await UiPrefs.saveState(previousUiState);
+        }
+      } catch (rollbackError) {
+        debugPrint(
+          '[SuppressedError] lib/views/home/tabs/settings/settings_identity_helpers_part.dart rollback: $rollbackError',
+        );
+      }
+      if (mounted && !silent) {
         _showToast(errorMsg, success: false);
       }
+      if (rethrowOnError) rethrow;
+      if (!mounted) return;
     } finally {
       if (mounted) {
         if (!silent) setState(() => _isSavingTheme = false);

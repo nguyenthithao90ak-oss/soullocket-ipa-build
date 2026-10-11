@@ -12,6 +12,7 @@ Future<Uint8List> downloadPrivateImage(
   int? width,
   http.Client? client,
   void Function(int bytes)? onDownloadedBytes,
+  void Function(Uint8List bytes)? onDownloadedOriginalBytes,
 }) async {
   final transport = client ?? http.Client();
   final elapsed = Stopwatch()..start();
@@ -51,11 +52,16 @@ Future<Uint8List> downloadPrivateImage(
     }
     remaining();
     final bytes = buffer.takeBytes();
+    onDownloadedOriginalBytes?.call(bytes);
     onDownloadedBytes?.call(bytes.length);
     if (width == null) return bytes;
+    final targetWidth = width.clamp(64, 1600);
+    // Ảnh gốc đã không rộng hơn độ rộng cần: giữ nguyên
+    // tệp WebP/JPEG (~100–250 KB) thay vì giải mã rồi mã hóa lại PNG (~2 MB, tốn CPU và đĩa).
+    if (await _widthOf(bytes) <= targetWidth) return bytes;
     final codec = await ui.instantiateImageCodec(
       bytes,
-      targetWidth: width.clamp(64, 1024),
+      targetWidth: targetWidth,
       allowUpscaling: false,
     );
     try {
@@ -80,5 +86,20 @@ Future<Uint8List> downloadPrivateImage(
   } finally {
     transport.close();
     await chunks?.cancel();
+  }
+}
+
+/// Độ rộng ảnh đọc từ phần đầu tệp, không giải mã toàn ảnh.
+Future<int> _widthOf(Uint8List bytes) async {
+  final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+  try {
+    final descriptor = await ui.ImageDescriptor.encoded(buffer);
+    try {
+      return descriptor.width;
+    } finally {
+      descriptor.dispose();
+    }
+  } finally {
+    buffer.dispose();
   }
 }

@@ -3,8 +3,11 @@ part of '../soul_merge_screen.dart';
 class PersistentFloatingPhotoWidget extends StatefulWidget {
   final String url;
   final int index;
-  const PersistentFloatingPhotoWidget(
-      {super.key, required this.url, required this.index});
+  const PersistentFloatingPhotoWidget({
+    super.key,
+    required this.url,
+    required this.index,
+  });
 
   @override
   State<PersistentFloatingPhotoWidget> createState() =>
@@ -12,7 +15,8 @@ class PersistentFloatingPhotoWidget extends StatefulWidget {
 }
 
 class _PersistentFloatingPhotoWidgetState
-    extends State<PersistentFloatingPhotoWidget> {
+    extends State<PersistentFloatingPhotoWidget>
+    with ScreenActivityMixin {
   double _x = 0;
   double _y = 0;
   double _angle = 0;
@@ -21,17 +25,26 @@ class _PersistentFloatingPhotoWidgetState
   final math.Random _random = math.Random();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _randomizePosition();
-      _timer = Timer.periodic(
-          const Duration(seconds: 8), (_) => _randomizePosition());
-    });
+  void onScreenActivityChanged(bool active) {
+    if (!active) _isDragging = false;
+    _syncPositionTimer();
+    if (active && _x == 0 && _y == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _randomizePosition());
+    }
+  }
+
+  void _syncPositionTimer() {
+    _timer?.cancel();
+    _timer = isScreenActive && !_isDragging
+        ? Timer.periodic(
+            const Duration(seconds: 8),
+            (_) => _randomizePosition(),
+          )
+        : null;
   }
 
   void _randomizePosition() {
-    if (!mounted || _isDragging) return;
+    if (!isScreenActive || _isDragging) return;
     final size = MediaQuery.of(context).size;
     setState(() {
       _x = 20 + _random.nextDouble() * (size.width - 140);
@@ -66,15 +79,11 @@ class _PersistentFloatingPhotoWidgetState
       },
       onPointerUp: (event) {
         setState(() => _isDragging = false);
-        _timer?.cancel();
-        _timer = Timer.periodic(
-            const Duration(seconds: 8), (_) => _randomizePosition());
+        _syncPositionTimer();
       },
       onPointerCancel: (event) {
         setState(() => _isDragging = false);
-        _timer?.cancel();
-        _timer = Timer.periodic(
-            const Duration(seconds: 8), (_) => _randomizePosition());
+        _syncPositionTimer();
       },
       child: Transform.rotate(
         angle: _angle,
@@ -88,10 +97,15 @@ class _PersistentFloatingPhotoWidgetState
                 color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 spreadRadius: 2,
-              )
+              ),
             ],
             image: DecorationImage(
-              image: CachedNetworkImageProvider(widget.url),
+              image: ResizeImage(
+                CachedNetworkImageProvider(widget.url),
+                width: 360,
+                height: 360,
+                policy: ResizeImagePolicy.fit,
+              ),
               fit: BoxFit.cover,
             ),
           ),

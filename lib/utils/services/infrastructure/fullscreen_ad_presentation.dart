@@ -6,6 +6,100 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 enum FullscreenAdOutcome { rewarded, dismissed, unavailable }
 
+/// Các caller cùng chờ một lượt tải, kể cả phần kiểm tra quyền trước native load.
+class SharedAdLoad {
+  Completer<void>? _pending;
+
+  bool get isRunning => _pending != null;
+
+  Future<void> run(Future<void> Function() load) {
+    final running = _pending;
+    if (running != null) return running.future;
+    final pending = Completer<void>();
+    _pending = pending;
+    Future<void> start() async {
+      try {
+        await load();
+        if (!pending.isCompleted) pending.complete();
+      } catch (error, stack) {
+        if (!pending.isCompleted) pending.completeError(error, stack);
+      } finally {
+        // Callback cũ không được tháo khóa của lượt mới sau cancel.
+        if (identical(_pending, pending)) _pending = null;
+      }
+    }
+
+    unawaited(start());
+    return pending.future;
+  }
+
+  void cancel() {
+    final pending = _pending;
+    _pending = null;
+    if (pending != null && !pending.isCompleted) pending.complete();
+  }
+}
+
+/// Chỉ ghi mã/domain SDK; message native và ResponseInfo có thể chứa dữ liệu riêng.
+String adFailureDetails(Object error) {
+  final message = AppErrorMapper.resolve(error).message;
+  if (error is! AdError) return message;
+  final domain =
+      RegExp(r'^[A-Za-z][A-Za-z0-9_.-]{0,79}$').hasMatch(error.domain)
+      ? error.domain
+      : 'unknown';
+  return '$message (code=${error.code}, domain=$domain)';
+}
+
+/// Chỉ giới hạn việc chuẩn bị; quảng cáo đã xuất hiện chờ callback đóng.
+/// Sau mỗi await, caller kiểm tra [canContinue] để bỏ kết quả đến muộn.
+Future<T?> prepareAdWithTimeout<T>({
+  required Future<T?> Function(bool Function() canContinue) prepare,
+  required bool Function() isCurrent,
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  var active = true;
+  bool canContinue() => active && isCurrent();
+  final settled = Completer<T?>();
+  Timer? timeoutTimer;
+
+  Future<void> settlePreparation() async {
+    try {
+      // Future.sync còn bắt cả lỗi xảy ra khi callback tạo Future, còn await
+      // bên dưới giữ handler cho tới khi Future gốc kết thúc, kể cả sau timeout.
+      final result = await Future<T?>.sync(() => prepare(canContinue));
+      if (settled.isCompleted) return;
+      settled.complete(canContinue() ? result : null);
+    } catch (error) {
+      // Khi timeout đã trả fallback, vẫn phải tiêu thụ lỗi của Future gốc để
+      // callback native chậm không biến thành uncaught async error.
+      if (!settled.isCompleted) {
+        debugPrint(
+          'AdMobService: ad preparation failed: ${adFailureDetails(error)}',
+        );
+        settled.complete(null);
+      } else {
+        debugPrint(
+          'AdMobService: late ad preparation failure ignored: ${adFailureDetails(error)}',
+        );
+      }
+    }
+  }
+
+  try {
+    if (!canContinue()) return null;
+    timeoutTimer = Timer(timeout, () {
+      active = false;
+      if (!settled.isCompleted) settled.complete(null);
+    });
+    unawaited(settlePreparation());
+    return await settled.future;
+  } finally {
+    active = false;
+    timeoutTimer?.cancel();
+  }
+}
+
 /// Callback native quyết định đóng; Future show treo không giữ luồng chờ.
 Future<FullscreenAdOutcome> presentRewardedAd({
   required RewardedAd ad,
@@ -75,7 +169,7 @@ Future<FullscreenAdOutcome> _presentFullscreenAd({
   Timer? startTimer;
 
   void logFailure(Object error) => debugPrint(
-    'AdMobService: fullscreen presentation failed: ${AppErrorMapper.resolve(error).message}',
+    'AdMobService: fullscreen presentation failed: ${adFailureDetails(error)}',
   );
 
   Future<void> disposeSafely() async {
@@ -152,6 +246,7 @@ Future<FullscreenAdOutcome> _presentFullscreenAd({
 Future<T?> loadAdWithTimeout<T extends Ad>({
   required Future<void> Function(void Function(T), void Function(Object)) load,
   required bool Function() canAccept,
+  String debugLabel = 'ad',
   Duration timeout = const Duration(seconds: 12),
 }) {
   final result = Completer<T?>();
@@ -169,12 +264,17 @@ Future<T?> loadAdWithTimeout<T extends Ad>({
       await ad.dispose();
     } catch (error) {
       debugPrint(
-        'AdMobService: stale ad dispose failed: ${AppErrorMapper.resolve(error).message}',
+        'AdMobService: stale ad dispose failed: ${adFailureDetails(error)}',
       );
     }
   }
 
-  timer = Timer(timeout, () => finish(null));
+  timer = Timer(timeout, () {
+    debugPrint(
+      'AdMobService: $debugLabel load timed out after ${timeout.inMilliseconds}ms.',
+    );
+    finish(null);
+  });
   Future<void> start() async {
     try {
       await load(
@@ -187,11 +287,10 @@ Future<T?> loadAdWithTimeout<T extends Ad>({
           finish(ad);
         },
         (error) {
-          // Ghi mã lỗi đã được AppErrorMapper làm sạch để chẩn đoán fill/load;
-          // không ghi ad unit, token hay dữ liệu người dùng.
+          // Ghi mã/domain SDK để phân biệt no-fill với lỗi adapter hoặc request.
           debugPrint(
-            'AdMobService: ad load callback failed: '
-            '${AppErrorMapper.resolve(error).message}',
+            'AdMobService: $debugLabel load callback failed: '
+            '${adFailureDetails(error)}',
           );
           finish(null);
         },
@@ -199,7 +298,7 @@ Future<T?> loadAdWithTimeout<T extends Ad>({
     } catch (error) {
       finish(null);
       debugPrint(
-        'AdMobService: ad load failed: ${AppErrorMapper.resolve(error).message}',
+        'AdMobService: $debugLabel load failed: ${adFailureDetails(error)}',
       );
     }
   }

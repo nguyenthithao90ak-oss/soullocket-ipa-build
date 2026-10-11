@@ -81,6 +81,70 @@ extension _CollageIntroPanel on _CollageMakerScreenState {
   }
 
   Widget _buildIntroCard() {
-    return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF8F1), Color(0xFFF4E9DE)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: _paperLine.withValues(alpha: 0.9)),
+        boxShadow: _paperShadow(_paperRoseDeep),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _paperRoseDeep.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _paperRoseDeep.withValues(alpha: 0.22)),
+            ),
+            child: const Icon(
+              Icons.auto_awesome_mosaic_rounded,
+              color: _paperRoseDeep,
+              size: 27,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('collage_subtitle'),
+                  style: SLTheme.quicksand(
+                    color: _paperInk,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  context.tr(
+                    'ui_utilities_choose_2_to_9_photos_choose_a_a76a0d',
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    color: _paperMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

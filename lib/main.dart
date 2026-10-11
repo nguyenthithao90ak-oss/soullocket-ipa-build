@@ -17,6 +17,7 @@ import 'package:soullocket_app/core/bootstrap/background_handlers.dart'
     as background_handlers;
 import 'package:soullocket_app/utils/soullocket_security_watermark.dart';
 import 'package:soullocket_app/app.dart';
+import 'package:soullocket_app/core/app_router.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/build_signature_service.dart';
 import 'package:soullocket_app/core/service_locator.dart';
@@ -33,6 +34,8 @@ import 'package:flutter/material.dart';
 import 'utils/services/market_service.dart';
 import 'utils/services/soul_event_reminder_service.dart';
 import 'utils/services/calendar_reminder_service.dart';
+import 'utils/services/habit_reminder_service.dart';
+import 'utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
@@ -234,7 +237,13 @@ void main() {
                 const SizedBox(height: 16),
                 TextButton.icon(
                   onPressed: () {
-                    // Try to pop current route or restart
+                    final navigator =
+                        NotificationService.navigatorKey.currentState;
+                    if (navigator?.canPop() ?? false) {
+                      navigator!.pop();
+                    } else {
+                      AppRouter.router.go('/');
+                    }
                   },
                   icon: const Icon(Icons.refresh_rounded),
                   label: Text(
@@ -296,25 +305,17 @@ void main() {
         await initializeDateFormatting();
         await BuildSignatureService.verifyOfficialBuildSignature();
         // Vẽ ngay màn tải thay vì giữ màn chờ đen của hệ điều hành trong lúc
-        // khởi tạo Firebase (tối đa 3 giây); MyApp thay thế khi sẵn sàng.
+        // khởi tạo Firebase; MyApp thay thế khi sẵn sàng.
         if (!kIsWeb) {
           runApp(const StartupLoadingApp());
           FlutterNativeSplash.remove();
         }
-        unawaited(OfflineSyncQueue.instance.startListening());
-
-        // Firebase khởi tạo với timeout để không bao giờ treo màn hình Splash
-        try {
-          await initializeFirebaseBootstrap()
-              .then((_) {
-                MarketService.instance.attachAuthListener();
-                SoulEventReminderService.instance.start();
-                CalendarReminderService.instance.start();
-              })
-              .timeout(const Duration(seconds: 3));
-        } catch (e) {
-          debugPrint('Firebase bootstrap timeout or error: $e');
-        }
+        // Firebase có retry native dài hơn 3 giây. Chờ khởi tạo thành công
+        // trước MyApp để các service Auth/Database không truy cập app chưa có.
+        // Nếu thất bại, catch bên ngoài hiển thị màn lỗi có hướng dẫn.
+        await initializeFirebaseBootstrap().timeout(
+          const Duration(seconds: 20),
+        );
 
         if (!kIsWeb) {
           try {
@@ -326,9 +327,8 @@ void main() {
           }
         }
 
-        await MarketService.instance.init();
-        SoulEventReminderService.instance.start();
-        CalendarReminderService.instance.start();
+        // Đọc lựa chọn vùng từ bộ nhớ đã nạp, chưa gắn listener cloud.
+        await MarketService.instance.init(synchronize: false);
         runApp(const MyApp());
         _scheduleDeferredBootstrap();
 
@@ -475,6 +475,8 @@ void _scheduleDeferredBootstrap() {
             return true;
           };
           await runDeferredBootstrapTasks(
+            prepareDelay: const Duration(milliseconds: 350),
+            warmFontsDelay: const Duration(milliseconds: 750),
             prepareCore: () async {
               // Giữ nguyên thứ tự bảo mật/App Check và điều kiện trước SDK.
               await Future.wait([
@@ -585,20 +587,33 @@ Future<void> _warmUpWidgetService() async {
 }
 
 Future<void> _warmUpBackgroundServices() async {
-  unawaited(
-    _runBackgroundWarmUpTask('Music init error', () => MusicService().init()),
+  await _runBackgroundWarmUpTask(
+    'Firebase background services init error',
+    () async {
+      // Queue/nhắc lịch chỉ đọc Auth và RTDB sau khi bootstrap đã hoàn tất.
+      await initializeFirebaseBootstrap();
+      MarketService.instance.attachAuthListener();
+      await OfflineSyncQueue.instance.startListening();
+      SoulEventReminderService.instance.start();
+      CalendarReminderService.instance.start();
+      HabitReminderService.instance.start();
+    },
   );
-  unawaited(
-    _runBackgroundWarmUpTask(
-      'Connectivity init error',
-      () => ConnectivityService().initialize(),
-    ),
+  // Giãn các lệnh native tùy chọn để không dồn lên cùng một frame.
+  await Future<void>.delayed(const Duration(milliseconds: 150));
+  await _runBackgroundWarmUpTask(
+    'Music init error',
+    () => MusicService().init(),
   );
-  unawaited(
-    _runBackgroundWarmUpTask(
-      'Security warm-up error',
-      () => SecurityService().isProxyOrVpnActive(),
-    ),
+  await Future<void>.delayed(const Duration(milliseconds: 150));
+  await _runBackgroundWarmUpTask(
+    'Connectivity init error',
+    () => ConnectivityService().initialize(),
+  );
+  await Future<void>.delayed(const Duration(milliseconds: 150));
+  await _runBackgroundWarmUpTask(
+    'Security warm-up error',
+    () => SecurityService().isProxyOrVpnActive(),
   );
 }
 

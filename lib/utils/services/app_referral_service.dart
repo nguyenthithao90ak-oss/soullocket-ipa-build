@@ -207,14 +207,19 @@ class AppReferralService {
   Future<AppReferralProfile> _fetchProfile(String uid) async {
     final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
       'getAppReferralProfile',
-      timeout: const Duration(seconds: 30),
+      timeout: const Duration(seconds: 15),
       requireAppCheck: true,
     );
     if (_disposed || FirebaseAuth.instance.currentUser?.uid != uid) {
       throw StateError('account_changed');
     }
     final profile = AppReferralProfile.fromJson(result.data);
-    await _saveProfile(profile, uid);
+    unawaited(
+      _saveProfile(
+        profile,
+        uid,
+      ).then<void>((_) {}, onError: (Object error, StackTrace stackTrace) {}),
+    );
     return profile;
   }
 
@@ -235,7 +240,7 @@ class AppReferralService {
   }
 
   Future<AppReferralProfile> loadProfile({bool forceRefresh = false}) async {
-    await initialize();
+    await initialize().timeout(const Duration(seconds: 10));
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw StateError('sign_in_required');
     if (!forceRefresh) {

@@ -99,34 +99,9 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     );
   }
 
-  Widget _buildWidgetPanelTabBar() {
-    return WidgetStudioSegmentedControl(
-      selectedId: _widgetPanelTabKey,
-      onChanged: (styleKey) {
-        unawaited(_handleWidgetPanelTabChanged(styleKey));
-      },
-      items: [
-        WidgetStudioTab(
-          id: WidgetService.defaultWidgetStyleKey,
-          label: context.tr('home_mcnh_a57a8e'),
-          icon: Icons.widgets_rounded,
-        ),
-        WidgetStudioTab(
-          id: 'countdown',
-          label: context.tr('home_mngy_5500cb'),
-          icon: Icons.timer_outlined,
-        ),
-        WidgetStudioTab(
-          id: 'soulevent',
-          label: context.tr('p7_widget_tab_memories'),
-          icon: Icons.celebration_rounded,
-        ),
-      ],
-    );
-  }
-
   Widget _buildWidgetPanel({bool hideBackButton = false}) {
     final config = _buildWidgetPanelConfig();
+    final selectedTemplate = WidgetStudioTemplate.fromId(_widgetPanelTabKey);
 
     Future<void> handlePinWidget() async {
       if (kIsWeb) {
@@ -154,15 +129,19 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           await showAppHelpArticle(context, 'widget');
           return;
         }
-        if (_widgetPanelTabKey == 'soulevent') {
-          final houseId = _houseId ?? '';
-          if (houseId.isNotEmpty) {
-            await WidgetService.syncSoulEventWidgetData(houseId: houseId);
-          }
-          await WidgetService.requestPinSoulEventWidget();
-        } else {
-          await _persistAndSyncWidgetAppearance();
-          await WidgetService.requestPinWidget();
+        await _persistAndSyncWidgetAppearance();
+        switch (selectedTemplate) {
+          case WidgetStudioTemplate.event:
+            await WidgetService.requestPinSoulEventWidget();
+          case WidgetStudioTemplate.cycle:
+            await WidgetService.requestPinCycleWidget();
+          case WidgetStudioTemplate.calendar:
+            await WidgetService.requestPinCalendarWidget();
+          case WidgetStudioTemplate.sleep:
+            await WidgetService.requestPinSleepWidget();
+          case WidgetStudioTemplate.classic:
+          case WidgetStudioTemplate.countdown:
+            await WidgetService.requestPinWidget();
         }
         if (!mounted) return;
         _showToast(context.tr('widget_pin_req_sent'), success: true);
@@ -218,25 +197,14 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             themeName: config.smartThemeLabel,
             child: Column(
               children: [
-                _buildWidgetPreview(),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    context.tr('widget_utility_examples'),
-                    style: SLSettingsText.title(SLSettingsColors.ink),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.tr('widget_utility_examples_hint'),
-                  style: SLSettingsText.caption(SLSettingsColors.inkSecondary),
-                ),
-                const SizedBox(height: 10),
                 WidgetUtilityGallery(
                   sizeKey: _widgetPreviewSizeKey,
                   themeKey: _draftWidgetThemeKey ?? 'pink',
                   animated: _widgetHeartAnimated,
+                  selectedId: selectedTemplate.id,
+                  onChanged: (id) =>
+                      unawaited(_handleWidgetPanelTabChanged(id)),
+                  previewBuilder: (_) => _buildWidgetPreview(),
                 ),
                 const SizedBox(height: 14),
                 WidgetStudioSegmentedControl(
@@ -276,8 +244,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             ),
           ),
           const SizedBox(height: 16),
-          _buildWidgetPanelTabBar(),
-          const SizedBox(height: 14),
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
               icon: Icons.info_outline_rounded,
@@ -329,7 +295,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
             ),
           ),
-          if (_widgetPanelTabKey != 'soulevent') ...[
+          if (selectedTemplate.usesCoupleStyle) ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.favorite_rounded,
@@ -420,7 +386,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
             ),
           ],
-          if (_widgetPanelTabKey != 'soulevent') ...[
+          if (selectedTemplate.usesCoupleStyle) ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.auto_awesome_rounded,

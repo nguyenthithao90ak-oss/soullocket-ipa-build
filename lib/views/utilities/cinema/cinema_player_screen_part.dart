@@ -1,10 +1,12 @@
 part of '../cinema_screen.dart';
 
 class _CinemaReelPlayerScreen extends StatefulWidget {
+  final String houseId;
   final _CinemaDailyReel reel;
   final int initialIndex;
 
   const _CinemaReelPlayerScreen({
+    required this.houseId,
     required this.reel,
     required this.initialIndex,
   });
@@ -14,7 +16,8 @@ class _CinemaReelPlayerScreen extends StatefulWidget {
       _CinemaReelPlayerScreenState();
 }
 
-class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
+class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen>
+    with ScreenActivityMixin {
   static const Offset _kDefaultTitleAnchor = Offset(0.08, 0.58);
 
   final CinemaVideoExportService _videoExportService =
@@ -46,8 +49,10 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
     _titleController = TextEditingController(
       text: _buildDefaultExportTitle(widget.reel),
     );
-    _startTimer();
   }
+
+  @override
+  void onScreenActivityChanged(bool active) => _startTimer();
 
   @override
   void dispose() {
@@ -59,8 +64,12 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
 
   void _startTimer() {
     _timer?.cancel();
+    _timer = null;
+    if (!isScreenActive || widget.reel.items.length < 2) return;
     _timer = Timer.periodic(_kCinemaFrameDuration, (_) {
-      if (!mounted || widget.reel.items.length < 2) {
+      if (!isScreenActive || widget.reel.items.length < 2) {
+        _timer?.cancel();
+        _timer = null;
         return;
       }
       _goToIndex((_index + 1) % widget.reel.items.length);
@@ -216,11 +225,18 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                 return Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
-                    _buildContainedImage(
-                      frame.imageUrl,
-                      memCacheWidth: 1600,
-                      errorIconSize: 42,
-                    ),
+                    frame.isPrivate
+                        ? PrivateDiaryImage(
+                            houseId: widget.houseId,
+                            memoryId: frame.id,
+                            fit: BoxFit.contain,
+                            cacheWidth: 1600,
+                          )
+                        : _buildContainedImage(
+                            frame.imageUrl,
+                            memCacheWidth: 1600,
+                            errorIconSize: 42,
+                          ),
                     DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(

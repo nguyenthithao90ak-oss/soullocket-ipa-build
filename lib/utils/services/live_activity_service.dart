@@ -9,7 +9,12 @@ class LiveActivityService {
   final _liveActivities = LiveActivities();
   String? _activityId;
 
+  // Live Activity chỉ có trên iOS (Dynamic Island/màn khóa). Trên Android plugin trả
+  // PlatformException ở mỗi lần gọi, nên bỏ qua để khỏi tốn lượt gọi kênh native vô ích.
+  bool get _supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
   Future<void> init() async {
+    if (!_supported) return;
     try {
       await _liveActivities.init(appGroupId: 'group.com.soullocket.app');
     } catch (e) {
@@ -23,6 +28,7 @@ class LiveActivityService {
     required int days,
     required String title,
   }) async {
+    if (!_supported) return;
     try {
       final areActivitiesEnabled = await _liveActivities.areActivitiesEnabled();
       if (!areActivitiesEnabled) return;
@@ -48,6 +54,7 @@ class LiveActivityService {
   }
 
   Future<void> endActivity() async {
+    if (!_supported) return;
     try {
       if (_activityId != null) {
         await _liveActivities.endActivity(_activityId!);

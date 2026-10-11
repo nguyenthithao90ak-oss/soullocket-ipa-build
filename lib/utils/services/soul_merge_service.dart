@@ -16,6 +16,12 @@ class SoulMergeService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseService _houseService = HouseService();
+  int _lastBumpSentAt = 0;
+  String? _interactivePresenceHouse;
+  String? _interactivePresenceRole;
+  bool _interactivePresenceOnline = false;
+  int _interactivePresenceCheckedAt = 0;
+  int _lastInteractiveSentAt = 0;
 
   Future<String?> getCurrentHouseId() => _houseService.getCurrentHouseId();
 
@@ -26,8 +32,17 @@ class SoulMergeService {
       final user = _auth.currentUser;
       if (user == null) return;
 
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // Không gửi nhiều lần cho một chuỗi chạm/dao động liên tục.
+      if (now - _lastBumpSentAt < 350) return;
+      _lastBumpSentAt = now;
+
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return;
+
+      final eventNow = DateTime.now().millisecondsSinceEpoch;
+      if (eventNow - _lastInteractiveSentAt < 180) return;
+      _lastInteractiveSentAt = eventNow;
 
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
@@ -74,6 +89,8 @@ class SoulMergeService {
     String? replyTo,
     String? expectedHouseId,
     String? expectedUid,
+    String? messageId,
+    bool isRetry = false,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -107,15 +124,42 @@ class SoulMergeService {
           _auth.currentUser?.uid != user.uid) {
         throw StateError('Soul Merge scope changed');
       }
-      final ref = _db.ref('houses/$houseId/soul_merge/chat');
-      await ref.push().set({
+      if (messageId != null && !SoulMessageActions.validId(messageId)) {
+        throw ArgumentError('Invalid message id');
+      }
+      final ref = _db
+          .ref('houses/$houseId/soul_merge/chat')
+          .child(messageId ?? newSoulMessageId(houseId));
+      final payload = <String, dynamic>{
         if (trimmed.isNotEmpty) 'text': trimmed,
         if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
         'sender': role,
         'senderUid': user.uid,
         'replyTo': ?replyTo,
         'timestamp': ServerValue.timestamp,
-      });
+      };
+      bool sameContent(Object? raw) =>
+          raw is Map &&
+          raw['senderUid'] == user.uid &&
+          raw['sender'] == role &&
+          (raw['text'] ?? '') == trimmed &&
+          (raw['imageUrl'] ?? '') == (imageUrl ?? '') &&
+          raw['replyTo'] == replyTo;
+      if (isRetry) {
+        final existing = await ref.get();
+        if (existing.exists) {
+          if (sameContent(existing.value)) return;
+          throw StateError('Message id belongs to different content');
+        }
+      }
+      try {
+        await ref.set(payload);
+      } catch (_) {
+        // Ghi có thể đã được xác nhận trước khi kết nối đổi; cùng ID ngăn gửi trùng.
+        final existing = await ref.get();
+        if (sameContent(existing.value)) return;
+        rethrow;
+      }
 
       // Body của thông báo push
       final body = trimmed.isNotEmpty
@@ -162,6 +206,39 @@ class SoulMergeService {
       debugPrint('[SoulMergeService] sendSoulMessage error: $e');
       rethrow;
     }
+  }
+
+  String newSoulMessageId(String houseId) =>
+      _db.ref('houses/$houseId/soul_merge/chat').push().key!;
+
+  Stream<Map<String, dynamic>> watchSoulReadReceipts(String houseId) => _db
+      .ref('houses/$houseId/soul_merge/read_receipts')
+      .onValue
+      .map(
+        (event) => event.snapshot.value is Map
+            ? Map<String, dynamic>.from(event.snapshot.value as Map)
+            : <String, dynamic>{},
+      );
+
+  Future<void> markSoulMessageRead({
+    required String houseId,
+    required String expectedUid,
+    required String role,
+    required String messageId,
+    required int timestamp,
+  }) async {
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    if ((role != 'user1' && role != 'user2') || timestamp <= 0) return;
+    // Ghi hai nhánh trong một request, nhưng không tạo ref/listener ở node
+    // `soul_merge` cha để tránh tải nhầm toàn bộ trạng thái realtime.
+    await _db.ref().update({
+      'houses/$houseId/soul_merge/read_receipts/$expectedUid': {
+        'messageId': messageId,
+        'timestamp': timestamp,
+        'role': role,
+      },
+      'houses/$houseId/soul_merge/lastSeen/$role': timestamp,
+    });
   }
 
   Future<void> _requireMessageScope(
@@ -233,6 +310,97 @@ class SoulMergeService {
     await _db.ref('houses/$houseId/soul_merge/chat/$messageId').remove();
   }
 
+  /// Theo dõi tối đa 50 tin đã ghim cho đúng House.
+  /// Node ghim tách khỏi message bất biến để không làm thay đổi lịch sử chat.
+  Stream<List<Map<String, dynamic>>> watchSoulPinnedMessages({
+    String? houseId,
+  }) {
+    return Stream.fromFuture(
+      houseId == null
+          ? _houseService.getCurrentHouseId()
+          : Future.value(houseId),
+    ).asyncExpand<List<Map<String, dynamic>>>((resolvedHouseId) {
+      if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
+        return const Stream.empty();
+      }
+      return _db
+          .ref('houses/$resolvedHouseId/soul_merge/pinned')
+          .orderByChild('pinnedAt')
+          .limitToLast(50)
+          .onValue
+          .asyncMap((event) async {
+            final pinned = <Map<String, dynamic>>[];
+            for (final child in event.snapshot.children) {
+              final raw = child.value;
+              if (child.key == null || raw is! Map) continue;
+              pinned.add({...Map<String, dynamic>.from(raw), 'id': child.key});
+            }
+            pinned.sort(
+              (a, b) => ((b['pinnedAt'] as num?)?.toInt() ?? 0).compareTo(
+                (a['pinnedAt'] as num?)?.toInt() ?? 0,
+              ),
+            );
+
+            // Metadata ghim nằm ngoài trang 20 không chứa nội dung tin nhắn,
+            // vì vậy strip ghim trước đây chỉ hiển thị bản xem trước rỗng.
+            // Hydrate một lần theo từng thay đổi danh sách ghim (tối đa 50
+            // reads), không mở listener riêng cho từng tin và vẫn giữ metadata
+            // nếu một lần đọc nội dung bị lỗi/mất mạng.
+            return Future.wait(
+              pinned.map((pin) async {
+                final messageId = pin['id']?.toString();
+                if (messageId == null ||
+                    !SoulMessageActions.validId(messageId)) {
+                  return pin;
+                }
+                try {
+                  final messageSnapshot = await _db
+                      .ref(
+                        'houses/$resolvedHouseId/soul_merge/chat/$messageId',
+                      )
+                      .get();
+                  final message = messageSnapshot.value;
+                  if (message is Map) {
+                    return <String, dynamic>{
+                      ...Map<String, dynamic>.from(message),
+                      ...pin,
+                      'id': messageId,
+                    };
+                  }
+                } catch (error) {
+                  debugPrint(
+                    '[SoulMergeService] Pinned message hydrate failed: '
+                    '${error.runtimeType}',
+                  );
+                }
+                return pin;
+              }),
+            );
+          });
+    });
+  }
+
+  Future<void> pinSoulMessage({
+    required String houseId,
+    required String expectedUid,
+    required String messageId,
+  }) async {
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    await _db.ref('houses/$houseId/soul_merge/pinned/$messageId').set({
+      'pinnedBy': expectedUid,
+      'pinnedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> unpinSoulMessage({
+    required String houseId,
+    required String expectedUid,
+    required String messageId,
+  }) async {
+    await _requireMessageScope(houseId, expectedUid, messageId);
+    await _db.ref('houses/$houseId/soul_merge/pinned/$messageId').remove();
+  }
+
   Stream<Map<String, dynamic>?> watchSoulMessage(
     String houseId,
     String messageId,
@@ -301,7 +469,46 @@ class SoulMergeService {
             : <String, dynamic>{},
       );
 
+  /// Theo dõi ảnh đại diện riêng của phòng Soul Merge.
+  ///
+  /// Ảnh này tách khỏi `settings/avtUser1|avtUser2` để người dùng có thể
+  /// trang trí phòng chat mà không làm thay đổi avatar ở Home/Ghép đôi.
+  Stream<Map<String, dynamic>> watchSoulAvatar(String houseId) => _db
+      .ref('houses/$houseId/soul_merge/avatar')
+      .onValue
+      .map(
+        (event) => event.snapshot.value is Map
+            ? Map<String, dynamic>.from(event.snapshot.value as Map)
+            : <String, dynamic>{},
+      );
+
   Future<void> saveSoulBackground(
+    String houseId, {
+    String? url,
+    String? storagePath,
+    String? expectedUid,
+  }) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null ||
+        (expectedUid != null && uid != expectedUid) ||
+        await getCurrentHouseId() != houseId ||
+        _auth.currentUser?.uid != uid) {
+      throw StateError('Soul Merge scope changed');
+    }
+    await _db
+        .ref('houses/$houseId/soul_merge/background')
+        .set(
+          url == null
+              ? null
+              : {
+                  'url': url,
+                  'storagePath': storagePath,
+                  'updatedAt': ServerValue.timestamp,
+                },
+        );
+  }
+
+  Future<void> saveSoulAvatar(
     String houseId, {
     String? url,
     String? storagePath,
@@ -313,7 +520,7 @@ class SoulMergeService {
       throw StateError('Soul Merge scope changed');
     }
     await _db
-        .ref('houses/$houseId/soul_merge/background')
+        .ref('houses/$houseId/soul_merge/avatar')
         .set(
           url == null
               ? null
@@ -376,14 +583,26 @@ class SoulMergeService {
       final role = _normalizeRole(prefs.getString('il_role'));
 
       final oppositeRole = role == 'user1' ? 'user2' : 'user1';
-      final presenceSnap = await _db
-          .ref('houses/$houseId/presence/$oppositeRole')
-          .get();
-      final presenceData = presenceSnap.value as Map<dynamic, dynamic>?;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final presenceCacheValid =
+          _interactivePresenceHouse == houseId &&
+          _interactivePresenceRole == oppositeRole &&
+          now - _interactivePresenceCheckedAt < 2000;
+      if (!presenceCacheValid) {
+        final presenceSnap = await _db
+            .ref('houses/$houseId/presence/$oppositeRole')
+            .get();
+        final presenceData = presenceSnap.value as Map<dynamic, dynamic>?;
+        _interactivePresenceHouse = houseId;
+        _interactivePresenceRole = oppositeRole;
+        _interactivePresenceCheckedAt = now;
+        _interactivePresenceOnline =
+            PresenceService.isPresenceOnline(presenceData);
+      }
 
-      // Nếu người kia offline, ta không cần gửi event vì đằng nào họ cũng không thấy được (event realtime)
-      // Điều này giúp tiết kiệm lượt ghi/đọc (bandwidth) đáng kể cho Firebase.
-      if (!PresenceService.isPresenceOnline(presenceData)) {
+      // Nếu người kia offline, không ghi event tạm thời mà họ chắc chắn không
+      // thể nhận; cache presence 2 giây để chuỗi chạm không tạo nhiều lượt đọc.
+      if (!_interactivePresenceOnline) {
         return;
       }
 
@@ -398,7 +617,7 @@ class SoulMergeService {
       });
 
       // Prune old events to keep lightweight
-      final snap = await ref.orderByChild('timestamp').get();
+      final snap = await ref.orderByChild('timestamp').limitToLast(21).get();
       if (snap.exists && snap.value is Map) {
         final events = Map<dynamic, dynamic>.from(snap.value as Map);
         if (events.length > 20) {
@@ -420,16 +639,20 @@ class SoulMergeService {
   }
 
   /// Watch real-time interactive events
-  Stream<Map<String, dynamic>> watchInteractiveEvents() {
+  Stream<Map<String, dynamic>> watchInteractiveEvents({String? houseId}) {
     return Stream.fromFuture(
-      _houseService.getCurrentHouseId(),
-    ).asyncExpand<Map<String, dynamic>>((houseId) {
-      if (houseId == null || houseId.isEmpty) return const Stream.empty();
+      houseId == null
+          ? _houseService.getCurrentHouseId()
+          : Future.value(houseId),
+    ).asyncExpand<Map<String, dynamic>>((resolvedHouseId) {
+      if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
+        return const Stream.empty();
+      }
 
       final now = DateTime.now().millisecondsSinceEpoch;
 
       return _db
-          .ref('houses/$houseId/soul_merge/interactive_events')
+          .ref('houses/$resolvedHouseId/soul_merge/interactive_events')
           .orderByChild('timestamp')
           .startAt(now)
           .limitToLast(20)

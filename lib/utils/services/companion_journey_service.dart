@@ -80,6 +80,13 @@ class CompanionJourneyService extends ChangeNotifier {
   Future<void> purchase(List<String> itemIds) =>
       _call({'action': 'purchase', 'itemIds': itemIds});
 
+  Future<void> redeemCharacter(HomeCompanionCharacter character, int expectedPrice) =>
+      _call({
+        'action': 'redeem_character',
+        'character': character.name,
+        'expectedPrice': expectedPrice,
+      });
+
   Future<RewardClaimResult> claimAdReward({bool showIfNone = false}) async {
     if (_disposed || _uid == null || state?.enabled != true) {
       return const RewardClaimResult(ok: false, error: 'unauthenticated');
@@ -125,7 +132,7 @@ class CompanionJourneyService extends ChangeNotifier {
           await user!.getIdToken(true);
           return true;
         },
-      );
+      ).timeout(const Duration(seconds: 25));
       if (_disposed || generation != _generation || request != _request) {
         throw StateError('stale_journey_response');
       }

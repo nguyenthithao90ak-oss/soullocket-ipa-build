@@ -24,7 +24,7 @@ class AudioWaveformBubble extends StatefulWidget {
 
 class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
     with SingleTickerProviderStateMixin {
-  late final AudioPlayer _player;
+  late AudioPlayer _player;
   StreamSubscription? _posSub;
   StreamSubscription? _durSub;
   StreamSubscription? _stateSub;
@@ -34,7 +34,12 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
   Duration _duration = Duration.zero;
   bool _isLoading = false;
   bool _startingPlayback = false;
+  bool _resettingPlayer = false;
   VoidCallback? _releaseSoundQuiet;
+  int _playerGeneration = 0;
+  int _playbackRequestId = 0;
+
+  static const _playerOperationTimeout = Duration(seconds: 12);
 
   void _releaseQuiet() {
     _releaseSoundQuiet?.call();
@@ -44,7 +49,7 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
   double _playbackSpeed = 1.0;
 
   // Cố định mẫu sóng âm ngẫu nhiên đẹp mắt theo mã băm của URL
-  late final List<double> _waveformSamples;
+  late List<double> _waveformSamples;
 
   bool get _isPlaying => _playerState == PlayerState.playing;
 
@@ -54,20 +59,28 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
     _player = AudioPlayer();
     _duration = widget.initialDuration ?? Duration.zero;
     _waveformSamples = _generateWaveform(widget.audioUrl);
+    _attachPlayerListeners();
+  }
 
-    _posSub = _player.onPositionChanged.listen((pos) {
+  void _attachPlayerListeners() {
+    final generation = ++_playerGeneration;
+    final player = _player;
+    _posSub = player.onPositionChanged.listen((pos) {
+      if (generation != _playerGeneration) return;
       if (mounted) {
         setState(() => _position = pos);
       }
     });
 
-    _durSub = _player.onDurationChanged.listen((dur) {
+    _durSub = player.onDurationChanged.listen((dur) {
+      if (generation != _playerGeneration) return;
       if (mounted && dur > Duration.zero) {
         setState(() => _duration = dur);
       }
     });
 
-    _stateSub = _player.onPlayerStateChanged.listen((state) {
+    _stateSub = player.onPlayerStateChanged.listen((state) {
+      if (generation != _playerGeneration) return;
       if (state != PlayerState.playing && !_startingPlayback) _releaseQuiet();
       if (mounted) {
         setState(() {
@@ -83,13 +96,94 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
     });
   }
 
+  List<StreamSubscription> _detachPlayerListeners() {
+    final subscriptions = [
+      ...?_posSub == null ? null : [_posSub!],
+      ...?_durSub == null ? null : [_durSub!],
+      ...?_stateSub == null ? null : [_stateSub!],
+    ];
+    _posSub = null;
+    _durSub = null;
+    _stateSub = null;
+    return subscriptions;
+  }
+
+  void _cleanupDetachedPlayer(
+    AudioPlayer player,
+    List<StreamSubscription> subscriptions,
+  ) {
+    for (final subscription in subscriptions) {
+      unawaited(
+        subscription.cancel().catchError((error) {
+          debugPrint('[AudioWaveformBubble] Listener cancel error: $error');
+        }),
+      );
+    }
+    unawaited(
+      player.stop().catchError((error) {
+        debugPrint('[AudioWaveformBubble] Detached player stop error: $error');
+      }),
+    );
+    unawaited(
+      player.dispose().catchError((error) {
+        debugPrint(
+          '[AudioWaveformBubble] Detached player dispose error: $error',
+        );
+      }),
+    );
+  }
+
+  Future<void> _replacePlayer({required int expectedGeneration}) async {
+    if (!mounted ||
+        _resettingPlayer ||
+        expectedGeneration != _playerGeneration) {
+      return;
+    }
+    _resettingPlayer = true;
+    _playerGeneration++;
+    final previousPlayer = _player;
+    final previousSubscriptions = _detachPlayerListeners();
+    _releaseQuiet();
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _startingPlayback = false;
+        _playerState = PlayerState.stopped;
+        _position = Duration.zero;
+        _duration = widget.initialDuration ?? Duration.zero;
+      });
+    }
+    _player = AudioPlayer();
+    _attachPlayerListeners();
+    _resettingPlayer = false;
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _startingPlayback = false;
+        _playerState = PlayerState.stopped;
+        _position = Duration.zero;
+        _duration = widget.initialDuration ?? Duration.zero;
+      });
+    }
+    _cleanupDetachedPlayer(previousPlayer, previousSubscriptions);
+  }
+
+  @override
+  void didUpdateWidget(covariant AudioWaveformBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.audioUrl == widget.audioUrl) return;
+    _playbackRequestId++;
+    _waveformSamples = _generateWaveform(widget.audioUrl);
+    _releaseQuiet();
+    unawaited(_replacePlayer(expectedGeneration: _playerGeneration));
+  }
+
   @override
   void dispose() {
     _releaseQuiet();
-    _posSub?.cancel();
-    _durSub?.cancel();
-    _stateSub?.cancel();
-    _player.dispose();
+    final subscriptions = _detachPlayerListeners();
+    _playerGeneration++;
+    _cleanupDetachedPlayer(_player, subscriptions);
     super.dispose();
   }
 
@@ -107,36 +201,77 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
     return samples;
   }
 
+  bool _isCurrentPlayer(AudioPlayer player, int generation) {
+    return mounted &&
+        generation == _playerGeneration &&
+        identical(player, _player);
+  }
+
   Future<void> _togglePlay() async {
-    if (_startingPlayback) return;
+    if (_startingPlayback || _resettingPlayer) return;
+    final generation = _playerGeneration;
+    final player = _player;
     if (_isPlaying) {
-      await _player.pause();
-      _releaseQuiet();
+      try {
+        await player.pause().timeout(_playerOperationTimeout);
+        if (_isCurrentPlayer(player, generation)) _releaseQuiet();
+      } catch (error) {
+        if (!_isCurrentPlayer(player, generation)) return;
+        debugPrint('[AudioWaveformBubble] Pause error: $error');
+        unawaited(_replacePlayer(expectedGeneration: generation));
+      }
     } else {
+      final requestId = ++_playbackRequestId;
+      bool isCurrentRequest() =>
+          requestId == _playbackRequestId &&
+          _isCurrentPlayer(player, generation);
       _startingPlayback = true;
       _releaseSoundQuiet ??= SoundService().holdQuiet();
+      final deadline = DateTime.now().add(_playerOperationTimeout);
       try {
         if (_playerState == PlayerState.paused) {
-          await _player.resume();
+          await player.resume().timeout(_remainingOperationTimeout(deadline));
         } else {
-          setState(() => _isLoading = true);
+          if (mounted) setState(() => _isLoading = true);
           final url = widget.audioUrl.trim();
           if (url.startsWith('http://') || url.startsWith('https://')) {
-            await _player.play(UrlSource(url));
+            await player
+                .play(UrlSource(url))
+                .timeout(_remainingOperationTimeout(deadline));
           } else {
-            await _player.play(DeviceFileSource(url));
+            await player
+                .play(DeviceFileSource(url))
+                .timeout(_remainingOperationTimeout(deadline));
           }
-          await _player.setPlaybackRate(_playbackSpeed);
+          if (!isCurrentRequest()) return;
+          await player
+              .setPlaybackRate(_playbackSpeed)
+              .timeout(_remainingOperationTimeout(deadline));
         }
+        if (!isCurrentRequest()) return;
+      } on TimeoutException catch (error) {
+        if (!isCurrentRequest()) return;
+        debugPrint('[AudioWaveformBubble] Playback timed out: $error');
+        await _replacePlayer(expectedGeneration: generation);
       } catch (e) {
+        if (!isCurrentRequest()) return;
         _releaseQuiet();
         debugPrint('[AudioWaveformBubble] Playback error: $e');
-        if (mounted) setState(() => _isLoading = false);
       } finally {
-        _startingPlayback = false;
-        if (!mounted || _player.state != PlayerState.playing) _releaseQuiet();
+        if (isCurrentRequest()) {
+          _startingPlayback = false;
+          setState(() => _isLoading = false);
+          if (player.state != PlayerState.playing) _releaseQuiet();
+        }
       }
     }
+  }
+
+  Duration _remainingOperationTimeout(DateTime deadline) {
+    final remaining = deadline.difference(DateTime.now());
+    return remaining <= Duration.zero
+        ? const Duration(milliseconds: 1)
+        : remaining;
   }
 
   Future<void> _toggleSpeed() async {
@@ -150,7 +285,17 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
     }
     setState(() => _playbackSpeed = nextSpeed);
     if (_isPlaying) {
-      await _player.setPlaybackRate(nextSpeed);
+      final generation = _playerGeneration;
+      final player = _player;
+      try {
+        await player
+            .setPlaybackRate(nextSpeed)
+            .timeout(_playerOperationTimeout);
+      } catch (error) {
+        if (!_isCurrentPlayer(player, generation)) return;
+        debugPrint('[AudioWaveformBubble] Playback rate error: $error');
+        unawaited(_replacePlayer(expectedGeneration: generation));
+      }
     }
   }
 
@@ -289,18 +434,23 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _isPlaying || _position > Duration.zero
-                    ? '${_formatDuration(_position)} / ${_formatDuration(_duration)}'
-                    : (_duration > Duration.zero
-                          ? _formatDuration(_duration)
-                          : context.tr('ui_common_voice_note_ddc07a')),
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: secondaryColor,
+              Expanded(
+                child: Text(
+                  _isPlaying || _position > Duration.zero
+                      ? '${_formatDuration(_position)} / ${_formatDuration(_duration)}'
+                      : (_duration > Duration.zero
+                            ? _formatDuration(_duration)
+                            : context.tr('ui_common_voice_note_ddc07a')),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: secondaryColor,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: _toggleSpeed,
                 child: Container(

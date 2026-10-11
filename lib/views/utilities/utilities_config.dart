@@ -23,7 +23,6 @@ const List<String> utilitiesHubDefaultOrder = <String>[
   'tarot',
   'diary_export',
   'store',
-  'giftcode',
 ];
 
 Map<String, Map<String, dynamic>> get appConfig => {
@@ -31,10 +30,6 @@ Map<String, Map<String, dynamic>> get appConfig => {
     'icon': Icons.photo_library_rounded,
     'colors': [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
     'title': L10nService().translate('util_luunhtbit_6f4b4a'),
-  },
-  'giftcode': {
-    'icon': Icons.confirmation_number_rounded,
-    'colors': [const Color(0xFFFF8A65), const Color(0xFFFF6F91)],
   },
   'voice': {
     'icon': Icons.graphic_eq_rounded,

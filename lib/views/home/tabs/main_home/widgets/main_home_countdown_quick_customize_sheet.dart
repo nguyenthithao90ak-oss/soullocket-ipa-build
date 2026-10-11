@@ -39,12 +39,19 @@ class _CountdownQuickCustomizeSheetContentState
     required bool selected,
     required VoidCallback onTap,
   }) {
-    // Cân bằng dùng cùng nền xem trước với vòng đếm thật trên trang chủ.
-    if (option.value == 'default') {
-      return _buildBalancedOptionChip(
-        option: option,
+    if (CountdownArtworkDesign.styleKeys.contains(option.value)) {
+      return CountdownStyleChoiceTile(
+        styleKey: option.value,
+        label: option.label,
         selected: selected,
         onTap: onTap,
+        trailing: option.isPremium
+            ? Icon(
+                option.isVipOnly
+                    ? Icons.diamond_rounded
+                    : Icons.auto_awesome_rounded,
+              )
+            : null,
       );
     }
 
@@ -142,151 +149,74 @@ class _CountdownQuickCustomizeSheetContentState
     );
   }
 
-  Widget _buildBalancedOptionChip({
+  Future<void> _unlockStyleWithAd({
     required _CountdownQuickOption option,
-    required bool selected,
-    required VoidCallback onTap,
-  }) => BalancedCountdownOption(selected: selected, onTap: onTap);
+    required Future<void> Function(_CountdownQuickOption option) onUnlocked,
+  }) async {
+    if (_unlockingStyleKey != null) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _unlockingStyleKey = option.value);
+    try {
+      final expiry = await AdMobService().unlockCountdownStyleWithAd(
+        option.value,
+        quick: true,
+      );
+      if (!mounted) return;
+      if (expiry != null) {
+        setState(() => _unlockedStyles = {..._unlockedStyles, option.value});
+        await onUnlocked(option);
+        if (!mounted) return;
+        widget.homeState._showLatestSnackBar(
+          context
+              .tr('countdown_quick_style_unlocked_hours')
+              .replaceAll('{style}', option.label)
+              .replaceAll(
+                '{hours}',
+                '${_MainHomeTabState._kCountdownQuickUnlockWindow.inHours}',
+              ),
+        );
+      } else {
+        widget.homeState._showLatestSnackBar(
+          context.tr('ui_home_not_unlocked_yet_please_watch_all_ads_334eb2'),
+        );
+      }
+    } catch (_) {
+      widget.homeState._showLatestSnackBar(
+        context.tr('ui_home_an_error_occurred_while_loading_the_ad_cc279f'),
+      );
+    } finally {
+      if (mounted) setState(() => _unlockingStyleKey = null);
+    }
+  }
 
   Widget buildLockedAdButton({
     required _CountdownQuickOption option,
     required Future<void> Function(_CountdownQuickOption option) onUnlocked,
   }) {
     final isThisUnlocking = _unlockingStyleKey == option.value;
-    final accent = option.accent;
-    final palette = _countdownQuickPalette(option.value, accent);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: isThisUnlocking
-            ? null
-            : () async {
-                if (_unlockingStyleKey != null) return;
-                HapticFeedback.mediumImpact();
-                setState(() {
-                  _unlockingStyleKey = option.value;
-                });
-                try {
-                  final adMob = AdMobService();
-                  final expiry = await adMob.unlockCountdownStyleWithAd(
-                    option.value,
-                    quick: true,
-                  );
-                  if (!mounted) return;
-                  if (expiry != null) {
-                    setState(() {
-                      _unlockedStyles = {..._unlockedStyles, option.value};
-                    });
-                    await onUnlocked(option);
-                    if (!mounted) return;
-                    widget.homeState._showLatestSnackBar(
-                      context
-                          .tr('countdown_quick_style_unlocked_hours')
-                          .replaceAll('{style}', option.label)
-                          .replaceAll(
-                            '{hours}',
-                            '${_MainHomeTabState._kCountdownQuickUnlockWindow.inHours}',
-                          ),
-                    );
-                  } else {
-                    widget.homeState._showLatestSnackBar(
-                      context.tr('ui_home_not_unlocked_yet_please_watch_all_ads_334eb2'),
-                    );
-                  }
-                } catch (_) {
-                  widget.homeState._showLatestSnackBar(
-                    context.tr('ui_home_an_error_occurred_while_loading_the_ad_cc279f'),
-                  );
-                } finally {
-                  if (mounted) {
-                    setState(() {
-                      _unlockingStyleKey = null;
-                    });
-                  }
-                }
-              },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                palette.first.withValues(alpha: 0.18),
-                palette.last.withValues(alpha: 0.10),
-                Colors.white.withValues(alpha: 0.96),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: palette.first.withValues(alpha: 0.52),
-              width: 1.25,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: palette.first.withValues(alpha: 0.13),
-                blurRadius: 13,
-                spreadRadius: -4,
-                offset: const Offset(0, 6),
+    return CountdownStyleChoiceTile(
+      styleKey: option.value,
+      label: option.label,
+      onTap: isThisUnlocking
+          ? null
+          : () => _unlockStyleWithAd(option: option, onUnlocked: onUnlocked),
+      trailing: isThisUnlocking
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                valueColor: AlwaysStoppedAnimation<Color>(option.accent),
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _CountdownQuickOptionPreview(option: option),
-              const SizedBox(width: 11),
-              Flexible(
-                child: Text(
-                  option.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: 13.2,
-                    fontWeight: FontWeight.w900,
-                    color: accent,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (isThisUnlocking)
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(accent),
-                  ),
-                )
-              else
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: palette),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
+            )
+          : const Icon(Icons.play_circle_fill_rounded),
     );
   }
 
   Widget buildLockedVipButton({required _CountdownQuickOption option}) {
-    final accent = option.accent;
-    final palette = _countdownQuickPalette(option.value, accent);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
+    return CountdownStyleChoiceTile(
+      styleKey: option.value,
+      label: option.label,
       onTap: () {
         HapticFeedback.mediumImpact();
         showDialog(
@@ -296,7 +226,11 @@ class _CountdownQuickCustomizeSheetContentState
               title: context.tr('p6_upgrade_vip'),
               icon: Icons.diamond_outlined,
             ),
-            content: Text(L10nService().format('dialog_vip_feature', {'feature': option.label})),
+            content: Text(
+              L10nService().format('dialog_vip_feature', {
+                'feature': option.label,
+              }),
+            ),
             actions: [
               SLDialogAction(
                 primary: true,
@@ -307,69 +241,7 @@ class _CountdownQuickCustomizeSheetContentState
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              palette.first.withValues(alpha: 0.24),
-              palette.last.withValues(alpha: 0.14),
-              Colors.white.withValues(alpha: 0.97),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accent.withValues(alpha: 0.68), width: 1.7),
-          boxShadow: [
-            BoxShadow(
-              color: palette.first.withValues(alpha: 0.22),
-              blurRadius: 17,
-              spreadRadius: -4,
-              offset: const Offset(0, 7),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _CountdownQuickOptionPreview(option: option),
-            const SizedBox(width: 11),
-            Flexible(
-              child: Text(
-                option.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontSize: 13.2,
-                  fontWeight: FontWeight.w900,
-                  color: accent,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 29,
-              height: 29,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: palette),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: accent.withValues(alpha: 0.27),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.diamond_rounded,
-                size: 17,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
+      trailing: const Icon(Icons.diamond_rounded),
     );
   }
 
@@ -452,30 +324,34 @@ class _CountdownQuickCustomizeSheetContentState
             ],
           ),
           const SizedBox(height: 14),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+          Column(
             children: options.map((option) {
               final isLocked =
                   option.isPremium &&
                   !widget.isVip &&
                   !_unlockedStyles.contains(option.value);
+              late final Widget chip;
               if (isLocked) {
-                return buildLockedAdButton(
+                chip = buildLockedAdButton(
                   option: option,
                   onUnlocked: (opt) async {
                     HapticFeedback.selectionClick();
                     await onSelect(opt);
                   },
                 );
+              } else {
+                chip = buildOptionChip(
+                  option: option,
+                  selected: selectedValue == option.value,
+                  onTap: () async {
+                    HapticFeedback.selectionClick();
+                    await onSelect(option);
+                  },
+                );
               }
-              return buildOptionChip(
-                option: option,
-                selected: selectedValue == option.value,
-                onTap: () async {
-                  HapticFeedback.selectionClick();
-                  await onSelect(option);
-                },
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(width: double.infinity, child: chip),
               );
             }).toList(),
           ),
@@ -711,7 +587,9 @@ class _CountdownQuickCustomizeSheetContentState
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        context.tr('ui_home_upload_or_remove_the_homepage_background_image_7e3019'),
+                        context.tr(
+                          'ui_home_upload_or_remove_the_homepage_background_image_7e3019',
+                        ),
                         style: SLTheme.quicksand(
                           fontSize: 12.1,
                           fontWeight: FontWeight.w700,
@@ -741,7 +619,10 @@ class _CountdownQuickCustomizeSheetContentState
                   Expanded(
                     child: Text(
                       _bgUploadProgress != null
-                          ? L10nScope.of(context).format('ui_home_uploading_value1_b346dd', {'value1': (_bgUploadProgress! * 100).toInt()})
+                          ? L10nScope.of(context).format(
+                              'ui_home_uploading_value1_b346dd',
+                              {'value1': (_bgUploadProgress! * 100).toInt()},
+                            )
                           : context.tr('ui_home_preparing_to_upload_97d135'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
@@ -801,7 +682,9 @@ class _CountdownQuickCustomizeSheetContentState
                         color: Color(0xFFD81B60),
                       ),
                       label: Text(
-                        hasBg ? context.tr('diary_custom_sticker_replace') : context.tr('ui_home_upload_a_photo_3cd9bb'),
+                        hasBg
+                            ? context.tr('diary_custom_sticker_replace')
+                            : context.tr('ui_home_upload_a_photo_3cd9bb'),
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -829,7 +712,9 @@ class _CountdownQuickCustomizeSheetContentState
                             builder: (ctx) => SLAlertDialog(
                               title: Text(context.tr('home_xanhnn_abd8b5')),
                               content: Text(
-                                context.tr('ui_home_are_you_sure_you_want_to_remove_f452e2'),
+                                context.tr(
+                                  'ui_home_are_you_sure_you_want_to_remove_f452e2',
+                                ),
                               ),
                               actions: [
                                 SLDialogAction(
@@ -863,9 +748,16 @@ class _CountdownQuickCustomizeSheetContentState
   }
 
   Future<void> _pickBgImage() async {
+    if (_isUploadingBg) return;
     final homeState = widget.homeState;
     final houseId = (homeState._houseId ?? '').trim();
-    if (houseId.isEmpty) {
+    final uploadUid = FirebaseAuth.instance.currentUser?.uid;
+    bool isCurrent() =>
+        mounted &&
+        homeState.mounted &&
+        homeState._houseId == houseId &&
+        FirebaseAuth.instance.currentUser?.uid == uploadUid;
+    if (houseId.isEmpty || uploadUid == null) {
       homeState._showLatestSnackBar(
         context.tr('ui_home_please_log_in_or_join_the_house_f56621'),
       );
@@ -904,55 +796,33 @@ class _CountdownQuickCustomizeSheetContentState
       }
     }
 
+    String? uploadedUrl;
+    bool commitAttempted = false;
     try {
-      final pickedFile = await homeState._storageService.pickImage();
-      if (pickedFile == null || !mounted) return;
-      XFile file = pickedFile;
-
-      try {
-        final croppedFile = await ImageCropper().cropImage(
-          sourcePath: file.path,
-          aspectRatio: const CropAspectRatio(ratioX: 9, ratioY: 16),
-          compressFormat: ImageCompressFormat.jpg,
-          compressQuality: 82,
-          maxWidth: 1440,
-          maxHeight: 3200,
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: L10nService().translate('home_cnhsanhhn_38c921'),
-              toolbarColor: const Color(0xFFD81B60),
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.ratio16x9,
-              lockAspectRatio: true,
-            ),
-            IOSUiSettings(
-              title: L10nService().translate('home_cnhsanhhn_38c921'),
-              // Using ratio16x9 since ratio9x16 was removed in image_cropper v7
-              aspectRatioPresets: const [CropAspectRatioPreset.ratio16x9],
-              aspectRatioLockEnabled: true,
-              aspectRatioPickerButtonHidden: true,
-              resetAspectRatioEnabled: false,
-            ),
-          ],
-        );
-        if (croppedFile != null) {
-          file = XFile(croppedFile.path);
-        }
-      } catch (e) {
-        debugPrint('Lỗi cắt ảnh: $e');
-      }
-
-      if (!mounted) return;
+      if (!isCurrent() || _isUploadingBg) return;
       setState(() {
         _isUploadingBg = true;
         _bgUploadProgress = 0.0;
       });
+      final pickedFile = await homeState._storageService.pickImage(
+        preserveOriginal: true,
+      );
+      if (pickedFile == null || !isCurrent()) return;
+      final file = await cropAndConfirmImage(
+        context: context,
+        image: pickedFile,
+        aspectRatio: 9 / 16,
+        maxOutputSize: const Size(1440, 3200),
+        titleKey: 'home_cnhsanhhn_38c921',
+        isScopeCurrent: isCurrent,
+      );
+      if (file == null || !isCurrent()) return;
 
       final url = await homeState._storageService.uploadImage(
         houseId,
         'themes',
         file,
-        quality: 95,
+        quality: 86,
         minWidth: 1440,
         minHeight: 1440,
         onProgress: (progress) {
@@ -964,32 +834,53 @@ class _CountdownQuickCustomizeSheetContentState
         },
       );
 
-      if (!mounted) return;
+      uploadedUrl = url?.trim();
+      if (!mounted || !isCurrent())
+        throw StateError('Home media scope changed');
       if (url == null || url.trim().isEmpty) {
-        homeState._showLatestSnackBar(context.tr('ui_home_background_image_download_failed_75884f'));
+        homeState._showLatestSnackBar(
+          context.tr('ui_home_background_image_download_failed_75884f'),
+        );
         return;
       }
 
-      final oldUrl = UiPrefs.notifier.value.customBackgroundUrl;
-      if (oldUrl.isNotEmpty) {
+      uploadedUrl = url.trim();
+
+      commitAttempted = true;
+      await homeState._saveCountdownQuickUiPrefs(
+        customBackgroundUrl: uploadedUrl,
+        isVip: widget.isVip,
+        expectedHouseId: houseId,
+        expectedUid: uploadUid,
+      );
+      // Đã lưu thành công; object mới đã thuộc bản ghi Settings và không được
+      // nhánh cleanup lỗi phía dưới xóa nữa.
+      uploadedUrl = null;
+      await discardConfirmedCropImage(file);
+
+      if (mounted && isCurrent()) {
+        homeState._showLatestSnackBar(
+          context.tr('ui_home_background_image_saved_successfully_b3e59f'),
+        );
+      }
+    } catch (e) {
+      // Khi đã gửi commit, lỗi mạng có thể xảy ra sau lúc server lưu thành công.
+      // Không xóa ảnh mới khi chưa biết kết quả commit.
+      if (uploadedUrl != null && !commitAttempted) {
         try {
-          homeState._storageService.deleteImageByUrl(oldUrl);
-        } catch (error) {
+          await homeState._storageService.deleteImageByUrl(uploadedUrl);
+        } catch (cleanupError) {
           debugPrint(
-            '[SuppressedError] lib/views/home/tabs/main_home/widgets/main_home_countdown_quick_customize_sheet.dart: $error',
+            '[SuppressedError] lib/views/home/tabs/main_home/widgets/main_home_countdown_quick_customize_sheet.dart cleanup: $cleanupError',
           );
         }
       }
-
-      await homeState._saveCountdownQuickUiPrefs(
-        customBackgroundUrl: url.trim(),
-        isVip: widget.isVip,
-      );
-
-      homeState._showLatestSnackBar(context.tr('ui_home_background_image_saved_successfully_b3e59f'));
-    } catch (e) {
       if (mounted) {
-        homeState._showLatestSnackBar(context.tr('ui_home_an_error_occurred_while_uploading_the_background_da5648'));
+        homeState._showLatestSnackBar(
+          context.tr(
+            'ui_home_an_error_occurred_while_uploading_the_background_da5648',
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -1002,21 +893,23 @@ class _CountdownQuickCustomizeSheetContentState
   }
 
   Future<void> _clearBgImage() async {
-    final oldUrl = UiPrefs.notifier.value.customBackgroundUrl;
-    if (oldUrl.isNotEmpty) {
-      try {
-        widget.homeState._storageService.deleteImageByUrl(oldUrl);
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/home/tabs/main_home/widgets/main_home_countdown_quick_customize_sheet.dart: $error',
-        );
-      }
-    }
+    if (_isUploadingBg) return;
+    final houseId = widget.homeState._houseId;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (houseId == null || uid == null) return;
     await widget.homeState._saveCountdownQuickUiPrefs(
       customBackgroundUrl: '',
       isVip: widget.isVip,
+      expectedHouseId: houseId,
+      expectedUid: uid,
     );
-    widget.homeState._showLatestSnackBar(context.tr('ui_home_removed_homepage_background_image_40e6e1'));
+    if (!mounted ||
+        widget.homeState._houseId != houseId ||
+        FirebaseAuth.instance.currentUser?.uid != uid)
+      return;
+    widget.homeState._showLatestSnackBar(
+      context.tr('ui_home_removed_homepage_background_image_40e6e1'),
+    );
   }
 
   Widget buildAvatarIconToggleSection({
@@ -1087,7 +980,9 @@ class _CountdownQuickCustomizeSheetContentState
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    context.tr('ui_home_turn_on_off_decorative_icons_on_the_67ad77'),
+                    context.tr(
+                      'ui_home_turn_on_off_decorative_icons_on_the_67ad77',
+                    ),
                     style: SLTheme.quicksand(
                       fontSize: 12.1,
                       fontWeight: FontWeight.w700,
@@ -1189,7 +1084,9 @@ class _CountdownQuickCustomizeSheetContentState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      context.tr('ui_home_upload_or_remove_the_homepage_background_image_7e3019'),
+                      context.tr(
+                        'ui_home_upload_or_remove_the_homepage_background_image_7e3019',
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: 12.1,
                         fontWeight: FontWeight.w700,
@@ -1219,7 +1116,10 @@ class _CountdownQuickCustomizeSheetContentState
                 Expanded(
                   child: Text(
                     _bgUploadProgress != null
-                        ? L10nScope.of(context).format('ui_home_uploading_value1_b346dd', {'value1': (_bgUploadProgress! * 100).toInt()})
+                        ? L10nScope.of(context).format(
+                            'ui_home_uploading_value1_b346dd',
+                            {'value1': (_bgUploadProgress! * 100).toInt()},
+                          )
                         : context.tr('ui_home_preparing_to_upload_97d135'),
                     style: SLTheme.quicksand(
                       fontSize: 13,
@@ -1279,7 +1179,9 @@ class _CountdownQuickCustomizeSheetContentState
                       color: Color(0xFFD81B60),
                     ),
                     label: Text(
-                      hasBg ? context.tr('diary_custom_sticker_replace') : context.tr('ui_home_upload_a_photo_3cd9bb'),
+                      hasBg
+                          ? context.tr('diary_custom_sticker_replace')
+                          : context.tr('ui_home_upload_a_photo_3cd9bb'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
@@ -1307,7 +1209,9 @@ class _CountdownQuickCustomizeSheetContentState
                           builder: (ctx) => SLAlertDialog(
                             title: Text(context.tr('home_xanhnn_abd8b5')),
                             content: Text(
-                              context.tr('ui_home_are_you_sure_you_want_to_remove_f452e2'),
+                              context.tr(
+                                'ui_home_are_you_sure_you_want_to_remove_f452e2',
+                              ),
                             ),
                             actions: [
                               SLDialogAction(
@@ -1404,7 +1308,9 @@ class _CountdownQuickCustomizeSheetContentState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      context.tr('ui_home_choose_a_display_view_for_the_home_e4ea0c'),
+                      context.tr(
+                        'ui_home_choose_a_display_view_for_the_home_e4ea0c',
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: 12.1,
                         fontWeight: FontWeight.w700,
@@ -1567,6 +1473,7 @@ class _CountdownQuickCustomizeSheetContentState
                 const AppHelpButton(articleId: 'personalize'),
                 CountdownStudioPreview(
                   styleKey: selectedStyle.value,
+                  enableMotion: !uiState.liteMode,
                   number: widget.homeState._calculateDays(),
                   label: selectedStyle.label,
                   caption: context.tr('p7_countdown_preview_title'),
@@ -1596,7 +1503,9 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 buildSizeSection(
                   title: context.tr('home_kthuocvongdem'),
-                  description: context.tr('ui_home_drag_to_adjust_the_size_of_the_8cbd98'),
+                  description: context.tr(
+                    'ui_home_drag_to_adjust_the_size_of_the_8cbd98',
+                  ),
                   icon: Icons.photo_size_select_large_rounded,
                   currentValue: uiState.countdownSizePx,
                   tempValue: _tempCountdownSize,
@@ -1659,8 +1568,9 @@ class _CountdownQuickCustomizeSheetContentState
                     // --- Kiểu khung avatar ---
                     buildCollapsedSection(
                       title: L10nService().translate('home_kieukhungavatar'),
-                      description:
-                          context.tr('ui_home_change_the_avatar_border_style_displayed_on_9f0976'),
+                      description: context.tr(
+                        'ui_home_change_the_avatar_border_style_displayed_on_9f0976',
+                      ),
                       icon: Icons.account_circle_rounded,
                       options: [
                         for (final key in KeepsakePalette.newStyleKeys)
@@ -1740,8 +1650,9 @@ class _CountdownQuickCustomizeSheetContentState
                     // --- Chất lượng đồ họa ---
                     buildCollapsedSection(
                       title: L10nService().translate('home_chatluongdohoa'),
-                      description:
-                          context.tr('ui_home_customize_graphic_quality_and_display_effects_3251e4'),
+                      description: context.tr(
+                        'ui_home_customize_graphic_quality_and_display_effects_3251e4',
+                      ),
                       icon: Icons.high_quality_rounded,
                       options: [
                         _CountdownQuickOption(
@@ -1787,7 +1698,9 @@ class _CountdownQuickCustomizeSheetContentState
                     // --- Ngôn ngữ ---
                     buildCollapsedSection(
                       title: L10nService().translate('home_ngonngu'),
-                      description: context.tr('ui_home_change_the_application_s_display_language_68599c'),
+                      description: context.tr(
+                        'ui_home_change_the_application_s_display_language_68599c',
+                      ),
                       icon: Icons.language_rounded,
                       options: [
                         _CountdownQuickOption(
@@ -1919,122 +1832,19 @@ class _CountdownQuickOptionPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = _countdownQuickPalette(option.value, option.accent);
-    final flyingHeartSticker = option.value == 'floating_hearts'
-        ? SoulLocketStickerCatalog.find('heart_plush')
-        : null;
-
-    return ExcludeSemantics(
-      child: SizedBox(
-        width: 40,
-        height: 40,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: palette,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(
-              option.value == 'crystal' ? 12 : 15,
-            ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.82),
-              width: 1.3,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: palette.first.withValues(alpha: 0.25),
-                blurRadius: 8,
-                spreadRadius: -2,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _CountdownQuickPreviewPainter(
-                    styleKey: option.value,
-                    colors: palette,
-                  ),
-                ),
-              ),
-              if (flyingHeartSticker != null)
-                SoulLocketAnimatedSticker(
-                  sticker: flyingHeartSticker,
-                  size: 32,
-                  animate: !MediaQuery.disableAnimationsOf(context),
-                  filterQuality: FilterQuality.medium,
-                )
-              else
-                Icon(option.icon, size: 20, color: Colors.white),
-            ],
-          ),
+    if (CountdownArtworkDesign.styleKeys.contains(option.value) ||
+        option.value == 'balanced') {
+      return CountdownStylePreview(styleKey: option.value, dimension: 58);
+    }
+    return SizedBox.square(
+      dimension: 40,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: option.accent.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(12),
         ),
+        child: Icon(option.icon, size: 23, color: option.accent),
       ),
     );
-  }
-}
-
-class _CountdownQuickPreviewPainter extends CustomPainter {
-  final String styleKey;
-  final List<Color> colors;
-
-  const _CountdownQuickPreviewPainter({
-    required this.styleKey,
-    required this.colors,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.34)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    if (styleKey == 'deep_ocean' || styleKey == 'glass') {
-      canvas.drawCircle(
-        Offset(size.width * 0.24, size.height * 0.28),
-        3,
-        paint,
-      );
-      canvas.drawCircle(
-        Offset(size.width * 0.76, size.height * 0.70),
-        4,
-        paint,
-      );
-      return;
-    }
-    if (styleKey == 'golden_sunset' || styleKey == 'lava') {
-      final center = Offset(size.width * 0.72, size.height * 0.25);
-      for (var index = 0; index < 6; index++) {
-        final angle = index * pi / 3;
-        canvas.drawLine(
-          center + Offset(cos(angle), sin(angle)) * 5,
-          center + Offset(cos(angle), sin(angle)) * 8,
-          paint,
-        );
-      }
-      return;
-    }
-    final sparklePaint = Paint()..color = Colors.white.withValues(alpha: 0.48);
-    canvas.drawCircle(
-      Offset(size.width * 0.22, size.height * 0.72),
-      1.6,
-      sparklePaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.78, size.height * 0.23),
-      1.2,
-      sparklePaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _CountdownQuickPreviewPainter oldDelegate) {
-    return oldDelegate.styleKey != styleKey ||
-        !listEquals(oldDelegate.colors, colors);
   }
 }

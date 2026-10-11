@@ -152,7 +152,10 @@ class MarketService extends ChangeNotifier with WidgetsBindingObserver {
         : 'sl_market_v1_user_${Uri.encodeComponent(uid)}';
   }
 
-  Future<void> init({SharedPreferences? preferences}) async {
+  Future<void> init({
+    SharedPreferences? preferences,
+    bool synchronize = true,
+  }) async {
     if (!_observingLocale && !_disposed) {
       WidgetsBinding.instance.addObserver(this);
       _observingLocale = true;
@@ -162,8 +165,11 @@ class MarketService extends ChangeNotifier with WidgetsBindingObserver {
     } catch (_) {
       // Cho phép ứng dụng mở với mặc định khi bộ nhớ tùy chọn chưa sẵn sàng.
     }
-    attachAuthListener();
-    _bindCloud();
+    // Startup đọc lựa chọn local trước frame đầu; đồng bộ cloud bắt đầu sau.
+    if (synchronize) {
+      attachAuthListener();
+      _bindCloud();
+    }
     if (!_disposed) notifyListeners();
   }
 

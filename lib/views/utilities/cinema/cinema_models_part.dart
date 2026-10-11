@@ -6,6 +6,7 @@ class _CinemaMemoryRecord {
   final String thumbnailUrl;
   final String authorName;
   final DateTime timestamp;
+  final bool isPrivate;
 
   const _CinemaMemoryRecord({
     required this.id,
@@ -13,6 +14,7 @@ class _CinemaMemoryRecord {
     required this.thumbnailUrl,
     required this.authorName,
     required this.timestamp,
+    this.isPrivate = false,
   });
 
   String get displayUrl => thumbnailUrl.isEmpty ? imageUrl : thumbnailUrl;
@@ -20,8 +22,9 @@ class _CinemaMemoryRecord {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
-      'imageUrl': imageUrl,
-      'thumbnailUrl': thumbnailUrl,
+      if (isPrivate) 'privateMedia': true,
+      if (!isPrivate) 'imageUrl': imageUrl,
+      if (!isPrivate) 'thumbnailUrl': thumbnailUrl,
       'authorName': authorName,
       'timestampMs': timestamp.millisecondsSinceEpoch,
     };
@@ -34,14 +37,18 @@ class _CinemaMemoryRecord {
     final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(raw));
     final id = data['id']?.toString().trim() ?? '';
     final imageUrl = data['imageUrl']?.toString().trim() ?? '';
-    if (id.isEmpty || imageUrl.isEmpty) {
+    final isPrivate = PrivateMemoryLinkPolicy.isPrivate(data);
+    if (id.isEmpty || (!isPrivate && imageUrl.isEmpty)) {
       return null;
     }
     final timestampMs = (data['timestampMs'] as num?)?.toInt() ?? 0;
     return _CinemaMemoryRecord(
       id: id,
-      imageUrl: imageUrl,
-      thumbnailUrl: data['thumbnailUrl']?.toString().trim() ?? '',
+      imageUrl: isPrivate ? '' : imageUrl,
+      isPrivate: isPrivate,
+      thumbnailUrl: isPrivate
+          ? ''
+          : data['thumbnailUrl']?.toString().trim() ?? '',
       authorName: data['authorName']?.toString().trim() ?? '',
       timestamp: timestampMs <= 0
           ? DateTime.now()
@@ -107,7 +114,8 @@ class _CinemaDailyReel {
     final dateKey = data['dateKey']?.toString().trim() ?? '';
     final title = data['title']?.toString().trim() ?? '';
     final subtitle = data['subtitle']?.toString().trim() ?? '';
-    final accentValue = (data['accentValue'] as num?)?.toInt() ??
+    final accentValue =
+        (data['accentValue'] as num?)?.toInt() ??
         const Color(0xFFFF6FA5).toARGB32();
     final createdAtMs = (data['createdAtMs'] as num?)?.toInt() ?? 0;
     final expiresAtMs = (data['expiresAtMs'] as num?)?.toInt() ?? 0;

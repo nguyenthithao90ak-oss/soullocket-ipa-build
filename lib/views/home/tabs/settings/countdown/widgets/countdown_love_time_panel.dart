@@ -4,7 +4,7 @@ part of '../../../settings_tab.dart';
 extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
   Widget _buildLoveTimeCounters() {
     return StreamBuilder<int>(
-      stream: Stream<int>.periodic(const Duration(seconds: 1), (tick) => tick),
+      stream: _loveTimeTickStream,
       initialData: 0,
       builder: (context, snapshot) {
         final detail = _loveTimeDetail(_anchorDate);
@@ -53,7 +53,11 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
     required String value,
     required String label,
     bool alternate = false,
-  }) => PrivateSpaceTimeCell(value: value, label: label);
+  }) => PrivateSpaceTimeCell(
+    value: value,
+    label: label,
+    dark: _CountdownModeThemeData.resolve(_resolveThemeKey(_themeKey)).isDark,
+  );
 
   Future<bool> _handleOpenedSpaceBack() async {
     if (_openedSpaceHouseId == null) {

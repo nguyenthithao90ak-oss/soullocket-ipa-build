@@ -12,8 +12,13 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../utils/services/ai_counselor_service.dart';
+import '../../utils/services/purchase_service.dart';
+import '../../utils/services/utility_service.dart';
+import '../premium/premium_store_screen.dart';
 import '../../utils/services/storage/ai_pending_request_store.dart';
 import '../ui_prefs.dart';
 import '../home/widgets/soul_merge_screen.dart';
@@ -26,7 +31,8 @@ class FriendlyChatScreen extends StatefulWidget {
     this.myName,
     this.embedded = false,
   }) : _serviceOverride = null,
-       _uidOverride = null;
+       _uidOverride = null,
+       _proOverride = null;
 
   @visibleForTesting
   const FriendlyChatScreen.forTesting({
@@ -36,11 +42,14 @@ class FriendlyChatScreen extends StatefulWidget {
     this.houseId,
     this.myName,
     this.embedded = false,
+    bool isPro = true,
   }) : _serviceOverride = service,
-       _uidOverride = currentUid;
+       _uidOverride = currentUid,
+       _proOverride = isPro;
 
   final AiCounselorService? _serviceOverride;
   final String? Function()? _uidOverride;
+  final bool? _proOverride;
 
   final String? houseId;
   final String? myName;
@@ -71,7 +80,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   final Set<int> _reportingIndexes = <int>{};
   final List<_FriendlyChatMessage> _messages = <_FriendlyChatMessage>[
     _FriendlyChatMessage(
-      text: L10nService().translate('util_chobnmnhlc_032510'),
+      text: L10nService().translate('friendly_chat_confide_greeting'),
       isUser: false,
     ),
   ];
@@ -87,10 +96,14 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   bool _isCheckingAiResult = false;
   bool _hasUserInteracted = false;
   String _persona = 'default';
+  // Chat thân thiện dành cho Pro: null = đang xác minh, false = hiện lời mời nâng cấp.
+  bool? _isPro;
 
   @override
   void initState() {
     super.initState();
+    _isPro = widget._proOverride ?? UtilityService.proAccess.value;
+    if (widget._proOverride == null) unawaited(_refreshProAccess());
     _aiService = widget._serviceOverride ?? AiCounselorService();
     _sessionUid = _currentUid;
     final houseId = widget.houseId?.trim();
@@ -105,6 +118,29 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshProAccess({bool force = false}) async {
+    try {
+      final access = await PurchaseService()
+          .getVipAccessInfo(forceRefresh: force)
+          .timeout(const Duration(seconds: 8));
+      if (mounted) setState(() => _isPro = access.isVip);
+    } catch (_) {
+      // Không xác minh được thì mở chat; server vẫn chặn tài khoản thường.
+      if (mounted && _isPro == null) setState(() => _isPro = true);
+    }
+  }
+
+  Future<void> _openUpgrade() async {
+    await slPush(
+      context,
+      PremiumStoreScreen(
+        houseId: widget.houseId ?? '',
+        myName: widget.myName ?? '',
+      ),
+    );
+    if (mounted) await _refreshProAccess(force: true);
   }
 
   String get _cacheKey => _sessionCacheKey;
@@ -128,51 +164,66 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       // Cache trước, cloud sau: tránh cache chậm ghi đè lịch sử cloud vừa tải.
       await _loadCachedHistory();
       if (!mounted || !_isCurrentSession) return;
-      await _loadRecentHistory();
-      if (!mounted || !_isCurrentSession) return;
       if (pendingId == null) {
+        // Không có lượt đang chờ: mở khung chat ngay từ cache trên máy, đồng bộ
+        // cloud ở nền để người dùng không phải chờ hàm khởi động mỗi lần vào.
         _messages.removeWhere((message) => message.isTransient);
         _pendingAiOutcome = null;
+        _revealHistory();
+        unawaited(_syncCloudHistoryInBackground());
+        return;
       }
-      if (pendingId != null) {
-        var index = _messages.indexWhere(
-          (message) => !message.isUser && message.requestId == pendingId,
-        );
-        if (index < 0) {
-          index = _messages.length;
-          _messages.add(
-            _FriendlyChatMessage(
-              text: '',
-              isUser: false,
-              isTransient: true,
-              requestId: pendingId,
-              createdAt: DateTime.now().millisecondsSinceEpoch,
-            ),
-          );
-        }
-        setState(() {
-          _pendingAiOutcome = AiTaskOutcome(
+      // Có lượt đang chờ: đọc cloud trước để không hiện trùng hay gửi chồng lượt mới.
+      await _loadRecentHistory();
+      if (!mounted || !_isCurrentSession) return;
+      var index = _messages.indexWhere(
+        (message) => !message.isUser && message.requestId == pendingId,
+      );
+      if (index < 0) {
+        index = _messages.length;
+        _messages.add(
+          _FriendlyChatMessage(
+            text: '',
+            isUser: false,
+            isTransient: true,
             requestId: pendingId,
-            status: 'pending',
-          );
-          _pendingAiMessageIndex = index;
-        });
-        // Không dựng lại input hay phát lại generate khi khôi phục màn hình.
-        await _checkPendingAiResult();
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+        );
       }
-      if (mounted && _isCurrentSession) {
-        final firstReveal = !_historyVisible;
-        setState(() {
-          _historyReady = true;
-          _historyVisible = true;
-        });
-        if (firstReveal) _scrollToBottom(animate: false);
-      }
+      setState(() {
+        _pendingAiOutcome = AiTaskOutcome(
+          requestId: pendingId,
+          status: 'pending',
+        );
+        _pendingAiMessageIndex = index;
+      });
+      // Không dựng lại input hay phát lại generate khi khôi phục màn hình.
+      await _checkPendingAiResult();
+      if (mounted && _isCurrentSession) _revealHistory();
     } catch (_) {
       if (!mounted || !_isCurrentSession) return;
       setState(() => _historyLoadFailed = true);
     } finally {
       _isInitializing = false;
+    }
+  }
+
+  void _revealHistory() {
+    final firstReveal = !_historyVisible;
+    setState(() {
+      _historyReady = true;
+      _historyVisible = true;
+    });
+    if (firstReveal) _scrollToBottom(animate: false);
+  }
+
+  Future<void> _syncCloudHistoryInBackground() async {
+    try {
+      await _loadRecentHistory();
+    } catch (_) {
+      // Cache vẫn dùng được; lỗi đồng bộ nền không chặn người dùng gửi tin.
+      debugPrint('[FriendlyChat] Cloud history sync skipped');
     }
   }
 
@@ -531,6 +582,21 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     }
   }
 
+  // Chỉ gợi ý câu mở đầu khi người dùng chưa nói gì và có thể gửi ngay.
+  bool get _showStarters =>
+      _historyReady &&
+      !_historyLoadFailed &&
+      !_isSending &&
+      !_isCheckingAiResult &&
+      _pendingAiOutcome == null &&
+      !_messages.any((message) => message.isUser);
+
+  void _sendStarter(String text) {
+    if (!_showStarters) return;
+    _messageController.text = text;
+    unawaited(_sendMessage());
+  }
+
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty ||
@@ -750,7 +816,10 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
         if (navTarget == 101) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SoulMergeScreen()),
+            SLRoute(
+              fullscreenDialog: true,
+              builder: (_) => const SoulMergeScreen(),
+            ),
           );
         } else if (navTarget == 102) {
           Navigator.of(
@@ -857,7 +926,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       _messages.clear();
       _messages.add(
         _FriendlyChatMessage(
-          text: L10nService().translate('util_chobnmnhlc_032510'),
+          text: L10nService().translate('friendly_chat_confide_greeting'),
           isUser: false,
         ),
       );
@@ -993,6 +1062,14 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Chỉ câu AI mới nhất có nút báo cáo hiện sẵn; câu khác báo cáo qua nhấn giữ.
+    final latestReportable = _messages.lastIndexWhere(
+      (message) =>
+          !message.isUser &&
+          !message.isTransient &&
+          message.createdAt > 0 &&
+          message.text.trim().isNotEmpty,
+    );
     final content = Column(
       children: [
         Expanded(
@@ -1000,15 +1077,22 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               ? const FriendlyChatLoading()
               : ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  itemCount: _messages.length + 1 + (_isSending ? 1 : 0),
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  itemCount:
+                      _messages.length +
+                      1 +
+                      (_isSending || _showStarters ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return const _AiDisclosureCard();
+                      return FriendlyChatPrivacyBanner(
+                        onClear: _isSending ? null : _clearHistory,
+                      );
                     }
                     final messageIndex = index - 1;
-                    if (_isSending && messageIndex == _messages.length) {
-                      return const _TypingBubble();
+                    if (messageIndex == _messages.length) {
+                      return _isSending
+                          ? const FriendlyChatTypingBubble()
+                          : FriendlyChatStarters(onSelected: _sendStarter);
                     }
                     if (_messages[messageIndex].isTransient) {
                       return const SizedBox.shrink();
@@ -1017,7 +1101,9 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
                       message: _messages[messageIndex],
                       isReporting: _reportingIndexes.contains(messageIndex),
                       onLongPress: () => _showMessageActions(messageIndex),
-                      onReport: () => _reportMessage(messageIndex),
+                      onReport: messageIndex == latestReportable
+                          ? () => _reportMessage(messageIndex)
+                          : null,
                     );
                   },
                 ),
@@ -1055,14 +1141,21 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       ],
     );
 
-    final body = ColoredBox(
-      color: SLDetailStyle.background(context),
+    final body = DecoratedBox(
+      decoration: BoxDecoration(gradient: FriendlyChatPalette.backdrop(context)),
       child: SafeArea(
         top: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
-            child: content,
+            // Tài khoản thường thấy lời mời nâng cấp thay vì khung chat.
+            child: switch (_isPro) {
+              true => content,
+              false => FriendlyChatProGate(
+                onUpgrade: AppConfig.isPurchaseEnabled ? _openUpgrade : null,
+              ),
+              null => const FriendlyChatLoading(),
+            },
           ),
         ),
       ),
@@ -1078,18 +1171,20 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         foregroundColor: SLDetailStyle.text(context),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        titleSpacing: 0,
-        title: Text(
-          context.tr('util_chatthnthi_c39699'),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: SLTheme.quicksand(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: SLDetailStyle.text(context),
-          ),
+        // Có nút quay lại thì sát nút; mở trực tiếp (không có nút) thì chừa lề.
+        titleSpacing: ModalRoute.of(context)?.canPop == true ? 0 : 16,
+        shape: Border(
+          bottom: BorderSide(color: SLDetailStyle.outline(context)),
+        ),
+        title: FriendlyChatHeaderTitle(
+          title: context.tr('util_chatthnthi_c39699'),
+          busy: _isSending,
+          status: _isSending
+              ? context.tr('ai_task_waiting_reply')
+              : context.tr('friendly_chat_header_status'),
         ),
         actions: [
+          if (_isPro == true) ...[
           PopupMenuButton<String>(
             icon: Icon(Icons.tune_rounded, color: SLDetailStyle.muted(context)),
             color: SLDetailStyle.card(context),
@@ -1149,6 +1244,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               color: SLDetailStyle.muted(context),
             ),
           ),
+          ],
         ],
       ),
       body: body,
@@ -1187,7 +1283,7 @@ class _FriendlyChatBubble extends StatelessWidget {
       constraints: BoxConstraints(
         maxWidth:
             MediaQuery.sizeOf(context).width.clamp(0, 720) *
-            (isUser ? 0.78 : 0.70),
+            (isUser ? 0.78 : 0.74),
       ),
       child: FriendlyChatTextBubble(
         text: message.text,
@@ -1196,187 +1292,70 @@ class _FriendlyChatBubble extends StatelessWidget {
       ),
     );
 
-    if (!isUser) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 40),
-              child: _BotStickerAvatar(size: 28),
-            ),
-            const SizedBox(width: 8),
-            Flexible(child: bubble),
-            if (onReport != null) ...[
-              const SizedBox(width: 2),
-              if (isReporting)
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: SLDetailStyle.primary,
-                    ),
-                  ),
-                )
-              else
-                Material(
-                  color: Colors.transparent,
-                  child: IconButton(
-                    icon: Icon(
-                      message.reported
-                          ? Icons.check_circle_rounded
-                          : Icons.outlined_flag_rounded,
-                      size: 20,
-                      color: message.reported
-                          ? SLDetailStyle.sage
-                          : SLDetailStyle.muted(context),
-                    ),
-                    tooltip: context.tr('p5_profile_report'),
-                    splashRadius: 20,
-                    onPressed: message.reported ? null : onReport,
-                  ),
-                ),
-            ],
-          ],
-        ),
+    if (isUser) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Align(alignment: AlignmentDirectional.centerEnd, child: bubble),
       );
     }
 
-    return Align(alignment: Alignment.centerRight, child: bubble);
-  }
-}
-
-class _AiDisclosureCard extends StatelessWidget {
-  const _AiDisclosureCard();
-
-  @override
-  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: SLDetailDisclosure(
-        icon: Icons.info_outline_rounded,
-        title: context.tr('util_trlai_e23336'),
-        description: context.tr('detail_chat_privacy_short'),
-        child: Text(
-          context.tr('util_tinnhncthc_aeaabb'),
-          style: SLTheme.quicksand(
-            fontSize: 12,
-            height: 1.5,
-            color: SLDetailStyle.muted(context),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TypingBubble extends StatefulWidget {
-  const _TypingBubble();
-
-  @override
-  State<_TypingBubble> createState() => _TypingBubbleState();
-}
-
-class _TypingBubbleState extends State<_TypingBubble>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      padding: EdgeInsets.only(bottom: onReport == null ? 12 : 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: _BotStickerAvatar(size: 28),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const FriendlyChatAvatar(),
+              const SizedBox(width: 8),
+              Flexible(child: bubble),
+            ],
           ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: FriendlyChatTextBubble(
-              text: context.tr('ai_task_waiting_reply'),
-              isUser: false,
+          if (onReport != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 34),
+              child: TextButton.icon(
+                key: const ValueKey('friendly-chat-report-latest'),
+                onPressed: message.reported || isReporting ? null : onReport,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  foregroundColor: SLDetailStyle.muted(context),
+                  disabledForegroundColor: message.reported
+                      ? SLDetailStyle.sage
+                      : SLDetailStyle.muted(context),
+                  textStyle: SLTheme.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                icon: isReporting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: SLDetailStyle.primary,
+                        ),
+                      )
+                    : Icon(
+                        message.reported
+                            ? Icons.check_circle_rounded
+                            : Icons.outlined_flag_rounded,
+                        size: 16,
+                      ),
+                label: Text(
+                  message.reported
+                      ? context.tr('util_boco_0f64d2')
+                      : context.tr('p5_profile_report'),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          _TypingDots(controller: _controller),
         ],
       ),
     );
-  }
-}
-
-class _TypingDots extends StatelessWidget {
-  const _TypingDots({required this.controller});
-
-  final Animation<double> controller;
-
-  double _opacityForDot(int index, double value) {
-    final phase = value * 3;
-    final distance = (phase - index).abs();
-    return (1 - distance).clamp(0.35, 1).toDouble();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(3, (index) {
-            return Padding(
-              padding: EdgeInsets.only(left: index == 0 ? 0 : 3),
-              child: Opacity(
-                opacity: _opacityForDot(index, controller.value),
-                child: const Text(
-                  '.',
-                  style: TextStyle(
-                    color: SLDetailStyle.primary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                  ),
-                ),
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-}
-
-class _BotStickerAvatar extends StatelessWidget {
-  const _BotStickerAvatar({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return SLDetailIcon(icon: Icons.chat_bubble_outline_rounded, size: size);
   }
 }
 

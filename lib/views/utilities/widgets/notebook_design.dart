@@ -610,6 +610,7 @@ class NotebookNoteMenu extends StatelessWidget {
   );
 }
 
+
 class _DoneBadge extends StatelessWidget {
   const _DoneBadge();
   @override

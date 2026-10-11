@@ -134,19 +134,19 @@ import ActivityKit
     }
 
     let alert = UIAlertController(
-      title: "Cá nhân hóa trải nghiệm",
-      message: "SoulLocket muốn theo dõi hoạt động của bạn để hiển thị quảng cáo phù hợp hơn và đo lường hiệu quả chiến dịch. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào trong Cài đặt.",
+      title: NSLocalizedString("att_pre_prompt_title", tableName: "InfoPlist", comment: ""),
+      message: NSLocalizedString("att_pre_prompt_body", tableName: "InfoPlist", comment: ""),
       preferredStyle: .alert
     )
 
     alert.addAction(UIAlertAction(
-      title: "Tiếp tục",
+      title: NSLocalizedString("att_pre_prompt_continue", tableName: "InfoPlist", comment: ""),
       style: .default,
       handler: { _ in result(true) }
     ))
 
     alert.addAction(UIAlertAction(
-      title: "Không",
+      title: NSLocalizedString("att_pre_prompt_decline", tableName: "InfoPlist", comment: ""),
       style: .cancel,
       handler: { _ in result(false) }
     ))

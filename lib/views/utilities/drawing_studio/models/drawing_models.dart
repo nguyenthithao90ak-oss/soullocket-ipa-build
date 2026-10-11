@@ -17,11 +17,15 @@ class _DrawStroke {
   final Color color;
   final double width;
   final List<Offset> points;
+  final bool isEraser;
+  final int? stickerIndex;
 
   _DrawStroke({
     required this.color,
     required this.width,
     required this.points,
     this.id = '',
+    this.isEraser = false,
+    this.stickerIndex,
   });
 }

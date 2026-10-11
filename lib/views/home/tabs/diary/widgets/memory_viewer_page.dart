@@ -499,3 +499,4 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
     );
   }
 }
+

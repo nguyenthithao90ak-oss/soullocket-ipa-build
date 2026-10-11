@@ -3,6 +3,8 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -27,6 +29,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
   List<SingleMatchHistoryEntry> _history = [];
   String? _callingHouseId;
   String? _error;
+  final SingleOpenGate _openGate = SingleOpenGate();
 
   @override
   void initState() {
@@ -62,20 +65,27 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
   Future<void> _startRandomCall({
     required bool isVideo,
     required bool isBlind,
+  }) {
+    return _openGate.run(
+      () => _startRandomCallFlow(isVideo: isVideo, isBlind: isBlind),
+    );
+  }
+
+  Future<void> _startRandomCallFlow({
+    required bool isVideo,
+    required bool isBlind,
   }) async {
     final excludeHouseIds = _history
         .where((e) => e.isCall)
         .map((e) => e.peerHouseId)
         .toSet();
 
-    final result = await Navigator.push<dynamic>(
+    final result = await slPush<dynamic>(
       context,
-      MaterialPageRoute(
-        builder: (context) => SingleMatchFindingScreen(
-          currentHouseId: widget.houseId,
-          excludeHouseIds: excludeHouseIds,
-          isVideo: isVideo,
-        ),
+      SingleMatchFindingScreen(
+        currentHouseId: widget.houseId,
+        excludeHouseIds: excludeHouseIds,
+        isVideo: isVideo,
       ),
     );
 
@@ -101,16 +111,14 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
 
     setState(() => _callingHouseId = pick.houseId);
     try {
-      await Navigator.push(
+      await slPush<void>(
         context,
-        MaterialPageRoute(
-          builder: (_) => SingleMatchCallScreen(
-            peerName: pick.displayName,
-            peerAvatarUrl: pick.avatarUrl,
-            peerHouseId: pick.houseId,
-            isVideo: isVideo,
-            isBlind: isBlind,
-          ),
+        SingleMatchCallScreen(
+          peerName: pick.displayName,
+          peerAvatarUrl: pick.avatarUrl,
+          peerHouseId: pick.houseId,
+          isVideo: isVideo,
+          isBlind: isBlind,
         ),
       );
     } finally {
@@ -461,12 +469,10 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                     runSpacing: 8,
                     children: [
                       TextButton.icon(
-                        onPressed: () => Navigator.push(
+                        onPressed: () => slPush<void>(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => VisitorProfileScreen(
-                              targetHouseId: entry.peerHouseId,
-                            ),
+                          VisitorProfileScreen(
+                            targetHouseId: entry.peerHouseId,
                           ),
                         ),
                         icon: const Icon(Icons.person_search_rounded, size: 17),

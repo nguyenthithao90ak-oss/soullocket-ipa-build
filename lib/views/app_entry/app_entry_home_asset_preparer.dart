@@ -58,9 +58,13 @@ class AppEntryHomeAssetPreparer {
       await Future.wait(
         urls.map((url) async {
           try {
-            final file = await _cacheManager
-                .getSingleFile(url)
-                .timeout(const Duration(seconds: 5));
+            // Lần mở trước đã nhớ file: giải mã ngay, không chờ cache manager
+            // mở cơ sở dữ liệu, để Home có ảnh từ khung hình đầu tiên.
+            final file =
+                HomeStartupMediaCache.getFile(url) ??
+                await _cacheManager
+                    .getSingleFile(url)
+                    .timeout(const Duration(seconds: 5));
             HomeStartupMediaCache.saveFile(url, file);
 
             // Giữ nguyên file gốc, chỉ giảm kích thước bản giải mã dùng ở Home.

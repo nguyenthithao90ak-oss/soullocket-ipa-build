@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../sleep_tracking_math.dart';
 import '../sleep_presence_state.dart';
 import '../sleep_tracking_scope.dart';
+import 'secure_storage_service.dart';
 import 'widget_service.dart';
 
 class _SleepScope {
@@ -16,13 +17,7 @@ class _SleepScope {
   static Future<_SleepScope?> read() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.reload();
-    final scope = SleepTrackingScope.fromCache(
-      uid: FirebaseAuth.instance.currentUser?.uid,
-      cachedUid: prefs.getString('il_auth_uid'),
-      house:
-          prefs.getString('il_house_id') ?? prefs.getString('il_rel_house_id'),
-      role: prefs.getString('il_role') ?? prefs.getString('il_rel_role'),
-    );
+    final scope = await SleepTrackingService.readCachedScope(prefs);
     return scope == null
         ? null
         : _SleepScope(scope.uid, scope.house, scope.role);
@@ -48,6 +43,25 @@ class SleepTrackingService {
     HealthDataType.SLEEP_AWAKE,
   ];
   static Future<void>? _refresh;
+
+  /// Ghép đôi/bảo mật có thể chỉ giữ House/UID/role trong bộ nhớ bảo mật và xóa
+  /// bản sao prefs; đọc giống `AuthHouseContextService` để theo dõi nền không tự tắt.
+  /// Đăng xuất xóa cả hai nơi nên phạm vi vẫn trả null đúng lúc.
+  static Future<SleepTrackingScope?> readCachedScope(
+    SharedPreferences prefs,
+  ) async {
+    final secure = SecureStorageService.instance;
+    return resolveSleepTrackingScope(
+      uid: FirebaseAuth.instance.currentUser?.uid,
+      house:
+          prefs.getString('il_house_id') ?? prefs.getString('il_rel_house_id'),
+      cachedUid: prefs.getString('il_auth_uid'),
+      role: prefs.getString('il_role') ?? prefs.getString('il_rel_role'),
+      secureHouse: () => secure.read(SecureStorageService.keyHouseId),
+      secureUid: () => secure.read(SecureStorageService.keyAuthUid),
+      secureRole: () => secure.read(SecureStorageService.keyRole),
+    );
+  }
 
   /// Khôi phục cache thiếu từ membership thật, không đoán user1 cho người không phải chủ nhà.
   static Future<void> prepareScope({
@@ -284,6 +298,8 @@ class SleepTrackingService {
       await prefs.setString('sleep_tracking_scope', scope.token);
     } else {
       await prefs.remove('sleep_tracking_scope');
+      await prefs.remove('sleep_screen_journal');
+      await prefs.remove('sleep_screen_synced_at');
     }
     await prefs.setBool('is_sleep_tracking_enabled', enabled);
     if (await scope.current()) await _syncWidget(scope.house);

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
+import 'package:soullocket_app/utils/screen_activity_mixin.dart';
 import 'package:lottie/lottie.dart';
 
 import 'package:soullocket_app/views/ui_prefs.dart';
@@ -30,12 +32,16 @@ class LottieAsyncLoader extends StatefulWidget {
   State<LottieAsyncLoader> createState() => _LottieAsyncLoaderState();
 }
 
-class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
+class _LottieAsyncLoaderState extends State<LottieAsyncLoader>
+    with ScreenActivityMixin<LottieAsyncLoader> {
   static const int _maxRamCacheSize = 50;
   static final Map<String, File> _ramCache = {};
 
   bool _shouldLoad = false;
   File? _cachedFile;
+  Timer? _loadTimer;
+  int _loadGeneration = 0;
+  bool _loadScheduled = false;
 
   static void _cacheRamFile(String url, File file) {
     if (_ramCache.containsKey(url)) {
@@ -49,27 +55,84 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
   @override
   void initState() {
     super.initState();
-    final cleanUrl = widget.url.trim();
-    if (_ramCache.containsKey(cleanUrl)) {
-      _cachedFile = _ramCache[cleanUrl];
-      _shouldLoad = true;
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() => _shouldLoad = true);
-          _preloadLottie();
-        }
-      });
-    }
+    _resetForUrl();
   }
 
-  Future<void> _preloadLottie() async {
-    if (kIsWeb) return;
+  @override
+  void didUpdateWidget(covariant LottieAsyncLoader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) _resetForUrl();
+  }
+
+  void _resetForUrl() {
+    _loadTimer?.cancel();
+    _loadGeneration++;
+    _loadScheduled = false;
     final cleanUrl = widget.url.trim();
-    if (_ramCache.containsKey(cleanUrl)) return;
+    _cachedFile = _ramCache[cleanUrl];
+    _shouldLoad = _cachedFile != null;
+    if (_cachedFile == null) _scheduleLoadWhenActive();
+  }
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    if (!active) {
+      _loadTimer?.cancel();
+      _loadScheduled = false;
+      return;
+    }
+    if (_cachedFile != null) {
+      if (!_shouldLoad && mounted) setState(() => _shouldLoad = true);
+      return;
+    }
+    _scheduleLoadWhenActive();
+  }
+
+  void _scheduleLoadWhenActive() {
+    if (kIsWeb ||
+        !isScreenActive ||
+        _loadScheduled ||
+        _cachedFile != null ||
+        widget.url.trim().isEmpty) {
+      return;
+    }
+    _loadScheduled = true;
+    final generation = _loadGeneration;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          !isScreenActive ||
+          generation != _loadGeneration ||
+          _cachedFile != null) {
+        _loadScheduled = false;
+        return;
+      }
+      void start() {
+        _loadTimer = null;
+        if (!mounted ||
+            !isScreenActive ||
+            generation != _loadGeneration ||
+            _cachedFile != null) {
+          _loadScheduled = false;
+          return;
+        }
+        setState(() => _shouldLoad = true);
+        unawaited(_preloadLottie(widget.url.trim(), generation));
+      }
+
+      if (widget.loadDelay <= Duration.zero) {
+        start();
+      } else {
+        _loadTimer = Timer(widget.loadDelay, start);
+      }
+    });
+  }
+
+  Future<void> _preloadLottie(String cleanUrl, int generation) async {
+    if (kIsWeb || cleanUrl.isEmpty) return;
+    File? file;
 
     try {
-      final file = await const StorageDownloadCacheHelper()
+      file = await const StorageDownloadCacheHelper()
           .getCachedNetworkFile(
             cleanUrl,
             namespace: 'lottie_anims',
@@ -77,7 +140,7 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
           );
       if (file != null && file.existsSync()) {
         _cacheRamFile(cleanUrl, file);
-        if (mounted) {
+        if (mounted && generation == _loadGeneration) {
           setState(() {
             _cachedFile = file;
           });
@@ -87,7 +150,16 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
       debugPrint(
         '[SuppressedError] lib/widgets/lottie_async_loader.dart: $error',
       );
+    } finally {
+      if (generation == _loadGeneration) _loadScheduled = false;
     }
+  }
+
+  @override
+  void dispose() {
+    _loadTimer?.cancel();
+    _loadGeneration++;
+    super.dispose();
   }
 
   @override

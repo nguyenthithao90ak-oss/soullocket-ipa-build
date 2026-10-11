@@ -448,8 +448,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     for (final checkin in _checkins) {
       consider(
         key: 'checkin_${checkin.id}',
-        title: checkin.title,
-        kindLabel: 'Check-in',
+        title: checkin.displayTitle,
+        kindLabel: context.tr('ui_map_check_in_48431e'),
         lat: checkin.lat,
         lng: checkin.lng,
       );
@@ -481,8 +481,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         if (checkin.id != checkinId) continue;
         return _NearbyMapPinCandidate(
           key: key,
-          title: checkin.title,
-          kindLabel: 'Check-in',
+          title: checkin.displayTitle,
+          kindLabel: context.tr('ui_map_check_in_48431e'),
           lat: checkin.lat,
           lng: checkin.lng,
           distanceMeters: 0,
@@ -786,7 +786,7 @@ extension _MapLocationLogicExt on _MapScreenState {
                     id: entry.key,
                     lat: lat,
                     lng: lng,
-                    title: (map['name'] ?? 'Check-in').toString(),
+                    title: (map['name'] ?? '').toString(),
                     note: (map['note'] ?? '').toString(),
                     imageUrl: (map['imageUrl'] ?? map['photoUrl'] ?? '')
                         .toString(),

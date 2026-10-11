@@ -173,7 +173,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            sectionTag('SoulLocket Admin'),
+                            sectionTag(context.tr('admin_app_title')),
                             SLSpacing.h16,
                             Text(
                               context.tr('admin_webadminda_bc6955'),

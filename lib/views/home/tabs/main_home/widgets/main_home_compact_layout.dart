@@ -40,9 +40,8 @@ extension _MainHomeCompactLayout on _MainHomeTabState {
           label: context.tr('pairing_connect_now'),
           stickerId: 'wish',
           fallbackIcon: Icons.favorite_border_rounded,
-          onTap: () => Navigator.of(
-            context,
-          ).push(SLRoute(builder: (_) => const PairingDashboardScreen())),
+          onTap: () =>
+              unawaited(slPush(context, const PairingDashboardScreen())),
         ),
       HomeQuickAction(
         id: 'together',
@@ -286,40 +285,6 @@ extension _MainHomeCompactLayout on _MainHomeTabState {
           const SizedBox(width: 12),
           Expanded(child: insight),
         ],
-      ),
-    );
-  }
-}
-
-/// Nút bút chì nhỏ thay cho nút chữ "Tùy chỉnh vòng đếm".
-class _HomeCounterCustomizeButton extends StatelessWidget {
-  const _HomeCounterCustomizeButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: context.tr('home_tychnhvngm_09a3bd'),
-      child: Material(
-        color: SLColors.paper.withValues(alpha: 0.92),
-        shape: const CircleBorder(
-          side: BorderSide(color: SLColors.borderLight),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          key: const ValueKey('home-counter-customize'),
-          onTap: onTap,
-          child: const SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(
-              Icons.edit_rounded,
-              size: 18,
-              color: SLColors.primaryActive,
-            ),
-          ),
-        ),
       ),
     );
   }

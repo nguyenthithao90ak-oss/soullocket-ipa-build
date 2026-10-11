@@ -70,6 +70,19 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
         }
       });
 
+      if (_view == _SoulGameView.gameplay) {
+        _pauseMenuPulse();
+      } else {
+        _resumeMenuPulse();
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_view == _SoulGameView.gameplay) {
+          _pauseMenuPulse();
+        } else {
+          _resumeMenuPulse();
+        }
+      });
       if (storedAutoTrayShuffleEnabled && !autoTrayShuffleEnabled) {
         unawaited(_persistSetting(_autoTrayShuffleEnabledKey, false));
       }
@@ -90,6 +103,10 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
         _isOpeningGameplay = false;
         _view = _SoulGameView.menu;
       });
+      _resumeMenuPulse();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resumeMenuPulse();
+      });
     }
   }
 
@@ -99,6 +116,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       _isOpeningGameplay = false;
       _view = _SoulGameView.splash;
     });
+    _resumeMenuPulse();
     await _bootstrap();
   }
 

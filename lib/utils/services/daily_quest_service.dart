@@ -63,13 +63,29 @@ class DailyQuestService {
   Stream<Map<String, dynamic>> streamQuests() {
     final ref = _getTodayQuestRef();
     if (ref == null) return Stream.value({});
-    return ref.onValue.map((event) {
-      final val = event.snapshot.value;
-      if (val is Map) {
-        return Map<String, dynamic>.from(val);
+    return ref.onValue.map((event) => _normalizeQuestData(event.snapshot.value));
+  }
+
+  Map<String, dynamic> _normalizeQuestData(Object? rawValue) {
+    if (rawValue is! Map) return const {};
+
+    final normalized = <String, dynamic>{};
+    for (final entry in rawValue.entries) {
+      final questId = entry.key;
+      final value = entry.value;
+      if (questId is! String || value is! Map) continue;
+      if (!questsConfig.containsKey(questId)) continue;
+
+      final quest = <String, dynamic>{};
+      final progress = value['progress'];
+      if (progress is num && progress.isFinite) {
+        quest['progress'] = progress;
       }
-      return {};
-    });
+      final done = value['done'];
+      if (done is bool) quest['done'] = done;
+      normalized[questId] = quest;
+    }
+    return normalized;
   }
 
   Future<void> recordProgress(String questId) async {

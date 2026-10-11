@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import '../../utils/services/anti_spam_service.dart';
+import '../../core/sl_route.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/security_flow_guard.dart';
@@ -923,45 +924,39 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _openTermsDocument() {
     final l10n = L10nService();
-    Navigator.push(
+    slPush<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: l10n.locale.languageCode == 'vi'
-              ? l10n.translate('Điều khoản sử dụng')
-              : context.tr('update_hub_terms'),
-          assetPath: 'assets/docs/terms.html',
-        ),
+      DocumentViewerScreen(
+        title: l10n.locale.languageCode == 'vi'
+            ? l10n.translate('Điều khoản sử dụng')
+            : context.tr('update_hub_terms'),
+        assetPath: 'assets/docs/terms.html',
       ),
     );
   }
 
   void _openPrivacyDocument() {
     final l10n = L10nService();
-    Navigator.push(
+    slPush<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: l10n.locale.languageCode == 'vi'
-              ? l10n.translate('Chính sách bảo mật')
-              : context.tr('privacy_policy'),
-          assetPath: 'assets/docs/privacy.html',
-        ),
+      DocumentViewerScreen(
+        title: l10n.locale.languageCode == 'vi'
+            ? l10n.translate('Chính sách bảo mật')
+            : context.tr('privacy_policy'),
+        assetPath: 'assets/docs/privacy.html',
       ),
     );
   }
 
   void _openGuideDocument() {
     final l10n = L10nService();
-    Navigator.push(
+    slPush<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => DocumentViewerScreen(
-          title: l10n.locale.languageCode == 'vi'
-              ? l10n.translate('Hướng dẫn sử dụng')
-              : context.tr('Hướng dẫn sử dụng'),
-          assetPath: 'assets/docs/huong_dan.html',
-        ),
+      DocumentViewerScreen(
+        title: l10n.locale.languageCode == 'vi'
+            ? l10n.translate('Hướng dẫn sử dụng')
+            : context.tr('Hướng dẫn sử dụng'),
+        assetPath: 'assets/docs/huong_dan.html',
       ),
     );
   }

@@ -105,7 +105,11 @@ class HomeCompanionPainter extends CustomPainter {
 
     // Đè lên chữ/khối nội dung thì mờ bớt; thu nhỏ cả bé lẫn hiệu ứng quanh chân.
     final feet = motion.position;
-    final opacity = mood?.opacity ?? 1.0;
+    final opacity = (mood?.opacity ?? 1.0) * (mood?.visibility ?? 1.0);
+    if (opacity <= 0.01) {
+      canvas.restore();
+      return;
+    }
     final faded = opacity < 0.99;
     if (faded) {
       canvas.saveLayer(

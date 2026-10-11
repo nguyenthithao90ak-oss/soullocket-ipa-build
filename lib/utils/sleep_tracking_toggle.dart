@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 /// Không bật lạc quan: đọc lại consent sau cả thành công lẫn rollback.
@@ -23,7 +25,7 @@ class SleepTrackingToggle extends ChangeNotifier {
 
   Future<void> load() async {
     final revision = _revision;
-    final value = await readEnabled();
+    final value = await readEnabled().timeout(const Duration(seconds: 10));
     if (!_disposed && revision == _revision) {
       enabled = value;
       notifyListeners();
@@ -42,7 +44,7 @@ class SleepTrackingToggle extends ChangeNotifier {
       if (revision == _revision) error = failure;
     } finally {
       try {
-        final actual = await readEnabled();
+        final actual = await readEnabled().timeout(const Duration(seconds: 10));
         if (revision == _revision) enabled = actual;
       } catch (failure) {
         if (revision == _revision) error ??= failure;

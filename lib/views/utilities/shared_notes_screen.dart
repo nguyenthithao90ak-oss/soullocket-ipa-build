@@ -20,20 +20,34 @@ class SharedNotesScreen extends StatefulWidget {
     required this.houseId,
     required this.myName,
     this.openPrompt = false,
+    this.databaseRef,
+    this.currentUid,
   });
   final String houseId, myName;
   final bool openPrompt;
+  final DatabaseReference? databaseRef;
+  final String? Function()? currentUid;
   @override
   State<SharedNotesScreen> createState() => _SharedNotesScreenState();
 }
 
 class _SharedNotesScreenState extends State<SharedNotesScreen> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  static const _startupTimeout = Duration(seconds: 12);
+  static const _readTimeout = Duration(seconds: 20);
+  late final DatabaseReference _dbRef =
+      widget.databaseRef ?? FirebaseDatabase.instance.ref();
   Map<String, Map<String, dynamic>> _notes = {};
   StreamSubscription<DatabaseEvent>? _metadataSubscription;
   // Pilot mốc D: cờ do server ghi; 'd1' thì đọc/ghi qua Worker, RTDB chỉ còn leaf báo thay đổi.
   StreamSubscription<DatabaseEvent>? _backendSubscription;
   bool _useD1 = false, _metadataStarted = false;
+  bool _backendReady = false, _metadataReady = false;
+  Timer? _startupTimer;
+  int _listenerSerial = 0;
+  int? _pendingReadSerial;
+  int? _pendingReadVersion;
+  bool? _pendingReadUseD1;
+  bool _hasReadResult = false;
   NotebookD1Client get _d1 => locator<NotebookD1Client>();
   int _version = 0, _generation = 0, _readSerial = 0, _promptIndex = 0;
   bool _loading = true, _loadError = false, _editorOpen = false;
@@ -42,7 +56,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   final Map<String, NotebookDraft> _editDrafts = {};
   final Set<String> _busyIds = {};
   Future<void> _cacheQueue = Future<void>.value();
-  String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+  String? get _uid => widget.currentUid != null
+      ? widget.currentUid!()
+      : FirebaseAuth.instance.currentUser?.uid;
   bool _scope(String house, String? uid, int generation) =>
       mounted &&
       widget.houseId == house &&
@@ -64,11 +80,14 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     if (old.houseId != widget.houseId) {
       _generation++;
       _readSerial++;
+      _listenerSerial++;
+      _startupTimer?.cancel();
       _metadataSubscription?.cancel();
       _backendSubscription?.cancel();
       _metadataStarted = false;
       _useD1 = false;
       _notes = {};
+      _hasReadResult = false;
       _version = 0;
       _loading = true;
       _loadError = false;
@@ -83,7 +102,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Future<void> _start() async {
     final house = widget.houseId, uid = _uid, generation = _generation;
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 2),
+      );
       if (!_scope(house, uid, generation)) return;
       final raw = prefs.getString('il_cached_notes_data_$house');
       if (raw != null) {
@@ -92,6 +113,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           setState(() {
             _notes = _mapNotes(data);
             _version = prefs.getInt('il_cached_notes_ver_$house') ?? 0;
+            _hasReadResult = true;
             _loading = false;
           });
         }
@@ -100,56 +122,122 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
       /* Cache không thay thế kết quả đọc có xác thực. */
     }
     if (!_scope(house, uid, generation)) return;
-    _backendSubscription = _dbRef
+    _listenBackend(house, uid, generation);
+  }
+
+  void _failLoad() {
+    _startupTimer?.cancel();
+    setState(() {
+      _loading = false;
+      _loadError = true;
+    });
+  }
+
+  void _listenBackend(String house, String? uid, int generation) {
+    final listenerSerial = ++_listenerSerial;
+    _metadataSubscription?.cancel();
+    _backendSubscription?.cancel();
+    _metadataStarted = false;
+    _backendReady = false;
+    _metadataReady = false;
+    _startupTimer?.cancel();
+    _startupTimer = Timer(_startupTimeout, () {
+      if (_scope(house, uid, generation) && listenerSerial == _listenerSerial) {
+        _failLoad();
+      }
+    });
+    try {
+      _backendSubscription = _dbRef
         .child('houses/$house/settings/dataBackends/notebook')
         .onValue
         .listen(
           (event) {
-            if (!_scope(house, uid, generation)) return;
+            if (!_scope(house, uid, generation) ||
+                listenerSerial != _listenerSerial) return;
+            _backendReady = true;
             final useD1 = event.snapshot.value == 'd1';
             if (_metadataStarted && useD1 == _useD1) return;
             _useD1 = useD1;
             if (!_metadataStarted) {
-              _listenMetadata(house, uid, generation);
+              _listenMetadata(house, uid, generation, listenerSerial);
             } else {
               _readSerial++;
-              _fetch(_version);
+              if (_metadataReady) _fetch(_version);
             }
           },
           onError: (Object error) {
             // Không đọc được cờ thì giữ nguồn RTDB như trước.
-            if (_scope(house, uid, generation) && !_metadataStarted) {
-              _listenMetadata(house, uid, generation);
+            if (_scope(house, uid, generation) &&
+                listenerSerial == _listenerSerial &&
+                !_metadataStarted) {
+              _backendReady = true;
+              _listenMetadata(house, uid, generation, listenerSerial);
+            }
+          },
+          onDone: () {
+            if (_scope(house, uid, generation) &&
+                listenerSerial == _listenerSerial) {
+              _backendReady = false;
+              _failLoad();
             }
           },
         );
+    } catch (_) {
+      if (_scope(house, uid, generation) && listenerSerial == _listenerSerial) {
+        _backendReady = false;
+        _failLoad();
+      }
+    }
   }
 
-  void _listenMetadata(String house, String? uid, int generation) {
+  void _listenMetadata(
+    String house,
+    String? uid,
+    int generation,
+    int listenerSerial,
+  ) {
     _metadataStarted = true;
+    try {
     _metadataSubscription = _dbRef
         .child('houses/$house/metadata/last_updated_notes')
         .onValue
         .listen(
           (event) {
-            if (!_scope(house, uid, generation)) return;
+            if (!_scope(house, uid, generation) ||
+                listenerSerial != _listenerSerial) return;
+            _metadataReady = true;
+            _startupTimer?.cancel();
             final version =
                 int.tryParse(event.snapshot.value?.toString() ?? '') ?? 0;
             if (version != _version ||
                 _loading ||
-                _notes.isEmpty ||
+                !_hasReadResult ||
                 _loadError) {
               _fetch(version);
             }
           },
           onError: (Object error) {
-            if (_scope(house, uid, generation))
-              setState(() {
-                _loading = false;
-                _loadError = true;
-              });
+            if (_scope(house, uid, generation) &&
+                listenerSerial == _listenerSerial) {
+              _metadataReady = false;
+              _failLoad();
+            }
+          },
+          onDone: () {
+            if (_scope(house, uid, generation) &&
+                listenerSerial == _listenerSerial) {
+              _metadataReady = false;
+              _failLoad();
+            }
           },
         );
+    } catch (_) {
+      if (_scope(house, uid, generation) && listenerSerial == _listenerSerial) {
+        _metadataStarted = false;
+        _metadataReady = false;
+        _failLoad();
+      }
+    }
   }
 
   Map<String, Map<String, dynamic>> _mapNotes(Map raw) => {
@@ -175,18 +263,29 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   }
 
   Future<void> _fetch(int version) async {
+    if (_pendingReadSerial == _readSerial &&
+        _pendingReadVersion == version &&
+        _pendingReadUseD1 == _useD1) {
+      return;
+    }
     final house = widget.houseId,
         uid = _uid,
         generation = _generation,
         serial = ++_readSerial;
+    _pendingReadSerial = serial;
+    _pendingReadVersion = version;
+    _pendingReadUseD1 = _useD1;
+    _startupTimer?.cancel();
     try {
-      final next = _useD1 ? await _d1.list(house) : await _readRtdbNotes(house);
+      final next = await (_useD1 ? _d1.list(house) : _readRtdbNotes(house))
+          .timeout(_readTimeout);
       if (!_scope(house, uid, generation) || serial != _readSerial) return;
       setState(() {
         _notes = next;
         _version = version;
         _loading = false;
         _loadError = false;
+        _hasReadResult = true;
       });
       _cache(house, next, version);
     } catch (_) {
@@ -195,6 +294,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           _loading = false;
           _loadError = true;
         });
+    } finally {
+      if (_pendingReadSerial == serial) _pendingReadSerial = null;
     }
   }
 
@@ -222,11 +323,18 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   }
 
   void _retry() {
+    if (_startupTimer?.isActive == true || _pendingReadSerial == _readSerial) {
+      return;
+    }
     setState(() {
-      _loading = true;
+      _loading = _notes.isEmpty;
       _loadError = false;
     });
-    _fetch(_version);
+    if (!_backendReady || !_metadataReady) {
+      _listenBackend(widget.houseId, _uid, _generation);
+    } else {
+      _fetch(_version);
+    }
   }
 
   Future<void> _openEditor({NotebookNote? note, String? seed}) async {
@@ -606,6 +714,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   @override
   void dispose() {
     _generation++;
+    _listenerSerial++;
+    _startupTimer?.cancel();
     _metadataSubscription?.cancel();
     _backendSubscription?.cancel();
     super.dispose();

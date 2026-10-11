@@ -45,15 +45,12 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
                       icon: Icons.settings_rounded,
                       color: SLTheme.primary,
                       onLongPress: widget.state._hideSettingsButtonForSession,
-                      onTap: widget.onOpenSettings ??
-                          () => Navigator.push(
-                                context,
-                                SLRoute(
-                                  builder: (_) => const SettingsTab(
-                                    showGuideOnOpen: true,
-                                  ),
-                                ),
-                              ),
+                      onTap:
+                          widget.onOpenSettings ??
+                          () => slPush<void>(
+                            context,
+                            const SettingsTab(showGuideOnOpen: true),
+                          ),
                     ),
                   ),
                 ),

@@ -311,11 +311,9 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
               label: _relationshipQrActionLabel(isSingle),
               gradient: const [],
               icon: Icons.qr_code_2_rounded,
-              onTap: () => Navigator.push(
+              onTap: () => slPush<void>(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => CoupleConnectScreen(houseId: _houseId!),
-                ),
+                CoupleConnectScreen(houseId: _houseId!),
               ),
             ),
           ],

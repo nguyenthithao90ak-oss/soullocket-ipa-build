@@ -45,13 +45,11 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.tr('ui_utilities_quick_presets_a60c8b'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w800,
-              color: _paperInk,
-              fontSize: 14,
-            ),
+          _buildSectionHeading(
+            step: '2',
+            title: context.tr('ui_utilities_quick_presets_a60c8b'),
+            icon: Icons.auto_awesome_mosaic_rounded,
+            subtitle: context.tr('collage_subtitle'),
           ),
           SLSpacing.h8,
           SingleChildScrollView(
@@ -100,12 +98,12 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                       ),
                       child: Column(
                         children: [
-                          Icon(
-                            icon,
-                            size: 22,
-                            color: selected ? _paperRoseDeep : _paperMuted,
-                          ),
-                          const SizedBox(height: 7),
+                           _buildQuickPresetPreview(
+                             style: style,
+                             icon: icon,
+                             selected: selected,
+                           ),
+                           const SizedBox(height: 8),
                           Text(
                             preset['label']! as String,
                             maxLines: 1,
@@ -132,6 +130,84 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                 );
               }).toList(growable: false),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickPresetPreview({
+    required String style,
+    required IconData icon,
+    required bool selected,
+  }) {
+    final accent = selected ? _paperRoseDeep : _paperMuted;
+    final soft = selected
+        ? _paperRoseDeep.withValues(alpha: 0.22)
+        : _paperMist.withValues(alpha: 0.42);
+    final image = BoxDecoration(
+      color: soft,
+      borderRadius: BorderRadius.circular(5),
+      border: Border.all(color: accent.withValues(alpha: 0.42)),
+    );
+
+    List<Widget> blocks;
+    switch (style) {
+      case 'story':
+        blocks = [
+          Positioned(left: 16, top: 3, bottom: 3, width: 24, child: DecoratedBox(decoration: image)),
+          Positioned(left: 44, top: 9, right: 9, height: 12, child: DecoratedBox(decoration: image)),
+          Positioned(left: 44, bottom: 9, right: 9, height: 12, child: DecoratedBox(decoration: image)),
+        ];
+        break;
+      case 'poster':
+        blocks = [
+          Positioned(left: 6, top: 7, right: 6, height: 18, child: DecoratedBox(decoration: image)),
+          Positioned(left: 14, bottom: 6, width: 25, height: 8, child: DecoratedBox(decoration: image)),
+          Positioned(right: 14, bottom: 6, width: 25, height: 8, child: DecoratedBox(decoration: image)),
+        ];
+        break;
+      case 'polaroid':
+        blocks = [
+          Positioned(left: 9, top: 7, width: 25, height: 24, child: DecoratedBox(decoration: image)),
+          Positioned(right: 9, top: 11, width: 25, height: 24, child: DecoratedBox(decoration: image)),
+        ];
+        break;
+      case 'heart':
+        blocks = [
+          Positioned(left: 17, top: 6, width: 20, height: 18, child: DecoratedBox(decoration: image)),
+          Positioned(right: 17, top: 6, width: 20, height: 18, child: DecoratedBox(decoration: image)),
+          Positioned(left: 25, bottom: 4, width: 20, height: 17, child: DecoratedBox(decoration: image)),
+        ];
+        break;
+      default:
+        blocks = [
+          Positioned(left: 7, top: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
+          Positioned(right: 7, top: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
+          Positioned(left: 7, bottom: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
+          Positioned(right: 7, bottom: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
+        ];
+    }
+
+    return SizedBox(
+      width: 76,
+      height: 42,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: accent.withValues(alpha: 0.22)),
+              ),
+            ),
+          ),
+          ...blocks,
+          Positioned(
+            right: 3,
+            bottom: 2,
+            child: Icon(icon, size: 11, color: accent.withValues(alpha: 0.85)),
           ),
         ],
       ),
@@ -543,30 +619,266 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            L10nService().translate('util_chnnh_719c35'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w800,
-              color: _paperInk,
-              fontSize: 15,
-            ),
-          ),
-          SLSpacing.h8,
-          Text(
-            context.tr('ui_utilities_add_photos_from_your_library_or_choose_2e234c'),
-            style: SLTheme.quicksand(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: _paperMuted,
-              height: 1.35,
+          _buildSectionHeading(
+            step: '1',
+            title: L10nService().translate('util_chnnh_719c35'),
+            icon: Icons.add_photo_alternate_rounded,
+            subtitle: context.tr(
+              'ui_utilities_add_photos_from_your_library_or_choose_2e234c',
             ),
           ),
           const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSourceModeButton(
+                  useMemory: true,
+                  icon: Icons.auto_stories_rounded,
+                  label: context.tr('home_nhknim_6f622f'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildSourceModeButton(
+                  useMemory: false,
+                  icon: Icons.photo_library_rounded,
+                  label: context.tr('ui_utilities_choose_from_device_131ca4'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: _isFromMemory
+                ? _buildMemorySourceOptions(compact: compact)
+                : _buildDeviceSourceOptions(compact: compact),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceModeButton({
+    required bool useMemory,
+    required IconData icon,
+    required String label,
+  }) {
+    final selected = _isFromMemory == useMemory;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _switchCollageSource(useMemory),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        constraints: const BoxConstraints(minHeight: 68),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected
+              ? _paperRoseDeep.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? _paperRoseDeep : _paperLine,
+            width: selected ? 1.8 : 1.1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 21,
+              color: selected ? _paperRoseDeep : _paperMuted,
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  color: selected ? _paperRoseDeep : _paperInk,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w900,
+                  height: 1.15,
+                ),
+              ),
+            ),
+            if (selected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: _paperRoseDeep,
+                size: 17,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMemorySourceOptions({required bool compact}) {
+    final hasPhotos = _memoryPhotos.isNotEmpty;
+    return Container(
+      key: const ValueKey('memory-source-options'),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8EFE5),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _paperLine.withValues(alpha: 0.85)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.collections_bookmark_rounded,
+                color: _paperRoseDeep,
+                size: 18,
+              ),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  _allMemoryPhotosLabel(),
+                  style: SLTheme.quicksand(
+                    color: _paperInk,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              _buildMemoryInfoChip(
+                icon: Icons.cloud_done_rounded,
+                label: hasPhotos
+                    ? context.tr('memory_puzzle_cached')
+                    : context.tr('util_0nh_e58f05'),
+                highlighted: hasPhotos,
+              ),
+            ],
+          ),
+          if (_availableMonths.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              context.tr('collage_choose_time'),
+              style: SLTheme.quicksand(
+                color: _paperMuted,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 7),
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _buildMemoryMonthChip(
+                    keyValue: 'all',
+                    label: _allMemoryPhotosLabel(),
+                  ),
+                  ..._availableMonths.map(
+                    (month) => _buildMemoryMonthChip(
+                      keyValue: month,
+                      label: _monthMenuLabel(
+                        month,
+                        _memoryPhotos.where((item) {
+                          final ts = item['ts'] as int? ?? 0;
+                          if (ts == 0) return false;
+                          final date = DateTime.fromMillisecondsSinceEpoch(ts);
+                          return '${date.year}-${date.month.toString().padLeft(2, '0')}' == month;
+                        }).length,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            context.tr('ui_utilities_choose_2_to_9_photos_choose_a_a76a0d'),
+            maxLines: compact ? 3 : 2,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
+              color: _paperMuted,
+              fontSize: 11.2,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemoryMonthChip({required String keyValue, required String label}) {
+    final selected = _selectedMonth == keyValue;
+    return Padding(
+      padding: const EdgeInsets.only(right: 7),
+      child: ChoiceChip(
+        selected: selected,
+        label: Text(label),
+        onSelected: (_) {
+          if (_selectedMonth == keyValue) return;
+          setState(() {
+            _selectedMonth = keyValue;
+            _markCollagePreviewDirty();
+          });
+          _scheduleAutoGenerate(immediate: true);
+        },
+        selectedColor: _paperRoseDeep,
+        backgroundColor: Colors.white.withValues(alpha: 0.72),
+        side: BorderSide(color: selected ? _paperRoseDeep : _paperLine),
+        labelStyle: SLTheme.quicksand(
+          color: selected ? Colors.white : _paperInk,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+        ),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+
+  Widget _buildDeviceSourceOptions({required bool compact}) {
+    final count = _deviceFiles.length;
+    return Container(
+      key: const ValueKey('device-source-options'),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8EFE5),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _paperLine.withValues(alpha: 0.85)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            count == 0
+                ? context.tr('collage_tap_select_photos')
+                : context.tr('collage_selected_photo_count').replaceAll('{count}', '$count'),
+            style: SLTheme.quicksand(
+              color: _paperInk,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 9),
           _buildSourceButton(
-            icon: Icons.photo_library_outlined,
+            icon: Icons.add_photo_alternate_rounded,
             label: context.tr('ui_utilities_choose_from_device_131ca4'),
             onTap: _pickDevicePhotos,
             accent: _paperRoseDeep,
+          ),
+          const SizedBox(height: 7),
+          Text(
+            context.tr('home_nhxemtrcsc_3818ff'),
+            textAlign: TextAlign.center,
+            maxLines: compact ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
+              color: _paperMuted,
+              fontSize: 10.8,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -582,7 +894,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 72,
+        constraints: const BoxConstraints(minHeight: 72),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.78),
           borderRadius: BorderRadius.circular(16),

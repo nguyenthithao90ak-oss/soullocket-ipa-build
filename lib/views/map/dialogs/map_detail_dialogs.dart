@@ -291,7 +291,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   SLSpacing.w12,
                   Expanded(
                     child: Text(
-                      checkin.title,
+                      checkin.displayTitle,
                       style: SLTheme.quicksand(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,

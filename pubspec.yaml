@@ -267,6 +267,13 @@ flutter:
     - assets/images/soul_merge_sticker.json
     - assets/images/default_auth_bg.jpg
     - assets/images/default_home_bg.jpg
+    - assets/images/home/home_default_canvas_couple.webp
+    - assets/images/diary_scrapbook/memory_box.webp
+    - assets/images/diary_scrapbook/floral_cluster.webp
+    - assets/images/diary_scrapbook/leafy_sprig.webp
+    - assets/images/diary_scrapbook/washi_rose.webp
+    - assets/images/diary_scrapbook/washi_sage.webp
+    - assets/images/diary_scrapbook/washi_cream.webp
     # Giữ GIF cũ cho dữ liệu đã lưu, không đóng thêm WebP trùng tên.
     - assets/images/anhtomau_stickers/sticker_1.gif
     - assets/images/anhtomau_stickers/sticker_2.gif

@@ -11,7 +11,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
     _interactionRotationTimer = null;
     _manualInteractionPresetType = preset.type;
     _showDefaultHeartSuggestion = false;
-    _smartInteractionPreset = preset;
+    _smartInteractionPresetNotifier.value = preset;
   }
 
   Future<void> _rememberInteractionRotationType(String type) async {
@@ -26,7 +26,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
   void _refillRotationQueue() {
     final allTypes = _kPartnerInteractionPresets.map((e) => e.type).toList();
     allTypes.shuffle(_random);
-    final currentType = _smartInteractionPreset.type;
+    final currentType = _smartInteractionPresetNotifier.value.type;
     if (allTypes.isNotEmpty && allTypes.first == currentType) {
       final swapIdx = 1 + _random.nextInt(allTypes.length - 1);
       final temp = allTypes[0];
@@ -56,7 +56,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       final nextPreset =
           _maybePresetForInteractionType(nextType) ??
           _defaultSmartInteractionPreset();
-      _smartInteractionPreset = nextPreset;
+      _smartInteractionPresetNotifier.value = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
     }
 
@@ -78,7 +78,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       final nextPreset =
           _maybePresetForInteractionType(nextType) ??
           _defaultSmartInteractionPreset();
-      _smartInteractionPreset = nextPreset;
+      _smartInteractionPresetNotifier.value = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
     }
   }

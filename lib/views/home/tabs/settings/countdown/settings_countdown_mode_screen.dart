@@ -39,6 +39,10 @@ class CountdownSpaceScreen extends StatefulWidget {
 class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
   static const String _pendingSpaceAvatarUploadKeyPrefix =
       'countdown_space_avatar_';
+  late final Stream<int> _loveTimeTickStream = Stream<int>.periodic(
+    const Duration(seconds: 1),
+    (tick) => tick,
+  );
 
   void _safeSetState(VoidCallback fn) {
     if (!mounted) {
@@ -68,13 +72,13 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
   // Keep the most useful styles on top for a cleaner, faster settings flow.
   static List<MapEntry<String, String>> get _countdownStyleOptions => [
     for (final key in KeepsakePalette.newStyleKeys)
-      MapEntry(L10nService().translate('keepsake_$key'), key),
+      MapEntry(L10nService().translate('countdown_$key'), key),
     MapEntry(
       L10nService().translate('countdown_floating_hearts'),
       'floating_hearts',
     ),
     MapEntry(L10nService().translate('countdown_glass'), 'glass'),
-    MapEntry(L10nService().translate('countdown_default'), 'default'),
+    MapEntry(L10nService().translate('countdown_love_letter'), 'default'),
     MapEntry(L10nService().translate('countdown_glow'), 'glow'),
     MapEntry(L10nService().translate('countdown_candy'), 'candy'),
     MapEntry(L10nService().translate('countdown_galaxy'), 'galaxy'),
@@ -224,41 +228,45 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
     _listenCountdownSpaces();
     if (widget.relationshipMode.trim() != 'single' &&
         _selfSpaceHouseId != 'local_self') {
-      _interactiveEventsSub = SoulMergeService()
-          .watchInteractiveEvents()
-          .listen((event) async {
-            if (!mounted ||
-                event.isEmpty ||
-                _openedSpaceHouseId != _selfSpaceHouseId) {
-              return;
-            }
-            final prefs = await SharedPreferences.getInstance();
-            final myRole = prefs.getString('il_role') ?? 'user1';
-            final sender = event['sender']?.toString();
-            if (sender == myRole) return;
-
-            final type = event['type']?.toString() ?? '';
-            final emoji =
-                event['emoji']?.toString() ??
-                event['customData']?['emoji']?.toString() ??
-                '❤️';
-
-            if (!mounted || _openedSpaceHouseId != _selfSpaceHouseId) return;
-            if (type == 'photo_shot') {
-              final size = MediaQuery.sizeOf(context);
-              _heartsKey.currentState?.spawnLocalExplosion(
-                Offset(size.width / 2, size.height * 0.74),
-                count: 8,
-              );
-            } else {
-              final exists = _kCountdownModeCenterIconPresets.any(
-                (p) => p.type == type,
-              );
-              if (exists) {
-                _sendReactionFlight(type, emoji, isIncoming: true);
+      try {
+        _interactiveEventsSub = SoulMergeService()
+            .watchInteractiveEvents()
+            .listen((event) async {
+              if (!mounted ||
+                  event.isEmpty ||
+                  _openedSpaceHouseId != _selfSpaceHouseId) {
+                return;
               }
-            }
-          });
+              final prefs = await SharedPreferences.getInstance();
+              final myRole = prefs.getString('il_role') ?? 'user1';
+              final sender = event['sender']?.toString();
+              if (sender == myRole) return;
+
+              final type = event['type']?.toString() ?? '';
+              final emoji =
+                  event['emoji']?.toString() ??
+                  event['customData']?['emoji']?.toString() ??
+                  '❤️';
+
+              if (!mounted || _openedSpaceHouseId != _selfSpaceHouseId) return;
+              if (type == 'photo_shot') {
+                final size = MediaQuery.sizeOf(context);
+                _heartsKey.currentState?.spawnLocalExplosion(
+                  Offset(size.width / 2, size.height * 0.74),
+                  count: 8,
+                );
+              } else {
+                final exists = _kCountdownModeCenterIconPresets.any(
+                  (p) => p.type == type,
+                );
+                if (exists) {
+                  _sendReactionFlight(type, emoji, isIncoming: true);
+                }
+              }
+            });
+      } catch (error, _) {
+        debugPrint('[CountdownSpace] interactive stream unavailable: $error');
+      }
     }
     unawaited(_promptPendingSpaceAvatarRetryIfNeeded());
   }
@@ -293,9 +301,17 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
       'il_countdown_space_${(scope ?? _scopeKey).trim()}_$key';
 
   Future<void> _refreshCountdownStyleUnlockState() async {
-    final unlocked = widget.isVipActive
-        ? _premiumCountdownStyleKeys
-        : await _getUnlockedCountdownStyleKeys();
+    Set<String> unlocked;
+    try {
+      unlocked = widget.isVipActive
+          ? _premiumCountdownStyleKeys
+          : await _getUnlockedCountdownStyleKeys();
+    } catch (error, _) {
+      // Quyền mở style là dữ liệu phụ; Firebase/Auth chưa sẵn sàng không được
+      // làm hỏng màn Không gian đếm. Giữ các style mặc định cho tới lần tải sau.
+      debugPrint('[CountdownSpace] style unlock state unavailable: $error');
+      unlocked = <String>{};
+    }
     if (!mounted) {
       _unlockedCountdownStyleKeys = unlocked;
       return;
@@ -525,24 +541,23 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
                                           !_isSharedSpace(_scopeKey)))
                                   ? null
                                   : () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => ChatDetailScreen(
-                                            myHouseId:
-                                                widget.currentHouseId ?? '',
-                                            targetHouseId: _scopeKey,
-                                            targetName: rightName,
-                                            targetAvatar: _avatarUrl2,
-                                            isInternal:
-                                                _scopeKey == _selfSpaceHouseId,
-                                            currentRole:
-                                                RoleUtils.currentRoleSync(),
-                                            targetRole:
-                                                RoleUtils.currentRoleSync() ==
-                                                    'user1'
-                                                ? 'user2'
-                                                : 'user1',
-                                          ),
+                                      slPush<void>(
+                                        context,
+                                        ChatDetailScreen(
+                                          myHouseId:
+                                              widget.currentHouseId ?? '',
+                                          targetHouseId: _scopeKey,
+                                          targetName: rightName,
+                                          targetAvatar: _avatarUrl2,
+                                          isInternal:
+                                              _scopeKey == _selfSpaceHouseId,
+                                          currentRole:
+                                              RoleUtils.currentRoleSync(),
+                                          targetRole:
+                                              RoleUtils.currentRoleSync() ==
+                                                  'user1'
+                                              ? 'user2'
+                                              : 'user1',
                                         ),
                                       );
                                     },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../utilities/memory_puzzle/memory_puzzle_brand_mark.dart';
 import 'soul_block_diary_cover.dart';
 
 /// Màn thư viện độc lập với nền ảnh chung, không tạo hoặc tải quảng cáo.
@@ -312,7 +313,12 @@ class GameLibraryView extends StatelessWidget {
                                       onPressed: progress == null
                                           ? secondaryAction
                                           : null,
-                                      icon: const Icon(Icons.extension_rounded),
+                                      icon: const MemoryPuzzleBrandMark(
+                                        key: ValueKey(
+                                          'memory-puzzle-brand-mark',
+                                        ),
+                                        size: 24,
+                                      ),
                                       label: Text(
                                         secondaryLabel!,
                                         textAlign: TextAlign.center,

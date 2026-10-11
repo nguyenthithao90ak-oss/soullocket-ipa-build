@@ -141,7 +141,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     style: slSettingsInputTextStyle(),
                     decoration: slSettingsInputDecoration(
                       hint: DateInputUtils.formatHint(),
-                      helperText: L10nService().format('date_input_helper', {'format': DateInputUtils.formatHint()}),
+                      helperText: L10nService().format('date_input_helper', {
+                        'format': DateInputUtils.formatHint(),
+                      }),
                       errorText: errorText,
                       prefixIcon: const Icon(
                         Icons.calendar_month_rounded,
@@ -557,14 +559,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
         restoring: _isRestoringVip,
         onViewBenefits: purchaseEnabled
             ? () {
-                Navigator.push(
+                slPush<void>(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => PremiumStoreScreen(
-                      houseId: _houseId ?? '',
-                      myName: _nameU1,
-                    ),
-                  ),
+                  PremiumStoreScreen(houseId: _houseId ?? '', myName: _nameU1),
                 );
               }
             : null,

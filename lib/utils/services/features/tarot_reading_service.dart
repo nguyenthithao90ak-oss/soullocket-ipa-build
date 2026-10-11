@@ -7,8 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/utils/zodiac_utils.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
-
-String _t(bool isEnglish, String vi, String en) => isEnglish ? en : vi;
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 String _safeText(dynamic value, {String fallback = ''}) {
   final text = value?.toString().trim() ?? '';
@@ -32,7 +31,7 @@ int? _calculateAgeYears(String dob) {
 
 String? _ageLabel(int? ageYears, bool isEnglish) {
   if (ageYears == null) return null;
-  return isEnglish ? '$ageYears years' : UiCopy.text('copy_750f44691f6d', {'value1': ageYears});
+  return UiCopy.bilingual('copy_750f44691f6d', isEnglish, {'value1': ageYears});
 }
 
 String? _localizedZodiacName(String? raw, bool isEnglish) =>
@@ -88,38 +87,6 @@ _MaturityLens _resolveMaturityLens(int? ageYears, bool isEnglish) {
     label: UiCopy.bilingual('copy_33046d32bb5b', isEnglish),
     summary: UiCopy.bilingual('copy_279922355541', isEnglish),
   );
-}
-
-String _compatibilityTitle(int score, bool isEnglish) {
-  if (!isEnglish) return '';
-  if (score >= 92) return 'Soul-level chemistry';
-  if (score >= 84) return 'Natural harmony';
-  if (score >= 72) return 'Promising chemistry';
-  if (score >= 60) return 'Attraction with lessons';
-  return 'Requires conscious effort';
-}
-
-String _compatibilityDescription({
-  required int score,
-  required bool isEnglish,
-  required String? viewerElement,
-  required String? partnerElement,
-}) {
-  if (!isEnglish) return '';
-  final pair = '${viewerElement ?? ''}-${partnerElement ?? ''}';
-  if (pair == 'Lửa-Khí' || pair == 'Khí-Lửa') {
-    return 'This pair can keep each other inspired and alive, but it still needs emotional grounding to avoid burning too fast.';
-  }
-  if (pair == 'Đất-Nước' || pair == 'Nước-Đất') {
-    return 'This pairing tends to nourish trust and emotional safety, making it easier to build something stable and lasting.';
-  }
-  if (score >= 84) {
-    return 'Your temperaments tend to move well together, which makes understanding easier when both sides stay honest.';
-  }
-  if (score >= 68) {
-    return "There is attraction here, but the bond grows best when both sides learn each other's emotional language instead of assuming.";
-  }
-  return 'This bond can still work, but it asks for patience, honesty, and more conscious adjustment from both sides.';
 }
 
 class TarotSpreadSlot {
@@ -299,12 +266,12 @@ class TarotViewerProfile {
     final isEnglish = localeCode.startsWith('en');
     final isSingle = relationshipMode == 'single';
     final nameU1 =
-        _safeText(settings['nameU1'], fallback: isEnglish ? 'You' : UiCopy.text('copy_40ffd8d0f1c7'));
+        _safeText(settings['nameU1'], fallback: UiCopy.text('copy_40ffd8d0f1c7'));
     final nameU2 = _safeText(
       settings['nameU2'],
       fallback: isSingle
-          ? (isEnglish ? 'Future partner' : UiCopy.text('copy_fd4ca9e4d18c'))
-          : (isEnglish ? 'Your partner' : UiCopy.text('copy_145933221191')),
+          ? UiCopy.text('copy_fd4ca9e4d18c')
+          : UiCopy.text('copy_145933221191'),
     );
     final dobU1 = _safeText(settings['dobU1']);
     final dobU2 = _safeText(settings['dobU2']);
@@ -335,18 +302,8 @@ class TarotViewerProfile {
           ZodiacUtils.getCompatibility(viewerZodiacKey, partnerZodiacKey);
       compatibilityScore =
           int.tryParse('${rawCompatibility['score'] ?? ''}') ?? 0;
-      if (isEnglish) {
-        compatibilityTitle = _compatibilityTitle(compatibilityScore, true);
-        compatibilityDescription = _compatibilityDescription(
-          score: compatibilityScore,
-          isEnglish: true,
-          viewerElement: viewerElement,
-          partnerElement: partnerElement,
-        );
-      } else {
-        compatibilityTitle = rawCompatibility['title']?.toString();
-        compatibilityDescription = rawCompatibility['desc']?.toString();
-      }
+      compatibilityTitle = rawCompatibility['title']?.toString();
+      compatibilityDescription = rawCompatibility['desc']?.toString();
     }
 
     return TarotViewerProfile(
@@ -903,11 +860,11 @@ class TarotReadingService {
         : UiCopy.bilingual('copy_c6e15eb627b9', isEnglish);
     final signalText = signals.messageCount == 0
         ? UiCopy.bilingual('copy_4fc975a8b773', isEnglish)
-        : _t(
-            isEnglish,
-            UiCopy.text('copy_c2c1d4665d95', {'value1': signals.averageLength >= 28 ? 'có chiều sâu và chịu khó quan sát' : 'không phô ra hết, nhưng vẫn có độ thật rõ rệt'}),
-            'Recent messages suggest your feelings ${signals.averageLength >= 28 ? 'carry depth and careful observation' : 'do not show everything, yet still feel very real'}.',
-          );
+        : UiCopy.text('copy_c2c1d4665d95', {
+            'value1': L10nService().translate(signals.averageLength >= 28
+                ? 'tarot_signal_deep'
+                : 'tarot_signal_reserved'),
+          });
     return UiCopy.bilingual('copy_de59a2a0a4ee', isEnglish, {'value1': viewerProfile.viewerName, 'value2': profileTag, 'value3': viewerProfile.maturitySummary, 'value4': zodiacText, 'value5': viewerLoveScore, 'value6': signalText});
   }
 
@@ -948,11 +905,15 @@ class TarotReadingService {
     final signalLine = signals.affectionScore >= 3
         ? UiCopy.bilingual('copy_830aab11f815', isEnglish)
         : UiCopy.bilingual('copy_dbe61da586f5', isEnglish);
-    return _t(
-      isEnglish,
-      UiCopy.text('copy_9b2c5f7a5a11', {'value1': viewerProfile.hasCompatibility ? 'có độ hợp khá rõ' : 'chưa hề lạnh', 'value2': warmth, 'value3': rhythm, 'value4': balanceLine, 'value5': signalLine}),
-      'The current energy ${viewerProfile.hasCompatibility ? 'shows visible compatibility' : 'is not cold at all'}: feelings are $warmth and the connection rhythm is $rhythm. $balanceLine $signalLine',
-    );
+    return UiCopy.text('copy_9b2c5f7a5a11', {
+      'value1': L10nService().translate(viewerProfile.hasCompatibility
+          ? 'tarot_energy_compatible'
+          : 'tarot_energy_warm'),
+      'value2': warmth,
+      'value3': rhythm,
+      'value4': balanceLine,
+      'value5': signalLine,
+    });
   }
 
   String _advice(
@@ -1151,11 +1112,9 @@ class TarotReadingService {
       case 'self_state':
         return UiCopy.bilingual('copy_a4075ad52e59', isEnglish);
       case 'partner_state':
-        return _t(
-          isEnglish,
-          isSingle ? UiCopy.text('copy_6e13fe2f0852') : UiCopy.text('copy_d70c709b472a'),
-          isSingle ? 'The person on your mind' : 'The other side',
-        );
+        return isSingle
+            ? UiCopy.text('copy_6e13fe2f0852')
+            : UiCopy.text('copy_d70c709b472a');
       case 'friction':
         return UiCopy.bilingual('copy_a0c2533f0b71', isEnglish);
       case 'bridge':
@@ -1195,10 +1154,13 @@ class TarotReadingService {
     final rhythm =
         _interactionText(isEnglish, insights.interactionRate).toLowerCase();
     final slotLine = switch (selection.slotId) {
-      'current_pulse' => _t(
-          isEnglish,
-          UiCopy.text('copy_c38335bc8ea9', {'value1': dominantEnergy == 'warm' ? 'muốn được đón nhận' : dominantEnergy == 'reflective' ? 'cần được gọi tên rõ ràng' : 'đòi hỏi bạn phải nhìn sâu hơn vào điều mình thật sự muốn'}),
-          'In this position, the card says your present feeling ${dominantEnergy == 'warm' ? 'wants to be received' : dominantEnergy == 'reflective' ? 'needs to be named clearly' : 'is asking you to look deeper into what you truly want'}.'),
+      'current_pulse' => UiCopy.text('copy_c38335bc8ea9', {
+          'value1': L10nService().translate(dominantEnergy == 'warm'
+              ? 'tarot_feeling_received'
+              : dominantEnergy == 'reflective'
+                  ? 'tarot_feeling_named'
+                  : 'tarot_feeling_deeper'),
+        }),
       'hidden_tide' => UiCopy.bilingual('copy_b9c45ed214e5', isEnglish),
       'heart_path' => UiCopy.bilingual('copy_3cd396e60771', isEnglish),
       'self_state' => UiCopy.bilingual('copy_8c3b1146e615', isEnglish, {'value1': needText}),

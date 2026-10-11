@@ -1,7 +1,7 @@
 part of '../../love_insights_view.dart';
 
 extension _InsightMoodHabitCardsExt on LoveInsightsView {
-  Widget _buildHabitCard(LoveInsightData insight) {
+  Widget _buildHabitCard(BuildContext context, LoveInsightData insight) {
     final favoriteIcon = insight.diaryTotal > insight.albumTotal
         ? Icons.menu_book_rounded
         : insight.diaryTotal < insight.albumTotal
@@ -11,18 +11,24 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
       key: const ValueKey('insight-habits'),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF2E5), Color(0xFFFCF7EF)],
+          colors: [
+            _InsightStyle.wash(context, const Color(0xFFFFF2E5)),
+            _InsightStyle.wash(context, const Color(0xFFFCF7EF)),
+          ],
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF1E3D1)),
+        border: Border.all(
+          color: _InsightStyle.wash(context, const Color(0xFFF1E3D1)),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCardTitle(
+            context,
             icon: Icons.spa_outlined,
             title: L10nService().translate(
               _isSingle ? 'home_thiquencab_8114d9' : 'home_nhphotng_4917b2',
@@ -35,6 +41,7 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
           const SizedBox(height: 20),
           _buildAdaptivePair(
             first: _buildHabitMetric(
+              context,
               icon: Icons.local_fire_department_outlined,
               label: L10nService().translate('home_hotngngy_0b53ec'),
               value: insight.interactionRate.toStringAsFixed(1),
@@ -42,6 +49,7 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
               isNumber: true,
             ),
             second: _buildHabitMetric(
+              context,
               icon: favoriteIcon,
               label: L10nService().translate('home_yuthch_2958ea'),
               value: _favoriteActivityLabel(insight),
@@ -53,7 +61,8 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
     );
   }
 
-  Widget _buildHabitMetric({
+  Widget _buildHabitMetric(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
@@ -64,13 +73,13 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
+        color: _InsightStyle.surface(context).withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 24, color: accent),
+          Icon(icon, size: 24, color: _InsightStyle.accent(context, accent)),
           const SizedBox(height: 12),
           Text(
             value,
@@ -78,7 +87,7 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
               fontSize: isNumber ? 32 : 18,
               height: 1.3,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF573E35),
+              color: _InsightStyle.accent(context, const Color(0xFF573E35)),
             ),
           ),
           const SizedBox(height: 6),
@@ -88,7 +97,7 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
               fontSize: 12,
               fontWeight: FontWeight.w500,
               height: 1.4,
-              color: const Color(0xFF846D5E),
+              color: _InsightStyle.accent(context, const Color(0xFF846D5E)),
             ),
           ),
         ],
@@ -96,29 +105,34 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
     );
   }
 
-  Widget _buildAdvisorCard(LoveInsightData insight) {
+  Widget _buildAdvisorCard(BuildContext context, LoveInsightData insight) {
     return Container(
       key: const ValueKey('insight-advisor'),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF7EAF0), Color(0xFFF7F1F8)],
+          colors: [
+            _InsightStyle.wash(context, const Color(0xFFF7EAF0)),
+            _InsightStyle.wash(context, const Color(0xFFF7F1F8)),
+          ],
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFEDDEE7)),
+        border: Border.all(
+          color: _InsightStyle.wash(context, const Color(0xFFEDDEE7)),
+        ),
       ),
       child: Stack(
         children: [
-          const PositionedDirectional(
+          PositionedDirectional(
             end: -6,
             top: -8,
             child: ExcludeSemantics(
               child: Icon(
                 Icons.format_quote_rounded,
                 size: 120,
-                color: Color(0xFFEBDCE7),
+                color: _InsightStyle.accent(context, const Color(0xFFEBDCE7)),
               ),
             ),
           ),
@@ -128,6 +142,7 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildCardTitle(
+                  context,
                   icon: Icons.auto_awesome_outlined,
                   title: L10nService().translate(
                     _isSingle
@@ -145,7 +160,9 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: _InsightStyle.surface(
+                      context,
+                    ).withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -156,7 +173,10 @@ extension _InsightMoodHabitCardsExt on LoveInsightsView {
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       height: 1.65,
-                      color: const Color(0xFF5A3F51),
+                      color: _InsightStyle.accent(
+                        context,
+                        const Color(0xFF5A3F51),
+                      ),
                     ),
                   ),
                 ),

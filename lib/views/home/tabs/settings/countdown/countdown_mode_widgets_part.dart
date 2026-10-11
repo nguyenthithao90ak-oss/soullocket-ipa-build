@@ -3,7 +3,7 @@ part of '../../settings_tab.dart';
 class _CountdownModeCenterIconPreset {
   const _CountdownModeCenterIconPreset({
     required this.type,
-    required this.label,
+    required this.labelKey,
     required this.emoji,
     required this.icon,
     this.assetPath,
@@ -12,7 +12,8 @@ class _CountdownModeCenterIconPreset {
   });
 
   final String type;
-  final String label;
+  final String labelKey;
+  String get label => L10nService().translate(labelKey);
   final String emoji;
   final IconData icon;
   final String? assetPath;
@@ -23,64 +24,64 @@ class _CountdownModeCenterIconPreset {
 final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
   _CountdownModeCenterIconPreset(
     type: 'miss',
-    label: L10nService().translate('home_nh_dbe2a3'),
+    labelKey: 'home_nh_dbe2a3',
     emoji: '\u{1F496}',
     icon: Icons.favorite_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_1.gif',
+    assetPath: HomeInteractionStickers.defaultFor('miss'),
     gradient: [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
     accent: const Color(0xFFD94C86),
   ),
   _CountdownModeCenterIconPreset(
     type: 'angry',
-    label: L10nService().translate('home_gin_6a4c8c'),
+    labelKey: 'home_gin_6a4c8c',
     emoji: '\u{1F63E}',
     icon: Icons.sentiment_very_dissatisfied_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_12.gif',
+    assetPath: HomeInteractionStickers.defaultFor('angry'),
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
   ),
   _CountdownModeCenterIconPreset(
     type: 'kiss',
-    label: L10nService().translate('home_hn_fac010'),
+    labelKey: 'home_hn_fac010',
     emoji: '\u{1F48B}',
     icon: Icons.favorite_border_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_14.gif',
+    assetPath: HomeInteractionStickers.defaultFor('kiss'),
     gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
     accent: const Color(0xFFE14A8B),
   ),
   _CountdownModeCenterIconPreset(
     type: 'hug',
-    label: L10nService().translate('home_m_07a3b7'),
+    labelKey: 'home_m_07a3b7',
     emoji: '\u{1F428}',
     icon: Icons.diversity_1_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_6.gif',
+    assetPath: HomeInteractionStickers.defaultFor('hug'),
     gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
     accent: const Color(0xFF2D8FE3),
   ),
   _CountdownModeCenterIconPreset(
     type: 'tease',
-    label: L10nService().translate('home_tru_d66cdf'),
+    labelKey: 'home_tru_d66cdf',
     emoji: '\u{1F921}',
     icon: Icons.auto_awesome_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_15.gif',
+    assetPath: HomeInteractionStickers.defaultFor('tease'),
     gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
     accent: const Color(0xFF7B61D9),
   ),
   _CountdownModeCenterIconPreset(
     type: 'cry',
-    label: L10nService().translate('home_khc_92394f'),
+    labelKey: 'home_khc_92394f',
     emoji: '\u{1F62D}',
     icon: Icons.face_retouching_natural_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_7.gif',
+    assetPath: HomeInteractionStickers.defaultFor('cry'),
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
     accent: const Color(0xFF5B8DEF),
   ),
   _CountdownModeCenterIconPreset(
     type: 'poop',
-    label: L10nService().translate('p7_interaction_troll'),
+    labelKey: 'p7_interaction_troll',
     emoji: '\u{1F4A9}',
     icon: Icons.bolt_rounded,
-    assetPath: 'assets/images/anhtomau_stickers/sticker_8.gif',
+    assetPath: HomeInteractionStickers.defaultFor('poop'),
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
     accent: const Color(0xFFB96B2C),
   ),
@@ -129,19 +130,19 @@ Widget _buildCountdownModeCenterIconVisual({
   double? emojiSize,
   bool preferAsset = true,
 }) {
+  // Cùng reference và renderer với Home, bộ chọn và hiệu ứng khi chạm.
   final resolvedAssetPath =
       preset.assetPath != null && preset.assetPath!.trim().isNotEmpty
       ? preset.assetPath!.trim()
       : null;
 
   if (preferAsset && resolvedAssetPath != null) {
-    return Image.asset(
+    return R2StickerImage(
       resolvedAssetPath,
       width: size,
       height: size,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (_, _, _) => _buildCountdownModeCenterIconVisual(
+      errorWidget: _buildCountdownModeCenterIconVisual(
         preset: preset,
         size: size,
         emojiSize: emojiSize,
@@ -179,145 +180,127 @@ Widget _buildCountdownModeCenterIconVisual({
 Future<String?> _showCountdownModeCenterIconPicker(
   BuildContext context, {
   required String selectedType,
+  bool isDark = false,
 }) {
   final selected = _normalizeCountdownModeCenterIconType(selectedType);
+  final palette = BalancedCountdownPalette(dark: isDark);
   return showModalBottomSheet<String>(
     context: context,
+    isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (sheetContext) {
-      return SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF101A2B),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-            ),
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  L10nService().translate('home_icongia_641af3'),
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
+    builder: (sheetContext) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * .85,
+          ),
+          child: Material(
+            color: palette.paper,
+            borderRadius: BorderRadius.circular(28),
+            clipBehavior: Clip.antiAlias,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('home_icongia_641af3'),
+                    style: SLTheme.quicksand(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: palette.ink,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  L10nService().translate('home_chmchnnhan_712b91'),
-                  style: SLTheme.quicksand(
-                    fontSize: 12.2,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white70,
-                    height: 1.42,
+                  const SizedBox(height: 6),
+                  Text(
+                    context.tr('home_chmchnnhan_712b91'),
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: palette.muted,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _kCountdownModeCenterIconPresets.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.86,
-                  ),
-                  itemBuilder: (context, index) {
-                    final preset = _kCountdownModeCenterIconPresets[index];
-                    final isSelected = preset.type == selected;
-                    return Semantics(
-                      button: true,
-                      selected: isSelected,
-                      label: L10nService()
-                          .translate('p7_choose_interaction')
-                          .replaceAll('{action}', preset.label),
-                      excludeSemantics: true,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(22),
-                        onTap: () =>
-                            Navigator.of(sheetContext).pop(preset.type),
-                        child: Ink(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.92),
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: isSelected
-                                  ? preset.accent
-                                  : Colors.white.withValues(alpha: 0.52),
-                              width: isSelected ? 2.2 : 1.2,
+                  const SizedBox(height: 18),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final largeText =
+                          MediaQuery.textScalerOf(context).scale(12) > 18;
+                      final columns = largeText || constraints.maxWidth < 300
+                          ? 2
+                          : 3;
+                      final width =
+                          (constraints.maxWidth - (columns - 1) * 10) / columns;
+                      return Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          for (final preset in _kCountdownModeCenterIconPresets)
+                            SizedBox(
+                              width: width,
+                              child: Semantics(
+                                button: true,
+                                selected: preset.type == selected,
+                                label: context
+                                    .tr('p7_choose_interaction')
+                                    .replaceAll('{action}', preset.label),
+                                excludeSemantics: true,
+                                child: Material(
+                                  color: preset.type == selected
+                                      ? palette.blush
+                                      : palette.paper,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    side: BorderSide(
+                                      color: preset.type == selected
+                                          ? palette.rose
+                                          : palette.border,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: InkWell(
+                                    onTap: () => Navigator.of(
+                                      sheetContext,
+                                    ).pop(preset.type),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          _buildCountdownModeCenterIconVisual(
+                                            preset: preset,
+                                            size: 60,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            preset.label,
+                                            textAlign: TextAlign.center,
+                                            style: SLTheme.quicksand(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: palette.ink,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: preset.accent.withValues(
-                                  alpha: isSelected ? 0.22 : 0.10,
-                                ),
-                                blurRadius: isSelected ? 20 : 12,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 46,
-                                height: 46,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: preset.gradient,
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.80),
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: _buildCountdownModeCenterIconVisual(
-                                    preset: preset,
-                                    size: 36,
-                                    emojiSize: 28,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                preset.label,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF243041),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      );
-    },
+      ),
+    ),
   );
 }
 
@@ -536,149 +519,124 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
     final borderColor = Colors.white.withValues(alpha: isDark ? 0.18 : 0.76);
     final centerPreset = _countdownModeCenterIconPresetFor(centerIconType);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          colors: [surfaceStart, surfaceEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: borderColor, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _CountdownModeAvatarIdentity(
-              name: leftName,
-              avatarUrl: leftAvatarUrl,
-              avatarFrameKey: avatarFrameKey,
-              fontKey: fontKey,
-              roleLabel: L10nService().translate('home_bn_415bfa'),
-              accent: const Color(0xFF4BA7FF),
-              foreground: foreground,
-              isDark: isDark,
-              onTap: onLeftAvatarTap,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final interactionSize = constraints.maxWidth < 330 ? 58.0 : 64.0;
+        final avatarSize = math
+            .min(92.0, (constraints.maxWidth - 30 - 16 - interactionSize) / 2)
+            .clamp(48.0, 92.0);
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 18, 14, 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(
+              colors: [surfaceStart, surfaceEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            border: Border.all(color: borderColor, width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Semantics(
-              button: onCenterIconTap != null || onCenterIconChanged != null,
-              label: L10nService()
-                  .translate('p7_center_interaction_label')
-                  .replaceAll('{action}', centerPreset.label),
-              hint: onCenterIconChanged == null
-                  ? null
-                  : L10nService().translate('p7_center_interaction_hint'),
-              excludeSemantics: true,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onCenterIconTap,
-                onLongPress: onCenterIconChanged == null
-                    ? null
-                    : () async {
-                        final selected =
-                            await _showCountdownModeCenterIconPicker(
-                              context,
-                              selectedType: centerIconType,
+          child: Row(
+            children: [
+              Expanded(
+                child: _CountdownModeAvatarIdentity(
+                  name: leftName,
+                  avatarUrl: leftAvatarUrl,
+                  avatarFrameKey: avatarFrameKey,
+                  fontKey: fontKey,
+                  roleLabel: L10nService().translate('home_bn_415bfa'),
+                  accent: const Color(0xFF4BA7FF),
+                  foreground: foreground,
+                  isDark: isDark,
+                  onTap: onLeftAvatarTap,
+                  avatarSize: avatarSize,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Semantics(
+                  button:
+                      onCenterIconTap != null || onCenterIconChanged != null,
+                  label: L10nService()
+                      .translate('p7_center_interaction_label')
+                      .replaceAll('{action}', centerPreset.label),
+                  hint: onCenterIconChanged == null
+                      ? null
+                      : L10nService().translate('p7_center_interaction_hint'),
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    key: const ValueKey('countdown_space_reaction'),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onCenterIconTap,
+                    onLongPress: onCenterIconChanged == null
+                        ? null
+                        : () async {
+                            final selected =
+                                await _showCountdownModeCenterIconPicker(
+                                  context,
+                                  selectedType: centerIconType,
+                                  isDark: isDark,
+                                );
+                            if (selected != null) {
+                              onCenterIconChanged!(selected);
+                            }
+                          },
+                    onHorizontalDragEnd: onCenterIconChanged == null
+                        ? null
+                        : (details) {
+                            final velocity = details.primaryVelocity ?? 0;
+                            if (velocity.abs() < 180) {
+                              return;
+                            }
+                            onCenterIconChanged!(
+                              _cycleCountdownModeCenterIconType(
+                                centerIconType,
+                                velocity < 0 ? 1 : -1,
+                              ),
                             );
-                        if (selected != null) {
-                          onCenterIconChanged!(selected);
-                        }
-                      },
-                onHorizontalDragEnd: onCenterIconChanged == null
-                    ? null
-                    : (details) {
-                        final velocity = details.primaryVelocity ?? 0;
-                        if (velocity.abs() < 180) {
-                          return;
-                        }
-                        onCenterIconChanged!(
-                          _cycleCountdownModeCenterIconType(
-                            centerIconType,
-                            velocity < 0 ? 1 : -1,
-                          ),
-                        );
-                      },
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.94),
-                    border: Border.all(
-                      color: Colors.white.withValues(
-                        alpha: isDark ? 0.28 : 0.84,
-                      ),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: centerPreset.accent.withValues(alpha: 0.22),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: centerPreset.gradient,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                          color: Colors.white.withValues(
-                            alpha: isDark ? 0.22 : 0.88,
-                          ),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: _buildCountdownModeCenterIconVisual(
-                          preset: centerPreset,
-                          size: 34,
-                          emojiSize: 24,
-                        ),
+                          },
+                    child: SizedBox(
+                      width: interactionSize,
+                      height: interactionSize,
+                      child: _buildCountdownModeCenterIconVisual(
+                        preset: centerPreset,
+                        size: interactionSize,
+                        emojiSize: interactionSize * .6,
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
+              Expanded(
+                child: _CountdownModeAvatarIdentity(
+                  name: rightName,
+                  avatarUrl: rightAvatarUrl,
+                  avatarFrameKey: avatarFrameKey,
+                  fontKey: fontKey,
+                  roleLabel: isSingleMode
+                      ? L10nService().translate('home_angch_7a6550')
+                      : L10nService().translate('home_ngiy_e21b71'),
+                  accent: const Color(0xFFFF6FA3),
+                  foreground: foreground,
+                  isDark: isDark,
+                  placeholder: isSingleMode,
+                  onTap: isSingleMode ? null : onRightAvatarTap,
+                  onChatTap: isSingleMode ? null : onRightAvatarChatTap,
+                  avatarSize: avatarSize,
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: _CountdownModeAvatarIdentity(
-              name: rightName,
-              avatarUrl: rightAvatarUrl,
-              avatarFrameKey: avatarFrameKey,
-              fontKey: fontKey,
-              roleLabel: isSingleMode
-                  ? L10nService().translate('home_angch_7a6550')
-                  : L10nService().translate('home_ngiy_e21b71'),
-              accent: const Color(0xFFFF6FA3),
-              foreground: foreground,
-              isDark: isDark,
-              placeholder: isSingleMode,
-              onTap: isSingleMode ? null : onRightAvatarTap,
-              onChatTap: isSingleMode ? null : onRightAvatarChatTap,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -696,6 +654,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
     this.placeholder = false,
     this.onTap,
     this.onChatTap,
+    this.avatarSize = 92,
   });
 
   final String name;
@@ -709,6 +668,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
   final bool placeholder;
   final VoidCallback? onTap;
   final VoidCallback? onChatTap;
+  final double avatarSize;
 
   @override
   Widget build(BuildContext context) {
@@ -724,6 +684,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
               avatarFrameKey: avatarFrameKey,
               accent: accent,
               placeholder: placeholder,
+              size: avatarSize,
             ),
             if (onChatTap != null)
               Positioned(
@@ -742,24 +703,33 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
                     excludeFromSemantics: true,
                     child: GestureDetector(
                       onTap: onChatTap,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: SLSettingsColors.accentStrong,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
+                      behavior: HitTestBehavior.opaque,
+                      child: SizedBox.square(
+                        dimension: 48,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: SLSettingsColors.accentStrong,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.chat_bubble_rounded,
-                          color: Colors.white,
-                          size: 13,
+                            child: const Icon(
+                              Icons.chat_bubble_rounded,
+                              color: Colors.white,
+                              size: 13,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -830,6 +800,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
     required this.fallbackName,
     required this.avatarFrameKey,
     required this.accent,
+    this.size = 72,
     this.placeholder = false,
   });
 
@@ -837,11 +808,11 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
   final String fallbackName;
   final String avatarFrameKey;
   final Color accent;
+  final double size;
   final bool placeholder;
 
   @override
   Widget build(BuildContext context) {
-    const size = 72.0;
     final avatarContent = _buildAvatarContent();
 
     return SlAvatarFrame(
@@ -927,187 +898,47 @@ class _CountdownModeCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedSize = size.roundToDouble();
-    final valueGradient = LinearGradient(
-      colors: styleData.numberGradient,
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
-    final valuePaint = Paint()
-      ..shader = valueGradient.createShader(
-        Rect.fromLTWH(0, 0, resolvedSize, resolvedSize),
-      );
-
     return RepaintBoundary(
-      child: Container(
-        width: resolvedSize,
-        height: resolvedSize,
-        decoration: ShapeDecoration(
-          shape: SlCountdownShapes.getShapeBorderForKey(
-            countdownShapeKey,
-            side: BorderSide.none,
-          ),
-          gradient: styleData.outerGradient,
-          shadows: styleData.shadows,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Container(
-            decoration: ShapeDecoration(
-              shape: SlCountdownShapes.getShapeBorderForKey(
-                countdownShapeKey,
-                side: styleData.innerBorder.top,
-              ),
-              gradient: styleData.innerGradient,
+      child: SizedBox.square(
+        dimension: resolvedSize,
+        child: CountdownArtworkSurface(
+          styleKey: styleKey,
+          transparent: transparentMode,
+          enableMotion: enableMotion,
+          minimumContentExtent: 160,
+          child: RelationshipDayCounterContent(
+            value: value,
+            topLabel: topLabel,
+            bottomLabel: bottomLabel,
+            size: resolvedSize,
+            enableMotion: enableMotion,
+            onEditValue: onValueTap,
+            onEditTopLabel: onTopTap,
+            onEditBottomLabel: onBottomTap,
+            numberColors: styleData.numberGradient,
+            topLabelStyle: SLTheme.textStyleForKey(
+              fontKey,
+              fontSize: resolvedSize * .070,
+              fontWeight: FontWeight.w800,
+              color: styleData.topColor,
+              letterSpacing: .6,
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: resolvedSize * 0.12,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: resolvedSize * 0.04,
-                        ),
-                        child: _CountdownModeCircleTapTarget(
-                          circleSize: resolvedSize,
-                          onTap: onTopTap,
-                          constraints: BoxConstraints(
-                            minWidth: (resolvedSize * 0.52).clamp(150.0, 260.0),
-                            minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              topLabel,
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.textStyleForKey(
-                                fontKey,
-                                fontSize: (resolvedSize * 0.082).clamp(
-                                  17.0,
-                                  24.0,
-                                ),
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.8,
-                                color: styleData.bottomColor,
-                                shadows: styleData.labelShadows,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: resolvedSize * 0.05),
-                      _CountdownModeCircleTapTarget(
-                        circleSize: resolvedSize,
-                        onTap: onValueTap,
-                        constraints: BoxConstraints(
-                          minWidth: (resolvedSize * 0.26).clamp(82.0, 148.0),
-                          minHeight: (resolvedSize * 0.14).clamp(42.0, 76.0),
-                        ),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            value,
-                            maxLines: 1,
-                            textAlign: TextAlign.center,
-                            style: SLTheme.textStyleForKey(
-                              fontKey,
-                              fontSize: (resolvedSize * 0.36).clamp(
-                                54.0,
-                                142.0,
-                              ),
-                              fontWeight: FontWeight.w900,
-                              height: 1.0,
-                              foreground: valuePaint,
-                              shadows: styleData.numberShadows,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: resolvedSize * 0.02),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: resolvedSize * 0.06,
-                        ),
-                        child: _CountdownModeCircleTapTarget(
-                          circleSize: resolvedSize,
-                          onTap: onBottomTap,
-                          constraints: BoxConstraints(
-                            minWidth: (resolvedSize * 0.56).clamp(156.0, 276.0),
-                            minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              bottomLabel,
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.textStyleForKey(
-                                fontKey,
-                                fontSize: (resolvedSize * 0.082).clamp(
-                                  17.0,
-                                  24.0,
-                                ),
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.1,
-                                color: styleData.bottomColor,
-                                shadows: styleData.labelShadows,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            bottomLabelStyle: SLTheme.textStyleForKey(
+              fontKey,
+              fontSize: resolvedSize * .065,
+              fontWeight: FontWeight.w700,
+              color: styleData.bottomColor,
+              letterSpacing: .4,
+            ),
+            numberStyle: SLTheme.textStyleForKey(
+              fontKey,
+              fontSize: resolvedSize * .36,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              height: 1.0,
+              letterSpacing: -2,
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CountdownModeCircleTapTarget extends StatelessWidget {
-  const _CountdownModeCircleTapTarget({
-    required this.circleSize,
-    required this.child,
-    this.onTap,
-    this.constraints,
-  });
-
-  final double circleSize;
-  final Widget child;
-  final VoidCallback? onTap;
-  final BoxConstraints? constraints;
-
-  double _countdownTapWidth(double circleSize) =>
-      (circleSize * 0.56).clamp(132.0, 240.0);
-
-  double _countdownTapHeight(double circleSize) =>
-      (circleSize * 0.16).clamp(46.0, 72.0);
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: onTap != null,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints:
-              constraints ??
-              BoxConstraints(
-                minWidth: _countdownTapWidth(circleSize),
-                minHeight: _countdownTapHeight(circleSize),
-              ),
-          child: Center(child: child),
         ),
       ),
     );

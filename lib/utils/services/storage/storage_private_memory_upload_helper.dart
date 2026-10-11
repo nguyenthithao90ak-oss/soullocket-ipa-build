@@ -46,6 +46,7 @@ class StoragePrivateMemoryUploadHelper {
     required PrivateMemoryInvoke invoke,
     required Future<({XFile file, String contentType})> Function() prepareFile,
     required http.Client client,
+    bool requestIsFresh = false,
     Future<void> Function(int bytes, bool isVideo)? beforeUpload,
     double? latitude,
     double? longitude,
@@ -99,30 +100,32 @@ class StoragePrivateMemoryUploadHelper {
 
     try {
       guard();
-      // Hồi phục ACK bị mất trước khi đọc/nén lại file; file cục bộ có thể đã mất.
-      final status = await invoke('getPrivateMemoryUploadStatus', scope);
-      guard();
-      if (status['ok'] != true || status['sessionId'] != sessionId) {
-        _fail('unavailable');
-      }
-      if (status['status'] == 'finalized') return receipt(status);
-      if (status['status'] == 'expired') _fail('deadline-exceeded');
-      if (!const {'missing', 'pending'}.contains(status['status'])) {
-        _fail('unavailable');
-      }
-      if (status['status'] == 'pending') {
-        try {
-          // PUT có thể đã tới R2 dù app chưa nhận ACK. Server kiểm tra file
-          // trước; nếu đủ chứng cứ thì không cần file cục bộ hoặc PUT lần hai.
-          final recovered = await invoke(
-            'finalizePrivateMemoryUpload',
-            finalizePayload,
-          );
-          guard();
-          return receipt(recovered);
-        } on FirebaseFunctionsException catch (error) {
-          guard();
-          if (error.code != 'failed-precondition') rethrow;
+      if (!requestIsFresh) {
+        // Hồi phục ACK bị mất trước khi đọc/nén lại file; file cục bộ có thể đã mất.
+        final status = await invoke('getPrivateMemoryUploadStatus', scope);
+        guard();
+        if (status['ok'] != true || status['sessionId'] != sessionId) {
+          _fail('unavailable');
+        }
+        if (status['status'] == 'finalized') return receipt(status);
+        if (status['status'] == 'expired') _fail('deadline-exceeded');
+        if (!const {'missing', 'pending'}.contains(status['status'])) {
+          _fail('unavailable');
+        }
+        if (status['status'] == 'pending') {
+          try {
+            // PUT có thể đã tới R2 dù app chưa nhận ACK. Server kiểm tra file
+            // trước; nếu đủ chứng cứ thì không cần file cục bộ hoặc PUT lần hai.
+            final recovered = await invoke(
+              'finalizePrivateMemoryUpload',
+              finalizePayload,
+            );
+            guard();
+            return receipt(recovered);
+          } on FirebaseFunctionsException catch (error) {
+            guard();
+            if (error.code != 'failed-precondition') rethrow;
+          }
         }
       }
 

@@ -9,6 +9,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/webrtc_service.dart';
+import '../../utils/services/call_setup_failure.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/ad_suppression_guard.dart';
 import '../../utils/services/purchase_service.dart';
@@ -188,8 +189,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         }
       }
       if (!mounted || _ending) return;
-      await _localRenderer.initialize();
-      await _remoteRenderer.initialize();
+      await runCallSetupStep('renderer', _localRenderer.initialize);
+      await runCallSetupStep('renderer', _remoteRenderer.initialize);
       if (!mounted || _ending) return;
       if (widget.targetHouseId == 'random_stranger_id') {
         await Future.delayed(const Duration(seconds: 2));
@@ -268,8 +269,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isPreparing = false);
-      debugPrint('Call setup: ${AppErrorMapper.resolve(e).message}');
-      final msgErrorOccurred = context.tr('p4_call_connection_failed');
+      final failure = CallSetupFailure.from(e, 'setup');
+      debugPrint('Call setup: $failure');
+      final msgErrorOccurred = context.tr(failure.messageKey);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SLSnackBar(content: Text(msgErrorOccurred)));

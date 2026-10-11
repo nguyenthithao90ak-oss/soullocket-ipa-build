@@ -150,7 +150,9 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                       setDialogState(() => stepIndex += 1);
                     },
                     child: Text(
-                      isLastStep ? context.tr('core_done') : context.tr('home_tiptc_555f1f'),
+                      isLastStep
+                          ? context.tr('core_done')
+                          : context.tr('home_tiptc_555f1f'),
                     ),
                   ),
               ],
@@ -277,18 +279,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   }
 
   void _openStickerCustomization() {
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute(
-            builder: (_) => const InteractionStickerEditorScreen(),
-          ),
-        )
-        .then((updated) async {
-          if (updated == true && mounted) {
-            await _loadCustomStickers();
-            _safeSetState(() {});
-          }
-        });
+    slPush<bool>(context, const InteractionStickerEditorScreen()).then((
+      updated,
+    ) async {
+      if (updated == true && mounted) {
+        await _loadCustomStickers();
+        _safeSetState(() {});
+      }
+    });
   }
 
   void _handleInteractionLongPressCancel() {
@@ -299,6 +297,9 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   void _showInteractionDragOverlay(Offset globalPosition) {
     _hideInteractionDragOverlay();
     final overlay = Overlay.of(context, rootOverlay: true);
+    final canEditStickers = kDebugMode
+        ? Future<bool>.value(true)
+        : PurchaseService().isVip();
 
     _interactionDragMenuOptions = List<_PartnerInteractionPreset>.from(
       _kPartnerInteractionPresets,
@@ -400,9 +401,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                   ),
                                   const SizedBox(width: 8),
                                   FutureBuilder<bool>(
-                                    future: kDebugMode
-                                        ? Future.value(true)
-                                        : PurchaseService().isVip(),
+                                    future: canEditStickers,
                                     initialData: kDebugMode,
                                     builder: (context, snapshot) {
                                       if (snapshot.data != true) {
@@ -752,7 +751,14 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               : DateTime.fromMillisecondsSinceEpoch(cooldownUntil);
           final message = unlockAt == null
               ? msgDatingCooldown
-              : L10nService().format('ui_home_you_need_to_wait_until_value1_value2_4499b0', {'value1': unlockAt.day, 'value2': unlockAt.month, 'value3': unlockAt.year});
+              : L10nService().format(
+                  'ui_home_you_need_to_wait_until_value1_value2_4499b0',
+                  {
+                    'value1': unlockAt.day,
+                    'value2': unlockAt.month,
+                    'value3': unlockAt.year,
+                  },
+                );
           scaffoldMessenger?.showSnackBar(SLSnackBar(content: Text(message)));
           return;
         }

@@ -408,10 +408,10 @@ class LocationService {
         accuracy: accuracy,
         distanceFilter: distanceFilter,
         intervalDuration: interval,
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationTitle: 'SoulLocket đang chia sẻ vị trí nền',
-          notificationText:
-              'Vị trí của bạn đang được cập nhật cho bản đồ chung.',
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle:
+              L10nService().translate('location_background_title'),
+          notificationText: L10nService().translate('location_background_body'),
           enableWakeLock:
               false, // ⚡ Không giữ WakeLock liên tục để tiết kiệm 85% pin
         ),

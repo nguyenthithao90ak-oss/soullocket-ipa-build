@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/sl_route.dart';
 import '../../widgets/sl_dialog.dart';
 import '../../utils/services/security_protection_analytics_service.dart';
 import '../../utils/services/security_protection_service.dart';
@@ -23,7 +24,6 @@ Future<SecurityProtectionDialogAction> showSecurityProtectionDialog(
   }
 
   final analyticsService = SecurityProtectionAnalyticsService();
-  final navigator = Navigator.of(context);
 
   unawaited(
     analyticsService.logDecision(
@@ -46,22 +46,20 @@ Future<SecurityProtectionDialogAction> showSecurityProtectionDialog(
       ) ??
       SecurityProtectionDialogAction.dismiss;
 
-  await analyticsService.logDecision(
-    verdict: verdict,
-    eventType: switch (action) {
-      SecurityProtectionDialogAction.retry => 'dialog_primary_tap',
-      SecurityProtectionDialogAction.openHelp => 'dialog_help_tap',
-      SecurityProtectionDialogAction.dismiss => 'dialog_dismissed',
-    },
-    source: source,
+  unawaited(
+    analyticsService.logDecision(
+      verdict: verdict,
+      eventType: switch (action) {
+        SecurityProtectionDialogAction.retry => 'dialog_primary_tap',
+        SecurityProtectionDialogAction.openHelp => 'dialog_help_tap',
+        SecurityProtectionDialogAction.dismiss => 'dialog_dismissed',
+      },
+      source: source,
+    ),
   );
 
-  if (action == SecurityProtectionDialogAction.openHelp && navigator.mounted) {
-    await navigator.push(
-      MaterialPageRoute(
-        builder: (_) => SecurityProtectionHelpScreen(verdict: verdict),
-      ),
-    );
+  if (action == SecurityProtectionDialogAction.openHelp && context.mounted) {
+    await slPush<void>(context, SecurityProtectionHelpScreen(verdict: verdict));
   }
 
   return action;
@@ -162,15 +160,24 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                   runSpacing: 10,
                   children: [
                     _MetaChip(
-                      label: L10nScope.of(context).format('ui_security_risk_level_value1_1e9ed1', {'value1': verdict.effectiveRisk.key}),
+                      label: L10nScope.of(context).format(
+                        'ui_security_risk_level_value1_1e9ed1',
+                        {'value1': verdict.effectiveRisk.key},
+                      ),
                       accent: accent,
                     ),
                     _MetaChip(
-                      label: L10nScope.of(context).format('ui_security_reason_value1_d1b6c3', {'value1': verdict.reason.key}),
+                      label: L10nScope.of(context).format(
+                        'ui_security_reason_value1_d1b6c3',
+                        {'value1': verdict.reason.key},
+                      ),
                       accent: accent,
                     ),
                     _MetaChip(
-                      label: L10nScope.of(context).format('ui_security_phase_value1_56217c', {'value1': verdict.rolloutStage.key}),
+                      label: L10nScope.of(context).format(
+                        'ui_security_phase_value1_56217c',
+                        {'value1': verdict.rolloutStage.key},
+                      ),
                       accent: accent,
                     ),
                   ],

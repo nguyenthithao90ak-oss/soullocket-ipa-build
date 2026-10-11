@@ -5,7 +5,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/screen_activity_mixin.dart';
 import 'memory_puzzle_audio.dart';
+import 'memory_puzzle_brand_mark.dart';
+import 'memory_puzzle_drag_feedback.dart';
 import 'memory_puzzle_engine.dart';
 import 'memory_puzzle_photo.dart';
 import 'memory_puzzle_piece_painter.dart';
@@ -33,7 +36,7 @@ class MemoryPuzzleScreen extends StatefulWidget {
 }
 
 class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
-    with WidgetsBindingObserver {
+    with ScreenActivityMixin {
   MemoryPuzzleEngine? _engine;
   MemoryPuzzlePhoto? _photo;
   Timer? _timer;
@@ -46,21 +49,46 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
   bool _musicEnabled = true;
   bool _effectsEnabled = true;
   bool _completed = false;
-  bool _foreground = true;
+  bool get _foreground => isScreenActive;
   bool _saveErrorShown = false;
   final GlobalKey _boardKey = GlobalKey();
+
+  Future<MemoryPuzzlePhoto?> _loadPhotoWithTimeout({
+    String? excludePhotoId,
+    String? preferredPhotoId,
+  }) {
+    final source = widget.loadPhoto(
+      excludePhotoId: excludePhotoId,
+      preferredPhotoId: preferredPhotoId,
+    );
+    var timedOut = false;
+    unawaited(
+      source.then<void>((photo) {
+        if (timedOut) photo?.image.dispose();
+      }, onError: (Object error, StackTrace stackTrace) {}),
+    );
+    return source.timeout(
+      const Duration(seconds: 15),
+      onTimeout: () {
+        timedOut = true;
+        throw TimeoutException('memory_puzzle_photo_timeout');
+      },
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     unawaited(_restoreOrStart());
   }
 
   Future<void> _restoreOrStart() async {
     Map<String, dynamic>? saved;
     try {
-      saved = await widget.loadProgress?.call();
+      final loadProgress = widget.loadProgress;
+      saved = loadProgress == null
+          ? null
+          : await loadProgress().timeout(const Duration(seconds: 12));
     } catch (_) {
       saved = null;
     }
@@ -91,7 +119,7 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
     final engine = restored ?? _newEngine(1);
     MemoryPuzzlePhoto? photo;
     try {
-      photo = await widget.loadPhoto(preferredPhotoId: photoId);
+      photo = await _loadPhotoWithTimeout(preferredPhotoId: photoId);
     } catch (_) {
       _showMessage('memory_puzzle_photo_failed');
     }
@@ -145,16 +173,18 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
     final photo = _photo;
     if (engine == null || photo == null || widget.saveProgress == null) return;
     try {
-      await widget.saveProgress!({
-        'scope': widget.progressScope,
-        'photoId': photo.id,
-        'level': engine.difficulty.level,
-        'elapsedSeconds': _elapsedSeconds,
-        'engine': engine.toJson(),
-        'savedAt': DateTime.now().millisecondsSinceEpoch,
-        'musicEnabled': _musicEnabled,
-        'effectsEnabled': _effectsEnabled,
-      });
+      await widget
+          .saveProgress!({
+            'scope': widget.progressScope,
+            'photoId': photo.id,
+            'level': engine.difficulty.level,
+            'elapsedSeconds': _elapsedSeconds,
+            'engine': engine.toJson(),
+            'savedAt': DateTime.now().millisecondsSinceEpoch,
+            'musicEnabled': _musicEnabled,
+            'effectsEnabled': _effectsEnabled,
+          })
+          .timeout(const Duration(seconds: 10));
       _saveErrorShown = false;
     } catch (_) {
       if (!_saveErrorShown) _showMessage('memory_puzzle_save_failed');
@@ -177,12 +207,12 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
     setState(() => _busy = true);
     final old = _photo;
     try {
-      var photo = await widget.loadPhoto(excludePhotoId: old?.id);
+      var photo = await _loadPhotoWithTimeout(excludePhotoId: old?.id);
       // Khi offline chỉ còn một ảnh đã cache, vẫn cho người chơi lên màn
       // tiếp theo bằng ảnh đó thay vì khóa tiến trình; nếu có ảnh khác thì
       // luôn ưu tiên ảnh khác ở lần gọi đầu.
       if (photo == null && advanceLevel && old != null) {
-        photo = await widget.loadPhoto();
+        photo = await _loadPhotoWithTimeout();
       }
       if (!mounted) {
         photo?.image.dispose();
@@ -297,9 +327,8 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _foreground = state == AppLifecycleState.resumed;
-    if (!_foreground) {
+  void onScreenActivityChanged(bool active) {
+    if (!active) {
       _timer?.cancel();
       _timer = null;
       unawaited(_sound((audio) => audio.pause()));
@@ -313,7 +342,6 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
   @override
   void dispose() {
     _timer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
     _photo?.image.dispose();
     unawaited(_sound((audio) => audio.dispose()));
     super.dispose();
@@ -326,10 +354,18 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
     return Scaffold(
       backgroundColor: dark ? const Color(0xFF111827) : const Color(0xFFF7F4EE),
       appBar: AppBar(
-        title: Text(
-          context.tr('memory_puzzle_title'),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        title: Row(
+          children: [
+            const MemoryPuzzleBrandMark(size: 30),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                context.tr('memory_puzzle_title'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -702,19 +738,13 @@ class _MemoryPuzzleScreenState extends State<MemoryPuzzleScreen>
             maxSimultaneousDrags: 1,
             onDragStarted: () =>
                 unawaited(_sound((audio) => audio.playPickup())),
-            feedback: Material(
-              color: Colors.transparent,
-              child: SizedBox.square(
-                dimension: puzzleDragSize,
-                child: CustomPaint(
-                  painter: MemoryPuzzlePiecePainter(
-                    image: image,
-                    piece: engine.pieces[id],
-                    rows: engine.difficulty.rows,
-                    cols: engine.difficulty.cols,
-                  ),
-                ),
-              ),
+            feedback: MemoryPuzzleDragFeedback(
+              image: image,
+              piece: engine.pieces[id],
+              rows: engine.difficulty.rows,
+              cols: engine.difficulty.cols,
+              reduceMotion:
+                  MediaQuery.maybeOf(context)?.disableAnimations ?? false,
             ),
             childWhenDragging: Opacity(
               opacity: .25,

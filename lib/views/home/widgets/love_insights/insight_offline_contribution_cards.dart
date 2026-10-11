@@ -1,7 +1,7 @@
 part of '../../love_insights_view.dart';
 
 extension _InsightOfflineContributionCardsExt on LoveInsightsView {
-  Widget _buildContributionCard(LoveInsightData insight) {
+  Widget _buildContributionCard(BuildContext context, LoveInsightData insight) {
     final firstPercent = (insight.shareU1 * 100).round().clamp(0, 100);
     final secondPercent = (insight.shareU2 * 100).round().clamp(0, 100);
     const firstColor = Color(0xFF99516B);
@@ -10,11 +10,12 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
     return Container(
       key: const ValueKey('insight-contribution'),
       padding: const EdgeInsets.all(20),
-      decoration: _softCardDecoration(),
+      decoration: _softCardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCardTitle(
+            context,
             icon: Icons.favorite_border_rounded,
             title: L10nService().translate('home_nggpchotnh_b78922'),
             subtitle: L10nService().translate('home_tnhtheonht_08e94d'),
@@ -23,20 +24,22 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
           const SizedBox(height: 20),
           _buildAdaptivePair(
             first: _buildContributionMember(
+              context,
               role: 'user1',
               name: _displayName(insight, isFirst: true),
               avatar: avatarU1,
               percent: firstPercent,
               accent: firstColor,
-              background: const Color(0xFFFFF0F2),
+              background: _InsightStyle.wash(context, const Color(0xFFFFF0F2)),
             ),
             second: _buildContributionMember(
+              context,
               role: 'user2',
               name: _displayName(insight, isFirst: false),
               avatar: avatarU2,
               percent: secondPercent,
               accent: secondColor,
-              background: const Color(0xFFECF6F3),
+              background: _InsightStyle.wash(context, const Color(0xFFECF6F3)),
             ),
           ),
           const SizedBox(height: 16),
@@ -45,7 +48,7 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
             child: SizedBox(
               height: 8,
               child: ColoredBox(
-                color: const Color(0xFFF0E5DF),
+                color: _InsightStyle.wash(context, const Color(0xFFF0E5DF)),
                 child: Row(
                   key: const ValueKey('insight-contribution-bar'),
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,16 +72,16 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAF6F1),
+              color: _InsightStyle.wash(context, const Color(0xFFFAF6F1)),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.lightbulb_outline_rounded,
                   size: 19,
-                  color: Color(0xFFA47750),
+                  color: _InsightStyle.accent(context, const Color(0xFFA47750)),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -88,7 +91,10 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       height: 1.55,
-                      color: const Color(0xFF79655C),
+                      color: _InsightStyle.accent(
+                        context,
+                        const Color(0xFF79655C),
+                      ),
                     ),
                   ),
                 ),
@@ -100,7 +106,8 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
     );
   }
 
-  Widget _buildContributionMember({
+  Widget _buildContributionMember(
+    BuildContext context, {
     required String role,
     required String name,
     required String avatar,
@@ -112,7 +119,7 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
       key: ValueKey('insight-contribution-$role'),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
       decoration: BoxDecoration(
-        color: background,
+        color: _InsightStyle.wash(context, background),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -133,7 +140,7 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF492E3A),
+              color: _InsightStyle.accent(context, const Color(0xFF492E3A)),
             ),
           ),
           const SizedBox(height: 6),
@@ -144,7 +151,7 @@ extension _InsightOfflineContributionCardsExt on LoveInsightsView {
               style: SLTheme.quicksand(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
-                color: accent,
+                color: _InsightStyle.accent(context, accent),
               ),
             ),
           ),

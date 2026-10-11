@@ -16,12 +16,17 @@ Future<VideoPlayerController?> createCachedVideoController(
   if (url.isEmpty) return null;
   final cache = cacheManager ?? AppCacheManager.instance;
   // Chỉ tra cứu cache ở đây; cache miss để tầng gọi phát URL ngay.
-  final fileInfo = await cache
-      .getFileFromCache(url)
-      .timeout(const Duration(milliseconds: 400), onTimeout: () => null);
-  final File? file = fileInfo?.file;
-  if (file == null || !await file.exists() || await file.length() == 0) {
+  try {
+    final fileInfo = await cache
+        .getFileFromCache(url)
+        .timeout(const Duration(milliseconds: 400), onTimeout: () => null);
+    final File? file = fileInfo?.file;
+    if (file == null || !await file.exists() || await file.length() == 0) {
+      return null;
+    }
+    return VideoPlayerController.file(file);
+  } catch (_) {
+    // Cache bị lỗi hoặc file vừa bị dọn vẫn cho phép tầng gọi phát URL.
     return null;
   }
-  return VideoPlayerController.file(file);
 }

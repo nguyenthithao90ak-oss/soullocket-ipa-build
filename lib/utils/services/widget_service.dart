@@ -14,6 +14,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/app_config.dart';
+import 'core/rtdb_read_coalescer.dart';
 import '../../utils/app_error_mapper.dart';
 import '../calendar_widget_snapshot.dart';
 import '../calendar/holiday_occurrence_resolver.dart';
@@ -86,6 +87,15 @@ class WidgetService {
 
   // Optimization constants
   static const int maxDiaryImagesForWidget = 12; // 12 ảnh gần nhất
+
+  /// Sau khi cả bộ ảnh diary đều không tải được (URL cũ đã đóng, mất mạng), chưa thử lại bộ đó
+  /// ngay ở các lần mở app kế tiếp: mỗi lần thử là tối đa 12 yêu cầu mạng tuần tự.
+  static const Duration diaryImageRetryCooldown = Duration(hours: 6);
+
+  /// Ảnh đại diện widget tải lỗi: chưa thử lại cùng URL trong 30 phút. Widget được cập nhật mỗi lần
+  /// trạng thái online đổi, nên trước đây một URL hỏng bị tải lại liên tục.
+  static const Duration avatarRetryCooldown = Duration(minutes: 30);
+  static final Map<String, DateTime> _avatarFailedAt = <String, DateTime>{};
   static const int widgetImageMaxWidth = 320; // Tăng một chút cho chất lượng
   static const int widgetImageMaxHeight = 250;
   static const int widgetImageQuality = 78; // 78% chất lượng JPEG
@@ -146,6 +156,19 @@ class WidgetService {
     final houseId = await HouseService().getCurrentHouseId();
     if (houseId != null && houseId.isNotEmpty) {
       await syncCycleWidgetData(houseId: houseId);
+    }
+  }
+
+  static Future<void> requestPinSleepWidget() async {
+    if (!supportsAndroidWidgets) return;
+    await ensureInitialized(forceUpdate: true);
+    await HomeWidget.requestPinWidget(
+      androidName: androidWidgetSleepName,
+      qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
+    );
+    final houseId = await HouseService().getCurrentHouseId();
+    if (houseId != null && houseId.isNotEmpty) {
+      await syncSleepWidgetData(houseId: houseId);
     }
   }
 
@@ -425,13 +448,19 @@ class WidgetService {
     await _saveIfMissing<String>('seasonResolvedKey', 'none');
     await _saveIfMissing<String>('loveDateText', '');
     await _saveIfMissing<String>('startDateRaw', '');
-    await _saveIfMissing<String>('dayUnitText', UiCopy.text('copy_8ccdd0407810'));
+    await _saveIfMissing<String>(
+      'dayUnitText',
+      UiCopy.text('copy_8ccdd0407810'),
+    );
     await _saveIfMissing<String>('diaryImagePaths', '[]');
     await _saveIfMissing<String>('diaryImageUrlSignature', '');
     await _saveIfMissing<int>('diaryImageCount', 0);
     await _saveIfMissing<bool>('cycle_enabled', false);
     await _saveIfMissing<String>('cycle_phase', 'menstruation');
-    await _saveIfMissing<String>('cycle_phase_label', UiCopy.text('copy_43ecc1a18f92'));
+    await _saveIfMissing<String>(
+      'cycle_phase_label',
+      UiCopy.text('copy_43ecc1a18f92'),
+    );
     await _saveIfMissing<String>('cycle_next_period_in', '');
     await _saveIfMissing<String>('cycle_tip', '');
     await _saveIfMissing<String>('cycle_progress', '0.0');
@@ -516,8 +545,8 @@ class WidgetService {
       final dir = await getApplicationDocumentsDirectory();
       if (!await dir.exists()) return;
 
-      final files = dir.listSync();
-      for (final file in files) {
+      // Liệt kê bất đồng bộ để thư mục nhiều ảnh không chặn UI isolate.
+      await for (final file in dir.list()) {
         if (file is File) {
           final fileName = file.path.split(Platform.pathSeparator).last;
           if (fileName.startsWith(prefix) && fileName.endsWith(suffix)) {
@@ -563,6 +592,7 @@ class WidgetService {
     if (savedSignature == nextSignature && savedPathsRaw != '[]') {
       return;
     }
+    if (await _diaryImageSetRecentlyFailed(nextSignature)) return;
 
     final savedPaths = <String>[];
     final localPaths = <String>[];
@@ -594,6 +624,12 @@ class WidgetService {
       'diaryImageUrlSignature',
       savedPaths.isEmpty ? '' : nextSignature,
     );
+    await _saveWidgetDataIfChanged<String>(
+      'diaryImageFailure',
+      savedPaths.isEmpty
+          ? '$nextSignature|${DateTime.now().millisecondsSinceEpoch}'
+          : '',
+    );
     await _saveWidgetDataIfChanged<int>('diaryImageCount', savedPaths.length);
 
     await _cleanupOldFiles(
@@ -601,6 +637,17 @@ class WidgetService {
       suffix: '.jpg',
       keepPaths: localPaths,
     );
+  }
+
+  static Future<bool> _diaryImageSetRecentlyFailed(String signature) async {
+    final raw = (await _readWidgetData<String>('diaryImageFailure'))?.trim();
+    if (raw == null || raw.isEmpty) return false;
+    final split = raw.lastIndexOf('|');
+    if (split <= 0 || raw.substring(0, split) != signature) return false;
+    final failedAt = int.tryParse(raw.substring(split + 1));
+    if (failedAt == null) return false;
+    final age = DateTime.now().millisecondsSinceEpoch - failedAt;
+    return age >= 0 && age < diaryImageRetryCooldown.inMilliseconds;
   }
 
   static Future<void> updateWidget({
@@ -993,6 +1040,11 @@ class WidgetService {
           return file.path;
         }
       }
+      final failedAt = _avatarFailedAt[url];
+      if (failedAt != null &&
+          DateTime.now().difference(failedAt) < avatarRetryCooldown) {
+        return null;
+      }
 
       final sourceFile = await _storageService.getCachedNetworkFile(
         url,
@@ -1018,6 +1070,7 @@ class WidgetService {
           );
           await file.writeAsBytes(bytes, flush: true);
         }
+        _avatarFailedAt.remove(url);
         return file.path;
       }
     } catch (e) {
@@ -1025,6 +1078,7 @@ class WidgetService {
         'Error downloading image for widget: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể tải ảnh cho widget.').message}',
       );
     }
+    _avatarFailedAt[url] = DateTime.now();
     return null;
   }
 
@@ -1253,11 +1307,16 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('cycle_phase', state.phase.name);
       await _saveWidgetDataIfChanged<String>(
         'cycle_phase_label',
-        state.phaseLabel,
+        L10nService().translate(switch (state.phase) {
+          CyclePhase.menstruation => 'cycle_ui_phase_period',
+          CyclePhase.follicular => 'cycle_ui_phase_follicular',
+          CyclePhase.ovulation => 'cycle_ui_phase_ovulation',
+          CyclePhase.luteal => 'cycle_ui_phase_luteal',
+        }),
       );
       await _saveWidgetDataIfChanged<String>(
         'cycle_next_period_in',
-        '${L10nService().translate('p3_health_next_period')}: '
+        '${L10nService().translate('cycle_ui_until_next_period')}: '
             '${state.nextPeriodIn == 0 ? L10nService().translate('milestone_today') : L10nService().format('milestone_days_left', {'days': state.nextPeriodIn})}',
       );
       await _saveWidgetDataIfChanged<String>(
@@ -1267,6 +1326,22 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>(
         'cycle_days_label',
         L10nService().translate('p3_health_days_remaining'),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_target_label',
+        L10nService().translate('cycle_ui_until_next_period'),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_expected_date',
+        L10nService().format('cycle_ui_expected_on', {
+          'date': await _formatCalendarDate(
+            CalendarCivilDate.addDays(DateTime.now(), state.nextPeriodIn),
+          ),
+        }),
+      );
+      await _saveWidgetDataIfChanged<String>(
+        'cycle_estimate_label',
+        L10nService().translate('cycle_ui_estimate'),
       );
       await _saveWidgetDataIfChanged<String>('cycle_tip', state.tip);
       await _saveWidgetDataIfChanged<String>(
@@ -1706,8 +1781,14 @@ class WidgetService {
     }
     final raw =
         presenceData ??
-        (await FirebaseDatabase.instance.ref('houses/$houseId/presence').get())
-            .value;
+        await RtdbReadCoalescer.shared.read(
+          '$uid|houses/$houseId/presence',
+          () async =>
+              (await FirebaseDatabase.instance
+                      .ref('houses/$houseId/presence')
+                      .get())
+                  .value,
+        );
     final data = raw is Map ? raw : <dynamic, dynamic>{};
     await ensureInitialized();
     if (revision != _sleepSyncRevision ||

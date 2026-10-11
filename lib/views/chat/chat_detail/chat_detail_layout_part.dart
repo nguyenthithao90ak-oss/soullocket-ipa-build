@@ -3,8 +3,9 @@ part of '../chat_detail_screen.dart';
 extension _ChatDetailLayoutPart on _ChatDetailScreenState {
   Widget _buildConversationBackground(String backgroundUrl) {
     final normalizedUrl = backgroundUrl.trim();
+    final palette = _ChatDetailPalette.of(context);
     if (normalizedUrl.isEmpty) {
-      return const ColoredBox(color: Colors.white);
+      return ColoredBox(color: palette.canvas);
     }
 
     return Stack(
@@ -16,18 +17,17 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           fit: BoxFit.cover,
           memCacheWidth: 800,
           filterQuality: FilterQuality.medium,
-          placeholder: (context, url) =>
-              const ColoredBox(color: Color(0xFFF8FAFC)),
+          placeholder: (context, url) => ColoredBox(color: palette.canvas),
           errorWidget: (context, url, error) =>
-              const ColoredBox(color: Color(0xFFF8FAFC)),
+              ColoredBox(color: palette.canvas),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withValues(alpha: 0.64),
-                Colors.white.withValues(alpha: 0.78),
-                Colors.white.withValues(alpha: 0.92),
+                palette.canvas.withValues(alpha: 0.64),
+                palette.canvas.withValues(alpha: 0.78),
+                palette.canvas.withValues(alpha: 0.92),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -103,8 +103,12 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                   SLSpacing.h8,
                   Text(
                     isChatClosed
-                        ? context.tr('ui_chat_you_can_still_review_old_messages_but_0b0ccc')
-                        : context.tr('ui_chat_send_a_message_sticker_or_photo_to_d04307'),
+                        ? context.tr(
+                            'ui_chat_you_can_still_review_old_messages_but_0b0ccc',
+                          )
+                        : context.tr(
+                            'ui_chat_send_a_message_sticker_or_photo_to_d04307',
+                          ),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: const Color(0xFF94A3B8),
@@ -118,12 +122,15 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           );
         }
 
-        final itemCount = messages.length +
+        final itemCount =
+            messages.length +
             (_isLoadingOlderMessages || _hasOlderMessageError ? 1 : 0);
         // Pre-compute once outside itemBuilder to avoid O(n²) indexWhere calls
-        final latestMeIndex = messages.indexWhere((m) => _isInternal
-            ? m.senderId == _currentRole
-            : m.senderId == widget.myHouseId);
+        final latestMeIndex = messages.indexWhere(
+          (m) => _isInternal
+              ? m.senderId == _currentRole
+              : m.senderId == widget.myHouseId,
+        );
         return ListView.builder(
           controller: _messagesScrollController,
           padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
@@ -170,33 +177,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
     );
   }
 
-  Widget _buildAppBarAction(
-    IconData icon,
-    VoidCallback onPressed, {
-    bool compact = false,
-  }) {
-    final buttonSize = compact ? 32.0 : 36.0;
-    final iconSize = compact ? 17.0 : 18.0;
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: buttonSize,
-        height: buttonSize,
-        margin: EdgeInsets.only(right: compact ? 2 : 4),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: iconSize, color: const Color(0xFF334155)),
-      ),
-    );
-  }
-
-  Widget _buildInputArea(
-    bool isChatClosed, {
-    bool hasChatBackground = false,
-  }) {
+  Widget _buildInputArea(bool isChatClosed, {bool hasChatBackground = false}) {
     if (isChatClosed) {
       return Container(
         width: double.infinity,
@@ -248,10 +229,14 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
               ),
               Expanded(
                 child: Container(
-                  constraints:
-                      const BoxConstraints(minHeight: 42, maxHeight: 110),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  constraints: const BoxConstraints(
+                    minHeight: 42,
+                    maxHeight: 110,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: hasChatBackground
                         ? const Color(0xFFFFFFFF).withValues(alpha: 0.82)
@@ -259,7 +244,8 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                     borderRadius: BorderRadius.circular(24),
                     border: hasChatBackground
                         ? Border.all(
-                            color: Colors.white.withValues(alpha: 0.35))
+                            color: Colors.white.withValues(alpha: 0.35),
+                          )
                         : null,
                   ),
                   child: Row(
@@ -273,8 +259,9 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                           child: _isUploading
                               ? const Padding(
                                   padding: EdgeInsets.all(4),
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(
                                   Icons.image_outlined,
@@ -303,8 +290,9 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                             ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                            ),
                             counterText: '',
                           ),
                           onSubmitted: (_) => _sendMsg(),
@@ -356,10 +344,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                         : Text(
                             _quickReactionEmoji,
                             key: ValueKey('quick_$_quickReactionEmoji'),
-                            style: const TextStyle(
-                              fontSize: 20,
-                              height: 1,
-                            ),
+                            style: const TextStyle(fontSize: 20, height: 1),
                           ),
                   ),
                 ),

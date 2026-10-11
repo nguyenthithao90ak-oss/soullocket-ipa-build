@@ -1,6 +1,6 @@
 part of '../../love_card_screen.dart';
 
-class _LoveThemeData {
+class LoveCardStudioTheme {
   final String key;
   final String chip;
   final String title;
@@ -12,7 +12,7 @@ class _LoveThemeData {
   final List<int> colors;
   final List<String> suggestions;
 
-  const _LoveThemeData({
+  const LoveCardStudioTheme({
     required this.key,
     required this.chip,
     required this.title,
@@ -26,8 +26,8 @@ class _LoveThemeData {
   });
 }
 
-final Map<String, _LoveThemeData> _loveCardThemes = {
-  'love': _LoveThemeData(
+final Map<String, LoveCardStudioTheme> _loveCardThemes = {
+  'love': LoveCardStudioTheme(
     key: 'love',
     chip: L10nService().translate('util_tnhyu_2814db'),
     title: L10nService().translate('util_dudngvmp_f089f1'),
@@ -43,7 +43,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('util_nucmtiuemm_ca0d9f'),
     ],
   ),
-  'birthday': _LoveThemeData(
+  'birthday': LoveCardStudioTheme(
     key: 'birthday',
     chip: L10nService().translate('util_sinhnht_71c600'),
     title: L10nService().translate('util_rcrvvuiti_6474ca'),
@@ -59,7 +59,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('util_sinhnhtnye_c15d9e'),
     ],
   ),
-  'anniversary': _LoveThemeData(
+  'anniversary': LoveCardStudioTheme(
     key: 'anniversary',
     chip: L10nService().translate('util_knim_4f6aeb'),
     title: L10nService().translate('util_trangtrngv_a5c5a8'),
@@ -75,7 +75,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('util_miknimvian_00727b'),
     ],
   ),
-  'miss': _LoveThemeData(
+  'miss': LoveCardStudioTheme(
     key: 'miss',
     chip: L10nService().translate('util_nhnhau_5dc5c1'),
     title: L10nService().translate('util_nhnhngvsul_592c70'),
@@ -91,7 +91,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('util_cnhngngyem_63cc72'),
     ],
   ),
-  'encouragement': _LoveThemeData(
+  'encouragement': LoveCardStudioTheme(
     key: 'encouragement',
     chip: L10nService().translate('love_card_theme_encouragement_chip'),
     title: L10nService().translate('love_card_theme_encouragement_title'),
@@ -111,7 +111,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('love_card_theme_encouragement_suggestion_3'),
     ],
   ),
-  'gratitude': _LoveThemeData(
+  'gratitude': LoveCardStudioTheme(
     key: 'gratitude',
     chip: L10nService().translate('love_card_theme_gratitude_chip'),
     title: L10nService().translate('love_card_theme_gratitude_title'),
@@ -127,7 +127,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('love_card_theme_gratitude_suggestion_3'),
     ],
   ),
-  'adventure': _LoveThemeData(
+  'adventure': LoveCardStudioTheme(
     key: 'adventure',
     chip: L10nService().translate('love_card_theme_adventure_chip'),
     title: L10nService().translate('love_card_theme_adventure_title'),
@@ -143,7 +143,7 @@ final Map<String, _LoveThemeData> _loveCardThemes = {
       L10nService().translate('love_card_theme_adventure_suggestion_3'),
     ],
   ),
-  'serenity': _LoveThemeData(
+  'serenity': LoveCardStudioTheme(
     key: 'serenity',
     chip: L10nService().translate('love_card_theme_serenity_chip'),
     title: L10nService().translate('love_card_theme_serenity_title'),

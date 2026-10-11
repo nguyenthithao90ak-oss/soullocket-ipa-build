@@ -12,8 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import '../../sleep_tracking_math.dart';
 import '../../sleep_presence_state.dart';
-import '../../sleep_tracking_scope.dart';
 import '../../sleep_service_startup.dart';
+import '../../sleep_screen_journal.dart';
 import '../sleep_tracking_service.dart';
 import '../widget_service.dart';
 import '../l10n_service.dart';
@@ -55,12 +55,7 @@ Future<void> _runSleepTracking(ServiceInstance service) async {
   await Firebase.initializeApp();
   final prefs = await SharedPreferences.getInstance();
   await prefs.reload();
-  final scope = SleepTrackingScope.fromCache(
-    uid: FirebaseAuth.instance.currentUser?.uid,
-    cachedUid: prefs.getString('il_auth_uid'),
-    house: prefs.getString('il_house_id') ?? prefs.getString('il_rel_house_id'),
-    role: prefs.getString('il_role') ?? prefs.getString('il_rel_role'),
-  );
+  final scope = await SleepTrackingService.readCachedScope(prefs);
   if (scope == null ||
       prefs.getBool('is_sleep_tracking_enabled') != true ||
       prefs.getString('sleep_tracking_scope') != scope.token) {
@@ -74,6 +69,12 @@ Future<void> _runSleepTracking(ServiceInstance service) async {
   StreamSubscription<Map<String, dynamic>?>? stopSub;
   StreamSubscription<Map<String, dynamic>?>? statusSub;
   Future<void> pending = Future.value();
+  Future<void> localPending = Future.value();
+  final journal = SleepScreenJournal.read(
+    scope.token,
+    prefs.getString('sleep_screen_journal'),
+  );
+  bool syncing = false;
   bool stopped = false;
   Future<void> shutdown() async {
     if (stopped) return;
@@ -87,19 +88,15 @@ Future<void> _runSleepTracking(ServiceInstance service) async {
 
   Future<bool> current() async {
     await prefs.reload();
-    return !stopped &&
-        FirebaseAuth.instance.currentUser?.uid == uid &&
-        prefs.getString('il_auth_uid') == uid &&
-        prefs.getBool('is_sleep_tracking_enabled') == true &&
-        prefs.getString('sleep_tracking_scope') ==
-            sleepConsentScope(uid, house, role) &&
-        (prefs.getString('il_house_id') ??
-                prefs.getString('il_rel_house_id')) ==
-            house &&
-        sleepRole(
-              prefs.getString('il_role') ?? prefs.getString('il_rel_role'),
-            ) ==
-            role;
+    if (stopped ||
+        FirebaseAuth.instance.currentUser?.uid != uid ||
+        prefs.getBool('is_sleep_tracking_enabled') != true ||
+        prefs.getString('sleep_tracking_scope') != scope.token) {
+      return false;
+    }
+    // Token chứa UID/House/role; đổi tài khoản, nhà hoặc vai đều làm lệch token.
+    return (await SleepTrackingService.readCachedScope(prefs))?.token ==
+        scope.token;
   }
 
   void enqueue(Future<void> Function() job) {
@@ -116,104 +113,135 @@ Future<void> _runSleepTracking(ServiceInstance service) async {
         });
   }
 
-  Future<void> sync() async {
-    if (await current())
-      await WidgetService.syncSleepWidgetData(houseId: house);
+  Future<void> persistLocal() async {
+    if (!await current()) return;
+    await prefs.setString('sleep_screen_journal', journal.encode());
+    service.invoke('sleepLocal', {'scope': scope.token});
   }
 
-  Future<void> apply(
-    Map<String, dynamic> Function(Map<String, dynamic>) change, {
-    bool recordOnWake = false,
-  }) async {
-    if (!await current()) return;
-    await ref.get();
-    if (!await current()) return;
-    SleepRecord? ended;
-    final result = await ref.runTransaction((raw) {
-      ended = null;
-      if (stopped ||
-          FirebaseAuth.instance.currentUser?.uid != uid ||
-          raw is! Map)
-        return Transaction.abort();
-      final p = Map<String, dynamic>.from(raw);
-      final next = automatedSleepPresence(p, change(p));
-      if (next == null) return Transaction.abort();
-      final now = DateTime.now().millisecondsSinceEpoch,
-          start = sleepEpoch(p['sleep_start_time']);
-      if (recordOnWake &&
-          p['sleep_source'] == 'screen_estimate' &&
-          p['sleep_mode'] == true &&
-          start > 0 &&
-          now > start &&
-          now - start <= 50400000)
-        ended = SleepRecord(start, now, now - start);
-      return Transaction.success(next);
-    }, applyLocally: false);
-    final completed = ended;
-    if (result.committed && completed != null && await current()) {
-      await FirebaseDatabase.instance
-          .ref(
-            'houses/' +
-                house +
-                '/sleep_history/' +
-                role +
-                '/estimate_' +
-                completed.start.toString(),
-          )
-          .set(completed.toMap('screen_estimate'));
+  // Ghi máy và ghi mạng có hàng đợi riêng: offline không làm mất sự kiện màn hình.
+  Future<void> flush() async {
+    if (syncing || !await current()) return;
+    syncing = true;
+    try {
+      // Transaction cần snapshot ban đầu; không abort vì cache native chưa nạp.
+      await ref.get().timeout(const Duration(seconds: 10));
+      for (final event in [...journal.events]) {
+        if (!await current()) return;
+        SleepRecord? ended;
+        final result = await ref
+            .runTransaction((raw) {
+              if (stopped || FirebaseAuth.instance.currentUser?.uid != uid)
+                return Transaction.abort();
+              final p = raw is Map
+                  ? Map<String, dynamic>.from(raw)
+                  : <String, dynamic>{};
+              if (p['sleep_tracking_enabled'] != true)
+                return Transaction.abort();
+              final next = screenSleepPresence(
+                p,
+                screenOn: event.screenOn,
+                at: event.at,
+                timestamp: ServerValue.timestamp,
+              );
+              ended = event.screenOn
+                  ? completedScreenSleep(next, event.at)
+                  : null;
+              return Transaction.success(next);
+            }, applyLocally: false)
+            .timeout(const Duration(seconds: 10));
+        if (!result.committed) return;
+        final record = ended;
+        if (record != null && await current()) {
+          await FirebaseDatabase.instance
+              .ref('houses/$house/sleep_history/$role/estimate_${record.start}')
+              .set(record.toMap('screen_estimate'))
+              .timeout(const Duration(seconds: 10));
+        }
+        final saved = localPending.then((_) async {
+          journal.acknowledge(event);
+          await persistLocal();
+        });
+        localPending = saved.catchError((Object _) {});
+        await saved;
+      }
+      if (!await current()) return;
+      await ref
+          .runTransaction((raw) {
+            if (stopped ||
+                FirebaseAuth.instance.currentUser?.uid != uid ||
+                raw is! Map)
+              return Transaction.abort();
+            final p = Map<String, dynamic>.from(raw);
+            final next = automatedSleepPresence(
+              p,
+              tickScreenSleepPresence(p, DateTime.now()),
+            );
+            return next == null
+                ? Transaction.abort()
+                : Transaction.success({
+                    ...next,
+                    'sleep_updated_at': ServerValue.timestamp,
+                  });
+          }, applyLocally: false)
+          .timeout(const Duration(seconds: 10));
+      await prefs.setInt(
+        'sleep_screen_synced_at',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      service.invoke('sleepLocal', {'scope': scope.token});
+      try {
+        if (await current())
+          await WidgetService.syncSleepWidgetData(
+            houseId: house,
+          ).timeout(const Duration(seconds: 8));
+      } catch (_) {
+        debugPrint('[SleepTracker] Widget sync deferred');
+      }
+    } finally {
+      syncing = false;
     }
-    if (result.committed) await sync();
+  }
+
+  void observe(bool screenOn, int at) {
+    localPending = localPending
+        .then((_) async {
+          if (!await current()) return;
+          journal.observe(SleepScreenEvent(at, screenOn));
+          await persistLocal();
+          enqueue(flush);
+        })
+        .catchError((Object _) {
+          debugPrint('[SleepTracker] Local screen event failed');
+        });
   }
 
   stopSub = service.on('stopService').listen((_) => unawaited(shutdown()));
-  timer = Timer.periodic(
-    const Duration(minutes: 5),
-    (_) => enqueue(() async {
-      await apply((p) {
-        final state = androidSleepEstimate(p, DateTime.now());
-        return {
-          'sleep_mode': state == 'sleeping' || state == 'noon_nap',
-          'sleep_status': state,
-          'sleep_start_time': state == 'sleeping' || state == 'noon_nap'
-              ? sleepEpoch(p['last_screen_off'])
-              : 0,
-          'sleep_source': 'screen_estimate',
-          'sleep_updated_at': ServerValue.timestamp,
-        };
-      });
-    }),
-  );
+  timer = Timer.periodic(const Duration(minutes: 1), (_) {
+    localPending = localPending
+        .then((_) async {
+          if (!await current()) return;
+          journal.presence = tickScreenSleepPresence(
+            journal.presence,
+            DateTime.now(),
+          );
+          await persistLocal();
+          enqueue(flush);
+        })
+        .catchError((Object _) {
+          debugPrint('[SleepTracker] Local estimate deferred');
+        });
+  });
   screenSub = Screen().screenStateStream.listen(
-    (event) => enqueue(() async {
+    (event) {
       final now = DateTime.now().millisecondsSinceEpoch;
       if (event == ScreenStateEvent.screenOff) {
-        await apply(
-          (p) => {
-            'last_screen_off': now,
-            'sleep_mode': false,
-            'sleep_status': 'unknown',
-            'sleep_source': 'screen_estimate',
-            'sleep_start_time': 0,
-            'sleep_updated_at': ServerValue.timestamp,
-          },
-        );
-      } else if (event == ScreenStateEvent.screenOn) {
-        // Mở máy là hoạt động đã xác nhận, không giữ cờ ngủ sau đó.
-        await apply(
-          (p) => {
-            'last_screen_on': now,
-            'last_active': now,
-            'last_wake_time': now,
-            'sleep_mode': false,
-            'sleep_status': 'awake',
-            'sleep_start_time': 0,
-            'sleep_source': 'screen_estimate',
-            'sleep_updated_at': ServerValue.timestamp,
-          },
-          recordOnWake: true,
-        );
+        observe(false, now);
+      } else if (event == ScreenStateEvent.screenOn ||
+          event == ScreenStateEvent.screenUnlocked) {
+        observe(true, now);
       }
-    }),
+    },
     onError: (Object error) async {
       debugPrint('[SleepTracker] Screen events unavailable');
       await prefs.reload();
@@ -236,11 +264,15 @@ Future<void> _runSleepTracking(ServiceInstance service) async {
   );
   statusSub = service.on('sleepStatus').listen((message) async {
     if (message?['scope'] == scope.token && await current()) {
+      // Yêu cầu này chỉ được gửi lúc app ở foreground; không đoán màn hình khi reboot.
+      if (message?['foreground'] == true)
+        observe(true, DateTime.now().millisecondsSinceEpoch);
       service.invoke('sleepReady', {'ready': true, 'scope': scope.token});
     }
   });
   if (await current())
     service.invoke('sleepReady', {'ready': true, 'scope': scope.token});
+  enqueue(flush);
 }
 
 class BackgroundTrackingService {
@@ -326,10 +358,9 @@ class BackgroundTrackingService {
     } catch (e) {
       await prefs.reload();
       // Không hoàn tác vào tài khoản/House mới nếu người dùng đổi phiên.
+      final active = await SleepTrackingService.readCachedScope(prefs);
       if (FirebaseAuth.instance.currentUser?.uid == uid &&
-          (prefs.getString('il_house_id') ??
-                  prefs.getString('il_rel_house_id')) ==
-              houseId) {
+          active?.house == houseId) {
         await prefs.setBool('is_sleep_tracking_enabled', false);
         await prefs.remove('sleep_tracking_scope');
         if (Platform.isAndroid)
@@ -355,18 +386,55 @@ class BackgroundTrackingService {
       readiness: service.on('sleepReady'),
       isRunning: service.isRunning,
       start: service.startService,
-      requestStatus: () => service.invoke('sleepStatus', {'scope': scope}),
+      requestStatus: () =>
+          service.invoke('sleepStatus', {'scope': scope, 'foreground': true}),
     );
+  }
+
+  /// Giữ consent đã có, kiểm tra phản hồi thật và khởi động lại service bị dừng.
+  static Future<bool> ensureRunning({
+    required String houseId,
+    required String uid,
+  }) async {
+    await SleepTrackingService.prepareScope(houseId: houseId, expectedUid: uid);
+    if (!await SleepTrackingService.isEnabled()) return false;
+    if (Platform.isIOS) {
+      await _schedule();
+      return true;
+    }
+    if (!Platform.isAndroid) return false;
+    await initialize(autoStart: false);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    await _startAndroid(prefs.getString('sleep_tracking_scope')!);
+    return true;
+  }
+
+  static Future<Map<String, dynamic>> readLocalPresence(String scope) async {
+    if (!Platform.isAndroid) return {};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    final journal = SleepScreenJournal.read(
+      scope,
+      prefs.getString('sleep_screen_journal'),
+    );
+    if (journal.presence['last_screen_on'] == null &&
+        journal.presence['last_screen_off'] == null)
+      return {};
+    return {
+      ...journal.presence,
+      'pending': journal.events.isNotEmpty,
+      'synced_at': prefs.getInt('sleep_screen_synced_at') ?? 0,
+    };
   }
 
   static Future<void> stop({String? houseId, String? uid}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.reload();
+    // Chỉ chặn khi biết chắc đang ở nhà khác; thiếu bản sao prefs vẫn phải tắt được.
+    final active = await SleepTrackingService.readCachedScope(prefs);
     if ((uid != null && FirebaseAuth.instance.currentUser?.uid != uid) ||
-        (houseId != null &&
-            (prefs.getString('il_house_id') ??
-                    prefs.getString('il_rel_house_id')) !=
-                houseId))
+        (houseId != null && active != null && active.house != houseId))
       throw StateError('sleep_scope_changed');
     await prefs.setBool('is_sleep_tracking_enabled', false);
     await prefs.remove('sleep_tracking_scope');

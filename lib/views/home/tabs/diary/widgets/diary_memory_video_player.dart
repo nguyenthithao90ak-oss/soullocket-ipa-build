@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:video_player/video_player.dart';
+import '../../../../../utils/screen_activity_mixin.dart';
 import '../../../../../utils/services/infrastructure/cloudflare_r2_service.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
@@ -45,13 +46,14 @@ class DiaryMemoryVideoPlayer extends StatefulWidget {
 }
 
 class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, ScreenActivityMixin {
   VideoPlayerController? _controller;
   bool _initialized = false;
   bool _hasError = false;
 
   int _generation = 0;
   bool _foreground = true;
+  bool _resumeWhenVisible = true;
   StreamSubscription<String?>? _auth;
   Timer? _expiry;
   String? _uid;
@@ -111,6 +113,22 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     }
   }
 
+  @override
+  void onScreenActivityChanged(bool active) {
+    if (!active) {
+      _resumeWhenVisible =
+          isScreenForeground &&
+          widget.isActive &&
+          !widget.previewOnly &&
+          (!_initialized || _controller?.value.isPlaying == true);
+      unawaited(_afterBuild().then((_) => _syncPlayback()));
+    } else if (_resumeWhenVisible && _initialized) {
+      _resumeWhenVisible = false;
+      unawaited(_afterBuild().then((_) => _syncPlayback()));
+    }
+    unawaited(_syncControlsTarget());
+  }
+
   Future<void> _syncControlsTarget() async {
     final target = widget.controlsTarget;
     if (target == null) return;
@@ -122,6 +140,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
         _initialized &&
         !_hasError &&
         widget.isActive &&
+        isScreenActive &&
         !widget.previewOnly;
     if (wanted) {
       target.value = controller;
@@ -135,6 +154,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _foreground = state == AppLifecycleState.resumed;
+    if (!_foreground) _resumeWhenVisible = false;
     if (widget.requireFreshAuthorization) {
       if (_foreground) {
         unawaited(_initVideo());
@@ -163,7 +183,10 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     final controller = _controller;
     if (controller == null || !_initialized) return;
     try {
-      if (widget.isActive && _foreground && !widget.previewOnly) {
+      if (widget.isActive &&
+          _foreground &&
+          isScreenActive &&
+          !widget.previewOnly) {
         await controller.play();
       } else {
         await controller.pause();
@@ -286,41 +309,78 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
     super.dispose();
   }
 
+  void _retry() {
+    setState(() {
+      _hasError = false;
+      _initialized = false;
+    });
+    _initVideo();
+  }
+
+  Widget _errorView() {
+    final message = L10nService().translate('memory_video_play_error');
+    if (widget.previewOnly) {
+      // Ô xem trước trong lưới rất nhỏ: chỉ một biểu tượng co theo ô, không chữ/nút
+      // (khung lỗi đầy đủ cao ~140 px làm tràn ô). Chạm vào ô mở màn xem có nút thử lại.
+      return Semantics(
+        label: message,
+        child: const Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.42,
+            heightFactor: 0.42,
+            child: FittedBox(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black38,
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(
+                    Icons.videocam_off_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Colors.white,
+            size: 48,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: _retry,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: Text(L10nService().translate('core_retry')),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white,
-              size: 48,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              L10nService().translate('memory_video_play_error'),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _hasError = false;
-                  _initialized = false;
-                });
-                _initVideo();
-              },
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: Text(L10nService().translate('core_retry')),
-            ),
-          ],
-        ),
-      );
+      return _errorView();
     }
 
     final controller = _controller;
@@ -334,38 +394,7 @@ class DiaryMemoryVideoPlayerState extends State<DiaryMemoryVideoPlayer>
       valueListenable: controller,
       builder: (context, value, child) {
         if (value.hasError) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  color: Colors.white,
-                  size: 48,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  L10nService().translate('memory_video_play_error'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _hasError = false;
-                      _initialized = false;
-                    });
-                    _initVideo();
-                  },
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: Text(L10nService().translate('core_retry')),
-                ),
-              ],
-            ),
-          );
+          return _errorView();
         }
 
         final isPlaying = value.isPlaying;

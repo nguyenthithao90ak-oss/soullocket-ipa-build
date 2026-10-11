@@ -51,6 +51,9 @@ class StorageManagedUploadHelper {
     ValueChanged<double>? onProgress,
   }) async {
     try {
+      // Nén ảnh không cung cấp byte progress. Giữ ở 0 cho tới khi transport
+      // bắt đầu bơm dữ liệu thật vào request.
+      onProgress?.call(0);
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       final originalFileName = request.file.name.isNotEmpty
           ? request.file.name
@@ -66,14 +69,11 @@ class StorageManagedUploadHelper {
 
       if (!kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif') {
         try {
-          if (onProgress != null) onProgress(0.05); // Start compression
           final tempDir = await getTemporaryDirectory();
           tempCompressedPath = p.join(
             tempDir.path,
             'sl_upload_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
           );
-
-          if (onProgress != null) onProgress(0.1); // Preparing to compress
 
           final compressedFile = await FlutterImageCompress.compressAndGetFile(
             request.file.path,
@@ -83,8 +83,6 @@ class StorageManagedUploadHelper {
             quality: request.quality,
             format: CompressFormat.webp,
           );
-
-          if (onProgress != null) onProgress(0.35); // Compression finished
 
           if (compressedFile != null) {
             uploadFile = compressedFile;
@@ -113,8 +111,6 @@ class StorageManagedUploadHelper {
           'uploads/$currentUid/houses/${request.houseId}/${request.folderName}/$nowMs$fileExtension';
       final normalizedStoragePath = normalizeStorageWritePath(path);
 
-      if (onProgress != null) onProgress(0.4); // Start network upload
-
       try {
         final uploadResult =
             tempCompressedPath != null && uploadFile.path == tempCompressedPath
@@ -122,17 +118,13 @@ class StorageManagedUploadHelper {
                 normalizedStoragePath,
                 XFile(tempCompressedPath),
                 contentType: finalContentType,
-                onProgress: onProgress != null
-                    ? (p) => onProgress(0.4 + (p * 0.6))
-                    : null,
+                onProgress: onProgress,
               )
             : await uploadFileToPath(
                 normalizedStoragePath,
                 uploadFile,
                 contentType: finalContentType,
-                onProgress: onProgress != null
-                    ? (p) => onProgress(0.4 + (p * 0.6))
-                    : null,
+                onProgress: onProgress,
               );
 
         if (onProgress != null) onProgress(1.0); // Finished

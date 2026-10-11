@@ -16,6 +16,11 @@ String purchaseAccountToken(String uid) {
       '${value.substring(20)}';
 }
 
+/// Giữ kết quả VIP 2 phút (trước là 10 giây): nhiều màn hình hỏi VIP khi mở app làm đọc lặp
+/// `users/{uid}/vip` và `houses/{id}/vip`. Luồng mua/khôi phục luôn `forceRefresh`, hết hạn
+/// gói vẫn chặn ngay theo `expiresAtMs`; hạn mức thật do máy chủ quyết định.
+const int purchaseAccessReuseWindowMs = 120000;
+
 bool canReusePurchaseAccess({
   required String uid,
   required String? cachedUid,
@@ -26,7 +31,7 @@ bool canReusePurchaseAccess({
     cachedUid == uid &&
     checkedAtMs != null &&
     nowMs >= checkedAtMs &&
-    nowMs - checkedAtMs < 10000 &&
+    nowMs - checkedAtMs < purchaseAccessReuseWindowMs &&
     (expiresAtMs == null || expiresAtMs > nowMs);
 
 bool isPurchasePayloadUsable({

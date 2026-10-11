@@ -54,7 +54,14 @@ class HomeCompanionScene extends StatefulWidget {
     this.partnerName = '',
     this.partnerHasLetter = false,
     this.onOpenPartnerLetter,
+    this.guestVisits = false,
   });
+
+  /// Nhịp khách ghé chơi (giây thời gian Home đang hiển thị).
+  static const double firstGuestDelaySeconds = 45;
+  static const double guestStaySeconds = 30;
+  static const double guestGapMinSeconds = 90;
+  static const double guestGapSpreadSeconds = 90;
 
   final Widget child;
 
@@ -101,6 +108,10 @@ class HomeCompanionScene extends StatefulWidget {
 
   /// Chạm vào thỏ đang cầm thư để mở đọc.
   final VoidCallback? onOpenPartnerLetter;
+
+  /// Home: Kuromi/Melody (đã mở khóa) thỉnh thoảng ghé chơi rồi về, không
+  /// chiếm chỗ của hai bé chính.
+  final bool guestVisits;
 
   @override
   State<HomeCompanionScene> createState() => _HomeCompanionSceneState();
@@ -153,6 +164,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   void _journeyChanged() {
     if (!mounted) return;
     _cancelPetHold();
+    _dropGuest();
     final next = _limitCharacters(
       _journey == null
           ? HomeCompanionCharacter.values
@@ -196,6 +208,12 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       HomeCompanionPartnerStatus.unknown;
   bool _letterNow = false;
   double _nextStatusCheckAt = 60;
+  HomeCompanionCharacter? _guest;
+  double _guestUntil = 0;
+  double _guestGreetAt = 0;
+  bool _guestLeaving = false;
+  double _nextGuestAt = HomeCompanionScene.firstGuestDelaySeconds;
+  final _guestRandom = math.Random();
   final _bubbleText = <HomeCompanionCharacter, String>{};
   final _bubbleStart = <HomeCompanionCharacter, double>{};
   final _bubbleUntil = <HomeCompanionCharacter, double>{};
@@ -425,6 +443,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   /// Chạm vào bé: hiện bé là ai để hai người nhận ra nhau trên Home.
   void _sayIdentity(HomeCompanionCharacter character) {
+    if (character == _guest && !_guestLeaving) {
+      _say(
+        character,
+        L10nScope.of(context).translate('companion_guest_arrive_bubble'),
+      );
+      return;
+    }
     if (!_hasPartner) return;
     if (character == HomeCompanionCharacter.bunny) {
       _say(character, _partnerLine(_partnerStatusNow));
@@ -534,6 +559,125 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _scheduleMeasure();
   }
 
+  /// Bé khách có thể ghé: đã mở khóa và không phải hai bé chính.
+  List<HomeCompanionCharacter> get _guestPool {
+    final unlocked = _journey == null
+        ? HomeCompanionCharacter.values.toSet()
+        : _journey!.state?.unlocked ?? const <HomeCompanionCharacter>{};
+    return [
+      for (final character in const [
+        HomeCompanionCharacter.kuromi,
+        HomeCompanionCharacter.melody,
+      ])
+        if (unlocked.contains(character) && !_characters.contains(character))
+          character,
+    ];
+  }
+
+  void _setActiveCharacters(Set<HomeCompanionCharacter> next) {
+    _characters = Set.of(next);
+    _traffic.dispose();
+    _traffic = HomeCompanionTraffic({
+      for (final character in _characters) character: _motionFor(character),
+    });
+    _socialPlay.cancel();
+    _guestPlay.cancel();
+    _pendingGuestPlay = null;
+    _meeting = null;
+    _chase = null;
+    for (final character in HomeCompanionCharacter.values) {
+      if (!_characters.contains(character)) {
+        _motionFor(character).setSurfaces(const [], Rect.zero);
+      }
+    }
+    _scheduleMeasure();
+  }
+
+  /// Bỏ khách ngay (đổi tài khoản/mở khóa); không chạy hiệu ứng ra về.
+  void _dropGuest() {
+    final guest = _guest;
+    if (guest == null) return;
+    _guest = null;
+    _guestLeaving = false;
+    _moods[guest]!.visibility = 1;
+    _bubbleUntil.remove(guest);
+    _bubbleText.remove(guest);
+    _bubbleStart.remove(guest);
+    // Danh sách bé do nơi gọi dựng lại để dọn đường đi/traffic của khách.
+  }
+
+  void _tickGuestVisit(Duration delta) {
+    if (!widget.guestVisits ||
+        widget.pinToViewport ||
+        !widget.animate ||
+        _reduced) {
+      return;
+    }
+    final dt = (delta.inMicroseconds / 1000000).clamp(0.0, 0.1).toDouble();
+    final guest = _guest;
+    if (guest == null) {
+      if (_socialClock < _nextGuestAt || _anyPlay || _traffic.passing) return;
+      _nextGuestAt =
+          _socialClock +
+          HomeCompanionScene.guestGapMinSeconds +
+          _guestRandom.nextDouble() * HomeCompanionScene.guestGapSpreadSeconds;
+      final pool = _guestPool;
+      if (pool.isEmpty) return;
+      final next = pool[_guestRandom.nextInt(pool.length)];
+      _guest = next;
+      _guestLeaving = false;
+      _guestUntil = _socialClock + HomeCompanionScene.guestStaySeconds;
+      _guestGreetAt = _socialClock + 1.2;
+      _moods[next]!.visibility = 0;
+      _setActiveCharacters({..._characters, next});
+      _say(
+        next,
+        L10nScope.of(context).translate('companion_guest_arrive_bubble'),
+      );
+      return;
+    }
+    final mood = _moods[guest]!;
+    final pet = _motionFor(guest);
+    if (!_guestLeaving) {
+      if (pet.hasSurfaces) mood.visibility = mood.visibility + dt / 0.6;
+      if (_guestGreetAt > 0 &&
+          _socialClock >= _guestGreetAt &&
+          pet.hasSurfaces) {
+        _guestGreetAt = 0;
+        // Chạy tới chơi với bé chính gần nhất.
+        HomeCompanionMotion? friend;
+        for (final character in _characters) {
+          if (character == guest) continue;
+          final other = _motionFor(character);
+          if (!other.hasSurfaces) continue;
+          if (friend == null ||
+              (other.position - pet.position).distance <
+                  (friend.position - pet.position).distance) {
+            friend = other;
+          }
+        }
+        if (friend != null) pet.visitFriend(friend, userInvited: true);
+      }
+      if (_socialClock >= _guestUntil) {
+        _guestLeaving = true;
+        _say(
+          guest,
+          L10nScope.of(context).translate('companion_guest_leave_bubble'),
+          seconds: 2.4,
+        );
+      }
+      return;
+    }
+    // Chào xong mới mờ dần rồi rời Home.
+    if (_socialClock < _guestUntil + 1.6) return;
+    mood.visibility = mood.visibility - dt / 1.2;
+    if (mood.visibility > 0) return;
+    _guest = null;
+    _guestLeaving = false;
+    mood.visibility = 1;
+    _setActiveCharacters(Set.of(_characters)..remove(guest));
+  }
+
   @override
   void didUpdateWidget(covariant HomeCompanionScene oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -563,6 +707,11 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _journeyChanged();
     }
     if (oldWidget.calm != widget.calm) _applyCalm();
+    if (oldWidget.guestVisits && !widget.guestVisits && _guest != null) {
+      final guest = _guest;
+      _dropGuest();
+      _setActiveCharacters(Set.of(_characters)..remove(guest));
+    }
     if (oldWidget.partnerStatusListenable != widget.partnerStatusListenable) {
       oldWidget.partnerStatusListenable?.removeListener(_partnerStatusChanged);
       widget.partnerStatusListenable?.addListener(_partnerStatusChanged);
@@ -733,6 +882,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _tickGuests(delta);
     _tickSocial();
     _tickMoods(delta);
+    _tickGuestVisit(delta);
     var greetingVoice = HomeCompanionCharacter.bunny;
     for (final character in HomeCompanionCharacter.values) {
       final serial = _motionFor(character).greetingSerial;

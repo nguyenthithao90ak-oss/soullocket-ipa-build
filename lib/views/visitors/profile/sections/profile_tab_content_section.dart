@@ -4,6 +4,8 @@ import '../../../../core/sl_theme.dart';
 import '../../../../models/social_post.dart';
 import 'profile_section_models.dart';
 
+enum VisitorProfileTabLoadStatus { idle, loading, loaded, failed }
+
 class VisitorProfilePrivacyBlock extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -73,13 +75,31 @@ List<Widget> buildVisitorProfileTabContentSlivers({
   required Widget Function(SocialPost post) buildPostThumb,
   required void Function(int index, VisitorProfileTabContentData data)
   onOpenPost,
+  VisitorProfileTabLoadStatus? loadStatus,
+  String? errorText,
+  String? retryText,
+  VoidCallback? onRetry,
 }) {
   final data = tabContent[activeTab];
   if (data == null) {
     return const [];
   }
 
-  if (data.isLoading) {
+  if (loadStatus == VisitorProfileTabLoadStatus.failed) {
+    return [
+      SliverToBoxAdapter(
+        child: VisitorProfileLoadFailure(
+          text: errorText ?? '',
+          retryText: retryText ?? '',
+          onRetry: onRetry,
+        ),
+      ),
+    ];
+  }
+
+  if (loadStatus == VisitorProfileTabLoadStatus.idle) return const [];
+
+  if (data.isLoading || loadStatus == VisitorProfileTabLoadStatus.loading) {
     return const [
       SliverToBoxAdapter(
         child: Padding(
@@ -121,6 +141,40 @@ List<Widget> buildVisitorProfileTabContentSlivers({
       ),
     ),
   ];
+}
+
+class VisitorProfileLoadFailure extends StatelessWidget {
+  final String text;
+  final String retryText;
+  final VoidCallback? onRetry;
+
+  const VisitorProfileLoadFailure({
+    super.key,
+    required this.text,
+    required this.retryText,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: SLColors.textSecond),
+          SLSpacing.h12,
+          Text(text, textAlign: TextAlign.center),
+          SLSpacing.h12,
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: Text(retryText),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class VisitorProfileEmptyPosts extends StatelessWidget {

@@ -35,12 +35,18 @@ class SoulMergeHeader extends StatelessWidget {
     required this.onVoiceCall,
     required this.onVideoCall,
     required this.onOptions,
+    this.onSearch,
+    this.avatarUrl,
+    this.onAvatarTap,
   });
   final String partnerName;
   final VoidCallback onBack;
   final VoidCallback onVoiceCall;
   final VoidCallback onVideoCall;
   final VoidCallback onOptions;
+  final VoidCallback? onSearch;
+  final String? avatarUrl;
+  final VoidCallback? onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +70,7 @@ class SoulMergeHeader extends StatelessWidget {
                 color: colors.ink,
               ),
               if (MediaQuery.sizeOf(context).width >= 350) ...[
-                const SoulMergeMark(size: 38),
+                _SoulMergeHeaderAvatar(url: avatarUrl, onTap: onAvatarTap),
                 const SizedBox(width: 9),
               ],
               Expanded(
@@ -109,6 +115,13 @@ class SoulMergeHeader extends StatelessWidget {
                 icon: const Icon(Icons.videocam_rounded, size: 23),
                 color: colors.rose,
               ),
+              if (onSearch != null && MediaQuery.sizeOf(context).width >= 380)
+                IconButton(
+                  tooltip: context.tr('p4_soul_search_hint'),
+                  onPressed: onSearch,
+                  icon: const Icon(Icons.search_rounded, size: 22),
+                  color: colors.rose,
+                ),
               IconButton(
                 key: const ValueKey('soul-merge-options'),
                 tooltip: context.tr('settings'),
@@ -119,6 +132,40 @@ class SoulMergeHeader extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SoulMergeHeaderAvatar extends StatelessWidget {
+  const _SoulMergeHeaderAvatar({required this.url, this.onTap});
+
+  final String? url;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = url?.trim() ?? '';
+    final avatar = ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: normalized.startsWith('https://')
+          ? Image.network(
+              normalized,
+              width: 38,
+              height: 38,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const SoulMergeMark(size: 38),
+            )
+          : const SoulMergeMark(size: 38),
+    );
+    if (onTap == null) return avatar;
+    return Semantics(
+      button: true,
+      label: context.tr('p5_profile_change_avatar'),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: avatar,
       ),
     );
   }

@@ -1,7 +1,10 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../widgets/keepsake_design.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -12,7 +15,9 @@ import 'soul_event_detail_screen.dart';
 import 'soul_event_editor_sheet.dart';
 
 class SoulEventsScreen extends StatefulWidget {
-  const SoulEventsScreen({super.key});
+  const SoulEventsScreen({super.key, this.houseIdLoader, this.eventsLoader});
+  final Future<String?> Function()? houseIdLoader;
+  final Stream<List<SoulEvent>> Function(String)? eventsLoader;
 
   @override
   State<SoulEventsScreen> createState() => _SoulEventsScreenState();
@@ -20,7 +25,13 @@ class SoulEventsScreen extends StatefulWidget {
 
 class _SoulEventsScreenState extends State<SoulEventsScreen> {
   String? _houseId;
+  bool _isLoadingHouse = true;
+  bool _houseLoadFailed = false;
   bool _isPinningWidget = false;
+  bool _eventsLoadTimedOut = false;
+  Timer? _eventsLoadTimer;
+  Stream<List<SoulEvent>>? _eventsStream;
+  int _eventsGeneration = 0;
 
   @override
   void initState() {
@@ -29,9 +40,62 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
   }
 
   Future<void> _loadHouseId() async {
-    final houseId = await HouseService().getCurrentHouseId();
-    if (!mounted || houseId == null) return;
-    setState(() => _houseId = houseId);
+    if (mounted) {
+      setState(() {
+        _isLoadingHouse = true;
+        _houseLoadFailed = false;
+      });
+    }
+    try {
+      final houseId = await (widget.houseIdLoader?.call() ??
+              HouseService().getCurrentHouseId())
+          .timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      setState(() {
+        _houseId = houseId;
+        _isLoadingHouse = false;
+        _houseLoadFailed = houseId == null || houseId.isEmpty;
+      });
+      if (houseId != null && houseId.isNotEmpty) {
+        _bindEvents(houseId);
+      }
+    } catch (error) {
+      debugPrint('[SoulEvents] Cannot load house: $error');
+      if (!mounted) return;
+      setState(() {
+        _isLoadingHouse = false;
+        _houseLoadFailed = true;
+      });
+    }
+  }
+
+  void _bindEvents(String houseId) {
+    _eventsLoadTimer?.cancel();
+    _eventsLoadTimedOut = false;
+    _eventsGeneration++;
+    try {
+      _eventsStream = widget.eventsLoader?.call(houseId) ??
+          SoulEventService().streamEvents(houseId);
+    } catch (error) {
+      _eventsStream = Stream<List<SoulEvent>>.error(error);
+    }
+    _eventsLoadTimer = Timer(const Duration(seconds: 12), () {
+      if (!mounted) return;
+      setState(() => _eventsLoadTimedOut = true);
+    });
+  }
+
+  void _retryEvents() {
+    if (!mounted) return;
+    final houseId = _houseId;
+    if (houseId == null) return;
+    setState(() => _bindEvents(houseId));
+  }
+
+  @override
+  void dispose() {
+    _eventsLoadTimer?.cancel();
+    super.dispose();
   }
 
   int? _calculateDaysDiff(SoulEvent event) {
@@ -134,13 +198,20 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
   @override
   Widget build(BuildContext context) {
     final houseId = _houseId;
-    if (houseId == null) {
+    if (houseId == null || houseId.isEmpty) {
       return Scaffold(
         body: Center(
-          child: Semantics(
-            label: context.tr('p8_events_loading'),
-            child: const CircularProgressIndicator(color: SLColors.primary),
-          ),
+          child: _isLoadingHouse
+              ? Semantics(
+                  label: context.tr('p8_events_loading'),
+                  child: const CircularProgressIndicator(
+                    color: SLColors.primary,
+                  ),
+                )
+              : _buildLoadFailure(
+                  context,
+                  onRetry: _houseLoadFailed ? _loadHouseId : null,
+                ),
         ),
       );
     }
@@ -198,10 +269,16 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: maxWidth),
                 child: StreamBuilder<List<SoulEvent>>(
-                  stream: SoulEventService().streamEvents(houseId),
+                  key: ValueKey(_eventsGeneration),
+                  stream: _eventsStream,
                   builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return _buildLoadFailure(context);
+                    if (snapshot.hasError ||
+                        (_eventsLoadTimedOut && !snapshot.hasData)) {
+                      _eventsLoadTimer?.cancel();
+                      return _buildLoadFailure(
+                        context,
+                        onRetry: _retryEvents,
+                      );
                     }
                     if (!snapshot.hasData) {
                       return const Center(
@@ -210,6 +287,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                         ),
                       );
                     }
+                    _eventsLoadTimer?.cancel();
 
                     final sortedEvents = List<SoulEvent>.from(snapshot.data!)
                       ..sort((first, second) {
@@ -292,15 +370,34 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     icon: Icons.calendar_today_outlined,
   );
 
-  Widget _buildLoadFailure(BuildContext context) {
+  Widget _buildLoadFailure(
+    BuildContext context, {
+    VoidCallback? onRetry,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: SLTheme.emptyStatePanel(
-          icon: Icons.cloud_off_rounded,
-          title: context.tr('p8_events_load_error_title'),
-          subtitle: context.tr('p8_events_load_error_subtitle'),
-          accentColor: SLColors.danger,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SLTheme.emptyStatePanel(
+              icon: Icons.cloud_off_rounded,
+              title: context.tr('p8_events_load_error_title'),
+              subtitle: context.tr('p8_events_load_error_subtitle'),
+              accentColor: SLColors.danger,
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(context.tr('core_retry')),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -415,14 +512,9 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(24),
                 onTap: () {
-                  Navigator.push(
+                  slPush<void>(
                     context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => SoulEventDetailScreen(
-                        houseId: _houseId!,
-                        event: event,
-                      ),
-                    ),
+                    SoulEventDetailScreen(houseId: _houseId!, event: event),
                   );
                 },
                 child: Padding(

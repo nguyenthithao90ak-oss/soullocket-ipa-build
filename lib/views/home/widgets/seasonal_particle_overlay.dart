@@ -1,4 +1,5 @@
 ﻿import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 enum SeasonalType {
@@ -11,11 +12,13 @@ enum SeasonalType {
 class SeasonalParticleOverlay extends StatefulWidget {
   final Widget child;
   final bool enabled;
+  final ValueListenable<bool>? isActiveListenable;
 
   const SeasonalParticleOverlay({
     super.key,
     required this.child,
     this.enabled = true,
+    this.isActiveListenable,
   });
 
   @override
@@ -23,27 +26,76 @@ class SeasonalParticleOverlay extends StatefulWidget {
 }
 
 class _SeasonalParticleOverlayState extends State<SeasonalParticleOverlay>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _animCtrl;
   late final SeasonalType _season;
   final List<_SeasonalParticle> _particles = [];
   final math.Random _random = math.Random();
+  bool _isActive = true;
+  bool _isAppResumed = true;
 
   @override
   void initState() {
     super.initState();
+    _isActive = widget.isActiveListenable?.value ?? true;
+    _isAppResumed =
+        WidgetsBinding.instance.lifecycleState == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    widget.isActiveListenable?.addListener(_handleActivityChanged);
+    WidgetsBinding.instance.addObserver(this);
     _season = _determineSeason();
     _initParticlePool();
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
-    )..repeat();
+    );
+    _syncAnimation();
   }
 
   @override
   void dispose() {
+    widget.isActiveListenable?.removeListener(_handleActivityChanged);
+    WidgetsBinding.instance.removeObserver(this);
     _animCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant SeasonalParticleOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActiveListenable != widget.isActiveListenable) {
+      oldWidget.isActiveListenable?.removeListener(_handleActivityChanged);
+      widget.isActiveListenable?.addListener(_handleActivityChanged);
+      _isActive = widget.isActiveListenable?.value ?? true;
+    }
+    if (oldWidget.enabled != widget.enabled ||
+        oldWidget.isActiveListenable != widget.isActiveListenable) {
+      _syncAnimation();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final resumed = state == AppLifecycleState.resumed;
+    if (_isAppResumed == resumed) return;
+    _isAppResumed = resumed;
+    _syncAnimation();
+  }
+
+  void _handleActivityChanged() {
+    final nextActive = widget.isActiveListenable?.value ?? true;
+    if (_isActive == nextActive) return;
+    _isActive = nextActive;
+    _syncAnimation();
+    if (mounted) setState(() {});
+  }
+
+  void _syncAnimation() {
+    if (widget.enabled && _isActive && _isAppResumed) {
+      if (!_animCtrl.isAnimating) _animCtrl.repeat();
+    } else if (_animCtrl.isAnimating) {
+      _animCtrl.stop(canceled: false);
+    }
   }
 
   SeasonalType _determineSeason() {
@@ -84,17 +136,20 @@ class _SeasonalParticleOverlayState extends State<SeasonalParticleOverlay>
         Positioned.fill(
           child: IgnorePointer(
             child: RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: _animCtrl,
-                builder: (context, child) {
-                  return CustomPaint(
-                    painter: _SeasonalParticlePainter(
-                      particles: _particles,
-                      season: _season,
-                      progress: _animCtrl.value,
-                    ),
-                  );
-                },
+              child: TickerMode(
+                enabled: _isActive && _isAppResumed,
+                child: AnimatedBuilder(
+                  animation: _animCtrl,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: _SeasonalParticlePainter(
+                        particles: _particles,
+                        season: _season,
+                        progress: _animCtrl.value,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),

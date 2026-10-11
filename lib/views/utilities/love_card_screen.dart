@@ -7,8 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:flutter/material.dart';
+import '../../core/sl_route.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -54,7 +54,9 @@ class LoveCardService {
         final cardsMap = cardsSnap.value as Map;
         if (cardsMap.length >= 100) {
           throw Exception(
-            L10nService().translate('ui_utilities_the_love_mailbox_has_reached_its_limit_cb9f85'),
+            L10nService().translate(
+              'ui_utilities_the_love_mailbox_has_reached_its_limit_cb9f85',
+            ),
           );
         }
       }
@@ -329,14 +331,13 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
   final _senderNameCtrl = TextEditingController();
   final _signatureCtrl = TextEditingController();
   final _contentCtrl = TextEditingController();
-  final Map<String, _LoveThemeData> _themes = _loveCardThemes;
+  final Map<String, LoveCardStudioTheme> _themes = _loveCardThemes;
 
   String _selectedTheme = 'love';
   int _selectedBg = 0xFFE94057;
   int _currentIndex = 0;
   bool _isSending = false;
   bool _isPickingImage = false;
-  bool _hideTopChrome = false;
   XFile? _selectedImageFile;
   Uint8List? _selectedImageBytes;
   bool _didPromptPendingUploadRetry = false;
@@ -443,89 +444,52 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     }
   }
 
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical || notification.depth != 0) {
-      return false;
-    }
-
-    const revealThreshold = 20.0;
-    const hideThreshold = 72.0;
-
-    if (notification.metrics.pixels <= revealThreshold) {
-      if (_hideTopChrome && mounted) {
-        setState(() => _hideTopChrome = false);
-      }
-      return false;
-    }
-
-    if (notification is UserScrollNotification) {
-      if (notification.direction == ScrollDirection.reverse &&
-          notification.metrics.pixels > hideThreshold &&
-          !_hideTopChrome) {
-        setState(() => _hideTopChrome = true);
-      } else if (notification.direction == ScrollDirection.forward &&
-          _hideTopChrome) {
-        setState(() => _hideTopChrome = false);
-      }
-    }
-
-    return false;
-  }
-
-  void _refreshUi() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  void _showFullScreenPreview(
-    BuildContext context,
-    _LoveThemeData theme,
-    List<Color> colors,
-  ) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
+  void _showFullScreenPreview(BuildContext context, LoveCardStudioTheme theme) {
+    slPushRoute<void>(
+      context,
+      PageRouteBuilder<void>(
         barrierDismissible: true,
         opaque: false,
         pageBuilder: (context, animation, secondaryAnimation) => Scaffold(
           backgroundColor: Colors.black.withValues(alpha: 0.88),
           body: Stack(
             children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: RepaintBoundary(
-                    child: _LoveCardPreviewPanel(
-                      state: this,
-                      theme: theme,
-                      colors: colors,
-                      fullBleed: true,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 48,
-                right: 20,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close_rounded,
+              SafeArea(
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: IconButton(
+                        tooltip: context.tr('core_close'),
+                        onPressed: () => Navigator.of(context).pop(),
                         color: Colors.white,
-                        size: 22,
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        icon: const Icon(Icons.close_rounded),
                       ),
                     ),
-                  ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 560),
+                            child: LoveCardDraftPreview(
+                              theme: theme,
+                              senderController: _senderNameCtrl,
+                              signatureController: _signatureCtrl,
+                              contentController: _contentCtrl,
+                              senderFallback: _defaultSenderName(),
+                              imageBytes: _selectedImageBytes,
+                              expanded: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -537,23 +501,19 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
         ),
         transitionDuration: const Duration(milliseconds: 280),
       ),
+      identity: const ValueKey('love_card_full_screen_preview'),
     );
   }
 
   void _showCreateTab() {
     _hasChosenTab = true;
-    setState(() {
-      _currentIndex = 0;
-      _hideTopChrome = false;
-    });
+    setState(() => _currentIndex = 0);
   }
 
   void _showHistoryTab() {
     _hasChosenTab = true;
-    setState(() {
-      _currentIndex = 1;
-      _hideTopChrome = false;
-    });
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _currentIndex = 1);
   }
 
   void _selectTheme(String key) {
@@ -572,8 +532,6 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
       if (shouldSyncSignature) {
         _setControllerText(_signatureCtrl, nextTheme.signature);
       }
-      // Clear theme color cache on selection
-      _themeColorsCache.clear();
     });
   }
 
@@ -758,13 +716,9 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(
-            errorInfo.message,
-
-          ),
+          content: Text(errorInfo.message),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-
         ),
       );
     } finally {
@@ -789,9 +743,9 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SLSnackBar(content: Text(context.tr('util_thipcgii_431480'))));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SLSnackBar(content: Text(context.tr('util_thipcgii_431480'))),
+    );
   }
 
   String _defaultSenderName() {
@@ -971,27 +925,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     ).showSnackBar(SLSnackBar(content: Text(deletedSnackbarText)));
   }
 
-  final Map<String, List<Color>> _themeColorsCache = {};
-
-  _LoveThemeData _themeOf(String key) => _themes[key] ?? _themes['love']!;
-
-  List<Color> _themeColors(String key) {
-    if (!_themeColorsCache.containsKey(key)) {
-      final theme = _themeOf(key);
-      _themeColorsCache[key] = theme.colors
-          .map(Color.new)
-          .toList(growable: false);
-    }
-    return _themeColorsCache[key]!;
-  }
-
-  String _previewContent() {
-    final text = _contentCtrl.text.trim();
-    if (text.isNotEmpty) {
-      return text;
-    }
-    return context.tr('util_vitvicuchn_98d4af');
-  }
+  LoveCardStudioTheme _themeOf(String key) => _themes[key] ?? _themes['love']!;
 
   int _unreadCount(List<Map<dynamic, dynamic>> cards) {
     return cards

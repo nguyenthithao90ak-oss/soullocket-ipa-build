@@ -10,6 +10,8 @@ Future<void> runDeferredBootstrapTasks({
   required Future<void> Function() initializeAds,
   required void Function(Object, StackTrace) onOptionalError,
   Future<void> Function(Duration)? wait,
+  Duration prepareDelay = Duration.zero,
+  Duration warmFontsDelay = Duration.zero,
 }) async {
   final delay = wait ?? (duration) => Future<void>.delayed(duration);
 
@@ -21,7 +23,12 @@ Future<void> runDeferredBootstrapTasks({
     }
   }
 
-  unawaited(runOptional(warmFonts));
+  unawaited(
+    runOptional(() async {
+      if (warmFontsDelay > Duration.zero) await delay(warmFontsDelay);
+      await warmFonts();
+    }),
+  );
   unawaited(
     runOptional(() async {
       await delay(const Duration(seconds: 30));
@@ -29,6 +36,7 @@ Future<void> runDeferredBootstrapTasks({
     }),
   );
 
+  if (prepareDelay > Duration.zero) await delay(prepareDelay);
   await prepareCore();
   unawaited(runOptional(startBackground));
   unawaited(

@@ -97,13 +97,8 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
 
     // Nạp đồng bộ ngay lập tức từ RAM cache nếu đã sẵn sàng (0ms flicker)
     final cachedFile = R2NetworkImage._resolvedNetworkFiles.get(cleanUrl);
-    if (cachedFile != null && cachedFile.existsSync()) {
-      return Image.file(
-        cachedFile,
-        fit: widget.fit,
-        width: widget.width,
-        height: widget.height,
-      );
+    if (cachedFile != null) {
+      return _buildFileImage(cachedFile, cleanUrl);
     }
 
     // Nếu không có future (trường hợp khẩn cấp), nạp trực tiếp bằng CachedNetworkImage
@@ -119,23 +114,28 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
         }
 
         final file = snapshot.data;
-        if (file != null && file.existsSync()) {
+        if (file != null) {
           R2NetworkImage._resolvedNetworkFiles.put(cleanUrl, file);
-          return Image.file(
-            file,
-            fit: widget.fit,
-            width: widget.width,
-            height: widget.height,
-            cacheWidth: widget.width != null
-                ? (widget.width! * 2).toInt()
-                : 800,
-          );
+          return _buildFileImage(file, cleanUrl);
         }
 
         return _buildCachedNetworkImage(cleanUrl);
       },
     );
   }
+
+  int get _decodeWidth =>
+      widget.width == null ? 800 : (widget.width! * 2).round().clamp(1, 2400);
+
+  Widget _buildFileImage(File file, String cleanUrl) => Image.file(
+    file,
+    fit: widget.fit,
+    width: widget.width,
+    height: widget.height,
+    cacheWidth: _decodeWidth,
+    errorBuilder: (context, error, stackTrace) =>
+        _buildCachedNetworkImage(cleanUrl),
+  );
 
   Widget _buildCachedNetworkImage(String cleanUrl) {
     return CachedNetworkImage(
@@ -145,7 +145,7 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
       height: widget.height,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
-      memCacheWidth: widget.width != null ? (widget.width! * 2).toInt() : 800,
+      memCacheWidth: _decodeWidth,
       placeholder: (context, url) => widget.placeholder ?? _buildPlaceholder(),
       errorWidget: (context, url, error) => _buildErrorWidget(),
     );

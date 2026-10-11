@@ -63,11 +63,12 @@ class SleepTrackingPanel extends StatelessWidget {
     required this.supported,
     required this.ios,
     required this.manualActive,
+    this.serviceReady = true,
     required this.onToggle,
     required this.onManual,
     this.error,
   });
-  final bool enabled, busy, supported, ios, manualActive;
+  final bool enabled, busy, supported, ios, manualActive, serviceReady;
   final VoidCallback? onToggle, onManual;
   final String? error;
 
@@ -114,9 +115,17 @@ class SleepTrackingPanel extends StatelessWidget {
           ],
         ),
         Text(
-          context.tr(enabled ? 'sleep_tracking_on' : 'sleep_state_disabled'),
+          context.tr(
+            !enabled
+                ? 'sleep_state_disabled'
+                : serviceReady
+                ? 'sleep_tracking_on'
+                : 'sleep_tracking_restarting',
+          ),
           style: TextStyle(
-            color: enabled ? const Color(0xFF467E74) : const Color(0xFF72778C),
+            color: enabled && serviceReady
+                ? const Color(0xFF467E74)
+                : const Color(0xFF72778C),
             fontWeight: FontWeight.w600,
           ),
         ),

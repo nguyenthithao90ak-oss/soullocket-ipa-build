@@ -1,3 +1,5 @@
+import 'package:image_cropper/image_cropper.dart';
+import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import '../../../models/widget_appearance.dart';
@@ -21,7 +23,11 @@ import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_shared_note_header.dart';
+import 'package:soullocket_app/utils/services/home_couple_decor_sync_service.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_partner_letter.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_couple_profile_card.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_couple_decor_model.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_couple_decor_editor_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
@@ -41,9 +47,8 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, ValueListenable, listEquals;
+    show kDebugMode, kIsWeb, ValueListenable;
 import 'package:http/http.dart' as http;
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,7 +94,6 @@ import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/home/tabs/settings/theme/theme_preview_builder.dart';
 // import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
-import 'package:soullocket_app/views/utilities/bucket_list_screen.dart';
 import 'package:soullocket_app/views/utilities/block_blast_game.dart';
 import 'package:soullocket_app/views/together/together_hub_screen.dart';
 import 'package:soullocket_app/views/utilities/calendar_screen.dart';
@@ -101,7 +105,6 @@ import 'package:soullocket_app/views/utilities/drawing_studio_screen.dart';
 import 'package:soullocket_app/views/utilities/finance_screen.dart';
 import 'package:soullocket_app/views/utilities/friendly_chat_screen.dart';
 // import 'package:soullocket_app/views/utilities/gift_maker_screen.dart';
-import 'package:soullocket_app/views/utilities/giftcode_screen.dart';
 import 'package:soullocket_app/views/utilities/habit_screen.dart';
 import 'package:soullocket_app/views/utilities/love_card_screen.dart';
 import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
@@ -115,7 +118,6 @@ import 'package:soullocket_app/views/utilities/utility_sticker_icon.dart';
 import 'package:soullocket_app/views/utilities/utilities_config.dart';
 import 'package:soullocket_app/views/utilities/voice_screen.dart';
 // import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
-import 'package:soullocket_app/views/utilities/wishlist_screen.dart';
 import 'package:soullocket_app/utils/zodiac_utils.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/utils/services/daily_quest_service.dart';
@@ -124,6 +126,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/widgets/legacy_web_ui.dart';
 import 'package:soullocket_app/widgets/keepsake_frame.dart';
 import '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
+import '../widgets/main_home/hero/countdown_artwork_surface.dart';
 import '../widgets/main_home/hero/relationship_day_counter_content.dart';
 import '../widgets/main_home/hero/countdown_studio_widgets.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
@@ -142,7 +145,9 @@ import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
+import 'package:soullocket_app/utils/screen_activity_mixin.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/hero/relationship_duration_card.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_motion.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_scene.dart';
 import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
@@ -239,7 +244,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static const int _kReactionThrowBurstLimit = 5;
 
   bool _hideSettingsButtonUntilRestart = false;
-  int _lastChatMessageTs = 0;
+  final int _lastChatMessageTs = 0;
 
   void _hideSettingsButtonForSession() {
     if (!mounted) return;
@@ -257,7 +262,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
               ),
             ),
             behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
     }
@@ -365,13 +370,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     );
   }
 
-  static final List<String> _kHomeStickerAssets = List<String>.generate(99, (
-    i,
-  ) {
-    final num = (i + 1).toString().padLeft(3, '0');
-    return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
-  });
-
   static List<String> get _kGiftSuggestions => [
     for (var i = 1; i <= 20; i++)
       L10nService().translate(
@@ -401,22 +399,29 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final NoteService _noteService = NoteService();
   final StorageService _storageService = StorageService();
   final NotificationService _notificationService = NotificationService();
+  final HomeCoupleDecorSyncService _homeCoupleDecorSync =
+      HomeCoupleDecorSyncService();
   final LocationService _locationService = LocationService();
   final Random _random = Random();
   DateTime? _lastFetchTime;
   static const Duration _fetchCacheDuration = Duration(seconds: 30);
 
   Map<String, dynamic>? _houseSettings;
-  Map<String, dynamic> _presenceDataMap = {};
+  Map<String, dynamic> _presenceData = {};
   final ValueNotifier<Map<String, dynamic>> _presenceDataNotifier =
       ValueNotifier<Map<String, dynamic>>({});
-  Map<String, dynamic> get _presenceData => _presenceDataMap;
-  set _presenceData(Map<String, dynamic> v) => _presenceDataMap = v;
   bool _hasLoadedPresenceSnapshot = false;
   bool _isLoading = true;
   bool _showStatus = true;
   bool _showWeather = true;
   String? _houseId;
+  HomeCoupleCardDecor _homeCoupleDecor = HomeCoupleCardDecor.defaultValue();
+  String? _homeCoupleDecorScope;
+  bool _homeCoupleDecorLoadStarted = false;
+  Future<HomeCoupleCardDecor>? _homeCoupleDecorLoadFuture;
+  int _homeCoupleDecorLoadSerial = 0;
+  int _homeCoupleDecorRevision = 0;
+  StreamSubscription<HomeCoupleDecorSnapshot>? _homeCoupleDecorSubscription;
   String _currentRole = 'user1';
   List<UtilityApp> _pinnedApps = const [];
   late final Stream<DateTime> _secondStream = Stream<DateTime>.periodic(
@@ -512,14 +517,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   // Danh sách rỗng là kết quả hợp lệ (ảnh riêng tư không có link công khai);
   // cờ này tránh tải lại Nhật ký mỗi lần trạng thái online đổi.
   bool _widgetDiaryImageUrlsLoaded = false;
-  List<String> _recentChatSignals = [];
+  final List<String> _recentChatSignals = [];
 
   late final ValueNotifier<_PartnerInteractionPreset>
   _smartInteractionPresetNotifier;
-  _PartnerInteractionPreset get _smartInteractionPreset =>
-      _smartInteractionPresetNotifier.value;
-  set _smartInteractionPreset(_PartnerInteractionPreset v) =>
-      _smartInteractionPresetNotifier.value = v;
   bool _showDefaultHeartSuggestion = false;
   String? _manualInteractionPresetType;
   bool _isSendingInteraction = false;
@@ -538,6 +539,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier<String?>(null);
   Offset? _interactionDragPointerGlobal;
   bool _isTabActive = false;
+  bool _isAppResumed = true;
   bool _showMapCardFirstTapHint =
       !(OfflineCacheService.getPrefsSync()?.getBool(
             _mapCardFirstTapSeenPrefsKey,
@@ -603,12 +605,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         return manualPreset;
       }
     }
-    return _smartInteractionPreset;
+    return _smartInteractionPresetNotifier.value;
   }
 
   @override
   void initState() {
     super.initState();
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    _isAppResumed =
+        lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
     MarketService.instance.addListener(_onRegionPreferencesChanged);
     L10nService().addListener(_onRegionPreferencesChanged);
     unawaited(
@@ -636,18 +641,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ]);
       } catch (_) {}
     }());
-    // Pre-cache sticker assets deferred and chunked to avoid startup stutter
-    Timer(const Duration(seconds: 4), () async {
-      if (!mounted) return;
-      for (var i = 0; i < _kHomeStickerAssets.length; i++) {
-        if (!mounted) break;
-        precacheImage(AssetImage(_kHomeStickerAssets[i]), context);
-        // Chia nhỏ mỗi đợt 10 ảnh, nghỉ 50ms để không block UI thread
-        if (i % 10 == 9) {
-          await Future.delayed(const Duration(milliseconds: 50));
-        }
-      }
-    });
     unawaited(_syncHomeCardFirstTapHintState());
     _restoreWarmHomeCache();
     _warmHomeMedia(delayMotion: true, force: _hasWarmHomeSnapshot);
@@ -731,6 +724,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _albumSubscription?.cancel();
     _noteSubscription?.cancel();
     _homeCalendarSubscription?.cancel();
+    _homeCoupleDecorSubscription?.cancel();
     _healthCycleSyncSubscription?.cancel();
     _chatSignalSubscription?.cancel();
     _reactionFlightSubscription?.cancel();
@@ -750,11 +744,17 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _homePartnerBatteryNotifier.dispose();
     _fallingEffectTypeNotifier.dispose();
     _isScrollingNotifier.dispose();
+    unawaited(_homeCoupleDecorSync.dispose());
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final nextResumed = state == AppLifecycleState.resumed;
+    if (_isAppResumed != nextResumed) {
+      _isAppResumed = nextResumed;
+      _safeSetState(() {});
+    }
     if (state == AppLifecycleState.resumed &&
         _isTabActive &&
         _houseId != null) {
@@ -770,6 +770,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _isTabActive = isActive;
     if (isActive) {
       _deferHeavyHomeMotion = true;
+      _ensureCoupleDecorLoaded();
       _warmHomeMedia(delayMotion: true);
       final houseId = _houseId;
       if (houseId != null) {
@@ -881,9 +882,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _openSearchResultDestination(dynamic result) async {
     final action = result.actionId as String;
     if (action == 'history') {
-      await Navigator.of(
-        context,
-      ).push(SLRoute(builder: (_) => HistoryScreen(houseId: _houseId ?? '')));
+      await slPush(context, HistoryScreen(houseId: _houseId ?? ''));
       return;
     }
 
@@ -893,7 +892,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       if (tool == null) {
         return;
       }
-      await Navigator.of(context).push(SLRoute(builder: (_) => tool));
+      await slPush(context, tool);
     }
   }
 
@@ -1227,7 +1226,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final availablePresets = _kPartnerInteractionPresets.where((preset) {
       if (!preset.showInSmartSuggestion) return false;
       if (!avoidCurrent) return true;
-      if (preset.type != _smartInteractionPreset.type) return true;
+      if (preset.type != _smartInteractionPresetNotifier.value.type) {
+        return true;
+      }
       return _kPartnerInteractionPresets
               .where((item) => item.showInSmartSuggestion)
               .length ==
@@ -1348,22 +1349,16 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       onRetry: () => unawaited(_fetchHouseData()),
       child: ValueListenableBuilder<UiPrefsState>(
         valueListenable: UiPrefs.notifier,
-        builder: (context, uiState, _) => Stack(
-          children: [
-            ValueListenableBuilder<bool>(
-              valueListenable: widget.isActiveListenable,
-              builder: (context, isActive, _) {
-                if (!isActive) return const SizedBox.shrink();
-                return const SizedBox.shrink();
-              },
+        builder: (context, uiState, _) => ValueListenableBuilder<bool>(
+          valueListenable: widget.isActiveListenable,
+          child: SeasonalParticleOverlay(
+            isActiveListenable: widget.isActiveListenable,
+            child: _buildMainContent(
+              customBackgroundUrl: uiState.customBackgroundUrl,
             ),
-            SeasonalParticleOverlay(
-              child: _buildMainContent(
-                customBackgroundUrl: uiState.customBackgroundUrl,
-              ),
-            ),
-            const SizedBox.shrink(),
-          ],
+          ),
+          builder: (context, isActive, child) =>
+              TickerMode(enabled: isActive && _isAppResumed, child: child!),
         ),
       ),
     );
@@ -1387,11 +1382,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           case GettingStartedTopic.memory:
             widget.onOpenDiary?.call();
           case GettingStartedTopic.pairing:
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const PairingDashboardScreen(),
-              ),
-            );
+            slPush<void>(context, const PairingDashboardScreen());
         }
       },
     );

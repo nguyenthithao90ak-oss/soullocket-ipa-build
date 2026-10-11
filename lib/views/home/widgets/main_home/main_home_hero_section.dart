@@ -121,6 +121,7 @@ class _ModernHomeBody extends StatelessWidget {
     return HomeCompanionScene(
       followScroll: true,
       calm: true,
+      guestVisits: true,
       partnerStatusListenable: _PartnerStatusListenable(
         state._presenceDataNotifier,
         _companionPartnerStatus,
@@ -224,8 +225,7 @@ class _ModernHomeBody extends StatelessWidget {
                     firstGuideHeroKey: state.widget.firstGuideHeroKey,
                   ),
                 );
-                if (!showDayCounter) return countdown;
-                return _HomeHeroStage(isSingle: isSingle, child: countdown);
+                return countdown;
               }
 
               return NotificationListener<ScrollNotification>(
@@ -287,28 +287,14 @@ class _ModernHomeBody extends StatelessWidget {
                           ),
                           SizedBox(
                             width: double.infinity,
-                            child: Stack(
-                              alignment: Alignment.topCenter,
-                              clipBehavior: Clip.none,
-                              children: [
-                                state.widget.isSwipingListenable == null
-                                    ? buildCountdown(false)
-                                    : ValueListenableBuilder<bool>(
-                                        valueListenable:
-                                            state.widget.isSwipingListenable!,
-                                        builder: (context, isSwiping, _) =>
-                                            buildCountdown(isSwiping),
-                                      ),
-                                PositionedDirectional(
-                                  top: 0,
-                                  end: 0,
-                                  child: _HomeCounterCustomizeButton(
-                                    onTap:
-                                        state._showCountdownQuickCustomizeSheet,
+                            child: state.widget.isSwipingListenable == null
+                                ? buildCountdown(false)
+                                : ValueListenableBuilder<bool>(
+                                    valueListenable:
+                                        state.widget.isSwipingListenable!,
+                                    builder: (context, isSwiping, _) =>
+                                        buildCountdown(isSwiping),
                                   ),
-                                ),
-                              ],
-                            ),
                           ),
                           SLSpacing.h12,
                           RepaintBoundary(

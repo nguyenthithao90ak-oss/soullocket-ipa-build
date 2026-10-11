@@ -1,4 +1,3 @@
-import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -13,12 +12,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../utils/services/export_service.dart';
-import '../../core/sl_theme.dart';
+import 'widgets/keepsake_design.dart';
 
 class DiaryExportScreen extends StatefulWidget {
   final String houseId;
+  final ExportService? exportService;
 
-  const DiaryExportScreen({super.key, required this.houseId});
+  const DiaryExportScreen({
+    super.key,
+    required this.houseId,
+    this.exportService,
+  });
 
   @override
   State<DiaryExportScreen> createState() => _DiaryExportScreenState();
@@ -32,8 +36,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   bool _isExportingAll = false;
   double _exportProgress = 0;
   String _exportStatus = '';
+  String? _exportError;
+  VoidCallback? _retryExport;
   String _houseName = L10nService().translate('util_nginhtnhyu_dbebce');
   List<_ExportRecord> _history = [];
+
+  ExportService get _exportService => widget.exportService ?? ExportService();
 
   @override
   void initState() {
@@ -43,8 +51,10 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
   Future<void> _loadHouseName() async {
     try {
-      _houseName = await ExportService().resolveDiaryHouseName(widget.houseId);
-      await _loadHistory();
+      _houseName = await _exportService
+          .resolveDiaryHouseName(widget.houseId)
+          .timeout(const Duration(seconds: 12));
+      await _loadHistory().timeout(const Duration(seconds: 5));
     } catch (_) {
       // Keep fallback label
     } finally {
@@ -100,11 +110,8 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: context.tr('auth_guide_short'),
-      icon: const Icon(
-        Icons.info_outline_rounded,
-        color: Color(0xFFD81B60),
-        size: 22,
-      ),
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+      icon: const Icon(Icons.help_outline_rounded, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -113,26 +120,23 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     showDialog<void>(
       context: context,
       builder: (context) => SLAlertDialog(
-        title: Text(context.tr('export_diary')),
+        title: Text(context.tr('auth_guide_short')),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('vault_features_label'), style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
-                context.tr('diary_export_help_features'),
-              ),
-              SizedBox(height: 12),
-              Text(
-                context.tr('p3_help_how_to_label'),
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 4),
-              Text(
-                context.tr('ui_utilities_click_start_exporting_data_the_system_will_03ed4e'),
-              ),
+              _buildGuideSteps(),
+              const SizedBox(height: 20),
+              Text(context.tr('diary_export_html_body')),
+              const SizedBox(height: 12),
+              Text(context.tr('diary_export_zip_body')),
+              const SizedBox(height: 12),
+              Text(context.tr('diary_export_save_hint')),
+              const SizedBox(height: 12),
+              Text(context.tr('diary_export_check_note')),
+              const SizedBox(height: 12),
+              Text(context.tr('diary_export_safety_note')),
             ],
           ),
         ),
@@ -141,7 +145,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
             primary: true,
 
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('Đã hiểu')),
+            child: Text(context.tr('p3_understood')),
           ),
         ],
       ),
@@ -149,11 +153,15 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   }
 
   Future<void> _exportHtml() async {
-    if (_isExportingHtml) return;
-    setState(() => _isExportingHtml = true);
+    if (_isExportingHtml || _isExportingAll) return;
+    setState(() {
+      _isExportingHtml = true;
+      _exportError = null;
+      _retryExport = null;
+    });
 
     try {
-      final filePath = await ExportService().exportDiary(
+      final filePath = await _exportService.exportDiary(
         houseId: widget.houseId,
         houseName: _houseName,
         format: DiaryExportFormat.html,
@@ -167,7 +175,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(L10nScope.of(context).format('ui_utilities_exported_html_value1_b8061a', {'value1': filePath.split('/').last})),
+            content: Text(
+              L10nScope.of(context).format(
+                'ui_utilities_exported_html_value1_b8061a',
+                {'value1': filePath.split('/').last},
+              ),
+            ),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
               label: context.tr('p8_notebook_open'),
@@ -178,11 +191,13 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      final message = ExportService.errorMessage(e);
+      setState(() {
+        _exportError = message;
+        _retryExport = _exportHtml;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(
-          content: Text(context.tr('util_chathxutdl_223d08')),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     } finally {
       if (mounted) setState(() => _isExportingHtml = false);
@@ -190,15 +205,17 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   }
 
   Future<void> _exportAllMemories() async {
-    if (_isExportingAll) return;
+    if (_isExportingHtml || _isExportingAll) return;
     setState(() {
       _isExportingAll = true;
+      _exportError = null;
+      _retryExport = null;
       _exportProgress = 0;
       _exportStatus = L10nService().translate('ui_utilities_starting_302522');
     });
 
     try {
-      final filePath = await ExportService().exportAllMemories(
+      final filePath = await _exportService.exportAllMemories(
         houseId: widget.houseId,
         houseName: _houseName,
         onProgress: (progress, status) {
@@ -219,7 +236,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(L10nScope.of(context).format('ui_utilities_exported_zip_value1_69e938', {'value1': filePath.split('/').last})),
+            content: Text(
+              L10nScope.of(context).format(
+                'ui_utilities_exported_zip_value1_69e938',
+                {'value1': filePath.split('/').last},
+              ),
+            ),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
@@ -231,11 +253,13 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      final message = ExportService.errorMessage(e);
+      setState(() {
+        _exportError = message;
+        _retryExport = _exportAllMemories;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SLSnackBar(
-          content: Text(L10nScope.of(context).format('ui_utilities_error_value1_01d14e', {'value1': e.toString()})),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     } finally {
       if (mounted) {
@@ -255,7 +279,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(L10nScope.of(context).format('ui_utilities_cannot_open_file_value1_52bf4b', {'value1': result.message})),
+            content: Text(
+              L10nScope.of(context).format(
+                'ui_utilities_cannot_open_file_value1_52bf4b',
+                {'value1': result.message},
+              ),
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -264,7 +293,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(L10nScope.of(context).format('ui_utilities_cannot_open_file_value1_52bf4b', {'value1': e})),
+          content: Text(
+            L10nScope.of(context).format(
+              'ui_utilities_cannot_open_file_value1_52bf4b',
+              {'value1': e},
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -278,7 +312,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(context.tr('ui_utilities_file_does_not_exist_e5652f')),
+            content: Text(
+              context.tr('ui_utilities_file_does_not_exist_e5652f'),
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -296,7 +332,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(L10nScope.of(context).format('ui_utilities_saved_value1_bfd7a4', {'value1': fileName})),
+          content: Text(
+            L10nScope.of(
+              context,
+            ).format('ui_utilities_saved_value1_bfd7a4', {'value1': fileName}),
+          ),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),
         ),
@@ -305,7 +345,12 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(L10nScope.of(context).format('ui_utilities_error_saving_file_value1_802da4', {'value1': e})),
+          content: Text(
+            L10nScope.of(context).format(
+              'ui_utilities_error_saving_file_value1_802da4',
+              {'value1': e},
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -318,14 +363,22 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(path)],
-          text: L10nScope.of(context).format('ui_utilities_soullocket_value1_value2_s_love_diary_733d56', {'value1': fileName, 'value2': _houseName}),
+          text: L10nScope.of(context).format(
+            'ui_utilities_soullocket_value1_value2_s_love_diary_733d56',
+            {'value1': fileName, 'value2': _houseName},
+          ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
-          content: Text(L10nScope.of(context).format('ui_utilities_unable_to_share_value1_f76018', {'value1': e})),
+          content: Text(
+            L10nScope.of(context).format(
+              'ui_utilities_unable_to_share_value1_f76018',
+              {'value1': e},
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -335,63 +388,146 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8FB),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFFD81B60),
+      backgroundColor: KeepsakeStyle.canvas(context),
+      appBar: KeepsakeStyle.appBar(
+        context,
         title: Text(
-          context.tr('util_xutnhtk_c6feb9'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFFD81B60),
-          ),
+          context.tr('utility_title_diary_export'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [_buildInfoIcon(context)],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFD81B60)),
-            )
-          : Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFFFBFD),
-                    Color(0xFFFDFDFF),
-                    Color(0xFFFFF1F6),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+          ? SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(
+                          color: KeepsakeStyle.accent(context),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          context.tr('loading'),
+                          textAlign: TextAlign.center,
+                          style: KeepsakeStyle.text(
+                            context,
+                            color: KeepsakeStyle.muted(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              child: SafeArea(
-                child: ListView(
-                  padding: SLSpacing.all16,
-                  children: [
-                    // House name card
-                    _buildHouseCard(),
-                    SLSpacing.h16,
-                    _buildExportCard(
-                      icon: Icons.language_rounded,
-                      title: context.tr('util_xuthtml_c57dd1'),
-                      description: context.tr('util_tofilehtml_f2f8a2'),
-                      colors: const [Color(0xFF5DA9FF), Color(0xFF7C4DFF)],
-                      isBusy: _isExportingHtml,
-                      onTap: _exportHtml,
-                    ),
-                    SLSpacing.h12,
-                    _buildExportCard(
-                      icon: Icons.folder_zip_rounded,
-                      title: context.tr('ui_utilities_export_all_memories_626026'),
-                      description: context.tr('ui_utilities_diary_and_memory_photos_zip_file_27d8c5'),
-                      colors: const [Color(0xFFD81B60), Color(0xFFFF5E92)],
-                      isBusy: _isExportingAll,
-                      onTap: _exportAllMemories,
-                    ),
-                    if (_isExportingAll) _buildProgressSection(),
-                    if (_history.isNotEmpty) _buildHistorySection(),
-                  ],
+            )
+          : SafeArea(
+              top: false,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: ListView(
+                    key: const Key('diary-export-scroll'),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    children: [
+                      _buildHouseCard(),
+                      const SizedBox(height: 20),
+                      _buildPanel(
+                        key: const Key('diary-export-guide'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle(
+                              Icons.auto_stories_outlined,
+                              context.tr('auth_guide_short'),
+                            ),
+                            const SizedBox(height: 14),
+                            _buildGuideSteps(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        context.tr('diary_export_choose'),
+                        style: KeepsakeStyle.text(
+                          context,
+                          size: 17,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildExportCard(
+                        id: 'html',
+                        icon: Icons.menu_book_rounded,
+                        title: context.tr('diary_export_html_title'),
+                        description: context.tr('diary_export_html_body'),
+                        action: context.tr('diary_export_html_action'),
+                        color: KeepsakeStyle.sage,
+                        isBusy: _isExportingHtml,
+                        onTap: _exportHtml,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildExportCard(
+                        id: 'zip',
+                        icon: Icons.folder_zip_outlined,
+                        title: context.tr('diary_export_zip_title'),
+                        description: context.tr('diary_export_zip_body'),
+                        action: context.tr('diary_export_zip_action'),
+                        color: KeepsakeStyle.rosewood,
+                        isBusy: _isExportingAll,
+                        onTap: _exportAllMemories,
+                      ),
+                      if (_isExportingAll) _buildProgressSection(),
+                      if (_exportError != null) ...[
+                        const SizedBox(height: 12),
+                        _buildPanel(
+                          key: const Key('diary-export-error'),
+                          child: Semantics(
+                            liveRegion: true,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildNote(
+                                  Icons.error_outline_rounded,
+                                  _exportError!,
+                                ),
+                                const SizedBox(height: 8),
+                                OutlinedButton(
+                                  key: const Key('diary-export-retry'),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size(48, 48),
+                                    foregroundColor: KeepsakeStyle.ink(context),
+                                  ),
+                                  onPressed: _isExportingHtml || _isExportingAll
+                                      ? null
+                                      : _retryExport,
+                                  child: Text(context.tr('util_thli_4dffdf')),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      _buildNote(
+                        Icons.fact_check_outlined,
+                        context.tr('diary_export_check_note'),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildHistorySection(),
+                      const SizedBox(height: 20),
+                      _buildNote(
+                        Icons.lock_outline_rounded,
+                        context.tr('diary_export_safety_note'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -399,383 +535,500 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   }
 
   Widget _buildHouseCard() {
-    return Container(
-      padding: SLSpacing.all20,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFEEF5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: KeepsakeStyle.accentSurface(context),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.bookmark_added_outlined,
+                color: KeepsakeStyle.accent(context),
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('diary_export_intro_title'),
+                    style: KeepsakeStyle.text(
+                      context,
+                      size: 23,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _houseName,
+                    style: KeepsakeStyle.text(
+                      context,
+                      size: 13,
+                      color: KeepsakeStyle.muted(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF7D3E1)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+        const SizedBox(height: 12),
+        Text(
+          context.tr('util_xutnhtklul_13b3fb'),
+          style: KeepsakeStyle.text(
+            context,
+            size: 13,
+            color: KeepsakeStyle.muted(context),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPanel({Key? key, required Widget child}) {
+    return Container(
+      key: key,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: KeepsakeStyle.surface(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: KeepsakeStyle.line(context)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _houseName,
-            style: SLTheme.quicksand(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
+      child: child,
+    );
+  }
+
+  Widget _buildSectionTitle(IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: KeepsakeStyle.accent(context)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: KeepsakeStyle.text(
+              context,
+              size: 15,
+              weight: FontWeight.w600,
             ),
           ),
-          SLSpacing.h8,
-          Text(
-            context.tr('util_xutnhtklul_13b3fb'),
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF7A5C69),
-              height: 1.5,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGuideSteps() {
+    const keys = [
+      'diary_export_guide_choose',
+      'diary_export_guide_wait',
+      'diary_export_guide_save',
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var index = 0; index < keys.length; index++)
+          Padding(
+            padding: EdgeInsets.only(bottom: index == keys.length - 1 ? 0 : 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 26,
+                    minHeight: 26,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: KeepsakeStyle.accentSurface(context),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${index + 1}',
+                    textAlign: TextAlign.center,
+                    style: KeepsakeStyle.text(
+                      context,
+                      size: 12,
+                      weight: FontWeight.w600,
+                      color: KeepsakeStyle.accent(context),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.tr(keys[index]),
+                    style: KeepsakeStyle.text(context, size: 13),
+                  ),
+                ),
+              ],
             ),
           ),
-          SLSpacing.h16,
-          _buildFeatureLine(
-            Icons.language_rounded,
-            'HTML',
-            context.tr('util_bnwebnhmli_d0d399'),
+      ],
+    );
+  }
+
+  Widget _buildNote(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: KeepsakeStyle.muted(context)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: KeepsakeStyle.text(
+              context,
+              size: 12,
+              color: KeepsakeStyle.muted(context),
+            ),
           ),
-          SLSpacing.h8,
-          _buildFeatureLine(
-            Icons.folder_zip_rounded,
-            'ZIP',
-            context.tr('ui_utilities_package_all_diary_commemorative_photos_into_zip_bbc54d'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildProgressSection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          SLSpacing.h16,
-          LinearProgressIndicator(
-            value: _exportProgress,
-            backgroundColor: const Color(0xFFF1D4E1),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
-          SLSpacing.h8,
-          Text(
-            _exportStatus,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF7A5C69),
+      padding: const EdgeInsets.only(top: 16),
+      child: Semantics(
+        liveRegion: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LinearProgressIndicator(
+              value: _exportProgress.clamp(0, 1),
+              backgroundColor: KeepsakeStyle.accentSurface(context),
+              color: KeepsakeStyle.accent(context),
+              minHeight: 6,
+              borderRadius: BorderRadius.circular(3),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(_exportStatus, style: KeepsakeStyle.text(context, size: 13)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHistorySection() {
     return Column(
+      key: const Key('diary-export-history'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SLSpacing.h24,
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            children: [
-              Icon(
-                Icons.history_rounded,
-                size: 18,
-                color: const Color(0xFF7A5C69).withValues(alpha: 0.7),
-              ),
-              SLSpacing.w8,
-              Text(
-                context.tr('ui_utilities_recent_exports_f7b5d2'),
-                style: SLTheme.quicksand(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF47303B),
-                ),
-              ),
-              SLSpacing.w8,
-              Text(
-                L10nScope.of(context).format('ui_utilities_value1_files_4bbfd0', {'value1': _history.length}),
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7A5C69),
-                ),
-              ),
-            ],
+        _buildSectionTitle(
+          Icons.history_rounded,
+          context.tr('ui_utilities_recent_exports_f7b5d2'),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          context.tr('diary_export_save_hint'),
+          style: KeepsakeStyle.text(
+            context,
+            size: 12,
+            color: KeepsakeStyle.muted(context),
           ),
         ),
-        SLSpacing.h12,
-        ...List.generate(_history.length, (i) => _buildHistoryTile(i)),
+        const SizedBox(height: 12),
+        if (_history.isEmpty)
+          _buildPanel(
+            child: _buildNote(
+              Icons.insert_drive_file_outlined,
+              context.tr('diary_export_empty'),
+            ),
+          )
+        else ...[
+          Text(
+            L10nScope.of(context).format('ui_utilities_value1_files_4bbfd0', {
+              'value1': _history.length,
+            }),
+            style: KeepsakeStyle.text(
+              context,
+              size: 12,
+              color: KeepsakeStyle.muted(context),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...List.generate(_history.length, _buildHistoryTile),
+        ],
       ],
     );
   }
 
   Widget _buildHistoryTile(int index) {
     final record = _history[index];
-    final dateStr = LocaleDateFormat.dateTime(record.exportedAt);
-    final isHtml = record.type == 'html';
-    final icon = isHtml ? Icons.language_rounded : Icons.folder_zip_rounded;
-    final color = isHtml ? const Color(0xFF5DA9FF) : const Color(0xFFD81B60);
-    final fileName = record.filePath.split('/').last;
-
+    final fileName = record.filePath.split(RegExp(r'[/\\]')).last;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFFF7D3E1).withValues(alpha: 0.6),
-          ),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 4,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          leading: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          title: Text(
-            fileName,
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF47303B),
-            ),
-          ),
-          subtitle: Text(
-            dateStr,
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF7A5C69),
-            ),
-          ),
-          trailing: SizedBox(
-            width: 140,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: _buildPanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _actionIcon(
-                  Icons.file_download_rounded,
-                  const Color(0xFF15803D),
-                  L10nService().translate('ui_utilities_save_to_device_2562f6'),
-                  () => _saveToDownloads(record.filePath, fileName),
+                Icon(
+                  record.type == 'html'
+                      ? Icons.description_outlined
+                      : Icons.folder_zip_outlined,
+                  color: KeepsakeStyle.accent(context),
                 ),
-                _actionIcon(
-                  Icons.open_in_new_rounded,
-                  const Color(0xFF7C4DFF),
-                  L10nService().translate('ui_utilities_open_the_file_5cbe70'),
-                  () => _openFile(record.filePath),
-                ),
-                _actionIcon(
-                  Icons.share_rounded,
-                  const Color(0xFF5DA9FF),
-                  L10nService().translate('share'),
-                  () => _shareFile(record.filePath),
-                ),
-                _actionIcon(
-                  Icons.delete_outline_rounded,
-                  Colors.red[300]!,
-                  UiCopy.text('copy_a372558dd185'),
-                  () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => SLAlertDialog(
-                        title: Text(context.tr('ui_utilities_delete_export_file_eb5347')),
-                        content: Text(L10nScope.of(context).format('ui_utilities_remove_value1_from_device_bb47eb', {'value1': fileName})),
-                        actions: [
-                          SLDialogAction(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: Text(context.tr('Huỷ')),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Tooltip(
+                        message: fileName,
+                        child: Text(
+                          fileName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: KeepsakeStyle.text(
+                            context,
+                            size: 13,
+                            weight: FontWeight.w600,
                           ),
-                          SLDialogAction(
-                            primary: true,
-                            destructive: true,
-
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              _removeFromHistory(index);
-                            },
-
-                            child: Text(context.tr('ui_utilities_delete_82339c')),
-                          ),
-                        ],
+                        ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 4),
+                      Text(
+                        LocaleDateFormat.dateTime(record.exportedAt),
+                        style: KeepsakeStyle.text(
+                          context,
+                          size: 12,
+                          color: KeepsakeStyle.muted(context),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final twoColumns =
+                    constraints.maxWidth >= 260 &&
+                    MediaQuery.textScalerOf(context).scale(14) <= 18;
+                final width = twoColumns
+                    ? (constraints.maxWidth - 8) / 2
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _historyAction(
+                      width,
+                      'open-$index',
+                      Icons.open_in_new_rounded,
+                      context.tr('p8_notebook_open'),
+                      () => _openFile(record.filePath),
+                    ),
+                    _historyAction(
+                      width,
+                      'share-$index',
+                      Icons.ios_share_rounded,
+                      context.tr('share'),
+                      () => _shareFile(record.filePath),
+                    ),
+                    _historyAction(
+                      width,
+                      'save-$index',
+                      Icons.file_download_outlined,
+                      context.tr('ui_utilities_save_to_device_2562f6'),
+                      () => _saveToDownloads(record.filePath, fileName),
+                    ),
+                    _historyAction(
+                      width,
+                      'delete-$index',
+                      Icons.delete_outline_rounded,
+                      context.tr('ui_utilities_delete_82339c'),
+                      () => _confirmDelete(index, fileName),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _actionIcon(
+  Widget _historyAction(
+    double width,
+    String id,
     IconData icon,
-    Color color,
-    String tooltip,
+    String label,
     VoidCallback onPressed,
   ) {
     return SizedBox(
-      width: 32,
-      height: 32,
-      child: IconButton(
-        icon: Icon(icon, size: 18),
-        color: color,
+      width: width,
+      child: OutlinedButton(
+        key: Key('diary-export-$id'),
         onPressed: onPressed,
-        tooltip: tooltip,
-        padding: EdgeInsets.zero,
-        splashRadius: 18,
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          foregroundColor: KeepsakeStyle.ink(context),
+          side: BorderSide(color: KeepsakeStyle.line(context)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(label, style: KeepsakeStyle.text(context, size: 12)),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFeatureLine(IconData icon, String title, String desc) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF4F8),
-            borderRadius: SLRadius.mdAll,
-          ),
-          child: Icon(icon, color: const Color(0xFFD81B60)),
-        ),
-        SLSpacing.w12,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF47303B),
-                ),
-              ),
-              SLSpacing.gapH(2),
-              Text(
-                desc,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7A5C69),
-                  height: 1.4,
-                ),
-              ),
-            ],
+  void _confirmDelete(int index, String fileName) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text(context.tr('ui_utilities_delete_export_file_eb5347')),
+        content: Text(
+          L10nScope.of(context).format(
+            'ui_utilities_remove_value1_from_device_bb47eb',
+            {'value1': fileName},
           ),
         ),
-      ],
+        actions: [
+          SLDialogAction(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.tr('cancel')),
+          ),
+          SLDialogAction(
+            primary: true,
+            destructive: true,
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _removeFromHistory(index);
+            },
+            child: Text(context.tr('ui_utilities_delete_82339c')),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildExportCard({
+    required String id,
     required IconData icon,
     required String title,
     required String description,
-    required List<Color> colors,
+    required String action,
+    required Color color,
     required bool isBusy,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: isBusy ? null : onTap,
-        borderRadius: SLRadius.xlAll,
-        child: Ink(
-          padding: SLSpacing.all16,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.first.withValues(alpha: 0.10),
-                colors.last.withValues(alpha: 0.18),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: SLRadius.xlAll,
-            border: Border.all(color: colors.last.withValues(alpha: 0.20)),
-          ),
-          child: Row(
+    return _buildPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: colors),
-                  borderRadius: SLRadius.lgAll,
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: isBusy
-                    ? const Padding(
-                        padding: SLSpacing.all12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Icon(icon, color: Colors.white),
+                child: Icon(
+                  icon,
+                  color: KeepsakeStyle.dark(context)
+                      ? KeepsakeStyle.accent(context)
+                      : color,
+                ),
               ),
-              SLSpacing.w12,
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: SLTheme.quicksand(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF47303B),
+                      style: KeepsakeStyle.text(
+                        context,
+                        size: 16,
+                        weight: FontWeight.w600,
                       ),
                     ),
-                    SLSpacing.h4,
                     Text(
-                      description,
-                      style: SLTheme.quicksand(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7A5C69),
-                        height: 1.4,
+                      id.toUpperCase(),
+                      style: KeepsakeStyle.text(
+                        context,
+                        size: 11,
+                        color: KeepsakeStyle.muted(context),
                       ),
                     ),
                   ],
                 ),
               ),
-              SLSpacing.w12,
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFFD81B60)),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(
+            description,
+            style: KeepsakeStyle.text(
+              context,
+              size: 13,
+              color: KeepsakeStyle.muted(context),
+            ),
+          ),
+          const SizedBox(height: 14),
+          FilledButton(
+            key: Key('diary-export-$id'),
+            onPressed: _isExportingHtml || _isExportingAll ? null : onTap,
+            style: KeepsakeStyle.primary(context).copyWith(
+              minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+            ),
+            child: Row(
+              children: [
+                if (isBusy)
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: KeepsakeStyle.muted(context),
+                    ),
+                  )
+                else
+                  const Icon(Icons.file_download_outlined, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isBusy ? context.tr('diary_export_working') : action,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

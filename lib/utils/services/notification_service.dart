@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/routing/single_open_gate.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -26,6 +28,7 @@ import 'house_service.dart';
 import '../../views/utilities/soul_events/soul_events_screen.dart';
 import '../../views/utilities/soul_events/soul_event_detail_screen.dart';
 import '../../views/utilities/calendar_screen.dart';
+import '../../views/utilities/habit_screen.dart';
 import 'soul_event_service.dart';
 import 'offline_cache_service.dart';
 import 'role_utils.dart';
@@ -65,6 +68,7 @@ class NotificationService {
   bool _localPluginReady = false;
   bool _didCheckSoulEventLaunch = false;
   Future<void>? _localPluginTask;
+  final SingleOpenGate _navigationGate = SingleOpenGate();
 
   static const int _dailySleepReminderId = 21450045;
 
@@ -72,7 +76,9 @@ class NotificationService {
   static AndroidNotificationChannel get _channel => AndroidNotificationChannel(
     'soullocket_high_importance', // id
     L10nService().translate('notifications_title'),
-    description: L10nService().translate('notification_partner_channel_description'),
+    description: L10nService().translate(
+      'notification_partner_channel_description',
+    ),
     importance: Importance.high,
     playSound: true,
   );
@@ -207,7 +213,9 @@ class NotificationService {
     }
 
     final token = await _fcm.getToken();
-    if (token == null || FirebaseAuth.instance.currentUser?.uid != user.uid) return;
+    if (token == null || FirebaseAuth.instance.currentUser?.uid != user.uid) {
+      return;
+    }
 
     await FirebaseDatabase.instance
         .ref('users/${user.uid}/fcmToken')
@@ -241,7 +249,8 @@ class NotificationService {
       // Giữ ID cũ để Android bảo toàn lựa chọn âm thanh/quyền của người dùng.
       await _localNotif
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(_channel);
     } catch (_) {
       debugPrint('[NotificationService] localized channel refresh unavailable');
@@ -257,11 +266,18 @@ class NotificationService {
     final write = () async {
       try {
         if (previous != null) await previous;
-        if (revision != _localeRevision || FirebaseAuth.instance.currentUser?.uid != uid) return;
-        await FirebaseDatabase.instance.ref('users/$uid/notificationLocale').set(locale);
+        if (revision != _localeRevision ||
+            FirebaseAuth.instance.currentUser?.uid != uid) {
+          return;
+        }
+        await FirebaseDatabase.instance
+            .ref('users/$uid/notificationLocale')
+            .set(locale);
       } catch (_) {
         // Rules cũ có thể chưa hỗ trợ locale; vẫn giữ FCM token và thông báo trong app.
-        debugPrint('[NotificationService] notification locale sync unavailable');
+        debugPrint(
+          '[NotificationService] notification locale sync unavailable',
+        );
       }
     }();
     _localeWrite = write;
@@ -309,7 +325,9 @@ class NotificationService {
             message.notification?.body ??
             message.data['text'] ??
             UiCopy.text('copy_ed5fd66064f8');
-        final senderName = message.data['senderName']?.toString() ?? UiCopy.text('copy_145933221191');
+        final senderName =
+            message.data['senderName']?.toString() ??
+            UiCopy.text('copy_145933221191');
         await WidgetService.syncSoulMergeWidgetData(
           message: text.toString(),
           senderName: senderName,
@@ -371,7 +389,7 @@ class NotificationService {
   /// Xử lý khi user tap vào thông báo mở App
   void _handleMessageOpenedApp(RemoteMessage message) {
     if (_shouldSkipOpenedMessage(message)) return;
-    _navigateFromData(message.data);
+    unawaited(_navigateFromData(message.data));
   }
 
   /// Xử lý khi user tap vào Local Notification
@@ -390,7 +408,8 @@ class NotificationService {
       final data = Map<String, dynamic>.from(decoded);
       if (eventsOnly &&
           data['type'] != 'soul_event_reminder_v1' &&
-          data['type'] != 'calendar_reminder_v2') {
+          data['type'] != 'calendar_reminder_v2' &&
+          data['type'] != 'habit_reminder_v1') {
         return;
       }
       await _navigateFromData(data);
@@ -422,7 +441,19 @@ class NotificationService {
     }
   }
 
-  Future<void> _navigateFromData(Map<String, dynamic> data) async {
+  Future<void> _navigateFromData(Map<String, dynamic> data) {
+    // Giữ khóa từ lúc đọc dữ liệu tới khi route đóng; callback trễ không
+    // xếp thêm màn hình sau lưng người dùng khi mạng hoặc thiết bị chậm.
+    return _navigationGate.run(() async {
+      try {
+        await _navigateFromDataInternal(data);
+      } catch (error) {
+        debugPrint(AppErrorMapper.resolve(error).message);
+      }
+    });
+  }
+
+  Future<void> _navigateFromDataInternal(Map<String, dynamic> data) async {
     final navigator = navigatorKey.currentState;
     final context = navigatorKey.currentContext;
     if (navigator == null || context == null) return;
@@ -438,7 +469,8 @@ class NotificationService {
         final targetHouseId =
             data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString();
-        final targetName = data['target_name']?.toString() ?? UiCopy.text('copy_145933221191');
+        final targetName =
+            data['target_name']?.toString() ?? UiCopy.text('copy_145933221191');
         if (myHouseId == null ||
             targetHouseId == null ||
             targetHouseId.isEmpty) {
@@ -455,7 +487,8 @@ class NotificationService {
         final targetHouseId =
             data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString();
-        final targetName = data['target_name']?.toString() ?? UiCopy.text('copy_145933221191');
+        final targetName =
+            data['target_name']?.toString() ?? UiCopy.text('copy_145933221191');
         if (myHouseId == null ||
             targetHouseId == null ||
             targetHouseId.isEmpty) {
@@ -546,6 +579,25 @@ class NotificationService {
       case 'utilities':
         destination = const HomeScreen(initialTab: 3);
         break;
+      case 'habits':
+        // Payload cũ không được mở thói quen của tài khoản/House trước đó.
+        if (requestUid == null ||
+            myHouseId == null ||
+            data['accountUid'] != requestUid ||
+            data['houseId'] != myHouseId ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid) {
+          return;
+        }
+        final habitName = await _resolveCurrentUserCinemaName(
+          houseService,
+          myHouseId,
+        );
+        if (FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId() != myHouseId) {
+          return;
+        }
+        destination = HabitScreen(houseId: myHouseId, myName: habitName);
+        break;
       case 'game':
         destination = const HomeScreen(initialTab: 4);
         break;
@@ -567,8 +619,16 @@ class NotificationService {
         break;
     }
 
-    if (!navigator.mounted) return;
-    await navigator.push(MaterialPageRoute(builder: (_) => destination));
+    if (!navigator.mounted ||
+        !context.mounted ||
+        FirebaseAuth.instance.currentUser?.uid != requestUid) {
+      return;
+    }
+    await slPush<void>(
+      context,
+      destination,
+      fullscreenDialog: destination is SoulMergeScreen,
+    );
   }
 
   Future<String> _resolveCurrentUserCinemaName(
@@ -651,11 +711,12 @@ class NotificationService {
         channelDescription: _channel.description,
         importance: Importance.high,
         priority: Priority.high,
+        playSound: true,
         icon: '@mipmap/ic_launcher',
         color: const Color(0xFFFF5E7E),
         actions: isCinemaInvite
             ? <AndroidNotificationAction>[
-              AndroidNotificationAction(
+                AndroidNotificationAction(
                   'cinema_accept',
                   UiCopy.text('pairing_ui_request_accept'),
                   showsUserInterface: true,
@@ -681,7 +742,7 @@ class NotificationService {
     await initialize();
     if (!await hasPermission()) return;
 
-    final payloadData = <String, dynamic>{if (data != null) ...data};
+    final payloadData = <String, dynamic>{...?data};
     final key = dedupeKey ?? '$title|$body|${jsonEncode(payloadData)}';
     final now = DateTime.now();
     final shouldSkip =
@@ -841,6 +902,12 @@ class NotificationService {
   Future<bool> refreshLocalTimeZone() {
     _timeZoneReady = false;
     return _ensureTimeZoneReady();
+  }
+
+  /// Trả về múi giờ IANA mà lịch cục bộ đang dùng sau khi đã khởi tạo.
+  Future<String?> ensureLocalTimeZone() async {
+    if (!await _ensureTimeZoneReady()) return null;
+    return tz.local.name;
   }
 
   /// Cài đặt thông báo cục bộ theo thời gian
@@ -1047,9 +1114,12 @@ class NotificationService {
       targetMinute: nightMinute,
       windowEndHour: 23,
       windowEndMinute: 59,
-      title: L10nService().format('notif_auto_good_night_title', {'value1': displayName}),
-      body:
-          L10nService().format('notif_auto_good_night_body', {'value1': displayName}),
+      title: L10nService().format('notif_auto_good_night_title', {
+        'value1': displayName,
+      }),
+      body: L10nService().format('notif_auto_good_night_body', {
+        'value1': displayName,
+      }),
     );
 
     await _maybeSendAutoTimedGreeting(
@@ -1059,9 +1129,12 @@ class NotificationService {
       targetMinute: morningMinute,
       windowEndHour: 9,
       windowEndMinute: 0,
-      title: L10nService().format('notif_auto_good_morning_title', {'value1': displayName}),
-      body:
-          L10nService().format('notif_auto_good_morning_body', {'value1': displayName}),
+      title: L10nService().format('notif_auto_good_morning_title', {
+        'value1': displayName,
+      }),
+      body: L10nService().format('notif_auto_good_morning_body', {
+        'value1': displayName,
+      }),
     );
   }
 

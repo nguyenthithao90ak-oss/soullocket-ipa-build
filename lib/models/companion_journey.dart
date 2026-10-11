@@ -15,6 +15,7 @@ class CompanionJourney {
     this.owned = const {},
     this.outfits = const {},
     this.catalog = const {},
+    this.characterCatalog = const {},
     this.claims = const {},
     this.quests = const {},
   });
@@ -27,6 +28,7 @@ class CompanionJourney {
   final Set<String> owned;
   final Map<HomeCompanionCharacter, HomeCompanionOutfit> outfits;
   final Map<String, CompanionShopItem> catalog;
+  final Map<HomeCompanionCharacter, CompanionCharacterOffer> characterCatalog;
   final Set<String> claims;
   final Map<String, CompanionQuest> quests;
 
@@ -55,6 +57,9 @@ class CompanionJourney {
     final rawQuests = json['quests'] is Map ? json['quests'] as Map : const {};
     final rawCatalog = json['catalog'] is Map
         ? json['catalog'] as Map
+        : const {};
+    final rawCharacters = json['characterCatalog'] is Map
+        ? json['characterCatalog'] as Map
         : const {};
     Set<String> flags(String key) => json[key] is Map
         ? (json[key] as Map).entries
@@ -94,6 +99,39 @@ class CompanionJourney {
               entry.value as Map,
             ),
       }),
+      characterCatalog: Map.unmodifiable({
+        for (final character in const [
+          HomeCompanionCharacter.melody,
+          HomeCompanionCharacter.kuromi,
+        ])
+          if (rawCharacters[character.name] is Map)
+            character: CompanionCharacterOffer.fromJson(
+              rawCharacters[character.name] as Map,
+            ),
+      }),
+    );
+  }
+}
+
+class CompanionCharacterOffer {
+  const CompanionCharacterOffer({required this.level, required this.xp, this.price});
+
+  final int level, xp;
+  final int? price;
+
+  factory CompanionCharacterOffer.fromJson(Map<dynamic, dynamic> json) {
+    int positive(String key, int maximum) {
+      final value = json[key];
+      return value is num && value.isFinite && value >= 1 && value <= maximum &&
+              value == value.toInt()
+          ? value.toInt()
+          : 0;
+    }
+    final price = positive('price', 1000000);
+    return CompanionCharacterOffer(
+      level: positive('level', 20),
+      xp: positive('xp', 1000000),
+      price: price == 0 ? null : price,
     );
   }
 }

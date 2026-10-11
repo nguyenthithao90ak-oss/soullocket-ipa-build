@@ -3,6 +3,7 @@ class StorageUploadResult {
     required this.downloadUrl,
     required this.storagePath,
     this.sessionId,
+    this.mediaId,
     this.expiresAt,
     this.dailyLimit,
     this.remainingToday,
@@ -15,6 +16,7 @@ class StorageUploadResult {
   final String downloadUrl;
   final String storagePath;
   final String? sessionId;
+  final String? mediaId;
   final int? expiresAt;
   final int? dailyLimit;
   final int? remainingToday;

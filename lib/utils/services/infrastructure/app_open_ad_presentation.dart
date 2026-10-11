@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'fullscreen_ad_presentation.dart' show adFailureDetails;
 
 /// Một lượt trình bày App Open; không chờ ghi thống kê để trả kết quả SDK.
 /// Khóa native do bên gọi giữ từ onShown đến onClosed, kể cả ad dài.
 Future<bool> presentAppOpenAd({
   required AppOpenAd ad,
+  required bool Function() canShow,
   required VoidCallback onShown,
   required VoidCallback onClosed,
   required Future<void> Function() recordShown,
@@ -21,7 +22,7 @@ Future<bool> presentAppOpenAd({
   void logFailure(String action, Object error) {
     debugPrint(
       'AdMobService: App Open $action failed: '
-      '${AppErrorMapper.resolve(error).message}',
+      '${adFailureDetails(error)}',
     );
   }
 
@@ -71,6 +72,11 @@ Future<bool> presentAppOpenAd({
   startTimer = Timer(showTimeout, () => finish(false));
   Future<void> showSafely() async {
     try {
+      // Quyền, tài khoản hoặc foreground có thể đổi trong lúc caller chờ tải.
+      if (!canShow()) {
+        finish(false);
+        return;
+      }
       await ad.show();
     } catch (error) {
       logFailure('show', error);

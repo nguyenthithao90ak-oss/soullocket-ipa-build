@@ -114,7 +114,7 @@ class StoragePickerService {
     return list;
   }
 
-  Future<XFile?> pickImage() async {
+  Future<XFile?> pickImage({bool preserveOriginal = false}) async {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
@@ -133,18 +133,25 @@ class StoragePickerService {
       () => ImagePickerRecoveryService.instance.pickImage(
         picker: _picker,
         source: ImageSource.gallery,
-        imageQuality: pickerImageQuality,
-        maxWidth: pickerMaxWidth,
-        maxHeight: pickerMaxHeight,
+        imageQuality: preserveOriginal ? null : pickerImageQuality,
+        maxWidth: preserveOriginal ? null : pickerMaxWidth,
+        maxHeight: preserveOriginal ? null : pickerMaxHeight,
       ),
     );
   }
 
-  Future<List<XFile>> pickImages({int? limit}) async {
+  Future<List<XFile>> pickImages({
+    int? limit,
+    bool preserveOriginal = false,
+  }) async {
     final normalizedLimit = clampImagePickLimit(limit);
     if (normalizedLimit <= 0) {
       return const <XFile>[];
     }
+
+    final imageQuality = preserveOriginal ? null : pickerImageQuality;
+    final maxWidth = preserveOriginal ? null : pickerMaxWidth;
+    final maxHeight = preserveOriginal ? null : pickerMaxHeight;
 
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
@@ -168,9 +175,9 @@ class StoragePickerService {
     final files = await _guardedPicker(
       () => ImagePickerRecoveryService.instance.pickMultiImage(
         picker: _picker,
-        imageQuality: pickerImageQuality,
-        maxWidth: pickerMaxWidth,
-        maxHeight: pickerMaxHeight,
+        imageQuality: imageQuality,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
       ),
     );
     if (files.length > normalizedLimit) {
@@ -179,11 +186,18 @@ class StoragePickerService {
     return files;
   }
 
-  Future<List<XFile>> pickMedia({int? limit}) async {
+  Future<List<XFile>> pickMedia({
+    int? limit,
+    bool preserveOriginal = false,
+  }) async {
     final normalizedLimit = clampImagePickLimit(limit);
     if (normalizedLimit <= 0) {
       return const <XFile>[];
     }
+
+    final imageQuality = preserveOriginal ? null : pickerImageQuality;
+    final maxWidth = preserveOriginal ? null : pickerMaxWidth;
+    final maxHeight = preserveOriginal ? null : pickerMaxHeight;
 
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
@@ -207,9 +221,9 @@ class StoragePickerService {
 
     final files = await _guardedPicker(
       () => _picker.pickMultipleMedia(
-        imageQuality: pickerImageQuality,
-        maxWidth: pickerMaxWidth,
-        maxHeight: pickerMaxHeight,
+        imageQuality: imageQuality,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
       ),
     );
     if (files.length > normalizedLimit) {

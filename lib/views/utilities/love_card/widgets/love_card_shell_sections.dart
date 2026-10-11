@@ -1,89 +1,217 @@
 part of '../../love_card_screen.dart';
 
+class _LoveCardPalette {
+  final bool dark;
+  const _LoveCardPalette(this.dark);
+  factory _LoveCardPalette.of(BuildContext context) =>
+      _LoveCardPalette(Theme.of(context).brightness == Brightness.dark);
+  Color get background =>
+      dark ? const Color(0xFF211E29) : const Color(0xFFF7F3ED);
+  Color get paper => dark ? const Color(0xFF2D2937) : const Color(0xFFFFFCF8);
+  Color get soft => dark ? const Color(0xFF39323F) : const Color(0xFFF0E8E2);
+  Color get line => dark ? const Color(0xFF494151) : const Color(0xFFE5DCD4);
+  Color get ink => dark ? const Color(0xFFF6EEE7) : const Color(0xFF39313D);
+  Color get muted => dark ? const Color(0xFFBEB1C2) : const Color(0xFF817481);
+  Color get accent => dark ? const Color(0xFFE5B0C4) : const Color(0xFF83526A);
+  Color get onAccent => dark ? const Color(0xFF34232F) : Colors.white;
+}
+
 class _LoveCardScreenBody extends StatelessWidget {
   final _LoveCardScreenState state;
-
   const _LoveCardScreenBody({required this.state});
 
   @override
   Widget build(BuildContext context) {
     final theme = state._themeOf(state._selectedTheme);
-    final colors = state._themeColors(theme.key);
-
-    return Scaffold(
-      backgroundColor: state.widget.isEmbedded
-          ? Colors.transparent
-          : const Color(0xFF172036),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF172036), Color(0xFF27304D), Color(0xFF382C4C)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return ValueListenableBuilder<AsyncSnapshot<List<Map<dynamic, dynamic>>>>(
+      valueListenable: state._cardsSnapshot,
+      child: LoveCardStudioComposer(
+        themes: state._themes.values.toList(growable: false),
+        theme: theme,
+        senderController: state._senderNameCtrl,
+        signatureController: state._signatureCtrl,
+        contentController: state._contentCtrl,
+        senderFallback: state._defaultSenderName(),
+        imageBytes: state._selectedImageBytes,
+        isPickingImage: state._isPickingImage,
+        isSending: state._isSending,
+        onThemeSelected: state._selectTheme,
+        onImageSelected: state._pickCardImage,
+        onImageRemoved: state._clearSelectedImage,
+        onSend: state._sendCard,
+        onPreview: () => state._showFullScreenPreview(context, theme),
+      ),
+      builder: (context, snapshot, editor) => LoveCardStudioShell(
+        isEmbedded: state.widget.isEmbedded,
+        currentIndex: state._currentIndex,
+        unreadCount: state._unreadCount(snapshot.data ?? const []),
+        onCreate: state._showCreateTab,
+        onHistory: state._showHistoryTab,
+        onInfo: () => showDialog<void>(
+          context: context,
+          builder: (_) => const _LoveCardInfoDialog(),
         ),
-        child: Stack(
+        editor: editor!,
+        history: _LoveCardHistoryView(state: state),
+      ),
+    );
+  }
+}
+
+class LoveCardStudioShell extends StatefulWidget {
+  final bool isEmbedded;
+  final int currentIndex;
+  final int unreadCount;
+  final VoidCallback onCreate;
+  final VoidCallback onHistory;
+  final VoidCallback onInfo;
+  final Widget editor;
+  final Widget history;
+
+  const LoveCardStudioShell({
+    super.key,
+    this.isEmbedded = false,
+    required this.currentIndex,
+    this.unreadCount = 0,
+    required this.onCreate,
+    required this.onHistory,
+    required this.onInfo,
+    required this.editor,
+    required this.history,
+  });
+
+  @override
+  State<LoveCardStudioShell> createState() => _LoveCardStudioShellState();
+}
+
+class _LoveCardStudioShellState extends State<LoveCardStudioShell> {
+  late bool _historyVisited = widget.currentIndex == 1;
+
+  @override
+  void didUpdateWidget(covariant LoveCardStudioShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentIndex == 1) _historyVisited = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _LoveCardPalette.of(context);
+    return Scaffold(
+      backgroundColor: palette.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Positioned(
-              top: -84,
-              right: -58,
-              child: _LoveCardThemeOrb(
-                size: 230,
-                color: colors.first.withValues(alpha: 0.24),
-              ),
-            ),
-            Positioned(
-              left: -72,
-              bottom: -92,
-              child: _LoveCardThemeOrb(
-                size: 250,
-                color: colors.last.withValues(alpha: 0.12),
-              ),
-            ),
-            Positioned(
-              top: 148,
-              left: 22,
-              child: Icon(
-                Icons.auto_awesome_rounded,
-                size: 24,
-                color: colors.last.withValues(alpha: 0.20),
-              ),
-            ),
-            Positioned(
-              right: 24,
-              bottom: 132,
-              child: Icon(
-                theme.accentIcon,
-                size: 42,
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
-            ),
-            SafeArea(
-              child: Column(
-                children: [
-                  if (!state.widget.isEmbedded)
-                    _LoveCardHeaderSection(
-                      state: state,
-                      theme: theme,
-                      colors: colors,
+            if (!widget.isEmbedded)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      color: palette.ink,
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      icon: const Icon(Icons.arrow_back_rounded, size: 22),
                     ),
-                  _LoveCardTabSwitcher(state: state, theme: theme),
-                  Expanded(
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: state._handleScrollNotification,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        child: KeyedSubtree(
-                          key: ValueKey(state._currentIndex),
-                          child: state._currentIndex == 0
-                              ? _LoveCardCreateView(state: state)
-                              : _LoveCardHistoryView(state: state),
-                        ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.tr('love_card_studio_title'),
+                            style: SLTheme.quicksand(
+                              color: palette.ink,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          if (MediaQuery.viewInsetsOf(context).bottom == 0) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              context.tr('love_card_studio_subtitle'),
+                              style: SLTheme.quicksand(
+                                color: palette.muted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
+                    IconButton(
+                      tooltip: context.tr('love_card_info_title'),
+                      onPressed: widget.onInfo,
+                      color: palette.muted,
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      icon: const Icon(Icons.info_outline_rounded, size: 21),
+                    ),
+                  ],
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                widget.isEmbedded ? 12 : 10,
+                16,
+                10,
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: palette.soft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _LoveCardStudioTab(
+                          label: context.tr('util_tothip_b2b416'),
+                          icon: Icons.edit_note_rounded,
+                          selected: widget.currentIndex == 0,
+                          onTap: widget.onCreate,
+                        ),
+                      ),
+                      Expanded(
+                        child: _LoveCardStudioTab(
+                          label: context.tr('util_lchs_3061f5'),
+                          icon: Icons.mail_outline_rounded,
+                          selected: widget.currentIndex == 1,
+                          count: widget.unreadCount,
+                          onTap: widget.onHistory,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: IndexedStack(
+                index: widget.currentIndex,
+                children: [
+                  TickerMode(
+                    enabled: widget.currentIndex == 0,
+                    child: RepaintBoundary(child: widget.editor),
+                  ),
+                  if (_historyVisited)
+                    TickerMode(
+                      enabled: widget.currentIndex == 1,
+                      child: RepaintBoundary(child: widget.history),
+                    )
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
             ),
@@ -94,462 +222,159 @@ class _LoveCardScreenBody extends StatelessWidget {
   }
 }
 
-class _LoveCardHeaderSection extends StatelessWidget {
-  final _LoveCardScreenState state;
-  final _LoveThemeData theme;
-  final List<Color> colors;
-
-  const _LoveCardHeaderSection({
-    required this.state,
-    required this.theme,
-    required this.colors,
-  });
-
-  Future<void> _showInfoDialog(BuildContext context) async {
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => SLAlertDialog(
-        title: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: colors.first.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(Icons.mark_email_read_rounded, color: colors.first),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(context.tr('love_card_info_title'))),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _LoveCardInfoRow(
-              icon: Icons.palette_outlined,
-              title: context.tr('love_card_info_create_title'),
-              body: context.tr('love_card_info_create_body'),
-            ),
-            const SizedBox(height: 14),
-            _LoveCardInfoRow(
-              icon: Icons.link_rounded,
-              title: context.tr('love_card_info_share_title'),
-              body: context.tr('love_card_info_share_body'),
-            ),
-            const SizedBox(height: 14),
-            _LoveCardInfoRow(
-              icon: Icons.lock_clock_outlined,
-              title: context.tr('love_card_info_private_title'),
-              body: context.tr('love_card_info_private_body'),
-            ),
-          ],
-        ),
-        actions: [
-          SLDialogAction(
-            primary: true,
-
-            onPressed: () => Navigator.of(dialogContext).pop(),
-
-            child: Text(context.tr('love_card_info_done')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      margin: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-      padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-      ),
-      child: Row(
-        children: [
-          _LoveCardRoundButton(
-            icon: Icons.arrow_back_ios_new_rounded,
-            onTap: () => Navigator.of(context).maybePop(),
-          ),
-          const SizedBox(width: 11),
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: colors.last.withValues(alpha: 0.96),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.first.withValues(alpha: 0.22),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Icon(theme.icon, color: const Color(0xFF26324A), size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.tr('love_card_studio_title'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  context.tr('love_card_studio_subtitle'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: Colors.white.withValues(alpha: 0.62),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          _LoveCardRoundButton(
-            icon: Icons.info_outline_rounded,
-            onTap: () => _showInfoDialog(context),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoveCardInfoRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String body;
-
-  const _LoveCardInfoRow({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 21, color: const Color(0xFF675A89)),
-        const SizedBox(width: 11),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF26324A),
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                body,
-                style: SLTheme.quicksand(
-                  color: const Color(0xFF687086),
-                  fontSize: 12.5,
-                  height: 1.42,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LoveCardTabSwitcher extends StatelessWidget {
-  final _LoveCardScreenState state;
-  final _LoveThemeData theme;
-
-  const _LoveCardTabSwitcher({required this.state, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = Color(theme.colors.first);
-    return Container(
-      margin: EdgeInsets.fromLTRB(14, state.widget.isEmbedded ? 10 : 2, 14, 10),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _LoveCardTabButton(
-              icon: Icons.edit_note_rounded,
-              label: context.tr('util_tothip_b2b416'),
-              isActive: state._currentIndex == 0,
-              accent: accent,
-              onTap: state._showCreateTab,
-            ),
-          ),
-          Expanded(
-            child:
-                ValueListenableBuilder<
-                  AsyncSnapshot<List<Map<dynamic, dynamic>>>
-                >(
-                  valueListenable: state._cardsSnapshot,
-                  builder: (context, snapshot, _) {
-                    final unread = snapshot.hasData
-                        ? state._unreadCount(snapshot.data!)
-                        : 0;
-                    return _LoveCardTabButton(
-                      icon: Icons.auto_stories_rounded,
-                      label: context.tr('util_lchs_3061f5'),
-                      isActive: state._currentIndex == 1,
-                      accent: accent,
-                      unreadCount: unread,
-                      onTap: state._showHistoryTab,
-                    );
-                  },
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoveCardTabButton extends StatelessWidget {
-  final IconData icon;
+class _LoveCardStudioTab extends StatelessWidget {
   final String label;
-  final bool isActive;
-  final Color accent;
+  final IconData icon;
+  final bool selected;
+  final int count;
   final VoidCallback onTap;
-  final int unreadCount;
-
-  const _LoveCardTabButton({
-    required this.icon,
+  const _LoveCardStudioTab({
     required this.label,
-    required this.isActive,
-    required this.accent,
+    required this.icon,
+    required this.selected,
+    this.count = 0,
     required this.onTap,
-    this.unreadCount = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFFFFBF4) : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 17,
-                color: isActive ? accent : Colors.white.withValues(alpha: 0.64),
-              ),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: isActive
-                        ? const Color(0xFF26324A)
-                        : Colors.white.withValues(alpha: 0.82),
-                    fontWeight: FontWeight.w900,
+    final palette = _LoveCardPalette.of(context);
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? palette.paper : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: selected ? palette.accent : palette.muted,
                   ),
-                ),
-              ),
-              if (unreadCount > 0) ...[
-                const SizedBox(width: 7),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '$unreadCount',
-                    style: SLTheme.quicksand(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        color: selected ? palette.ink : palette.muted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LoveCardThemeOrb extends StatelessWidget {
-  final double size;
-  final Color color;
-
-  const _LoveCardThemeOrb({required this.size, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
-        ),
-      ),
-    );
-  }
-}
-
-class _LoveCardRoundButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _LoveCardRoundButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Ink(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.08),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-          ),
-          child: Icon(icon, color: Colors.white, size: 19),
-        ),
-      ),
-    );
-  }
-}
-
-class _LoveCardGlassIcon extends StatelessWidget {
-  final IconData icon;
-  final double size;
-
-  const _LoveCardGlassIcon({required this.icon, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(size * 0.34),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: Icon(icon, color: Colors.white, size: size * 0.48),
-    );
-  }
-}
-
-class _LoveCardStatusPill extends StatelessWidget {
-  final String label;
-  final Color background;
-
-  const _LoveCardStatusPill({required this.label, required this.background});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: SLTheme.quicksand(
-          color: Colors.white,
-          fontSize: 10.5,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
-class _LoveCardHistoryMetric extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _LoveCardHistoryMetric({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 19,
-              fontWeight: FontWeight.w900,
+                  if (count > 0) ...[
+                    const SizedBox(width: 6),
+                    _LoveCardTag(label: '$count'),
+                  ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: SLTheme.quicksand(
-              color: Colors.white.withValues(alpha: 0.58),
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _LoveCardTag extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  const _LoveCardTag({required this.label, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _LoveCardPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: palette.soft,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: palette.accent, size: 14),
+            const SizedBox(width: 5),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              style: SLTheme.quicksand(
+                color: palette.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LoveCardInfoDialog extends StatelessWidget {
+  const _LoveCardInfoDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _LoveCardPalette.of(context);
+    return SLAlertDialog(
+      title: Text(context.tr('love_card_info_title')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final item in [
+            (Icons.palette_outlined, 'love_card_info_create'),
+            (Icons.link_rounded, 'love_card_info_share'),
+            (Icons.schedule_rounded, 'love_card_info_private'),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(item.$1, color: palette.accent, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('${item.$2}_title'),
+                          style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.tr('${item.$2}_body'),
+                          style: SLTheme.quicksand(fontSize: 13, height: 1.45),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        SLDialogAction(
+          primary: true,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.tr('love_card_info_done')),
+        ),
+      ],
     );
   }
 }

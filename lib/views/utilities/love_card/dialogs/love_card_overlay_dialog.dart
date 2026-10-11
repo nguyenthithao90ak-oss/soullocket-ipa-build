@@ -15,11 +15,9 @@ extension on _LoveCardScreenState {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            LoveCardPublicViewerScreen(payload: _payloadFromCard(card)),
-      ),
+    await slPush<void>(
+      context,
+      LoveCardPublicViewerScreen(payload: _payloadFromCard(card)),
     );
   }
 }

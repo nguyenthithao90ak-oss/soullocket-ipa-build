@@ -122,7 +122,8 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
 
   Widget _buildThemeEventCard(UpcomingEvent event) {
     final customEventId = _extractCustomEventId(event);
-    final isDeleting = customEventId != null &&
+    final isDeleting =
+        customEventId != null &&
         _deletingCustomEventIds.contains(customEventId);
     final accent = _themeEventSourceColor(event);
     final dateLabel = _formatThemeDate(
@@ -220,17 +221,16 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap:
-                    isDeleting ? null : () => _deleteCustomAnniversary(event),
+                onTap: isDeleting
+                    ? null
+                    : () => _deleteCustomAnniversary(event),
                 child: Container(
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
                     color: SLSettingsColors.accentSoft,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: SLSettingsColors.border,
-                    ),
+                    border: Border.all(color: SLSettingsColors.border),
                   ),
                   alignment: Alignment.center,
                   child: isDeleting
@@ -290,7 +290,8 @@ class _ThemeEventPreviewSection extends StatefulWidget {
     required String subtitle,
     required Color accent,
     required List<UpcomingEvent> events,
-  }) eventSectionBuilder;
+  })
+  eventSectionBuilder;
   final BuildContext context;
 
   const _ThemeEventPreviewSection({
@@ -308,24 +309,82 @@ class _ThemeEventPreviewSection extends StatefulWidget {
 }
 
 class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
-  late final Stream<List<UpcomingEvent>> _upcomingEventsStream;
+  late Stream<List<UpcomingEvent>> _upcomingEventsStream;
+  int _streamGeneration = 0;
 
   @override
   void initState() {
     super.initState();
-    _upcomingEventsStream =
-        widget.scheduleNotifService.streamUpcomingEvents(widget.houseId);
+    _upcomingEventsStream = _createUpcomingEventsStream();
+  }
+
+  Stream<List<UpcomingEvent>> _createUpcomingEventsStream() {
+    return withInitialEventTimeout<List<UpcomingEvent>>(
+      widget.scheduleNotifService.streamUpcomingEvents(widget.houseId),
+      timeout: const Duration(seconds: 12),
+    );
+  }
+
+  void _retryUpcomingEvents() {
+    if (!mounted) return;
+    setState(() {
+      _streamGeneration++;
+      _upcomingEventsStream = _createUpcomingEventsStream();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<UpcomingEvent>>(
+      key: ValueKey(_streamGeneration),
       stream: _upcomingEventsStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(height: 48, child: Center(
-            child: SizedBox.square(dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2))));
+        if (snapshot.hasError) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            decoration: BoxDecoration(
+              color: SLSettingsColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: SLSettingsColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.cloud_off_rounded,
+                  color: SLSettingsColors.inkSecondary,
+                  size: 18,
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    context.tr('core_err_try_again_later'),
+                    style: SLTheme.quicksand(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: SLSettingsColors.inkSecondary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _retryUpcomingEvents,
+                  child: Text(context.tr('retry')),
+                ),
+              ],
+            ),
+          );
+        }
+        if (!snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 48,
+            child: Center(
+              child: SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
         }
         final events = snapshot.data ?? const <UpcomingEvent>[];
         if (events.isEmpty) {
@@ -339,10 +398,12 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
           );
         }
 
-        final anniversaryEvents =
-            events.where((event) => event.source == 'custom').toList();
-        final calendarEvents =
-            events.where((event) => event.source == 'calendar').toList();
+        final anniversaryEvents = events
+            .where((event) => event.source == 'custom')
+            .toList();
+        final calendarEvents = events
+            .where((event) => event.source == 'calendar')
+            .toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,18 +428,21 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
             ),
             if (anniversaryEvents.isNotEmpty)
               widget.eventSectionBuilder(
-                title:
-                    widget.context.tr('theme_event_anniversary_section_title'),
-                subtitle:
-                    widget.context.tr('theme_event_anniversary_section_desc'),
+                title: widget.context.tr(
+                  'theme_event_anniversary_section_title',
+                ),
+                subtitle: widget.context.tr(
+                  'theme_event_anniversary_section_desc',
+                ),
                 accent: SLSettingsColors.accentStrong,
                 events: anniversaryEvents,
               ),
             if (calendarEvents.isNotEmpty)
               widget.eventSectionBuilder(
                 title: widget.context.tr('theme_event_calendar_section_title'),
-                subtitle:
-                    widget.context.tr('theme_event_calendar_section_desc'),
+                subtitle: widget.context.tr(
+                  'theme_event_calendar_section_desc',
+                ),
                 accent: SLSettingsColors.sky,
                 events: calendarEvents,
               ),

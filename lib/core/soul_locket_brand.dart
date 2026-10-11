@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../utils/services/l10n_service.dart';
 
 @immutable
 class SoulLocketBrandStyle {
   final String key;
-  final String label;
+  final String labelKey;
+  String get label => L10nService().translate(labelKey);
   final List<Color> backgroundColors;
   final Color frameColor;
   final Color surfaceColor;
@@ -14,7 +16,7 @@ class SoulLocketBrandStyle {
 
   const SoulLocketBrandStyle({
     required this.key,
-    required this.label,
+    required this.labelKey,
     required this.backgroundColors,
     required this.frameColor,
     required this.surfaceColor,
@@ -33,7 +35,7 @@ class SoulLocketBrand {
   static const List<SoulLocketBrandStyle> styles = <SoulLocketBrandStyle>[
     SoulLocketBrandStyle(
       key: 'rose',
-      label: 'Rose Glow',
+      labelKey: 'brand_style_rose',
       backgroundColors: <Color>[Color(0xFFFFD5E4), Color(0xFFFF7EA8)],
       frameColor: Color(0xFFF8A7C1),
       surfaceColor: Color(0xFFFFF7FB),
@@ -44,7 +46,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'mint',
-      label: 'Mint Kiss',
+      labelKey: 'brand_style_mint',
       backgroundColors: <Color>[Color(0xFFCBF5E8), Color(0xFF62D7B5)],
       frameColor: Color(0xFF8EE2C9),
       surfaceColor: Color(0xFFF4FFFB),
@@ -55,7 +57,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'ocean',
-      label: 'Ocean Love',
+      labelKey: 'brand_style_ocean',
       backgroundColors: <Color>[Color(0xFFD6F2FF), Color(0xFF5CB8FF)],
       frameColor: Color(0xFF97D7FF),
       surfaceColor: Color(0xFFF5FBFF),
@@ -66,7 +68,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'sunset',
-      label: 'Sunset Pop',
+      labelKey: 'brand_style_sunset',
       backgroundColors: <Color>[Color(0xFFFFDEB5), Color(0xFFFF8A65)],
       frameColor: Color(0xFFFFBC9E),
       surfaceColor: Color(0xFFFFFAF5),
@@ -77,7 +79,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'violet',
-      label: 'Lilac Dream',
+      labelKey: 'brand_style_violet',
       backgroundColors: <Color>[Color(0xFFE4D8FF), Color(0xFFA971FF)],
       frameColor: Color(0xFFC9B0FF),
       surfaceColor: Color(0xFFFBF9FF),
@@ -88,7 +90,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'midnight',
-      label: 'Midnight',
+      labelKey: 'brand_style_midnight',
       backgroundColors: <Color>[Color(0xFF243B55), Color(0xFF0F172A)],
       frameColor: Color(0xFF3F5E7A),
       surfaceColor: Color(0xFF162133),
@@ -99,7 +101,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'aurora',
-      label: 'Aurora',
+      labelKey: 'brand_style_aurora',
       backgroundColors: <Color>[Color(0xFF67E8F9), Color(0xFF7C3AED)],
       frameColor: Color(0xFFA5B4FC),
       surfaceColor: Color(0xFFF9FAFB),
@@ -110,7 +112,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'sakura',
-      label: 'Sakura Petal',
+      labelKey: 'brand_style_sakura',
       backgroundColors: <Color>[Color(0xFFFFF1F2), Color(0xFFFDA4AF)],
       frameColor: Color(0xFFFECDD3),
       surfaceColor: Color(0xFFFFFBFB),
@@ -121,7 +123,7 @@ class SoulLocketBrand {
     ),
     SoulLocketBrandStyle(
       key: 'gold',
-      label: 'Gold Luxury',
+      labelKey: 'brand_style_gold',
       backgroundColors: <Color>[Color(0xFFFEF3C7), Color(0xFFD97706)],
       frameColor: Color(0xFFFCD34D),
       surfaceColor: Color(0xFFFFFBEB),

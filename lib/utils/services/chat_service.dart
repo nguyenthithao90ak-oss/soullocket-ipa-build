@@ -221,13 +221,15 @@ class ChatService {
 
   Future<T> _runExternalChatAction<T>(
     Future<T> Function() action, {
-    String permissionMessage =
-        'Không mở được đoạn chat: có thể bạn không còn quyền truy cập, đoạn chat đã bị đóng hoặc mạng đang lỗi.',
+    String? permissionMessage,
   }) async {
     try {
       return await action();
     } on FirebaseException catch (error) {
       if (error.code == 'permission-denied') {
+        if (permissionMessage == null) {
+          throw const UiCopyException('chat_access_unavailable');
+        }
         throw Exception(permissionMessage);
       }
       rethrow;
@@ -313,7 +315,9 @@ class ChatService {
       if (status == 'closed') {
         final message = (room['closedMessage'] ?? '').toString().trim();
         throw Exception(
-          message.isEmpty ? 'Đoạn chat này đã bị đóng.' : message,
+          message.isEmpty
+              ? UiCopy.text('ui_chat_this_chat_has_been_closed_c1dd59')
+              : message,
         );
       }
     } on TimeoutException {
@@ -340,8 +344,8 @@ class ChatService {
     }
     throw Exception(
       cooldown > 0
-          ? 'Bạn gửi quá nhanh. Vui lòng chờ $cooldown giây rồi thử lại.'
-          : 'Bạn gửi quá nhanh. Vui lòng thử lại sau.',
+          ? UiCopy.text('chat_rate_limit_wait', {'seconds': cooldown})
+          : UiCopy.text('chat_rate_limit_retry'),
     );
   }
 

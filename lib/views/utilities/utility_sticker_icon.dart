@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/living_sticker.dart';
-import '../../widgets/living_sticker_scene.dart';
+import '../../widgets/lossless_sticker_assets.dart';
 
 const double _kUtilityStickerLogicalSize = 64;
 const Set<String> _kUtilityStickerIds = <String>{
@@ -48,7 +47,9 @@ String? utilityStickerAssetForId(String utilityId) {
   if (!_kUtilityStickerIds.contains(resolvedId)) {
     return null;
   }
-  return 'assets/images/utility_stickers/$resolvedId.webp';
+  return LosslessStickerAssets.resolve(
+    'assets/images/utility_stickers/$resolvedId.png',
+  );
 }
 
 bool hasUtilityStickerAsset(String utilityId) {
@@ -117,18 +118,38 @@ Future<void> precacheUtilityStickerList(
   );
   if (providers.isEmpty) return;
 
-  await Future.wait<void>(
-    providers.map((provider) async {
-      try {
-        await precacheImage(provider, context);
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/utilities/utility_sticker_icon.dart: $error',
-        );
-      }
-    }),
-    eagerError: false,
-  );
+  // Các sticker đều nhỏ nhưng giải mã cả danh sách đồng thời vẫn tạo một đợt
+  // raster/upload lên UI isolate. Chia lô giúp mở Home không giật khi task
+  // trì hoãn chạy cùng lúc với listener và animation khác.
+  const batchSize = 6;
+  for (var start = 0; start < providers.length; start += batchSize) {
+    if (!context.mounted || !_canPrecacheForScreen(context)) return;
+    final end = (start + batchSize).clamp(0, providers.length).toInt();
+    final batch = providers.sublist(start, end);
+    await Future.wait<void>(
+      batch.map((provider) async {
+        try {
+          await precacheImage(provider, context);
+        } catch (error) {
+          debugPrint(
+            '[SuppressedError] lib/views/utilities/utility_sticker_icon.dart: $error',
+          );
+        }
+      }),
+      eagerError: false,
+    );
+    if (end < providers.length) {
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+    }
+  }
+}
+
+bool _canPrecacheForScreen(BuildContext context) {
+  final lifecycle = WidgetsBinding.instance.lifecycleState;
+  if (lifecycle != null && lifecycle != AppLifecycleState.resumed) {
+    return false;
+  }
+  return ModalRoute.isCurrentOf(context) ?? true;
 }
 
 /// Builds the sticker icon for a utility tile.
@@ -155,19 +176,6 @@ Widget buildUtilityStickerIcon({
     return fallback;
   }
 
-  final normalizedId = utilityId.trim().toLowerCase();
-  final scene = LivingStickerCatalog.utility(
-    _kUtilityAliases[normalizedId] ?? normalizedId,
-  );
-  if (scene != null) {
-    return SizedBox.expand(
-      child: Padding(
-        padding: padding,
-        child: LivingSticker(scene: scene),
-      ),
-    );
-  }
-
   // Fast path: DPR known at call site → build image directly, no extra widget.
   if (devicePixelRatio != null) {
     final provider = utilityStickerImageProviderForId(
@@ -184,6 +192,7 @@ Widget buildUtilityStickerIcon({
           alignment: Alignment.center,
           filterQuality: FilterQuality.low,
           gaplessPlayback: true,
+          excludeFromSemantics: true,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
             if (wasSynchronouslyLoaded || frame != null) return child;
             return fallback;
@@ -214,6 +223,7 @@ Widget buildUtilityStickerIcon({
             alignment: Alignment.center,
             filterQuality: FilterQuality.low,
             gaplessPlayback: true,
+            excludeFromSemantics: true,
             frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
               if (wasSynchronouslyLoaded || frame != null) {
                 return child;

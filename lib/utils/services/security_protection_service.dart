@@ -96,13 +96,14 @@ extension SecurityProtectionReasonX on SecurityProtectionReason {
 
   String get adminLabel => switch (this) {
     SecurityProtectionReason.screenCapture => UiCopy.text('copy_08902e50e159'),
-    SecurityProtectionReason.overlay => 'Overlay/tapjacking',
+    SecurityProtectionReason.overlay => UiCopy.text('security_reason_overlay'),
     SecurityProtectionReason.controlApp => UiCopy.text('copy_9e1ecf34a68f'),
     SecurityProtectionReason.unofficialBuild => UiCopy.text('copy_7b91e8ac699b'),
     SecurityProtectionReason.unlicensed => UiCopy.text('copy_197b39b283d3'),
-    SecurityProtectionReason.malware => 'Malware/app access risk',
-    SecurityProtectionReason.rootIntegrity => 'Root/fake integrity/modded',
-    SecurityProtectionReason.playProtect => 'Play Protect verdict',
+    SecurityProtectionReason.malware => UiCopy.text('security_reason_malware'),
+    SecurityProtectionReason.rootIntegrity => UiCopy.text('security_reason_root'),
+    SecurityProtectionReason.playProtect =>
+      UiCopy.text('security_reason_play_protect'),
     SecurityProtectionReason.unknown => UiCopy.text('copy_5339c627cfb2'),
   };
 

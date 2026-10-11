@@ -1,5 +1,6 @@
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/service_locator.dart';
 import 'package:soullocket_app/utils/services/companion_journey_service.dart';
@@ -456,11 +457,7 @@ class _JourneySheetState extends State<_JourneySheet> {
                 icon: const Icon(Icons.favorite_outline),
                 label: Text(context.tr('companion_journey_quests')),
                 onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const RewardStoreScreen(),
-                    ),
-                  );
+                  await slPush<void>(context, const RewardStoreScreen());
                   if (mounted) await widget.service.refresh();
                 },
               ),

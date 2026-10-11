@@ -5,6 +5,7 @@ import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:flutter/services.dart';
 
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
@@ -20,6 +21,7 @@ class PairingEnterCodeSheet extends StatefulWidget {
 }
 
 class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
+  static const _requestTimeout = Duration(seconds: 15);
   final TextEditingController _codeCtrl = TextEditingController();
   final FocusNode _codeFocus = FocusNode();
   StreamSubscription<String>? _statusSub;
@@ -50,7 +52,8 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   Future<void> _restoreState() async {
     try {
       final request = await PairingService.instance
-          .getMyPendingOrAcceptedRequest();
+          .getMyPendingOrAcceptedRequest()
+          .timeout(_requestTimeout);
       if (!mounted || request == null) {
         return;
       }
@@ -88,7 +91,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _errorMsg = null;
     });
     try {
-      await PairingService.instance.sendPairingRequest(code);
+      await PairingService.instance
+          .sendPairingRequest(code)
+          .timeout(_requestTimeout);
       if (!mounted) {
         return;
       }
@@ -148,10 +153,12 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _errorMsg = null;
     });
     try {
-      await PairingService.instance.finalizeMerge(
-        code: code,
-        targetHouseId: houseId,
-      );
+      await PairingService.instance
+          .finalizeMerge(
+            code: code,
+            targetHouseId: houseId,
+          )
+          .timeout(_requestTimeout);
       if (!mounted) {
         return;
       }
@@ -185,7 +192,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     }
     setState(() => _isLoading = true);
     try {
-      await PairingService.instance.cancelMyRequest();
+      await PairingService.instance
+          .cancelMyRequest()
+          .timeout(_requestTimeout);
       if (mounted) {
         setState(() {
           _status = 'input';
@@ -209,11 +218,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   }
 
   Future<void> _scanCode() async {
-    final code = await Navigator.of(context).push<String>(
-      MaterialPageRoute<String>(
-        builder: (_) => const PairingQrScannerScreen(),
-        fullscreenDialog: true,
-      ),
+    final code = await slPush<String>(
+      context,
+      const PairingQrScannerScreen(),
+      fullscreenDialog: true,
     );
     if (!mounted || code == null) {
       return;
