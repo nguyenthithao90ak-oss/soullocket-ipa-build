@@ -133,7 +133,7 @@ abstract final class PrivateR2Put {
         responseFuture,
         producer,
       ]).timeout(const Duration(minutes: 2));
-      final response = results.first as http.Response;
+      final response = results.first as http.StreamedResponse;
       final ok = response.statusCode >= 200 && response.statusCode < 300;
       if (!ok && response.statusCode != 412) {
         throw StateError('Private upload failed (${response.statusCode})');

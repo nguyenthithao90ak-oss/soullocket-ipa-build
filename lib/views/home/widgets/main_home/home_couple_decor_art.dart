@@ -253,6 +253,10 @@ class _DecorArtPainter extends CustomPainter {
     final blink = phase > .47 && phase < .54;
     switch (id) {
       case 'bunny':
+        canvas.save();
+        canvas.translate(21, 25);
+        canvas.rotate(math.sin(radians) * .13);
+        canvas.translate(-21, -25);
         shape(
           canvas,
           Path()
@@ -261,6 +265,11 @@ class _DecorArtPainter extends CustomPainter {
             ..cubicTo(29, 10, 27, 20, 27, 25),
           const Color(0xFFF7C9D8),
         );
+        canvas.restore();
+        canvas.save();
+        canvas.translate(43, 25);
+        canvas.rotate(math.sin(radians + 1.8) * .16);
+        canvas.translate(-43, -25);
         shape(
           canvas,
           Path()
@@ -269,6 +278,7 @@ class _DecorArtPainter extends CustomPainter {
             ..cubicTo(51, -2, 54, 9, 43, 26),
           const Color(0xFFF7C9D8),
         );
+        canvas.restore();
         oval(canvas, const Rect.fromLTWH(14, 20, 36, 34), Colors.white);
         oval(
           canvas,
@@ -276,8 +286,13 @@ class _DecorArtPainter extends CustomPainter {
           const Color(0xFFFFE5EE),
           paper: false,
         );
-        face(canvas, 32, 34, gap: 5);
-        shape(canvas, heart(32, 20, 5), pink, paper: false);
+        face(canvas, 32, 34, gap: 5, blink: blink);
+        shape(
+          canvas,
+          heart(32, 20 + math.sin(radians) * 2, 5),
+          pink,
+          paper: false,
+        );
       case 'bear':
         oval(
           canvas,
@@ -300,8 +315,8 @@ class _DecorArtPainter extends CustomPainter {
           const Color(0xFFFFD9B7),
           paper: false,
         );
-        face(canvas, 32, 31, gap: 5);
-        shape(canvas, heart(32, 50, 5), pink, paper: false);
+        face(canvas, 32, 31 + math.sin(radians + 1) * 1.5, gap: 5, blink: blink);
+        shape(canvas, heart(32, 50 + math.sin(radians + 1) * 2, 5), pink, paper: false);
       case 'panda':
         oval(
           canvas,
@@ -326,9 +341,21 @@ class _DecorArtPainter extends CustomPainter {
           const Color(0xFF6C6573),
           paper: false,
         );
-        face(canvas, 32, 34, gap: 5);
+        face(canvas, 32, 34, gap: 5, blink: blink);
+        canvas.save();
+        canvas.translate(32, 50);
+        canvas.scale(
+          1 + math.sin(radians * 2) * .12,
+          1 + math.sin(radians * 2) * .12,
+        );
+        canvas.translate(-32, -50);
         shape(canvas, heart(32, 50, 5), const Color(0xFFEAA2B9), paper: false);
+        canvas.restore();
       case 'unicorn':
+        canvas.save();
+        canvas.translate(39, 19);
+        canvas.rotate(math.sin(radians * .5) * .12);
+        canvas.translate(-39, -19);
         shape(
           canvas,
           Path()
@@ -338,6 +365,7 @@ class _DecorArtPainter extends CustomPainter {
             ..close(),
           const Color(0xFFFFD77D),
         );
+        canvas.restore();
         oval(
           canvas,
           const Rect.fromLTWH(13, 18, 39, 34),
@@ -355,9 +383,18 @@ class _DecorArtPainter extends CustomPainter {
             Paint()..color = entry.$3,
           );
         }
-        face(canvas, 32, 34, gap: 5);
-        shape(canvas, heart(32, 50, 5), pink, paper: false);
+        face(canvas, 32, 34, gap: 5, blink: blink);
+        shape(
+          canvas,
+          heart(32, 50, 5 + math.sin(radians * 1.5) * .7),
+          pink,
+          paper: false,
+        );
       case 'milk_tea':
+        canvas.save();
+        canvas.translate(48, 18);
+        canvas.rotate(math.sin(radians + .6) * .12);
+        canvas.translate(-48, -18);
         line(
           canvas,
           Path()
@@ -366,6 +403,7 @@ class _DecorArtPainter extends CustomPainter {
           color: const Color(0xFFB88A9B),
           width: 2.5,
         );
+        canvas.restore();
         shape(
           canvas,
           Path()..addRRect(
@@ -392,7 +430,12 @@ class _DecorArtPainter extends CustomPainter {
             Paint()..color = const Color(0xFF8B6170),
           );
         }
-        shape(canvas, heart(32, 30, 6), pink, paper: false);
+        shape(
+          canvas,
+          heart(32, 30, 6 + math.sin(radians * 1.7) * .8),
+          pink,
+          paper: false,
+        );
       case 'cloud_star':
         shape(
           canvas,
@@ -404,8 +447,13 @@ class _DecorArtPainter extends CustomPainter {
             ..close(),
           const Color(0xFFD9ECF7),
         );
+        canvas.save();
+        canvas.translate(45, 17);
+        canvas.rotate(math.sin(radians * .5) * .28);
+        canvas.translate(-45, -17);
         shape(canvas, star(45, 17, 12, points: 4), gold);
-        face(canvas, 28, 39, gap: 4);
+        canvas.restore();
+        face(canvas, 28, 39 + math.sin(radians + 2) * 1.2, gap: 4, blink: blink);
       case 'balloon_heart':
         line(
           canvas,
@@ -416,9 +464,14 @@ class _DecorArtPainter extends CustomPainter {
             ..cubicTo(51, 48, 36, 48, 39, 60),
           color: const Color(0xFFB88A9B),
         );
-        shape(canvas, heart(20, 23, 15), pink);
-        shape(canvas, heart(44, 26, 15), purple);
-        shape(canvas, star(32, 12, 8, points: 4), gold, paper: false);
+        shape(canvas, heart(20, 23 + math.sin(radians) * 3, 15), pink);
+        shape(canvas, heart(44, 26 + math.sin(radians + 2.2) * 3, 15), purple);
+        shape(
+          canvas,
+          star(32, 12 + math.sin(radians * 1.5) * 2, 8, points: 4),
+          gold,
+          paper: false,
+        );
       case 'rainbow':
         for (final entry in const [
           (Color(0xFFE987A8), 0.0),
@@ -445,7 +498,12 @@ class _DecorArtPainter extends CustomPainter {
         }
         oval(canvas, const Rect.fromLTWH(7, 43, 22, 13), Colors.white);
         oval(canvas, const Rect.fromLTWH(38, 43, 20, 13), Colors.white);
+        canvas.save();
+        canvas.translate(32, 26);
+        canvas.rotate(math.sin(radians * .7) * .3);
+        canvas.translate(-32, -26);
         shape(canvas, star(32, 26, 7, points: 4), gold, paper: false);
+        canvas.restore();
       case 'cat':
         shape(
           canvas,
@@ -464,7 +522,7 @@ class _DecorArtPainter extends CustomPainter {
           const Rect.fromLTWH(13, 18, 38, 37),
           const Color(0xFFFFD0A7),
         );
-        face(canvas, 32, 35, gap: 5);
+        face(canvas, 32, 35, gap: 5, blink: blink);
         line(
           canvas,
           Path()
@@ -478,7 +536,7 @@ class _DecorArtPainter extends CustomPainter {
             ..lineTo(56, 45),
           color: ink.withValues(alpha: .7),
         );
-        shape(canvas, heart(32, 50, 5), pink, paper: false);
+        shape(canvas, heart(32, 50 + math.sin(radians * 1.6) * 1.5, 5), pink, paper: false);
       case 'cherry':
         line(
           canvas,
@@ -505,7 +563,7 @@ class _DecorArtPainter extends CustomPainter {
           }
           canvas.drawCircle(point, 2.6, Paint()..color = gold);
         }
-        shape(canvas, heart(32, 53, 6), pink, paper: false);
+        shape(canvas, heart(32, 53 + math.sin(radians) * 1.5, 6), pink, paper: false);
       case 'flower':
         line(
           canvas,
