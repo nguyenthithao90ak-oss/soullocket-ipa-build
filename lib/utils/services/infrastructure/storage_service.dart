@@ -1628,7 +1628,9 @@ class StorageService {
       requireUploadOwner();
       var lastByteProgress = 0.0;
       void reportByteProgress(double progress) {
-        final next = progress.clamp(0.0, 0.95).toDouble();
+        final next = progress
+            .clamp(0.0, StorageUploadProgress.putProgressCeiling)
+            .toDouble();
         if (next <= lastByteProgress) return;
         lastByteProgress = next;
         onProgress?.call(next);
@@ -1651,7 +1653,9 @@ class StorageService {
           ownerUid: uploadUid,
           onProgress: onProgress == null || kIsWeb
               ? null
-              : (progress) => reportByteProgress(progress * 0.95),
+              : (progress) => reportByteProgress(
+                  progress * StorageUploadProgress.putProgressCeiling,
+                ),
         );
       } else {
         await _putFirebaseSignedImage(
@@ -1660,7 +1664,9 @@ class StorageService {
           contentType: contentType,
           onProgress: onProgress == null || kIsWeb
               ? null
-              : (progress) => reportByteProgress(progress * 0.95),
+              : (progress) => reportByteProgress(
+                  progress * StorageUploadProgress.putProgressCeiling,
+                ),
         );
       }
 
@@ -1668,7 +1674,7 @@ class StorageService {
       // Byte progress kết thúc ở 95%; 5% cuối là finalize server và kiểm tra
       // scope. Trên Web, BrowserClient không có upload progress nên chỉ nhảy
       // tới mốc này sau khi PUT hoàn tất.
-      reportByteProgress(0.95);
+      reportByteProgress(StorageUploadProgress.putProgressCeiling);
       await finalizeSession?.call(session);
       requireUploadOwner();
       final mapped = mapResult(session);

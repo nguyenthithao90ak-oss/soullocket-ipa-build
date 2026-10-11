@@ -8,6 +8,9 @@ typedef StorageUploadProgressCallback = void Function(double progress);
 abstract final class StorageUploadProgress {
   static const int chunkSize = 64 * 1024;
 
+  /// Chừa 5% cho finalize/receipt sau khi PUT đã gửi đủ byte.
+  static const double putProgressCeiling = 0.95;
+
   static Future<void> pumpBytes({
     required StreamSink<List<int>> sink,
     required Uint8List bytes,

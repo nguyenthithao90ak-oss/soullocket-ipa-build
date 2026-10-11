@@ -104,7 +104,7 @@ class _HomeCoupleDecorArtState extends State<HomeCoupleDecorArt>
             ? artwork
             : AnimatedBuilder(
                 animation: controller,
-                builder: (context, child) => CustomPaint(
+                builder: (context, _) => CustomPaint(
                   painter: _DecorArtPainter(
                     widget.id,
                     phase: controller.value,
@@ -249,7 +249,6 @@ class _DecorArtPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 64, size.height / 64);
     final radians = phase * math.pi * 2;
-    final bounce = math.sin(radians);
     final blink = phase > .47 && phase < .54;
     switch (id) {
       case 'bunny':

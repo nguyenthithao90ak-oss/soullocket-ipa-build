@@ -83,7 +83,9 @@ class R2MediaTransport {
         totalBytes: bytes,
         onProgress: onProgress == null
             ? null
-            : (progress) => onProgress(progress * 0.95),
+            : (progress) => onProgress(
+                progress * StorageUploadProgress.putProgressCeiling,
+              ),
       );
       final results = await Future.wait<Object?>([response, producer]);
       return results.first as http.Response;
