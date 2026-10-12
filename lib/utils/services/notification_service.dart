@@ -1171,7 +1171,8 @@ class NotificationService {
   }
 
   Future<void> cancelInactivityReminder() async {
-    if (kIsWeb || !_localPluginReady) return;
+    if (kIsWeb) return;
+    await _ensureLocalPluginInitialized();
     await _localNotif.cancel(id: _inactiveAppReminderId);
   }
 
