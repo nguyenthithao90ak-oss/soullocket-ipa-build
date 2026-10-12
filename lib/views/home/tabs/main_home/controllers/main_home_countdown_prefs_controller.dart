@@ -221,14 +221,17 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       await UiPrefs.saveState(nextState);
       requireCurrentScope();
       if (houseId.isNotEmpty) {
-        await _dbRef.child('houses/$houseId/settings').update(updates);
-        requireCurrentScope();
         if (normalizedCustomBackgroundUrl != current.customBackgroundUrl) {
+          // Commit URL nền qua callable trước khi phát snapshot settings khác;
+          // nếu không listener có thể ghi đè preview mới bằng URL cũ.
           await _storageService.syncHomeBackground(
             houseId,
             normalizedCustomBackgroundUrl,
           );
+          requireCurrentScope();
         }
+        await _dbRef.child('houses/$houseId/settings').update(updates);
+        requireCurrentScope();
       }
     } catch (error) {
       debugPrint(

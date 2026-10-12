@@ -34,6 +34,9 @@ import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/home_startup_media_cache.dart';
+import '../../utils/services/storage/storage_service.dart';
+import '../../utils/services/infrastructure/cloudflare_r2_service.dart';
+import '../../widgets/home_background_image.dart';
 import '../../utils/home_image_policy.dart';
 import '../../utils/services/house_settings_service.dart';
 import '../../utils/services/music_service.dart';
@@ -592,6 +595,8 @@ class _HomeScreenState extends State<HomeScreen>
     if (backgroundUrl.isEmpty || backgroundUrl == _prewarmedBackgroundUrl) {
       return;
     }
+    // Nền R2 dùng URL đọc có xác thực và cache theo UID/House ở lớp hiển thị.
+    if (CloudflareR2Service.instance.isR2Url(backgroundUrl)) return;
     if (HomeStartupMediaCache.getFile(backgroundUrl) != null) {
       _prewarmedBackgroundUrl = backgroundUrl;
       return;

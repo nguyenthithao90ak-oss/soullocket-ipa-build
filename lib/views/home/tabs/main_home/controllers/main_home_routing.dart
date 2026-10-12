@@ -55,7 +55,7 @@ extension _MainHomeRouting on _MainHomeTabState {
   }
 
   void _ensureCoupleDecorLoaded() {
-    final uid = _auth.currentUser?.uid?.trim() ?? '';
+    final uid = _auth.currentUser?.uid.trim() ?? '';
     final houseId = _houseId?.trim() ?? '';
     final scope = '$uid|$houseId';
     if (uid.isEmpty || houseId.isEmpty || !_isTabActive) return;
@@ -74,7 +74,9 @@ extension _MainHomeRouting on _MainHomeTabState {
     _homeCoupleDecorLoadFuture = _homeCoupleDecorSync
         .loadForScope(uid: uid, houseId: houseId)
         .then((snapshot) async {
-          if (snapshot.revision > 0) _homeCoupleDecorRevision = snapshot.revision;
+          if (snapshot.revision > 0) {
+            _homeCoupleDecorRevision = snapshot.revision;
+          }
           return _coupleDecorWithVipAccess(snapshot.decor);
         });
     unawaited(
@@ -114,21 +116,20 @@ extension _MainHomeRouting on _MainHomeTabState {
             scope: scope,
             initialDecor: initial ?? _homeCoupleDecor,
             initialRevision: _homeCoupleDecorRevision,
-            saveShared: ({
-              required decor,
-              required expectedRevision,
-              required requestId,
-            }) => _homeCoupleDecorSync.save(
-              uid: _auth.currentUser?.uid ?? '',
-              houseId: _houseId ?? '',
-              decor: decor,
-              expectedRevision: expectedRevision,
-              requestId: requestId,
-              isCurrent: () =>
-                  mounted &&
-                  _isTabActive &&
-                  _coupleDecorScope() == scope,
-            ),
+            saveShared:
+                ({
+                  required decor,
+                  required expectedRevision,
+                  required requestId,
+                }) => _homeCoupleDecorSync.save(
+                  uid: _auth.currentUser?.uid ?? '',
+                  houseId: _houseId ?? '',
+                  decor: decor,
+                  expectedRevision: expectedRevision,
+                  requestId: requestId,
+                  isCurrent: () =>
+                      mounted && _isTabActive && _coupleDecorScope() == scope,
+                ),
             isVip: isVip,
             isScopeCurrent: () => mounted && _coupleDecorScope() == scope,
             previewLeft: _coupleDecorPreviewPerson(

@@ -2131,6 +2131,35 @@ class StorageService {
     }
   }
 
+  /// URL đã ký chỉ dùng để tải ảnh, không lưu vào cài đặt hoặc database.
+  Future<String> resolveHomeBackgroundReadUrl(String houseId, String url) async {
+    final uid = _requireCurrentUid();
+    final result = await _callWithAppCheckRetry(
+      () => _functions.httpsCallable('resolveHomeBackground').call({
+        'houseId': houseId.trim(),
+        'url': url.trim(),
+      }),
+      allowUnauthenticatedWithoutMarkers: true,
+    );
+    if (_auth.currentUser?.uid != uid) {
+      throw StateError('Home background session changed');
+    }
+    final data = result.data;
+    final signedUrl = data is Map ? data['url']?.toString().trim() ?? '' : '';
+    final uri = Uri.tryParse(signedUrl);
+    final expiresAt = data is Map ? data['expiresAt'] : null;
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        !uri.host.endsWith('.r2.cloudflarestorage.com') ||
+        uri.userInfo.isNotEmpty ||
+        (uri.hasPort && uri.port != 443) ||
+        expiresAt is! num ||
+        expiresAt <= DateTime.now().millisecondsSinceEpoch) {
+      throw StateError('Home background read not confirmed');
+    }
+    return signedUrl;
+  }
+
   /// Xóa ảnh public cũ sau khi đã commit URL mới.
   ///
   /// Ảnh Home avatar legacy/public nằm trên Firebase Storage, còn một số

@@ -40,7 +40,13 @@ class _HomeCoupleDecorArtState extends State<HomeCoupleDecorArt>
   @override
   void didUpdateWidget(covariant HomeCoupleDecorArt oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.animate != widget.animate) _syncMotion();
+    if (oldWidget.id != widget.id) {
+      _controller?.duration = _motionDuration(widget.id);
+      _controller?.value = 0;
+      _syncMotion();
+    } else if (oldWidget.animate != widget.animate) {
+      _syncMotion();
+    }
   }
 
   @override
@@ -105,10 +111,7 @@ class _HomeCoupleDecorArtState extends State<HomeCoupleDecorArt>
             : AnimatedBuilder(
                 animation: controller,
                 builder: (context, _) => CustomPaint(
-                  painter: _DecorArtPainter(
-                    widget.id,
-                    phase: controller.value,
-                  ),
+                  painter: _DecorArtPainter(widget.id, phase: controller.value),
                 ),
               ),
       ),
@@ -314,8 +317,19 @@ class _DecorArtPainter extends CustomPainter {
           const Color(0xFFFFD9B7),
           paper: false,
         );
-        face(canvas, 32, 31 + math.sin(radians + 1) * 1.5, gap: 5, blink: blink);
-        shape(canvas, heart(32, 50 + math.sin(radians + 1) * 2, 5), pink, paper: false);
+        face(
+          canvas,
+          32,
+          31 + math.sin(radians + 1) * 1.5,
+          gap: 5,
+          blink: blink,
+        );
+        shape(
+          canvas,
+          heart(32, 50 + math.sin(radians + 1) * 2, 5),
+          pink,
+          paper: false,
+        );
       case 'panda':
         oval(
           canvas,
@@ -452,7 +466,13 @@ class _DecorArtPainter extends CustomPainter {
         canvas.translate(-45, -17);
         shape(canvas, star(45, 17, 12, points: 4), gold);
         canvas.restore();
-        face(canvas, 28, 39 + math.sin(radians + 2) * 1.2, gap: 4, blink: blink);
+        face(
+          canvas,
+          28,
+          39 + math.sin(radians + 2) * 1.2,
+          gap: 4,
+          blink: blink,
+        );
       case 'balloon_heart':
         line(
           canvas,
@@ -535,7 +555,12 @@ class _DecorArtPainter extends CustomPainter {
             ..lineTo(56, 45),
           color: ink.withValues(alpha: .7),
         );
-        shape(canvas, heart(32, 50 + math.sin(radians * 1.6) * 1.5, 5), pink, paper: false);
+        shape(
+          canvas,
+          heart(32, 50 + math.sin(radians * 1.6) * 1.5, 5),
+          pink,
+          paper: false,
+        );
       case 'cherry':
         line(
           canvas,
@@ -562,7 +587,12 @@ class _DecorArtPainter extends CustomPainter {
           }
           canvas.drawCircle(point, 2.6, Paint()..color = gold);
         }
-        shape(canvas, heart(32, 53 + math.sin(radians) * 1.5, 6), pink, paper: false);
+        shape(
+          canvas,
+          heart(32, 53 + math.sin(radians) * 1.5, 6),
+          pink,
+          paper: false,
+        );
       case 'flower':
         line(
           canvas,
@@ -1007,5 +1037,5 @@ class _DecorArtPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DecorArtPainter oldDelegate) =>
-      oldDelegate.id != id;
+      oldDelegate.id != id || oldDelegate.phase != phase;
 }

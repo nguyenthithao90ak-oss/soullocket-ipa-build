@@ -46,7 +46,7 @@ class RelationshipDurationCard extends StatelessWidget {
       dark: Theme.of(context).brightness == Brightness.dark,
     );
     final primaryLabel = context.tr(
-      _clock ? 'home_pht_06b001' : 'comm_thng_59900',
+      _clock ? 'home_pht_06b001' : 'comm_thng_59900e',
     );
     final firstLabel = context.tr(_clock ? 'home_gi_770f40' : 'comm_nm_923e10');
     final secondLabel = context.tr(

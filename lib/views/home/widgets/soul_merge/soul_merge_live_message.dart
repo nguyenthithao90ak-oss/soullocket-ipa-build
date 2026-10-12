@@ -24,12 +24,15 @@ class _SoulMergeLiveMessageState extends State<SoulMergeLiveMessage>
     with WidgetsBindingObserver {
   StreamSubscription<Map<String, dynamic>?>? _subscription;
   bool _active = false;
+  bool _dependenciesReady = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _syncActivity();
+    // ModalRoute/TickerMode là inherited widgets; không được đọc từ
+    // initState vì context chưa hoàn tất mount. didChangeDependencies sẽ
+    // gọi _syncActivity ngay sau khi context sẵn sàng.
   }
 
   bool get _shouldListen {
@@ -41,6 +44,7 @@ class _SoulMergeLiveMessageState extends State<SoulMergeLiveMessage>
   }
 
   void _syncActivity() {
+    if (!_dependenciesReady) return;
     final active = mounted && _shouldListen;
     if (_active == active) return;
     _active = active;
@@ -75,6 +79,7 @@ class _SoulMergeLiveMessageState extends State<SoulMergeLiveMessage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _dependenciesReady = true;
     _syncActivity();
   }
 

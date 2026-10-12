@@ -71,6 +71,18 @@ class NotificationService {
   final SingleOpenGate _navigationGate = SingleOpenGate();
 
   static const int _dailySleepReminderId = 21450045;
+  static const int _sleepReminderVariantCount = 20;
+  static const int _sleepReminderScheduleDays = _sleepReminderVariantCount;
+  static const int _inactiveAppReminderId =
+      _dailySleepReminderId + _sleepReminderScheduleDays + 1;
+  static const String _lastAppOpenAtKey = 'il_last_app_opened_at';
+  static const Duration _inactiveAppReminderDelay = Duration(days: 3);
+
+  static String _sleepReminderIdKey(int offset) =>
+      'notif_sleep_good_night_${(offset % _sleepReminderVariantCount + 1).toString().padLeft(2, '0')}';
+
+  static int _sleepReminderNotificationId(int offset) =>
+      _dailySleepReminderId + offset;
 
   // Kênh thông báo Android (phải khai báo trước khi dùng)
   static AndroidNotificationChannel get _channel => AndroidNotificationChannel(
@@ -120,6 +132,7 @@ class NotificationService {
         _localeListenerAttached = true;
       }
       await syncDailySleepReminder();
+      await syncInactivityReminder();
       return;
     }
     if (_initializingTask != null) {
@@ -172,6 +185,7 @@ class NotificationService {
         }
         _isInitialized = true;
         await syncDailySleepReminder();
+        await syncInactivityReminder();
       } catch (error) {
         debugPrint(
           'NotificationService initialize error: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể khởi tạo thông báo lúc này.').message}',
@@ -310,6 +324,14 @@ class NotificationService {
       await _fcm.deleteToken();
     } catch (e) {
       debugPrint('[NotificationService] deleteToken error: $e');
+    }
+
+    // Không để lịch của tài khoản cũ hiện sau khi đổi tài khoản trên cùng máy.
+    try {
+      await cancelDailySleepReminder();
+      await cancelInactivityReminder();
+    } catch (error) {
+      debugPrint('[NotificationService] clear local reminders error: $error');
     }
   }
 
@@ -975,37 +997,57 @@ class NotificationService {
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
     final displayName = await _resolveSleepReminderDisplayName(prefs, role);
 
-    await _localNotif.cancel(id: _dailySleepReminderId);
-    await _localNotif.zonedSchedule(
-      id: _dailySleepReminderId,
-      title: buildSleepReminderTitle(displayName),
-      body: buildSleepReminderMessage(displayName),
-      scheduledDate: _nextDailySleepReminderTime(),
-      notificationDetails: _notificationDetails(),
-      payload: jsonEncode(<String, dynamic>{
-        'screen': 'home',
-        'type': 'daily_sleep_reminder',
-        'role': role,
-      }),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    final firstNight = _nextDailySleepReminderTime();
+    await cancelDailySleepReminder();
+    for (var offset = 0; offset < _sleepReminderScheduleDays; offset++) {
+      final scheduledDate = _sleepReminderDateAfter(firstNight, offset);
+      final variantIndex = _sleepVariantIndex(scheduledDate);
+      await _localNotif.zonedSchedule(
+        id: _sleepReminderNotificationId(offset),
+        title: buildSleepReminderTitle(displayName),
+        body: buildSleepReminderMessage(
+          displayName,
+          variantIndex: variantIndex,
+        ),
+        scheduledDate: scheduledDate,
+        notificationDetails: _notificationDetails(),
+        payload: jsonEncode(<String, dynamic>{
+          'screen': 'home',
+          'type': 'daily_sleep_reminder',
+          'role': role,
+          'variant': variantIndex,
+        }),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    }
   }
 
   Future<void> cancelDailySleepReminder() async {
     if (!_isInitialized) return;
-    await _localNotif.cancel(id: _dailySleepReminderId);
+    await cancelLocalNotifications(
+      List<int>.generate(
+        _sleepReminderScheduleDays,
+        _sleepReminderNotificationId,
+      ),
+    );
   }
 
   String buildSleepReminderTitle(String displayName) {
-    return UiCopy.text('copy_756122cb6b19', {'value1': displayName});
+    return L10nService().format('notif_sleep_reminder_title', {
+      'value1': displayName,
+    });
   }
 
-  String buildSleepReminderMessage(String displayName) {
+  String buildSleepReminderMessage(String displayName, {int? variantIndex}) {
     final safeName = displayName.trim().isNotEmpty
         ? displayName.trim()
         : UiCopy.text('copy_296890314132');
-    return UiCopy.text('copy_10f764e244cf', {'value1': safeName});
+    final index =
+        (variantIndex ?? _sleepVariantIndex(DateTime.now())) %
+        _sleepReminderVariantCount;
+    return L10nService().format(_sleepReminderIdKey(index), {
+      'value1': safeName,
+    });
   }
 
   Future<bool> _ensureTimeZoneReady() async {
@@ -1076,7 +1118,77 @@ class NotificationService {
   }
 
   String buildSleepReminderBody(String displayName) {
-    return UiCopy.text('copy_10f764e244cf', {'value1': displayName});
+    return buildSleepReminderMessage(displayName);
+  }
+
+  /// Đặt một lời nhắc nhẹ sau ba ngày không mở app.
+  ///
+  /// Đây là lịch một lần. Mỗi lần người dùng quay lại app, lịch cũ bị hủy và
+  /// được dựng lại từ đầu nên không tạo chuỗi thông báo lặp khi người dùng đã
+  /// hoạt động trở lại.
+  Future<void> syncInactivityReminder() async {
+    if (kIsWeb) return;
+
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
+    final enabled = prefs.getBool('il_notifications_enabled') ?? true;
+    final user = FirebaseAuth.instance.currentUser;
+    if (!enabled || user == null || !await hasPermission()) {
+      await cancelInactivityReminder();
+      return;
+    }
+
+    await _ensureLocalPluginInitialized();
+    if (!await _ensureTimeZoneReady()) return;
+
+    final now = tz.TZDateTime.now(tz.local);
+    final scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day + _inactiveAppReminderDelay.inDays,
+      19,
+      30,
+    );
+    await _localNotif.cancel(id: _inactiveAppReminderId);
+    await _localNotif.zonedSchedule(
+      id: _inactiveAppReminderId,
+      title: L10nService().translate('notif_inactive_app_title'),
+      body: L10nService().translate('notif_inactive_app_body'),
+      scheduledDate: scheduledDate,
+      notificationDetails: _notificationDetails(),
+      payload: jsonEncode(<String, dynamic>{
+        'screen': 'home',
+        'type': 'inactive_app_reminder',
+      }),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+    await prefs.setInt(
+      _lastAppOpenAtKey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  Future<void> cancelInactivityReminder() async {
+    if (kIsWeb || !_localPluginReady) return;
+    await _localNotif.cancel(id: _inactiveAppReminderId);
+  }
+
+  tz.TZDateTime _sleepReminderDateAfter(tz.TZDateTime firstNight, int offset) {
+    return tz.TZDateTime(
+      tz.local,
+      firstNight.year,
+      firstNight.month,
+      firstNight.day + offset,
+      firstNight.hour,
+      firstNight.minute,
+    );
+  }
+
+  int _sleepVariantIndex(DateTime date) {
+    final firstDay = DateTime(date.year, 1, 1);
+    return date.difference(firstDay).inDays % _sleepReminderVariantCount;
   }
 
   Future<void> checkAutoSleepGreetings(String houseId) async {

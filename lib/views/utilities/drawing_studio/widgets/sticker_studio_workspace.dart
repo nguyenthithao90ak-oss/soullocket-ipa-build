@@ -76,7 +76,7 @@ extension _StickerStudioWorkspace on _DrawingStudioScreenState {
       children: [
         _studioCircleButton(
           icon: Icons.arrow_back_rounded,
-          label: context.tr('back'),
+          label: context.tr('home_quayli_0033aa'),
           onTap: () => Navigator.of(context).maybePop(),
         ),
         const SizedBox(width: 6),
@@ -459,9 +459,9 @@ extension _StickerStudioWorkspace on _DrawingStudioScreenState {
                     ),
                   ),
                 ),
-                Positioned.fill(
+                const Positioned.fill(
                   child: IgnorePointer(
-                    child: CustomPaint(painter: const _StudioPaperTrim()),
+                    child: CustomPaint(painter: _StudioPaperTrim()),
                   ),
                 ),
                 const Positioned(top: -3, left: -5, child: _StudioWashiTape()),

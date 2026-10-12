@@ -428,7 +428,7 @@ class PurchaseService with WidgetsBindingObserver {
 
       if (response.statusCode != 200) {
         debugPrint(
-          'VIP sync failed: ${AppErrorMapper.resolve(response.body, fallbackMessage: 'Đồng bộ VIP thất bại.').message} (status=${response.statusCode})',
+          'VIP sync failed: ${AppErrorMapper.resolve(response.body, fallbackMessage: 'Đồng bộ PRO thất bại.').message} (status=${response.statusCode})',
         );
       }
     } catch (error) {

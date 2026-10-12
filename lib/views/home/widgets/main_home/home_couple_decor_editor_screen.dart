@@ -58,6 +58,7 @@ class _HomeCoupleDecorEditorScreenState
   HomeCoupleDecorSnapshot? _conflict;
   HomeCoupleCardDecor? _requestedDesign;
   String? _requestId;
+  int _retryBlockedUntilMs = 0;
 
   HomeCoupleCardDecor _normalizedInitialDecor() {
     return HomeCoupleCardDecor.fromJson(
@@ -236,10 +237,29 @@ class _HomeCoupleDecorEditorScreenState
     });
   }
 
+  String _rateLimitMessage(int retryAfterMs) => L10nService().format(
+    'ui_home_action_too_fast_blocked_in_value1_minutes_900f32',
+    {'value1': '${(retryAfterMs / 60000).ceil().clamp(1, 30)}'},
+  );
+
   Future<void> _save() async {
     if (_saving) return;
+    final retryAfterMs =
+        _retryBlockedUntilMs - DateTime.now().millisecondsSinceEpoch;
+    if (retryAfterMs > 0) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(_rateLimitMessage(retryAfterMs))),
+        );
+      return;
+    }
     if (!(widget.isScopeCurrent?.call() ?? true)) {
-      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.tr('home_decor_save_failed'))),
+        );
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
@@ -276,17 +296,21 @@ class _HomeCoupleDecorEditorScreenState
                   updatedAt: DateTime.now().millisecondsSinceEpoch,
                 ),
               )
-            : const HomeCoupleDecorSaveResult(
-                HomeCoupleDecorSaveStatus.failed,
-              );
+            : const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.failed);
       }
     } catch (_) {
-      result = const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.failed);
+      result = const HomeCoupleDecorSaveResult(
+        HomeCoupleDecorSaveStatus.failed,
+      );
     }
     if (!mounted) return;
     setState(() => _saving = false);
     if (!(widget.isScopeCurrent?.call() ?? true)) {
-      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.tr('home_decor_save_failed'))),
+        );
       return;
     }
     if (result.status == HomeCoupleDecorSaveStatus.saved ||
@@ -299,15 +323,21 @@ class _HomeCoupleDecorEditorScreenState
     if (result.status == HomeCoupleDecorSaveStatus.conflict) {
       setState(() => _conflict = result.snapshot);
     }
+    if (result.status == HomeCoupleDecorSaveStatus.rateLimited &&
+        result.retryAfterMs > 0) {
+      _retryBlockedUntilMs =
+          DateTime.now().millisecondsSinceEpoch + result.retryAfterMs;
+    }
     final message = switch (result.status) {
-      HomeCoupleDecorSaveStatus.rateLimited => L10nService().format(
-        'ui_home_action_too_fast_blocked_in_value1_minutes_900f32', {
-          'value1': '${(result.retryAfterMs / 60000).ceil().clamp(1, 30)}',
-        },
+      HomeCoupleDecorSaveStatus.rateLimited => _rateLimitMessage(
+        result.retryAfterMs,
       ),
-      HomeCoupleDecorSaveStatus.conflict => context.tr('notes_conflict_reloaded'),
-      HomeCoupleDecorSaveStatus.pending =>
-        context.tr('ui_common_you_re_clicking_too_fast_eeefa5'),
+      HomeCoupleDecorSaveStatus.conflict => context.tr(
+        'notes_conflict_reloaded',
+      ),
+      HomeCoupleDecorSaveStatus.pending => context.tr(
+        'ui_common_you_re_clicking_too_fast_eeefa5',
+      ),
       _ => result.message ?? context.tr('home_decor_save_failed'),
     };
     ScaffoldMessenger.of(context)
@@ -403,11 +433,6 @@ class _HomeCoupleDecorEditorScreenState
                     color: ink.withValues(alpha: .8),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  context.tr('home_decor_subtitle'),
-                  style: SLTheme.quicksand(fontSize: 12, height: 1.5, color: ink),
-                ),
                 if (_conflict != null) ...[
                   const SizedBox(height: 12),
                   Text(context.tr('notes_conflict_reloaded')),
@@ -416,7 +441,9 @@ class _HomeCoupleDecorEditorScreenState
                     onPressed: _useLatest,
                     icon: const Icon(Icons.sync_rounded),
                     label: Text(context.tr('insight_reload')),
-                    style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),

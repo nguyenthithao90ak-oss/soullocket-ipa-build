@@ -25,15 +25,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          'assets/images/home/home_default_canvas_couple.webp',
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          filterQuality: FilterQuality.low,
-          cacheWidth: 1080,
-          excludeFromSemantics: true,
-          errorBuilder: (_, _, _) => const ColoredBox(color: Color(0xFFF8EEE3)),
-        ),
+        const DefaultHomeBackgroundImage(),
         // Giữ màu tranh sáng dịu, giảm độ sáng khi dùng giao diện tối.
         ColoredBox(
           color: isDark
@@ -53,7 +45,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
       fit: StackFit.expand,
       children: [
         Positioned.fill(
-          child: _StableShellBackgroundImage(backgroundUrl: backgroundUrl),
+          child: _buildHomeBackgroundImage(backgroundUrl),
         ),
         // Lớp phủ tối nhẹ giúp làm dịu nền tùy chỉnh
         Positioned.fill(
@@ -64,6 +56,56 @@ extension _HomeScreenShellBackground on _HomeScreenState {
           ),
         ),
       ],
+    );
+  }
+  Widget _buildHomeBackgroundImage(String url) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final prefs = OfflineCacheService.getPrefsSync();
+    final houseId = prefs?.getString('il_auth_uid') == uid
+        ? (prefs?.getString('il_house_id') ?? '').trim()
+        : '';
+    final size = HomeImagePolicy.backgroundSize(context: context);
+    return HomeBackgroundImage(
+      scopeKey: '$uid:$houseId',
+      imageKey: '$url:${size.width}:${size.height}',
+      loadImage: () async {
+        final isR2 = CloudflareR2Service.instance.isR2Url(url);
+        if (!isR2) {
+          final file = HomeStartupMediaCache.getFile(url);
+          return HomeImagePolicy.resized(
+            file == null ? CachedNetworkImageProvider(url) : FileImage(file),
+            width: size.width,
+            height: size.height,
+          );
+        }
+        final resolvedHouse = await AuthHouseContextService.quickHouseId();
+        bool isCurrentScope() =>
+            mounted &&
+            FirebaseAuth.instance.currentUser?.uid == uid &&
+            (houseId.isEmpty || resolvedHouse == houseId) &&
+            UiPrefs.notifier.value.customBackgroundUrl.trim() == url;
+        if (uid.isEmpty || resolvedHouse == null ||
+            resolvedHouse.isEmpty || !isCurrentScope()) {
+          throw StateError('Home background session changed');
+        }
+        final cacheKey = 'home_background:$uid:$resolvedHouse:$url';
+        final cached = await AppCacheManager.instance.getFileFromCache(cacheKey);
+        if (!isCurrentScope()) throw StateError('Home background session changed');
+        if (cached != null && await cached.file.exists()) {
+          return HomeImagePolicy.resized(FileImage(cached.file),
+            width: size.width, height: size.height);
+        }
+        final signedUrl = await StorageService().resolveHomeBackgroundReadUrl(resolvedHouse, url);
+        if (!isCurrentScope() ||
+            await AuthHouseContextService.quickHouseId() != resolvedHouse) {
+          throw StateError('Home background session changed');
+        }
+        return HomeImagePolicy.resized(
+          CachedNetworkImageProvider(signedUrl,
+            cacheKey: cacheKey, cacheManager: AppCacheManager.instance),
+          width: size.width, height: size.height,
+        );
+      },
     );
   }
 }

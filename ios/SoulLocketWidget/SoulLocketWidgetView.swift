@@ -288,7 +288,7 @@ struct LockScreenWidgetView: View {
                 HStack(spacing: 3) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 8, weight: .semibold))
-                    Text("Soul Merge")
+                    Text(widgetText("widget_soul_merge_name"))
                         .font(.system(size: 9, weight: .bold, design: .rounded))
                         .tracking(0.5)
                 }

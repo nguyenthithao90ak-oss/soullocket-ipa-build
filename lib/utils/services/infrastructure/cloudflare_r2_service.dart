@@ -240,7 +240,19 @@ class CloudflareR2Service {
 
   /// Kiểm tra URL có phải của R2 hay không
   bool isR2Url(String url) {
-    return publicDomain.isNotEmpty && url.trim().startsWith(publicDomain);
+    final normalized = url.trim();
+    if (normalized.isEmpty) return false;
+    if (publicDomain.isNotEmpty && normalized.startsWith('$publicDomain/')) {
+      return true;
+    }
+
+    // Một số bản cài cũ không được truyền R2_PUBLIC_DOMAIN vào dart-define.
+    // Khi đó vẫn phải nhận diện URL r2.dev để Home xin signed URL thay vì
+    // GET trực tiếp bucket riêng tư và rơi về nền mặc định.
+    final uri = Uri.tryParse(normalized);
+    return uri?.scheme == 'https' &&
+        uri?.userInfo.isEmpty == true &&
+        uri?.host.toLowerCase().endsWith('.r2.dev') == true;
   }
 
   /// Xoá object trên R2 từ public URL

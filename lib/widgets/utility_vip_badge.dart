@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
 
-/// Nhãn VIP cho tiện ích dành cho tài khoản Pro (vd. Chat thân thiện).
+/// Nhãn gói trả phí (hiển thị chữ "PRO" từ khóa `utility_vip_badge`) cho tiện ích
+/// dành cho tài khoản PRO (vd. Chat thân thiện). Từ 12/10/2026 app thống nhất tên gói là PRO.
 /// Chữ nâu đậm trên nền vàng để đủ tương phản ở cả nền sáng và tối.
 class UtilityVipBadge extends StatelessWidget {
   const UtilityVipBadge({super.key, this.compact = false});

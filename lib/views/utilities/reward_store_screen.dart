@@ -803,7 +803,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
       if (await _adMob.isProUser()) {
         if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(content: Text(context.tr('reward_ad_vip_no_ads'))),
+          SLSnackBar(content: Text(context.tr('reward_store_pro'))),
         );
         return;
       }

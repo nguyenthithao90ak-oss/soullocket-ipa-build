@@ -329,6 +329,10 @@ class AppEntryController {
     }
 
     await _runGuarded(
+      'sync inactivity reminder on resume',
+      () => NotificationService().syncInactivityReminder(),
+    );
+    await _runGuarded(
       'record app open metric on resume',
       () => _recordAppOpenMetric(),
     );
@@ -425,6 +429,13 @@ class AppEntryController {
       return const AppEntryHouseSessionResult();
     }
     var didScheduleInitialAppOpenAd = false;
+
+    unawaited(
+      _runGuarded(
+        'sync inactivity reminder on app open',
+        () => NotificationService().syncInactivityReminder(),
+      ),
+    );
 
     _scheduleDeviceRegistration();
 

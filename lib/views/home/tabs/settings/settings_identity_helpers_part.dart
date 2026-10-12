@@ -368,10 +368,6 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           'transparentMode': transparentMode,
           'updatedAt': ServerValue.timestamp,
         };
-        // Silent autosave must be durable too. Otherwise the old object could
-        // be deleted while RTDB still has the previous URL.
-        await _dbRef.child('houses/$houseId/settings').update(settingsUpdates);
-        checkMediaScope();
         if (backgroundChanged) {
           // Callable có thể đã commit dù client mất response; báo cho caller
           // để không xóa object mới trong trường hợp kết quả không chắc chắn.
@@ -380,7 +376,13 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
             houseId,
             customBackgroundUrl,
           );
+          checkMediaScope();
         }
+        // Commit nền qua callable trước khi phát snapshot settings khác. Nếu
+        // ghi updatedAt trước, listener có thể nhận URL cũ và ghi đè preview
+        // mới trong lúc callable vẫn đang hoàn tất.
+        await _dbRef.child('houses/$houseId/settings').update(settingsUpdates);
+        checkMediaScope();
       }
 
       checkMediaScope();

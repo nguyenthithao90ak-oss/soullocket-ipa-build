@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -18,9 +17,8 @@ class HomeCoupleDecorSnapshot {
     this.updatedAt = 0,
   });
 
-  factory HomeCoupleDecorSnapshot.empty() => HomeCoupleDecorSnapshot(
-    decor: HomeCoupleCardDecor.defaultValue(),
-  );
+  factory HomeCoupleDecorSnapshot.empty() =>
+      HomeCoupleDecorSnapshot(decor: HomeCoupleCardDecor.defaultValue());
 
   final HomeCoupleCardDecor decor;
   final int revision;
@@ -32,15 +30,20 @@ class HomeCoupleDecorSnapshot {
     if (raw is List) return raw;
     if (raw is! Map) return [];
     final keys = raw.keys.toList()
-      ..sort((first, second) => int.parse('$first').compareTo(int.parse('$second')));
+      ..sort(
+        (first, second) => int.parse('$first').compareTo(int.parse('$second')),
+      );
     return [for (final key in keys) raw[key]];
   }
 
   factory HomeCoupleDecorSnapshot.fromRaw(Object? raw) {
     if (raw == null) return HomeCoupleDecorSnapshot.empty();
-    if (raw is! Map || raw['decor'] is! Map ||
-        raw['revision'] is! int || (raw['revision'] as int) < 1 ||
-        raw['updatedAt'] is! int || raw['updatedBy'] is! String ||
+    if (raw is! Map ||
+        raw['decor'] is! Map ||
+        raw['revision'] is! int ||
+        (raw['revision'] as int) < 1 ||
+        raw['updatedAt'] is! int ||
+        raw['updatedBy'] is! String ||
         raw['requestId'] is! String) {
       throw const FormatException('invalid_shared_decor');
     }
@@ -48,8 +51,7 @@ class HomeCoupleDecorSnapshot {
     design['stickers'] = _items(design['stickers']);
     design['drawings'] = [
       for (final stroke in _items(design['drawings']))
-        if (stroke is Map)
-          {...stroke, 'points': _items(stroke['points'])},
+        if (stroke is Map) {...stroke, 'points': _items(stroke['points'])},
     ];
     return HomeCoupleDecorSnapshot(
       decor: HomeCoupleCardDecor.fromJson(design),
@@ -73,7 +75,9 @@ class HomeCoupleDecorQuota {
   const HomeCoupleDecorQuota(this.times, this.requestIds);
 
   factory HomeCoupleDecorQuota.fromRaw(Object? raw) {
-    if (raw == null) return const HomeCoupleDecorQuota([0, 0, 0, 0, 0], ['', '', '', '', '']);
+    if (raw == null) {
+      return const HomeCoupleDecorQuota([0, 0, 0, 0, 0], ['', '', '', '', '']);
+    }
     if (raw is! Map || raw['version'] != 1) {
       throw const FormatException('invalid_decor_quota');
     }
@@ -82,7 +86,9 @@ class HomeCoupleDecorQuota {
     for (var index = 0; index < 5; index++) {
       final time = raw['at$index'];
       final id = raw['id$index'];
-      if (time is! int || time < 0 || id is! String ||
+      if (time is! int ||
+          time < 0 ||
+          id is! String ||
           (time == 0) != id.isEmpty ||
           (index > 0 && time > times.last)) {
         throw const FormatException('invalid_decor_quota');
@@ -114,13 +120,22 @@ class HomeCoupleDecorQuota {
 }
 
 enum HomeCoupleDecorSaveStatus {
-  saved, unchanged, rateLimited, conflict, pending, failed, scopeChanged,
+  saved,
+  unchanged,
+  rateLimited,
+  conflict,
+  pending,
+  failed,
+  scopeChanged,
 }
 
 class HomeCoupleDecorSaveResult {
   const HomeCoupleDecorSaveResult(
-    this.status, {this.snapshot, this.retryAfterMs = 0, this.message}
-  );
+    this.status, {
+    this.snapshot,
+    this.retryAfterMs = 0,
+    this.message,
+  });
 
   final HomeCoupleDecorSaveStatus status;
   final HomeCoupleDecorSnapshot? snapshot;
@@ -128,11 +143,12 @@ class HomeCoupleDecorSaveResult {
   final String? message;
 }
 
-typedef HomeCoupleDecorSave = Future<HomeCoupleDecorSaveResult> Function({
-  required HomeCoupleCardDecor decor,
-  required int expectedRevision,
-  required String requestId,
-});
+typedef HomeCoupleDecorSave =
+    Future<HomeCoupleDecorSaveResult> Function({
+      required HomeCoupleCardDecor decor,
+      required int expectedRevision,
+      required String requestId,
+    });
 
 abstract interface class HomeCoupleDecorTransport {
   String? get currentUid;
@@ -149,26 +165,37 @@ class _FirebaseCoupleDecorTransport implements HomeCoupleDecorTransport {
   String? get currentUid => FirebaseAuth.instance.currentUser?.uid;
   @override
   Stream<Object?> watch(String houseId) => _root
-      .child('houses/$houseId/homeCoupleDecor').onValue
+      .child('houses/$houseId/homeCoupleDecor')
+      .onValue
       .map((event) => event.snapshot.value);
   @override
   Future<Object?> readDecor(String houseId) async =>
-      (await _root.child('houses/$houseId/homeCoupleDecor').get()
-          .timeout(const Duration(seconds: 6))).value;
+      (await _root
+              .child('houses/$houseId/homeCoupleDecor')
+              .get()
+              .timeout(const Duration(seconds: 6)))
+          .value;
   @override
   Future<Object?> readQuota(String uid) async =>
-      (await _root.child('users/$uid/homeCoupleDecorQuota').get()
-          .timeout(const Duration(seconds: 6))).value;
+      (await _root
+              .child('users/$uid/homeCoupleDecorQuota')
+              .get()
+              .timeout(const Duration(seconds: 6)))
+          .value;
   @override
   Future<int> serverNowMs() async {
-    final snapshot = await FirebaseDatabase.instance.ref('.info/serverTimeOffset')
-        .onValue.first.timeout(const Duration(seconds: 3));
+    final snapshot = await FirebaseDatabase.instance
+        .ref('.info/serverTimeOffset')
+        .onValue
+        .first
+        .timeout(const Duration(seconds: 3));
     if (snapshot.snapshot.value is! num) {
       throw const FormatException('invalid_server_time');
     }
     return DateTime.now().millisecondsSinceEpoch +
         (snapshot.snapshot.value as num).toInt();
   }
+
   @override
   Future<void> write(Map<String, dynamic> update) => _root.update(update);
 }
@@ -197,8 +224,10 @@ class HomeCoupleDecorSyncService {
 
   static String newRequestId() {
     final random = Random.secure();
-    return List.generate(4, (_) => random.nextInt(1 << 32)
-        .toRadixString(16).padLeft(8, '0')).join();
+    return List.generate(
+      4,
+      (_) => random.nextInt(1 << 32).toRadixString(16).padLeft(8, '0'),
+    ).join();
   }
 
   Future<HomeCoupleDecorSnapshot> loadCached(String scope) async {
@@ -215,7 +244,9 @@ class HomeCoupleDecorSyncService {
         return HomeCoupleDecorSnapshot.fromRaw(decoded);
       }
     } catch (_) {}
-    return HomeCoupleDecorSnapshot(decor: await HomeCoupleDecorStore.load(scope));
+    return HomeCoupleDecorSnapshot(
+      decor: await HomeCoupleDecorStore.load(scope),
+    );
   }
 
   Future<HomeCoupleDecorSnapshot> loadForScope({
@@ -236,13 +267,17 @@ class HomeCoupleDecorSyncService {
   Future<void> cache(String scope, HomeCoupleDecorSnapshot snapshot) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('$_cachePrefix${Uri.encodeComponent(scope)}',
-          jsonEncode(snapshot.toJson()));
+      await prefs.setString(
+        '$_cachePrefix${Uri.encodeComponent(scope)}',
+        jsonEncode(snapshot.toJson()),
+      );
     } catch (_) {}
   }
 
   Stream<HomeCoupleDecorSnapshot> watch({
-    required String uid, required String houseId, required bool Function() isCurrent,
+    required String uid,
+    required String houseId,
+    required bool Function() isCurrent,
   }) {
     final scope = '$uid|$houseId';
     StreamSubscription<Object?>? remote;
@@ -252,21 +287,31 @@ class HomeCoupleDecorSyncService {
     void emit(HomeCoupleDecorSnapshot snapshot) {
       if (current() && !controller.isClosed) controller.add(snapshot);
     }
+
     controller = StreamController<HomeCoupleDecorSnapshot>(
       onListen: () {
-        remote = _transport.watch(houseId).listen((raw) {
-          if (!current()) return;
-          try {
-            final snapshot = HomeCoupleDecorSnapshot.fromRaw(raw);
-            if (_pending[scope]?.requestId == snapshot.requestId &&
-                snapshot.updatedBy == uid) return;
-            emit(snapshot);
-          } catch (error, stack) {
-            controller.addError(error, stack);
-          }
-        }, onError: (Object error, StackTrace stack) {
-          if (current()) controller.addError(error, stack);
-        });
+        remote = _transport
+            .watch(houseId)
+            .listen(
+              (raw) {
+                if (!current()) return;
+                try {
+                  final snapshot = HomeCoupleDecorSnapshot.fromRaw(raw);
+                  if (_pending[scope]?.requestId == snapshot.requestId &&
+                      snapshot.updatedBy == uid) {
+                    return;
+                  }
+                  emit(snapshot);
+                } catch (error, stack) {
+                  controller.addError(error, stack);
+                }
+              },
+              onError: (Object error, StackTrace stack) {
+                if (current()) {
+                  controller.addError(error, stack);
+                }
+              },
+            );
         confirmed = _confirmed.stream.listen((event) {
           if (event.scope == scope) emit(event.snapshot);
         });
@@ -280,9 +325,12 @@ class HomeCoupleDecorSyncService {
   }
 
   Future<HomeCoupleDecorSaveResult> save({
-    required String uid, required String houseId,
-    required HomeCoupleCardDecor decor, required int expectedRevision,
-    required String requestId, required bool Function() isCurrent,
+    required String uid,
+    required String houseId,
+    required HomeCoupleCardDecor decor,
+    required int expectedRevision,
+    required String requestId,
+    required bool Function() isCurrent,
   }) async {
     final scope = '$uid|$houseId';
     if (!RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(uid) ||
@@ -294,86 +342,164 @@ class HomeCoupleDecorSyncService {
     if (existing != null && existing.requestId != requestId) {
       return const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.pending);
     }
-    final future = existing?.result ?? _save(
-      uid: uid, houseId: houseId, decor: decor, expectedRevision: expectedRevision,
-      requestId: requestId, isCurrent: isCurrent,
-    );
+    final future =
+        existing?.result ??
+        _save(
+          uid: uid,
+          houseId: houseId,
+          decor: decor,
+          expectedRevision: expectedRevision,
+          requestId: requestId,
+          isCurrent: isCurrent,
+        );
     if (existing == null) {
       _pending[scope] = _PendingDecorSave(requestId, future);
-      unawaited(future.then((result) {
-        _pending.remove(scope);
-        if (result.snapshot != null && !_confirmed.isClosed) {
-          _confirmed.add(_ConfirmedDecor(scope, result.snapshot!));
-        }
-      }));
+      unawaited(
+        future.then((result) {
+          _pending.remove(scope);
+          if (result.snapshot != null && !_confirmed.isClosed) {
+            _confirmed.add(_ConfirmedDecor(scope, result.snapshot!));
+          }
+        }),
+      );
     }
-    return future.timeout(saveTimeout, onTimeout: () =>
-        const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.pending));
+    return future.timeout(
+      saveTimeout,
+      onTimeout: () =>
+          const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.pending),
+    );
   }
 
   Future<HomeCoupleDecorSaveResult> _save({
-    required String uid, required String houseId,
-    required HomeCoupleCardDecor decor, required int expectedRevision,
-    required String requestId, required bool Function() isCurrent,
+    required String uid,
+    required String houseId,
+    required HomeCoupleCardDecor decor,
+    required int expectedRevision,
+    required String requestId,
+    required bool Function() isCurrent,
   }) async {
     bool current() => isCurrent() && _transport.currentUid == uid;
-    if (!current()) return const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.scopeChanged);
+    if (!current()) {
+      return const HomeCoupleDecorSaveResult(
+        HomeCoupleDecorSaveStatus.scopeChanged,
+      );
+    }
     try {
       final values = await Future.wait<Object?>([
-        _transport.readDecor(houseId), _transport.readQuota(uid), _transport.serverNowMs(),
+        _transport.readDecor(houseId),
+        _transport.readQuota(uid),
+        _transport.serverNowMs(),
       ]);
-      if (!current()) return const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.scopeChanged);
+      if (!current()) {
+        return const HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.scopeChanged,
+        );
+      }
       final latest = HomeCoupleDecorSnapshot.fromRaw(values[0]);
       final quota = HomeCoupleDecorQuota.fromRaw(values[1]);
       final nowMs = values[2] as int;
       if (quota.requestIds.contains(requestId)) {
-        return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.saved, snapshot: latest);
+        return HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.saved,
+          snapshot: latest,
+        );
       }
       if (latest.revision > 0 && decor.sameDesign(latest.decor)) {
-        return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.unchanged, snapshot: latest);
+        return HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.unchanged,
+          snapshot: latest,
+        );
       }
       if (latest.revision != expectedRevision) {
-        return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.conflict, snapshot: latest);
+        return HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.conflict,
+          snapshot: latest,
+        );
       }
       final retryAfterMs = quota.retryAfterMs(nowMs);
       if (retryAfterMs > 0) {
-        return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.rateLimited, retryAfterMs: retryAfterMs);
+        return HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.rateLimited,
+          retryAfterMs: retryAfterMs,
+        );
       }
       final revision = latest.revision + 1;
       await _transport.write({
         'houses/$houseId/homeCoupleDecor': {
-          'decor': decor.toSharedJson(), 'revision': revision,
-          'requestId': requestId, 'updatedBy': uid, 'updatedAt': ServerValue.timestamp,
+          'decor': decor.toSharedJson(),
+          'revision': revision,
+          'requestId': requestId,
+          'updatedBy': uid,
+          'updatedAt': ServerValue.timestamp,
         },
-        'users/$uid/homeCoupleDecorQuota': quota.next(houseId, revision, requestId),
+        'users/$uid/homeCoupleDecorQuota': quota.next(
+          houseId,
+          revision,
+          requestId,
+        ),
       });
-      if (!current()) return const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.scopeChanged);
+      if (!current()) {
+        return const HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.scopeChanged,
+        );
+      }
       final snapshot = HomeCoupleDecorSnapshot(
-        decor: HomeCoupleCardDecor.fromJson(decor.toSharedJson()), revision: revision,
-        requestId: requestId, updatedBy: uid, updatedAt: nowMs,
+        decor: HomeCoupleCardDecor.fromJson(decor.toSharedJson()),
+        revision: revision,
+        requestId: requestId,
+        updatedBy: uid,
+        updatedAt: nowMs,
       );
       await cache('$uid|$houseId', snapshot);
-      return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.saved, snapshot: snapshot);
+      return HomeCoupleDecorSaveResult(
+        HomeCoupleDecorSaveStatus.saved,
+        snapshot: snapshot,
+      );
     } catch (error) {
-      if (!current()) return const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.scopeChanged);
+      if (!current()) {
+        return const HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.scopeChanged,
+        );
+      }
       if (error is FirebaseException && error.code == 'permission-denied') {
         try {
-          final latest = HomeCoupleDecorSnapshot.fromRaw(await _transport.readDecor(houseId));
-          final quota = HomeCoupleDecorQuota.fromRaw(await _transport.readQuota(uid));
+          final latest = HomeCoupleDecorSnapshot.fromRaw(
+            await _transport.readDecor(houseId),
+          );
+          final quota = HomeCoupleDecorQuota.fromRaw(
+            await _transport.readQuota(uid),
+          );
           final nowMs = await _transport.serverNowMs();
-          if (!current()) return const HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.scopeChanged);
+          if (!current()) {
+            return const HomeCoupleDecorSaveResult(
+              HomeCoupleDecorSaveStatus.scopeChanged,
+            );
+          }
           if (quota.requestIds.contains(requestId)) {
-            return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.saved, snapshot: latest);
+            return HomeCoupleDecorSaveResult(
+              HomeCoupleDecorSaveStatus.saved,
+              snapshot: latest,
+            );
           }
           if (latest.revision != expectedRevision) {
-            return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.conflict, snapshot: latest);
+            return HomeCoupleDecorSaveResult(
+              HomeCoupleDecorSaveStatus.conflict,
+              snapshot: latest,
+            );
           }
           final wait = quota.retryAfterMs(nowMs);
-          if (wait > 0) return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.rateLimited, retryAfterMs: wait);
+          if (wait > 0) {
+            return HomeCoupleDecorSaveResult(
+              HomeCoupleDecorSaveStatus.rateLimited,
+              retryAfterMs: wait,
+            );
+          }
         } catch (_) {}
       }
-      return HomeCoupleDecorSaveResult(HomeCoupleDecorSaveStatus.failed,
-          message: AppErrorMapper.resolve(error).message);
+      return HomeCoupleDecorSaveResult(
+        HomeCoupleDecorSaveStatus.failed,
+        message: AppErrorMapper.resolve(error).message,
+      );
     }
   }
 
