@@ -29,6 +29,8 @@ import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_signed_audio_upload.dart';
 import 'package:soullocket_app/utils/services/storage/voice_upload_scope.dart';
 import 'package:soullocket_app/utils/voice_storage_capacity.dart';
+import 'package:soullocket_app/utils/services/pro_feature_limits.dart';
+import 'package:soullocket_app/widgets/pro_upsell_dialog.dart';
 import 'package:soullocket_app/utils/screen_activity_mixin.dart';
 import 'package:soullocket_app/views/utilities/widgets/voice_message_studio.dart';
 
@@ -444,9 +446,32 @@ class _VoiceScreenState extends State<VoiceScreen>
         return;
       }
 
-      _recordLimitTimer = Timer(Duration(milliseconds: remainingMs), () async {
+      // Tài khoản thường ghi tối đa 60 giây mỗi tin; PRO ghi tới hết dung lượng nhà.
+      final freeCapMs = ProFeatureLimits.freeVoiceMessage.inMilliseconds;
+      final freeCapped = remainingMs > freeCapMs && !await checkProAccess();
+      // Trừ phần đã ghi trong lúc chờ kiểm tra PRO để không vượt 60 giây.
+      final startedAt = _recordStartedAt;
+      final spentMs = freeCapped && startedAt != null
+          ? DateTime.now().difference(startedAt).inMilliseconds
+          : 0;
+      final limitMs = freeCapped
+          ? (freeCapMs - spentMs).clamp(0, freeCapMs).toInt()
+          : remainingMs;
+      _recordLimitTimer = Timer(Duration(milliseconds: limitMs), () async {
         if (!_isRecording) return;
-        await _stopRecordingAndUpload(reachedLimit: true);
+        await _stopRecordingAndUpload(reachedLimit: !freeCapped);
+        if (freeCapped && mounted) {
+          unawaited(
+            showProUpsell(
+              context,
+              houseId: widget.houseId,
+              message: L10nService().format('pro_limit_voice_length', {
+                'seconds': ProFeatureLimits.freeVoiceMessage.inSeconds,
+                'minutes': VoiceStorageCapacity.capacityMs ~/ 60000,
+              }),
+            ),
+          );
+        }
       });
     } catch (e, stackTrace) {
       if (!_isRecording) _releaseVoiceRecordingQuiet();

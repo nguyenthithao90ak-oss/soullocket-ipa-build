@@ -12,6 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../utils/services/export_service.dart';
+import '../../utils/services/pro_feature_limits.dart';
+import '../../widgets/pro_upsell_dialog.dart';
+import '../../widgets/utility_vip_badge.dart';
 import 'widgets/keepsake_design.dart';
 
 class DiaryExportScreen extends StatefulWidget {
@@ -34,6 +37,10 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   bool _isLoading = true;
   bool _isExportingHtml = false;
   bool _isExportingAll = false;
+  bool _isExportingPdf = false;
+  bool? _isPro;
+  bool get _isBusy =>
+      _isExportingHtml || _isExportingAll || _isExportingPdf;
   double _exportProgress = 0;
   String _exportStatus = '';
   String? _exportError;
@@ -47,6 +54,11 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
   void initState() {
     super.initState();
     _loadHouseName();
+    unawaited(
+      checkProAccess().then((isPro) {
+        if (mounted) setState(() => _isPro = isPro);
+      }),
+    );
   }
 
   Future<void> _loadHouseName() async {
@@ -152,32 +164,67 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     );
   }
 
-  Future<void> _exportHtml() async {
-    if (_isExportingHtml || _isExportingAll) return;
+  Future<void> _exportHtml() => _exportDiaryFile(DiaryExportFormat.html);
+
+  Future<void> _exportPdf() => _exportDiaryFile(DiaryExportFormat.pdf);
+
+  // Tài khoản thường: bản web 30 ngày gần nhất. PRO: toàn bộ và có bản PDF đẹp.
+  Future<void> _exportDiaryFile(DiaryExportFormat format) async {
+    if (_isBusy) return;
+    final isPdf = format == DiaryExportFormat.pdf;
+    // Khóa nút ngay khi bấm: kiểm tra PRO có thể chờ mạng vài giây.
     setState(() {
-      _isExportingHtml = true;
+      if (isPdf) {
+        _isExportingPdf = true;
+      } else {
+        _isExportingHtml = true;
+      }
       _exportError = null;
       _retryExport = null;
     });
 
     try {
+      final isPro = await checkProAccess();
+      if (!mounted) return;
+      setState(() => _isPro = isPro);
+      if (isPdf && !isPro) {
+        setState(() => _isExportingPdf = false);
+        await showProUpsell(
+          context,
+          houseId: widget.houseId,
+          message: L10nService().format('pro_limit_diary_export', {
+            'days': ProFeatureLimits.freeDiaryExportDays,
+          }),
+        );
+        return;
+      }
+      final sinceMs = isPro
+          ? null
+          : DateTime.now()
+                .subtract(
+                  const Duration(days: ProFeatureLimits.freeDiaryExportDays),
+                )
+                .millisecondsSinceEpoch;
       final filePath = await _exportService.exportDiary(
         houseId: widget.houseId,
         houseName: _houseName,
-        format: DiaryExportFormat.html,
+        format: format,
+        sinceMs: sinceMs,
       );
 
       if (!mounted) return;
 
       if (filePath != null) {
-        _addToHistory(filePath, 'html');
+        _addToHistory(filePath, isPdf ? 'pdf' : 'html');
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
             content: Text(
               L10nScope.of(context).format(
-                'ui_utilities_exported_html_value1_b8061a',
+                isPdf
+                    ? 'diary_export_pdf_done'
+                    : 'ui_utilities_exported_html_value1_b8061a',
                 {'value1': filePath.split('/').last},
               ),
             ),
@@ -194,18 +241,23 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
       final message = ExportService.errorMessage(e);
       setState(() {
         _exportError = message;
-        _retryExport = _exportHtml;
+        _retryExport = isPdf ? _exportPdf : _exportHtml;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     } finally {
-      if (mounted) setState(() => _isExportingHtml = false);
+      if (mounted) {
+        setState(() {
+          _isExportingHtml = false;
+          _isExportingPdf = false;
+        });
+      }
     }
   }
 
   Future<void> _exportAllMemories() async {
-    if (_isExportingHtml || _isExportingAll) return;
+    if (_isBusy) return;
     setState(() {
       _isExportingAll = true;
       _exportError = null;
@@ -472,6 +524,27 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                         isBusy: _isExportingHtml,
                         onTap: _exportHtml,
                       ),
+                      if (_isPro == false) ...[
+                        const SizedBox(height: 8),
+                        _buildNote(
+                          Icons.workspace_premium_outlined,
+                          L10nService().format('pro_note_diary_export_range', {
+                            'days': ProFeatureLimits.freeDiaryExportDays,
+                          }),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      _buildExportCard(
+                        id: 'pdf',
+                        icon: Icons.picture_as_pdf_outlined,
+                        title: context.tr('export_pdf'),
+                        description: context.tr('diary_export_pdf_body'),
+                        action: context.tr('export_pdf'),
+                        color: KeepsakeStyle.rosewood,
+                        isBusy: _isExportingPdf,
+                        onTap: _exportPdf,
+                        proBadge: true,
+                      ),
                       const SizedBox(height: 12),
                       _buildExportCard(
                         id: 'zip',
@@ -504,7 +577,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                                     minimumSize: const Size(48, 48),
                                     foregroundColor: KeepsakeStyle.ink(context),
                                   ),
-                                  onPressed: _isExportingHtml || _isExportingAll
+                                  onPressed: _isBusy
                                       ? null
                                       : _retryExport,
                                   child: Text(context.tr('util_thli_4dffdf')),
@@ -778,7 +851,9 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  record.type == 'html'
+                  record.type == 'pdf'
+                      ? Icons.picture_as_pdf_outlined
+                      : record.type == 'html'
                       ? Icons.description_outlined
                       : Icons.folder_zip_outlined,
                   color: KeepsakeStyle.accent(context),
@@ -939,6 +1014,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
     required Color color,
     required bool isBusy,
     required VoidCallback onTap,
+    bool proBadge = false,
   }) {
     return _buildPanel(
       child: Column(
@@ -965,13 +1041,23 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: KeepsakeStyle.text(
-                        context,
-                        size: 16,
-                        weight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: KeepsakeStyle.text(
+                              context,
+                              size: 16,
+                              weight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (proBadge) ...[
+                          const SizedBox(width: 6),
+                          const UtilityVipBadge(compact: true),
+                        ],
+                      ],
                     ),
                     Text(
                       id.toUpperCase(),
@@ -998,7 +1084,7 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
           const SizedBox(height: 14),
           FilledButton(
             key: Key('diary-export-$id'),
-            onPressed: _isExportingHtml || _isExportingAll ? null : onTap,
+            onPressed: _isBusy ? null : onTap,
             style: KeepsakeStyle.primary(context).copyWith(
               minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
               padding: const WidgetStatePropertyAll(

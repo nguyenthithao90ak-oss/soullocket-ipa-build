@@ -285,6 +285,12 @@ class AppEntryController {
     final pausedAt = DateTime.now();
     _lastPausedAt = pausedAt;
     await _persistBackgroundTimestamp(pausedAt);
+    unawaited(
+      _runGuarded(
+        'schedule inactivity reminder while backgrounded',
+        () => NotificationService().syncInactivityReminder(),
+      ),
+    );
     unawaited(_adMobService.pauseAutoInterstitialScheduler());
     EncryptionService().notifyAppBackgrounded();
     if (keepPresenceOnline) {
@@ -329,8 +335,8 @@ class AppEntryController {
     }
 
     await _runGuarded(
-      'sync inactivity reminder on resume',
-      () => NotificationService().syncInactivityReminder(),
+      'cancel inactivity reminder on resume',
+      () => NotificationService().cancelInactivityReminder(),
     );
     await _runGuarded(
       'record app open metric on resume',
@@ -353,6 +359,12 @@ class AppEntryController {
 
   Future<void> refreshForegroundPresence() async {
     if (pendingSignedOutCleanup != null) return;
+    unawaited(
+      _runGuarded(
+        'cancel inactivity reminder while foreground',
+        () => NotificationService().cancelInactivityReminder(),
+      ),
+    );
     await _refreshPresenceContext();
     await _sessionConnectivityCoordinator.goOnlineNow();
   }
@@ -432,8 +444,8 @@ class AppEntryController {
 
     unawaited(
       _runGuarded(
-        'sync inactivity reminder on app open',
-        () => NotificationService().syncInactivityReminder(),
+        'cancel inactivity reminder on app open',
+        () => NotificationService().cancelInactivityReminder(),
       ),
     );
 

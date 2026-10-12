@@ -1444,10 +1444,17 @@ class AuthSignInService {
           message: AppErrorMapper.authSyncMessage,
         );
       }
-      final headers = await AppCheckHttpHeaders.withOptionalToken({
+      Map<String, String> headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
-      }).timeout(const Duration(seconds: 8));
+      };
+      try {
+        headers = await AppCheckHttpHeaders.withOptionalToken(
+          headers,
+        ).timeout(const Duration(seconds: 4));
+      } catch (_) {
+        // App Check lỗi/chậm: vẫn gọi tiếp, server quyết định.
+      }
       if (_auth.currentUser?.uid != user.uid) {
         throw AppErrorInfo(
           kind: AppErrorKind.user,

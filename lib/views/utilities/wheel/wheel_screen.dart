@@ -15,6 +15,8 @@ import '../../../core/sl_theme.dart';
 import '../../../utils/services/location_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/love_wheel_service.dart';
+import '../../../utils/services/pro_feature_limits.dart';
+import '../../../widgets/pro_upsell_dialog.dart';
 import 'package:soullocket_app/widgets/sl_toast.dart';
 import 'wheel_options_editor.dart';
 import 'wheel_stage.dart';
@@ -305,12 +307,42 @@ class _WheelScreenState extends State<WheelScreen>
     }
   }
 
+  // Tài khoản thường: 1 lượt quay/ngày; PRO quay không giới hạn.
+  final DailyFreeUsage _freeSpins = DailyFreeUsage('wheel');
+  bool _checkingSpinAccess = false;
+
+  Future<bool> _allowSpin() async {
+    if (await useDailyFreeTurn(
+      _freeSpins,
+      ProFeatureLimits.freeWheelSpinsPerDay,
+    )) {
+      return true;
+    }
+    if (!mounted) return false;
+    await showProUpsell(
+      context,
+      houseId: widget.houseId,
+      message: L10nService().format('pro_limit_wheel_daily', {
+        'count': ProFeatureLimits.freeWheelSpinsPerDay,
+      }),
+    );
+    return false;
+  }
+
   Future<void> _spin() async {
     if (_items.length < 2 ||
         _spinController.isAnimating ||
         _isSpinning ||
-        _isFetchingRestaurants) {
+        _isFetchingRestaurants ||
+        _checkingSpinAccess) {
       return;
+    }
+
+    _checkingSpinAccess = true;
+    try {
+      if (!await _allowSpin() || !mounted) return;
+    } finally {
+      _checkingSpinAccess = false;
     }
 
     _focusNode.unfocus();

@@ -1691,6 +1691,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     final markerSignature = _buildMarkerSignature(liveMarkerSpecs);
     if (markerSignature != _liveMarkerSignature) {
       _liveMarkerSignature = markerSignature;
+      _liveMapMarkerSpecs = liveMarkerSpecs;
       _liveMarkersVN.value = liveMarkerSpecs
           .map(_buildOsmMarker)
           .toList(growable: false);
@@ -1701,6 +1702,8 @@ extension _MapLocationLogicExt on _MapScreenState {
       _livePolylineSignature = polylineSignature;
       _livePolylinesVN.value = livePolylines;
     }
+
+    unawaited(_syncMapboxAnnotations());
 
     if (fitToData && !_didAutoFit && !_isFitting) {
       _fitDebounce?.cancel();

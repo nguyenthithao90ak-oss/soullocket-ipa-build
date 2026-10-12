@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../utils/services/love_insight_service.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/l10n_service.dart';
+import '../../utils/services/utility_service.dart';
+import '../../widgets/pro_upsell_dialog.dart';
 import 'love_insights_view.dart';
 
 class LoveInsightsScreen extends StatefulWidget {
@@ -34,11 +38,17 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   LoveInsightData? _insight;
   bool _isLoading = true;
   String? _errorText;
+  bool? _isPro;
 
   @override
   void initState() {
     super.initState();
     _loadInsight();
+    unawaited(
+      checkProAccess().then((isPro) {
+        if (mounted) setState(() => _isPro = isPro);
+      }),
+    );
   }
 
   Future<void> _loadInsight() async {
@@ -100,6 +110,12 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
       avatarU2: widget.avatarU2,
       loveDays: widget.loveDays,
       relationshipMode: widget.relationshipMode,
+      isPro: _isPro ?? UtilityService.proAccess.value ?? true,
+      onUpgrade: () => showProUpsell(
+        context,
+        houseId: widget.houseId,
+        message: L10nService().translate('pro_insights_desc'),
+      ),
     );
   }
 }

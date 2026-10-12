@@ -19,6 +19,9 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/live_snapshot.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/storage/storage_service.dart';
+import '../../utils/services/pro_feature_limits.dart';
+import '../../widgets/pro_upsell_dialog.dart';
+import '../../widgets/utility_vip_badge.dart';
 import 'love_card_public_viewer_screen.dart';
 
 part 'love_card/dialogs/love_card_overlay_dialog.dart';
@@ -516,11 +519,35 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     setState(() => _currentIndex = 1);
   }
 
-  void _selectTheme(String key) {
+  // Lần chọn mẫu mới nhất; lần chọn cũ xong kiểm tra PRO muộn thì bỏ qua.
+  int _themeSelection = 0;
+
+  Future<void> _selectTheme(String key) async {
     final nextTheme = _themes[key];
     if (nextTheme == null) {
       return;
     }
+    final selection = ++_themeSelection;
+    // Bộ mẫu PRO: tài khoản thường thấy lời mời nâng cấp thay vì đổi mẫu.
+    if (ProFeatureLimits.proLoveCardThemes.contains(key) &&
+        key != _selectedTheme) {
+      final isPro = await checkProAccess();
+      if (!mounted || selection != _themeSelection) return;
+      if (isPro) {
+        _applyTheme(key, nextTheme);
+        return;
+      }
+      await showProUpsell(
+        context,
+        houseId: widget.houseId,
+        message: context.tr('pro_limit_love_card_theme'),
+      );
+      return;
+    }
+    _applyTheme(key, nextTheme);
+  }
+
+  void _applyTheme(String key, LoveCardStudioTheme nextTheme) {
     final previousTheme = _selectedTheme;
     final currentSignature = _signatureCtrl.text.trim();
     final shouldSyncSignature =

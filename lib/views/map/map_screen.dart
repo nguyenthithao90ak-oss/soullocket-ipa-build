@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mbx;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -119,6 +120,11 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen>
     with WidgetsBindingObserver, ScreenActivityMixin {
   final fm.MapController _mapController = fm.MapController();
+  mbx.MapboxMap? _mapboxMap;
+  mbx.PointAnnotationManager? _mapboxPointManager;
+  mbx.PolylineAnnotationManager? _mapboxPolylineManager;
+  dynamic _mapboxPointTapSubscription;
+  int _mapboxSyncGeneration = 0;
   final LocationService _locationService = LocationService();
   final NotificationService _notificationService = NotificationService();
   final MapPinLimitService _mapPinLimitService = MapPinLimitService();
@@ -140,6 +146,8 @@ class _MapScreenState extends State<MapScreen>
       ValueNotifier<List<fm.Polyline>>(const []);
   final ValueNotifier<_LiveUiSnapshot> _liveUiVN =
       ValueNotifier<_LiveUiSnapshot>(_LiveUiSnapshot.empty());
+  List<_MapMarkerSpec> _staticMapMarkerSpecs = const [];
+  List<_MapMarkerSpec> _liveMapMarkerSpecs = const [];
 
   bool _isLoading = true;
   bool _isFetchingRoute = false;
@@ -220,6 +228,7 @@ class _MapScreenState extends State<MapScreen>
   bool _realtimePipelinesActive = false;
   bool _isFitting = false;
   bool _useMapboxTiles = false;
+  bool _useMapboxSdk = false;
   String? _lastRouteKey;
   int _routeRequestToken = 0;
   String _memorySignature = '';
@@ -289,7 +298,11 @@ class _MapScreenState extends State<MapScreen>
     try {
       final isVip = await PurchaseService().isVip();
       if (!mounted || !isVip) return;
-      setState(() => _useMapboxTiles = true);
+      setState(() {
+        _useMapboxTiles = false;
+        _useMapboxSdk = true;
+      });
+      unawaited(_syncMapboxAnnotations());
     } catch (error) {
       debugPrint('[Map] Không xác định được quyền Mapbox PRO: $error');
     }
@@ -312,6 +325,8 @@ class _MapScreenState extends State<MapScreen>
     _sleepModeSub?.cancel();
     _musicSub?.cancel();
     _mapController.dispose();
+    _mapboxPointTapSubscription?.cancel();
+    _mapboxMap?.dispose();
     _panelController.dispose();
     _panelExtent.dispose();
     _staticMarkersVN.dispose();
@@ -1143,10 +1158,52 @@ class _MapScreenState extends State<MapScreen>
 
   void _setStaticMarkers(List<fm.Marker> markers) {
     _staticMarkersVN.value = markers;
+    _staticMapMarkerSpecs = _buildStaticMapMarkerSpecs();
+    unawaited(_syncMapboxAnnotations());
+  }
+
+  List<_MapMarkerSpec> _buildStaticMapMarkerSpecs() {
+    final specs = <_MapMarkerSpec>[];
+    for (final memory in _memories.take(_kMaxRenderedMemoryMarkers)) {
+      specs.add(
+        _MapMarkerSpec(
+          id: 'memory_${memory.id}',
+          point: ll.LatLng(memory.lat, memory.lng),
+          icon: Icons.auto_awesome_rounded,
+          color: const Color(0xFF8B5CF6),
+          title: memory.title,
+          subtitle: memory.note.isEmpty
+              ? L10nService().translate('map_knimbn_288ae0')
+              : memory.note,
+          compact: true,
+          onTap: () => _showMemoryDialog(memory),
+        ),
+      );
+    }
+    final checkins = List<_MapCheckinItem>.of(_checkins)
+      ..sort((a, b) => (a.ts ?? 0).compareTo(b.ts ?? 0));
+    for (final checkin in checkins.take(_kMaxRenderedCheckinMarkers)) {
+      specs.add(
+        _MapMarkerSpec(
+          id: 'checkin_${checkin.id}',
+          point: ll.LatLng(checkin.lat, checkin.lng),
+          icon: Icons.favorite_rounded,
+          color: _kMapPink,
+          title: checkin.displayTitle,
+          subtitle: checkin.note.isEmpty
+              ? context.tr('ui_map_check_in_48431e')
+              : checkin.note,
+          compact: true,
+          onTap: () => _showCheckinDialog(checkin),
+        ),
+      );
+    }
+    return specs;
   }
 
   void _setCheckinPolylines(List<fm.Polyline> polylines) {
     _checkinPolylinesVN.value = polylines;
+    unawaited(_syncMapboxAnnotations());
   }
 
   void _setHistoryPolylines(List<fm.Polyline> polylines) {
@@ -1154,6 +1211,113 @@ class _MapScreenState extends State<MapScreen>
     if (signature == _historyPolylineSignature) return;
     _historyPolylineSignature = signature;
     _historyPolylinesVN.value = polylines;
+    unawaited(_syncMapboxAnnotations());
+  }
+
+  mbx.Point _mapboxPoint(ll.LatLng point) => mbx.Point(
+        coordinates: mbx.Position(point.longitude, point.latitude),
+      );
+
+  List<ll.LatLng> _validMapboxPoints(Iterable<ll.LatLng> points) => points
+      .where((point) => _isValidCoordinate(point.latitude, point.longitude))
+      .toList(growable: false);
+
+  Future<void> _syncMapboxAnnotations() async {
+    if (!_useMapboxSdk || _mapboxMap == null || _mapboxPointManager == null) {
+      return;
+    }
+    final pointManager = _mapboxPointManager!;
+    final polylineManager = _mapboxPolylineManager;
+    final generation = ++_mapboxSyncGeneration;
+    try {
+      await pointManager.deleteAll();
+      await polylineManager?.deleteAll();
+      if (!mounted || generation != _mapboxSyncGeneration) return;
+
+      final markerSpecs = <_MapMarkerSpec>[
+        ..._staticMapMarkerSpecs,
+        ..._liveMapMarkerSpecs,
+      ];
+      if (markerSpecs.isNotEmpty) {
+        final options = markerSpecs
+            .map(
+              (marker) => mbx.PointAnnotationOptions(
+                geometry: _mapboxPoint(marker.point),
+                textField: marker.title,
+                textSize: marker.compact ? 11 : 13,
+                textColor: marker.color.value,
+                textHaloColor: Colors.white.value,
+                textHaloWidth: 1.4,
+                textOffset: const [0, -1.4],
+                textAnchor: mbx.TextAnchor.BOTTOM,
+                customData: <String, Object>{'id': marker.id},
+              ),
+            )
+            .toList(growable: false);
+        await pointManager.createMulti(options);
+      }
+
+      if (polylineManager == null) return;
+      final lineOptions = <mbx.PolylineAnnotationOptions>[];
+      void addLine(
+        Iterable<ll.LatLng> source, {
+        required Color color,
+        required double width,
+        double borderWidth = 1.5,
+      }) {
+        final points = _validMapboxPoints(source);
+        if (points.length < 2) return;
+        lineOptions.add(
+          mbx.PolylineAnnotationOptions(
+            geometry: mbx.LineString(
+              coordinates: points.map((point) => mbx.Position(
+                point.longitude,
+                point.latitude,
+              )).toList(growable: false),
+            ),
+            lineColor: color.value,
+            lineWidth: width,
+            lineBorderColor: _kMapRouteBorder.value,
+            lineBorderWidth: borderWidth,
+            lineJoin: mbx.LineJoin.ROUND,
+          ),
+        );
+      }
+
+      if (_historyBundle.myPoints.length >= 2) {
+        addLine(
+          _compressHistoryPoints(_historyBundle.myPoints).map((point) => point.latLng),
+          color: _kMapBlue,
+          width: 4.8,
+        );
+      }
+      if (_historyBundle.partnerPoints.length >= 2) {
+        addLine(
+          _compressHistoryPoints(_historyBundle.partnerPoints).map((point) => point.latLng),
+          color: _kMapPinkDeep,
+          width: 4.8,
+        );
+      }
+      final sortedCheckins = List<_MapCheckinItem>.of(_checkins)
+        ..sort((a, b) => (a.ts ?? 0).compareTo(b.ts ?? 0));
+      if (sortedCheckins.length >= 2) {
+        addLine(
+          sortedCheckins.map((item) => ll.LatLng(item.lat, item.lng)),
+          color: _kMapPinkDeep,
+          width: 4.6,
+        );
+      }
+      final routePoints = _routeSnapshot?.points;
+      if (routePoints != null && routePoints.length >= 2) {
+        addLine(routePoints, color: _kMapRouteGlow, width: 9.5, borderWidth: 0);
+        addLine(routePoints, color: _kMapPinkDeep, width: 5.8, borderWidth: 2.3);
+      }
+      if (lineOptions.isNotEmpty) {
+        await polylineManager.createMulti(lineOptions);
+      }
+    } catch (error) {
+      debugPrint('[Mapbox] Annotation sync skipped: $error');
+    }
   }
 
   void _maybeScheduleAutoFit({required bool fitToData}) {

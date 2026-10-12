@@ -261,10 +261,14 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           ),
           children: [
             fm.TileLayer(
+              key: ValueKey(_useMapboxTiles),
               urlTemplate: _useMapboxTiles
                   ? AppConfig.mapboxTileUrl
                   : AppConfig.openStreetMapTileUrl,
               userAgentPackageName: AppConfig.androidPackageName,
+              tileDimension: _useMapboxTiles ? 512 : 256,
+              zoomOffset: _useMapboxTiles ? -1 : 0,
+              minZoom: _useMapboxTiles ? 1 : 0,
               maxZoom: 19,
               maxNativeZoom: 19,
               retinaMode: false,

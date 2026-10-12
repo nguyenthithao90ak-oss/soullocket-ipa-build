@@ -186,6 +186,13 @@ class _LoveCardThemeRail extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
+                            // Mẫu thuộc bộ PRO luôn có nhãn để người dùng nhận ra.
+                            if (ProFeatureLimits.proLoveCardThemes.contains(
+                              theme.key,
+                            )) ...[
+                              const SizedBox(width: 6),
+                              const UtilityVipBadge(compact: true),
+                            ],
                           ],
                         ),
                       ),

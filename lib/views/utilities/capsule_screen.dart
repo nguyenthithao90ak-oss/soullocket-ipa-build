@@ -21,6 +21,9 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/screen_activity_mixin.dart';
 import '../../utils/services/time_capsule_service.dart';
 import '../../utils/services/storage/storage_service.dart';
+import '../../utils/services/pro_feature_limits.dart';
+import '../../widgets/pro_upsell_dialog.dart';
+import '../../widgets/utility_vip_badge.dart';
 import '../../core/sl_theme.dart';
 import 'widgets/capsule_design.dart';
 
@@ -54,6 +57,8 @@ class _CapsuleScreenState extends State<CapsuleScreen>
   DateTime? _unlockDate;
   XFile? _selectedImage;
   bool _isUploading = false;
+  // Đang chờ kiểm tra PRO trước khi gửi: bỏ qua lần bấm thứ hai.
+  bool _checkingProAccess = false;
   final StorageService _storageService = StorageService();
 
   List<Map<String, dynamic>> _capsules = [];
@@ -64,11 +69,26 @@ class _CapsuleScreenState extends State<CapsuleScreen>
   String get _pendingUploadKey =>
       '$_pendingUploadKeyPrefix${FirebaseAuth.instance.currentUser?.uid ?? 'signed_out'}_${widget.houseId}';
 
+  // Thư hẹn giờ: tài khoản thường tối đa 3 thư chờ mở, đính kèm ảnh là PRO.
+  bool? _isPro;
+
   @override
   void initState() {
     super.initState();
     _loadCapsules();
     unawaited(_promptPendingUploadRetryIfNeeded());
+    unawaited(
+      checkProAccess().then((isPro) {
+        if (mounted) setState(() => _isPro = isPro);
+      }),
+    );
+  }
+
+  int get _pendingCapsuleCount {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    return _capsules
+        .where((c) => ((c['unlock_time_ms'] as num?)?.toInt() ?? 0) > nowMs)
+        .length;
   }
 
   @override
@@ -185,6 +205,16 @@ class _CapsuleScreenState extends State<CapsuleScreen>
   }
 
   Future<void> _pickImage() async {
+    if (_selectedImage == null && !await checkProAccess()) {
+      if (!mounted) return;
+      setState(() => _isPro = false);
+      await showProUpsell(
+        context,
+        houseId: widget.houseId,
+        message: context.tr('pro_limit_capsule_photo'),
+      );
+      return;
+    }
     final file = await _storageService.pickImage();
     if (file != null) {
       setState(() {
@@ -194,7 +224,7 @@ class _CapsuleScreenState extends State<CapsuleScreen>
   }
 
   Future<void> _addCapsule({Map<String, dynamic>? retryDraft}) async {
-    if (_isUploading) return;
+    if (_isUploading || _checkingProAccess) return;
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -234,6 +264,34 @@ class _CapsuleScreenState extends State<CapsuleScreen>
         SLSnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))),
       );
       return;
+    }
+    // Bản nháp gửi lại đã qua kiểm tra lúc tạo; chỉ chặn thư mới.
+    if (retryDraft == null) {
+      final overPending =
+          _pendingCapsuleCount >= ProFeatureLimits.freeCapsulePending;
+      var isPro = true;
+      if (overPending || selectedImage != null) {
+        _checkingProAccess = true;
+        try {
+          isPro = await checkProAccess();
+        } finally {
+          _checkingProAccess = false;
+        }
+      }
+      if (!isPro) {
+        if (!mounted) return;
+        setState(() => _isPro = false);
+        await showProUpsell(
+          context,
+          houseId: houseId,
+          message: overPending
+              ? L10nService().format('pro_limit_capsule_pending', {
+                  'count': ProFeatureLimits.freeCapsulePending,
+                })
+              : context.tr('pro_limit_capsule_photo'),
+        );
+        return;
+      }
     }
     if (!mounted) return;
 
@@ -807,13 +865,26 @@ class _CapsuleScreenState extends State<CapsuleScreen>
   Widget _buildModernImagePicker() {
     final hasImage = _selectedImage != null;
     if (!hasImage) {
-      return CapsuleChoiceTile(
+      final tile = CapsuleChoiceTile(
         key: const ValueKey('capsule-image-choice'),
         label: context.tr('util_chnnh_719c35'),
         title: context.tr('util_chnnh_719c35'),
         subtitle: context.tr('util_knimnhkm_583184'),
         icon: Icons.add_photo_alternate_rounded,
         onTap: _pickImage,
+      );
+      if (_isPro != false) return tile;
+      // Nhãn PRO: tài khoản thường chạm vào sẽ thấy lời mời nâng cấp.
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          tile,
+          const PositionedDirectional(
+            top: -6,
+            end: -4,
+            child: UtilityVipBadge(compact: true),
+          ),
+        ],
       );
     }
     return Semantics(

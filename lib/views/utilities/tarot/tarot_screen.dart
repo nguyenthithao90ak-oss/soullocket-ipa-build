@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/pro_feature_limits.dart';
+import '../../../widgets/pro_upsell_dialog.dart';
+import '../../../widgets/utility_vip_badge.dart';
 import 'models/tarot_models.dart';
 import 'painters/tarot_painters.dart';
 
@@ -149,9 +152,47 @@ class _TarotScreenState extends State<TarotScreen> {
     }
   }
 
+  // Tài khoản thường: 1 lượt trải bài/ngày (lá bài hôm nay không tính),
+  // kiểu trải bài cặp đôi dành cho PRO.
+  final DailyFreeUsage _freeReadings = DailyFreeUsage('tarot');
+  bool _checkingReadingAccess = false;
+
+  Future<bool> _allowReading() async {
+    final needsSpreadPro = ProFeatureLimits.proTarotSpreads.contains(spread.id);
+    final allowed = needsSpreadPro
+        ? await checkProAccess()
+        : await useDailyFreeTurn(
+            _freeReadings,
+            ProFeatureLimits.freeTarotReadingsPerDay,
+          );
+    if (allowed) return true;
+    if (!mounted) return false;
+    await showProUpsell(
+      context,
+      houseId: widget.houseId,
+      myName: widget.myName,
+      // Không dùng tr() của Tarot vì hàm đó tự thêm tiền tố 'tarot2_'.
+      message: needsSpreadPro
+          ? L10nService().translate('pro_limit_tarot_spread')
+          : L10nService().format('pro_limit_tarot_daily', {
+              'count': ProFeatureLimits.freeTarotReadingsPerDay,
+            }),
+    );
+    return false;
+  }
+
   Future<void> start([TarotCard? daily]) async {
-    if (busy || saving) return;
+    if (busy || saving || _checkingReadingAccess) return;
     FocusManager.instance.primaryFocus?.unfocus();
+    if (daily == null) {
+      _checkingReadingAccess = true;
+      try {
+        if (!await _allowReading()) return;
+      } finally {
+        _checkingReadingAccess = false;
+      }
+    }
+    if (!mounted) return;
     setState(() => busy = true);
     await Future<void>.delayed(Duration(milliseconds: reduceMotion ? 0 : 250));
     if (!mounted) return;
@@ -741,13 +782,25 @@ class _TarotScreenState extends State<TarotScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.title,
-                      style: SLTheme.quicksand(
-                        color: ink,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            item.title,
+                            style: SLTheme.quicksand(
+                              color: ink,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        if (ProFeatureLimits.proTarotSpreads.contains(
+                          item.id,
+                        )) ...[
+                          const SizedBox(width: 6),
+                          const UtilityVipBadge(compact: true),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(

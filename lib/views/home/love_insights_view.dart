@@ -7,6 +7,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/love_insight_service.dart';
 import 'widgets/insight_profile_avatar.dart';
+import '../../widgets/utility_vip_badge.dart';
 
 part 'widgets/love_insights/insight_header_cards.dart';
 part 'widgets/love_insights/insight_stats_grid.dart';
@@ -48,6 +49,9 @@ class LoveInsightsView extends StatelessWidget {
   final String avatarU2;
   final int loveDays;
   final String relationshipMode;
+  // Báo cáo nâng cao (lời khuyên, dòng thời gian) dành cho PRO.
+  final bool isPro;
+  final VoidCallback? onUpgrade;
 
   const LoveInsightsView({
     super.key,
@@ -61,6 +65,8 @@ class LoveInsightsView extends StatelessWidget {
     required this.relationshipMode,
     this.isLoading = false,
     this.errorText,
+    this.isPro = true,
+    this.onUpgrade,
   });
 
   bool get _isSingle => relationshipMode == 'single';
@@ -224,9 +230,64 @@ class LoveInsightsView extends StatelessWidget {
           ],
           _buildHabitCard(context, insight),
           SLSpacing.h20,
-          _buildAdvisorCard(context, insight),
-          SLSpacing.h20,
-          _buildTimelineSection(context, insight),
+          if (isPro) ...[
+            _buildAdvisorCard(context, insight),
+            SLSpacing.h20,
+            _buildTimelineSection(context, insight),
+          ] else
+            _buildProReportCard(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProReportCard(BuildContext context) {
+    return Container(
+      key: const ValueKey('insight-pro-report'),
+      padding: const EdgeInsets.all(20),
+      decoration: _softCardDecoration(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.insights_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.tr('pro_insights_title'),
+                  style: SLTheme.quicksand(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: _InsightStyle.ink(context),
+                  ),
+                ),
+              ),
+              const UtilityVipBadge(compact: true),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.tr('pro_insights_desc'),
+            style: SLTheme.quicksand(
+              fontSize: 13.5,
+              height: 1.45,
+              color: _InsightStyle.ink(context).withValues(alpha: 0.72),
+            ),
+          ),
+          if (onUpgrade != null) ...[
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              key: const ValueKey('insight-pro-upgrade'),
+              onPressed: onUpgrade,
+              style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+              icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+              label: Text(context.tr('p6_upgrade_vip')),
+            ),
+          ],
         ],
       ),
     );

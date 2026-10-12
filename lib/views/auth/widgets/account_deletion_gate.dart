@@ -40,33 +40,49 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
       _busy = true;
       _error = null;
     });
-    try {
-      if (cancel) {
-        await widget.cancelRequest().timeout(const Duration(seconds: 30));
+    Object? lastError;
+    // Lần đầu (chưa biết trạng thái): thử lại 1 lần rồi mở khóa (fail-open),
+    // vì server vẫn chặn ghi dữ liệu cho tài khoản đang chờ xóa.
+    final attempts = (!cancel && _status == null) ? 2 : 1;
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      try {
+        if (cancel) {
+          await widget.cancelRequest().timeout(const Duration(seconds: 30));
+        }
+        final status = await widget.loadStatus().timeout(
+          const Duration(seconds: 30),
+        );
+        if (!mounted) return;
+        setState(() {
+          _status = status;
+          _checked = true;
+          _busy = false;
+        });
+        return;
+      } catch (error) {
+        lastError = error;
+        if (!mounted) return;
+        if (attempt + 1 < attempts) {
+          await Future<void>.delayed(const Duration(seconds: 1));
+          if (!mounted) return;
+        }
       }
-      final status = await widget.loadStatus().timeout(
-        const Duration(seconds: 30),
-      );
-      if (!mounted) return;
-      setState(() {
-        _status = status;
-        _checked = true;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _error = _status == null
-            ? context.tr('ui_app_unable_to_check_login_please_check_the_bd9c62')
-            : AppErrorMapper.resolve(
-                error,
-                fallbackMessage: context.tr(
-                  'account_deletion_status_unavailable',
-                ),
-              ).message;
-      });
-    } finally {
-      if (mounted) setState(() => _busy = false);
     }
+    if (!mounted) return;
+    final error = lastError;
+    setState(() {
+      _busy = false;
+      if (!cancel && _status == null) {
+        // Không xác nhận được có lệnh xóa: cho đi tiếp thay vì kẹt màn hình.
+        _checked = true;
+        _error = null;
+      } else {
+        _error = AppErrorMapper.resolve(
+          error ?? 'account_deletion_status_unavailable',
+          fallbackMessage: context.tr('account_deletion_status_unavailable'),
+        ).message;
+      }
+    });
   }
 
   Future<void> _signOut() async {

@@ -73,7 +73,7 @@ class AppConfig {
   static String get mapboxTileUrl {
     final token = mapboxPublicToken.trim();
     if (token.isEmpty) return openStreetMapTileUrl;
-    return 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}{r}?access_token=$token';
+    return 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}.png?access_token=$token';
   }
   static const String osrmRouteBaseUrl = String.fromEnvironment(
     'OSRM_ROUTE_BASE_URL',
@@ -177,8 +177,8 @@ class AppConfig {
   /// Tạm thời tắt luồng mua/đổi quyền lợi trên iOS để phát hành bản free-only.
   static bool get isPurchaseEnabled => showPurchaseUi;
 
-  /// 1-day free VIP trial for newly created houses
-  static const int newHouseTrialDays = 1;
+  /// Số ngày dùng thử PRO cho nhà mới; khớp TRIAL_VIP_DURATION_MS (3 ngày) ở functions/vip.js.
+  static const int newHouseTrialDays = 3;
 
   // ── IMAGE QUALITY ─────────────────────────────────────────────────────
   /// Chất lượng nén ảnh khi upload (0-100)

@@ -121,6 +121,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   flutter_map: ^8.3.2
+  mapbox_maps_flutter: ^3.0.0
   live_activities: ^2.5.1
   flutter_background_service: ^5.1.0
   workmanager: ^0.10.10

@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart' hide Query;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:pdf/pdf.dart';
@@ -135,10 +136,12 @@ class ExportService {
     return fallbackName;
   }
 
+  /// [sinceMs]: chỉ xuất nhật ký từ mốc này (tài khoản thường: 30 ngày gần nhất).
   Future<String?> exportDiary({
     required String houseId,
     required DiaryExportFormat format,
     String? houseName,
+    int? sinceMs,
   }) async {
     final resolvedHouseName = houseName?.trim().isNotEmpty == true
         ? houseName!.trim()
@@ -146,13 +149,42 @@ class ExportService {
 
     switch (format) {
       case DiaryExportFormat.pdf:
-        return await exportDiaryToPdf(houseId, resolvedHouseName);
+        return await exportDiaryToPdf(
+          houseId,
+          resolvedHouseName,
+          sinceMs: sinceMs,
+        );
       case DiaryExportFormat.html:
-        return await exportDiaryToHtml(houseId, resolvedHouseName);
+        return await exportDiaryToHtml(
+          houseId,
+          resolvedHouseName,
+          sinceMs: sinceMs,
+        );
     }
   }
 
-  Future<String?> exportDiaryToPdf(String houseId, String houseName) async {
+  // Phông Be Vietnam Pro đóng gói sẵn để PDF hiện đủ dấu tiếng Việt.
+  static Future<pw.ThemeData?> _pdfTheme() async {
+    try {
+      final regular = await rootBundle.load(
+        'assets/fonts/BeVietnamPro-Regular.ttf',
+      );
+      final bold = await rootBundle.load('assets/fonts/BeVietnamPro-Bold.ttf');
+      return pw.ThemeData.withFont(
+        base: pw.Font.ttf(regular),
+        bold: pw.Font.ttf(bold),
+      );
+    } catch (error) {
+      debugPrint('[ExportService] Không tải được phông PDF: $error');
+      return null;
+    }
+  }
+
+  Future<String?> exportDiaryToPdf(
+    String houseId,
+    String houseName, {
+    int? sinceMs,
+  }) async {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) {
       throw const UiCopyException('copy_f15d7c99a3c3');
@@ -163,42 +195,84 @@ class ExportService {
         : 'SoulHouse';
     final scope = await _beginScope(resolvedHouseId);
     try {
-      final entries = await _loadDiaryEntries(scope);
+      final entries = await _loadDiaryEntries(scope, sinceMs: sinceMs);
       if (entries.isEmpty) {
         throw const UiCopyException('copy_1a95ec8dce23');
       }
-      final pdf = pw.Document();
+      final theme = await _pdfTheme();
+      final pdf = theme == null ? pw.Document() : pw.Document(theme: theme);
+      const rose = PdfColor.fromInt(0xFFB32F50);
+      const roseSoft = PdfColor.fromInt(0xFFFDE8ED);
+      const ink = PdfColor.fromInt(0xFF2F2329);
+      const muted = PdfColor.fromInt(0xFF76656C);
+      String dateOf(Map<String, dynamic> entry) {
+        final ts = _timestamp(entry);
+        return ts > 0
+            ? LocaleDateFormat.date(DateTime.fromMillisecondsSinceEpoch(ts))
+            : (entry['time']?.toString() ?? '');
+      }
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 40),
+          footer: (context) => pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Text(
+              '${context.pageNumber}/${context.pagesCount}',
+              style: const pw.TextStyle(fontSize: 9, color: muted),
+            ),
+          ),
           build: (context) => [
-            pw.Header(
-              level: 0,
-              child: pw.Text(
-                'NHAT KY TINH YEU - $resolvedHouseName',
-                style: const pw.TextStyle(
-                  fontSize: 24,
-                  fontWeight: pw.FontWeight.bold,
-                ),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(22),
+              decoration: const pw.BoxDecoration(
+                color: roseSoft,
+                borderRadius: pw.BorderRadius.all(pw.Radius.circular(16)),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    L10nService().translate('diary_export_pdf_title'),
+                    style: const pw.TextStyle(
+                      fontSize: 26,
+                      fontWeight: pw.FontWeight.bold,
+                      color: rose,
+                    ),
+                  ),
+                  pw.SizedBox(height: 6),
+                  pw.Text(
+                    resolvedHouseName,
+                    style: const pw.TextStyle(fontSize: 15, color: ink),
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    '${dateOf(entries.first)} – ${dateOf(entries.last)} · '
+                    '${L10nService().format('diary_export_pdf_entries', {'count': entries.length})}',
+                    style: const pw.TextStyle(fontSize: 11, color: muted),
+                  ),
+                ],
               ),
             ),
+            pw.SizedBox(height: 18),
             ...entries.map((entry) {
-              final date = entry['time'] ?? '';
               final author =
                   entry['authorName'] ??
                   entry['author'] ??
                   UiCopy.text('copy_7f0ab3a994bf');
-              final mood = entry['mood'] ?? '';
-              final content = entry['content'] ?? entry['c'] ?? '';
+              final mood = entry['mood']?.toString() ?? '';
+              final content = (entry['content'] ?? entry['c'] ?? '').toString();
 
               return pw.Container(
-                margin: const pw.EdgeInsets.symmetric(vertical: 10),
-                padding: const pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColors.pink, width: 0.5),
-                  borderRadius: const pw.BorderRadius.all(
-                    pw.Radius.circular(5),
+                margin: const pw.EdgeInsets.only(bottom: 12),
+                padding: const pw.EdgeInsets.fromLTRB(14, 12, 14, 12),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    left: pw.BorderSide(color: rose, width: 3),
+                    top: pw.BorderSide(color: roseSoft),
+                    right: pw.BorderSide(color: roseSoft),
+                    bottom: pw.BorderSide(color: roseSoft),
                   ),
                 ),
                 child: pw.Column(
@@ -208,17 +282,29 @@ class ExportService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(
-                          '$date | $author',
+                          '${dateOf(entry)} · $author',
                           style: const pw.TextStyle(
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.pink,
+                            fontSize: 11,
+                            color: rose,
                           ),
                         ),
-                        pw.Text(mood, style: const pw.TextStyle(fontSize: 16)),
+                        if (mood.isNotEmpty)
+                          pw.Text(
+                            mood,
+                            style: const pw.TextStyle(fontSize: 11, color: muted),
+                          ),
                       ],
                     ),
-                    pw.SizedBox(height: 4),
-                    pw.Text(content, style: const pw.TextStyle(fontSize: 12)),
+                    pw.SizedBox(height: 6),
+                    pw.Text(
+                      content,
+                      style: const pw.TextStyle(
+                        fontSize: 12,
+                        lineSpacing: 3,
+                        color: ink,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -240,7 +326,11 @@ class ExportService {
     }
   }
 
-  Future<String?> exportDiaryToHtml(String houseId, String houseName) async {
+  Future<String?> exportDiaryToHtml(
+    String houseId,
+    String houseName, {
+    int? sinceMs,
+  }) async {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) {
       throw const UiCopyException('copy_f15d7c99a3c3');
@@ -251,7 +341,7 @@ class ExportService {
         : 'SoulHouse';
     final scope = await _beginScope(resolvedHouseId);
     try {
-      final entries = await _loadDiaryEntries(scope);
+      final entries = await _loadDiaryEntries(scope, sinceMs: sinceMs);
       if (entries.isEmpty) {
         throw const UiCopyException('copy_1a95ec8dce23');
       }
@@ -275,8 +365,9 @@ class ExportService {
   }
 
   Future<List<Map<String, dynamic>>> _loadDiaryEntries(
-    _DiaryExportScope scope,
-  ) async {
+    _DiaryExportScope scope, {
+    int? sinceMs,
+  }) async {
     final entries = <Map<String, dynamic>>[];
     final baseQuery = _firestore
         .collection('houses')
@@ -302,6 +393,9 @@ class ExportService {
       lastDocument = snapshot.docs.last;
     }
 
+    if (sinceMs != null) {
+      entries.removeWhere((entry) => _timestamp(entry) < sinceMs);
+    }
     entries.sort(
       (first, second) => _timestamp(first).compareTo(_timestamp(second)),
     );

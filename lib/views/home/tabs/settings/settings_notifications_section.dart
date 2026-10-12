@@ -100,6 +100,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         await NotificationService().syncDailySleepReminder();
       } else {
         await NotificationService().cancelDailySleepReminder();
+        await NotificationService().cancelInactivityReminder();
       }
     } catch (e) {
       if (!mounted) return;
