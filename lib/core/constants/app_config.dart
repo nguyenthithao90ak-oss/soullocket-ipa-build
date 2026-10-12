@@ -63,6 +63,18 @@ class AppConfig {
     'OSM_TILE_URL',
     defaultValue: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
   );
+  /// Mapbox public token is supplied only through a local dart-define file.
+  /// Keep this empty in source so the token is never committed to Git.
+  static const String mapboxPublicToken = String.fromEnvironment(
+    'MAPBOX_PUBLIC_TOKEN',
+    defaultValue: '',
+  );
+  static bool get hasMapboxPublicToken => mapboxPublicToken.trim().isNotEmpty;
+  static String get mapboxTileUrl {
+    final token = mapboxPublicToken.trim();
+    if (token.isEmpty) return openStreetMapTileUrl;
+    return 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}{r}?access_token=$token';
+  }
   static const String osrmRouteBaseUrl = String.fromEnvironment(
     'OSRM_ROUTE_BASE_URL',
     defaultValue: 'https://router.project-osrm.org/route/v1/driving',

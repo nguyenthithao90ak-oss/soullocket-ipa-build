@@ -1227,12 +1227,11 @@ class NotificationService {
       targetMinute: nightMinute,
       windowEndHour: 23,
       windowEndMinute: 59,
-      title: L10nService().format('notif_auto_good_night_title', {
-        'value1': displayName,
-      }),
-      body: L10nService().format('notif_auto_good_night_body', {
-        'value1': displayName,
-      }),
+      title: buildSleepReminderTitle(displayName),
+      body: buildSleepReminderMessage(
+        displayName,
+        variantIndex: _sleepVariantIndex(DateTime.now()),
+      ),
     );
 
     await _maybeSendAutoTimedGreeting(

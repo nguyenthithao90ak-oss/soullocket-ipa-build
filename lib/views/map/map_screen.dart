@@ -39,6 +39,7 @@ import '../../utils/screen_activity_mixin.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/sleep_mode_service.dart';
 import '../../utils/services/music_service.dart';
+import '../../utils/services/purchase_service.dart';
 
 part 'dialogs/map_checkin_sheet.dart';
 part 'dialogs/map_detail_dialogs.dart';
@@ -218,6 +219,7 @@ class _MapScreenState extends State<MapScreen>
   Timer? _fitDebounce;
   bool _realtimePipelinesActive = false;
   bool _isFitting = false;
+  bool _useMapboxTiles = false;
   String? _lastRouteKey;
   int _routeRequestToken = 0;
   String _memorySignature = '';
@@ -278,7 +280,19 @@ class _MapScreenState extends State<MapScreen>
     _setViewingMap(true);
     WidgetsBinding.instance.addObserver(this);
     _setPartnerListenerActive(true);
+    unawaited(_resolveMapProvider());
     _initMap();
+  }
+
+  Future<void> _resolveMapProvider() async {
+    if (!AppConfig.hasMapboxPublicToken) return;
+    try {
+      final isVip = await PurchaseService().isVip();
+      if (!mounted || !isVip) return;
+      setState(() => _useMapboxTiles = true);
+    } catch (error) {
+      debugPrint('[Map] Không xác định được quyền Mapbox PRO: $error');
+    }
   }
 
   @override

@@ -261,7 +261,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           ),
           children: [
             fm.TileLayer(
-              urlTemplate: AppConfig.openStreetMapTileUrl,
+              urlTemplate: _useMapboxTiles
+                  ? AppConfig.mapboxTileUrl
+                  : AppConfig.openStreetMapTileUrl,
               userAgentPackageName: AppConfig.androidPackageName,
               maxZoom: 19,
               maxNativeZoom: 19,
@@ -269,6 +271,14 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               keepBuffer: 2,
               panBuffer: 1,
             ),
+            if (_useMapboxTiles)
+              const fm.RichAttributionWidget(
+                attributions: <fm.SourceAttribution>[
+                  fm.TextSourceAttribution('Mapbox'),
+                  fm.TextSourceAttribution('OpenStreetMap'),
+                ],
+                showFlutterMapAttribution: false,
+              ),
             ValueListenableBuilder<List<fm.Polyline>>(
               valueListenable: _historyPolylinesVN,
               builder: (context, polylines, _) {
