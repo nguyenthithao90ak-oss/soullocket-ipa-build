@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../models/weather_background.dart';
+import '../../../../widgets/weather_premium_artwork.dart';
 
 class HomeCoupleDrawingStroke {
   static const maxPoints = 160;
@@ -211,6 +213,17 @@ class HomeCoupleCardDecor {
     return this;
   }
 
+  /// Áp dụng fallback cho mọi lựa chọn Premium khi quyền PRO không còn.
+  /// Không gọi hàm này khi người dùng đang chỉnh nháp để tránh ghi đè lựa
+  /// chọn Premium trước khi họ bấm Lưu.
+  HomeCoupleCardDecor withPremiumAccess({required bool isVip}) {
+    var next = withFrameAccess(isVip: isVip);
+    if (!isVip && HomeCoupleDecorCatalog.isVipBackground(next.backgroundKey)) {
+      next = next.copyWith(backgroundKey: 'blush');
+    }
+    return next;
+  }
+
   Map<String, dynamic> toJson() => {
     'version': 1,
     'backgroundKey': backgroundKey,
@@ -362,7 +375,14 @@ class HomeCoupleStickerPack {
 
 /// Catalog vector, không tải ảnh ngoài mạng và không thêm dependency.
 abstract final class HomeCoupleDecorCatalog {
-  static const backgroundKeys = <String>['blush', 'lavender', 'mint', 'sunset'];
+  static const backgroundKeys = <String>[
+    'blush',
+    'lavender',
+    'mint',
+    'sunset',
+    'weather_premium',
+  ];
+  static const vipBackgroundKeys = <String>{'weather_premium'};
   static const frameKeys = <String>[
     'clean',
     'doodle',
@@ -395,7 +415,28 @@ abstract final class HomeCoupleDecorCatalog {
     'lavender': [Color(0xFFEDE8FF), Color(0xFFF7EDFF), Color(0xFFE9F3FF)],
     'mint': [Color(0xFFE2F8F0), Color(0xFFF9F6E9), Color(0xFFE8F2FF)],
     'sunset': [Color(0xFFFFE1D5), Color(0xFFFFF0D2), Color(0xFFFFE8F2)],
+    // Màu mặc định cho ô chọn trong editor. Card thật sẽ dùng
+    // weatherBackgroundColors() để phản ứng theo dữ liệu thời tiết.
+    'weather_premium': [
+      Color(0xFFDCEBFF),
+      Color(0xFFF4E7FF),
+      Color(0xFFFFEBC8),
+    ],
   };
+
+  static bool isVipBackground(String key) => vipBackgroundKeys.contains(key);
+
+  static String weatherState(Map<String, dynamic>? weather) =>
+      WeatherBackgroundState.fromWeather(weather).name;
+
+  static List<Color> weatherBackgroundColors({
+    Map<String, dynamic>? left,
+    Map<String, dynamic>? right,
+    required bool dark,
+  }) => WeatherBackgroundDesign.colors(
+    WeatherBackgroundSnapshot.fromPresence(left: left, right: right),
+    dark: dark,
+  );
 
   static List<Color> backgroundColors(String key, {required bool dark}) {
     final colors = backgrounds[key] ?? backgrounds['blush']!;

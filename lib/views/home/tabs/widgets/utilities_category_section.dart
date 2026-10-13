@@ -126,7 +126,7 @@ class UtilitiesCategorySection extends StatelessWidget {
   final List<UtilityApp> apps;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +228,7 @@ class _GridDrawer extends StatelessWidget {
   final double labelFontSize;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +270,7 @@ class _TileWrap extends StatelessWidget {
   final double labelFontSize;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +299,9 @@ class _TileWrap extends StatelessWidget {
                     labelFontSize: labelFontSize,
                     isPinned: pinnedIds.contains(app.id),
                     onTap: () => onTap(app),
-                    onLongPress: () => onLongPress(app),
+                    onLongPress: onLongPress == null
+                        ? null
+                        : () => onLongPress!(app),
                   ),
                 ),
               ),
@@ -324,7 +326,7 @@ class _BentoDrawer extends StatelessWidget {
   final _CategoryPalette palette;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   Widget _smallTile(UtilityApp? app) {
     if (app == null) return const SizedBox.shrink();
@@ -333,7 +335,7 @@ class _BentoDrawer extends StatelessWidget {
       stickerSize: 52,
       isPinned: pinnedIds.contains(app.id),
       onTap: () => onTap(app),
-      onLongPress: () => onLongPress(app),
+      onLongPress: onLongPress == null ? null : () => onLongPress!(app),
     );
   }
 
@@ -376,7 +378,9 @@ class _BentoDrawer extends StatelessWidget {
                       palette: palette,
                       isPinned: pinnedIds.contains(feature.id),
                       onTap: () => onTap(feature),
-                      onLongPress: () => onLongPress(feature),
+                      onLongPress: onLongPress == null
+                          ? null
+                          : () => onLongPress!(feature),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -441,7 +445,7 @@ class _FeatureTile extends StatelessWidget {
   final _CategoryPalette palette;
   final bool isPinned;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -525,7 +529,7 @@ class _CardGrid extends StatelessWidget {
   final _CategoryPalette palette;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -593,7 +597,7 @@ class _InfoCard extends StatelessWidget {
   final _CategoryPalette palette;
   final bool isPinned;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -603,7 +607,7 @@ class _InfoCard extends StatelessWidget {
       label: utilityHubSemanticLabel(context, app, isPinned),
       excludeSemantics: true,
       onTap: () => onTap(app),
-      onLongPress: () => onLongPress(app),
+      onLongPress: onLongPress == null ? null : () => onLongPress!(app),
       child: Material(
         key: ValueKey('utilities-tile-${app.id}'),
         color: palette.surface,
@@ -611,7 +615,7 @@ class _InfoCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => onTap(app),
-          onLongPress: () => onLongPress(app),
+          onLongPress: onLongPress == null ? null : () => onLongPress!(app),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
             // Chữ dồn xuống đáy để các thẻ cao bằng nhau vẫn gọn.
@@ -678,7 +682,7 @@ class _ListCard extends StatelessWidget {
   final _CategoryPalette palette;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -722,7 +726,7 @@ class _ListRow extends StatelessWidget {
   final _CategoryPalette palette;
   final bool isPinned;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -732,11 +736,11 @@ class _ListRow extends StatelessWidget {
       label: utilityHubSemanticLabel(context, app, isPinned),
       excludeSemantics: true,
       onTap: () => onTap(app),
-      onLongPress: () => onLongPress(app),
+      onLongPress: onLongPress == null ? null : () => onLongPress!(app),
       child: InkWell(
         key: ValueKey('utilities-tile-${app.id}'),
         onTap: () => onTap(app),
-        onLongPress: () => onLongPress(app),
+        onLongPress: onLongPress == null ? null : () => onLongPress!(app),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 64),
           child: Padding(

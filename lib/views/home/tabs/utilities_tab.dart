@@ -1,5 +1,4 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
-import 'widgets/utilities_app_action_sheet.dart';
 import 'widgets/utilities_daily_pick_card.dart';
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
@@ -46,7 +45,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   String? _houseId;
   String _myName = L10nService().translate('home_bn_1fd75b');
   String _relationshipMode = 'single';
-  Set<String> _pinnedIds = const <String>{};
   List<UtilityApp> _recentApps = const <UtilityApp>[];
   bool _layoutReady = false;
 
@@ -80,7 +78,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
   void _restoreLayout(SharedPreferences prefs) {
     final snapshot = _utilityService.readLayout(prefs);
-    _pinnedIds = snapshot.pinnedApps.map((app) => app.id).toSet();
     _recentApps = snapshot.recentApps;
     final account = UtilityService.cachedAccount(prefs, _auth.currentUser?.uid);
     _houseId = account?.houseId;
@@ -168,11 +165,12 @@ class _UtilitiesTabState extends State<UtilitiesTab>
           recentApps: _recentApps
               .where((app) => appsById.containsKey(app.id))
               .toList(growable: false),
-          pinnedIds: _pinnedIds,
+          // Đã gỡ "Ghim lên trang Nhà" (12/10/2026): Home không còn hàng ô ghim.
+          pinnedIds: const <String>{},
           dailyPick: dailyPick,
           dailyPickApp: dailyPick == null ? null : appsById[dailyPick.appId],
           onAppTap: _navigateToApp,
-          onAppLongPress: _showAppActions,
+          onAppLongPress: null,
         ),
       ),
     );
@@ -188,33 +186,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       }
     }
     return true;
-  }
-
-  Future<void> _showAppActions(UtilityApp app) async {
-    HapticFeedback.mediumImpact();
-    final action = await showUtilitiesAppActionSheet(
-      context,
-      app: app,
-      isPinned: _pinnedIds.contains(app.id),
-    );
-    if (!mounted || action == null) return;
-    switch (action) {
-      case UtilitiesAppAction.open:
-        await _navigateToApp(app.id);
-      case UtilitiesAppAction.togglePin:
-        final pinned = await _utilityService.togglePinApp(app.id);
-        if (!mounted) return;
-        setState(() {
-          _pinnedIds = {..._pinnedIds}..remove(app.id);
-          if (pinned) _pinnedIds.add(app.id);
-        });
-        SLNotice.showSuccess(
-          context,
-          context.tr(
-            pinned ? 'utilities_pinned_toast' : 'utilities_unpinned_toast',
-          ),
-        );
-    }
   }
 
   Future<void> _checkAndShowAppReviewForUtility() async {

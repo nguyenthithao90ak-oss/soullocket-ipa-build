@@ -27,12 +27,6 @@ abstract final class DiaryMoodCatalog {
         'color': const Color(0xFFE91E63),
       },
       {
-        'icon': '⭐',
-        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_proud'),
-        'label': L10nService().translate('diary_mood_proud'),
-        'color': const Color(0xFFFFB300),
-      },
-      {
         'icon': '🌙',
         'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_sleepy'),
         'label': L10nService().translate('diary_mood_sleepy'),
@@ -49,12 +43,6 @@ abstract final class DiaryMoodCatalog {
         'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_grumpy'),
         'label': L10nService().translate('diary_mood_grumpy'),
         'color': const Color(0xFFEF5350),
-      },
-      {
-        'icon': '😉',
-        'asset': SoulLocketStickerCatalog.originalReferenceFor('diary_playful'),
-        'label': L10nService().translate('diary_mood_playful'),
-        'color': const Color(0xFF42A5F5),
       },
       {
         'icon': '❤️‍🩹',

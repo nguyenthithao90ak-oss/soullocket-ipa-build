@@ -148,6 +148,18 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               ),
               const SizedBox(height: 10),
               MapToolbarButton(
+                key: const ValueKey('map_pro_layers_button'),
+                icon: _mapProView.baseLayer == MapProBaseLayer.satellite
+                    ? Icons.satellite_alt_rounded
+                    : Icons.layers_outlined,
+                tooltip: context.tr('map_pro_layers'),
+                onPressed: _hasMapProAccess ? _showMapProLayers : () {
+                  unawaited(_ensureMapProFeature());
+                },
+                accent: mapLavender,
+              ),
+              const SizedBox(height: 10),
+              MapToolbarButton(
                 key: const ValueKey('map_checkin_btn'),
                 icon: Icons.add_location_alt_rounded,
                 tooltip: context.tr('map_tocheckin_6fcea2'),
@@ -177,6 +189,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
       single: _isSingleRelationship,
       onToggle: _toggleMapPanel,
       children: [
+        _buildSearchedPlaceCard(),
+        if (_searchedPlace != null) const SizedBox(height: 14),
         _buildSummaryCard(),
         _buildPeopleStatusRow(),
         const SizedBox(height: 14),
@@ -234,9 +248,35 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
       return Positioned.fill(child: _buildMapFallbackSection());
     }
 
+    if (_useMapboxSdk) {
+      final initialPoint =
+          _preferredFocusPoint() ?? const ll.LatLng(14.0583, 108.2772);
+      return Positioned.fill(
+        child: RepaintBoundary(
+          child: mbx.MapWidget(
+            key: ValueKey('mapbox_sdk_$_mapSurfaceGeneration'),
+            viewport: mbx.CameraViewportState(
+              center: _mapboxPoint(initialPoint),
+              zoom: _preferredFocusPoint() == null ? 5 : 15,
+              padding: _mapCameraPadding,
+              pitch: _mapProView.threeDimensional ? 55 : 0,
+            ),
+            styleUri: _mapboxStyleUri,
+            onMapCreated: _onMapboxCreated,
+            onStyleLoadedListener: (_) => _onMapboxStyleLoaded(),
+            onMapLoadedListener: (_) => _onMapboxLoaded(),
+            onMapLoadErrorListener: (event) {
+              _handleMapboxLoadError(event.message);
+            },
+          ),
+        ),
+      );
+    }
+
     return Positioned.fill(
       child: RepaintBoundary(
         child: fm.FlutterMap(
+          key: ValueKey('flutter_map_$_mapSurfaceGeneration'),
           mapController: _mapController,
           options: fm.MapOptions(
             initialCenter:

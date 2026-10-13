@@ -116,11 +116,7 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
       ..shader = ui.Gradient.linear(
         Offset.zero,
         Offset(size.width, size.height),
-        const [
-          _paperCream,
-          Color(0xFFF4E9DD),
-          Color(0xFFEAEFE8),
-        ],
+        const [_paperCream, Color(0xFFF1EAFF), Color(0xFFE4F5F5)],
         const [0.0, 0.54, 1.0],
       );
     canvas.drawRect(Offset.zero & size, paint);
@@ -133,8 +129,8 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
           width: 142,
           height: 102,
         ),
-        const Color(0xFFE8D3C0),
-        -0.10
+        const Color(0xFFE9D7F0),
+        -0.10,
       ),
       (
         Rect.fromCenter(
@@ -142,8 +138,8 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
           width: 126,
           height: 88,
         ),
-        const Color(0xFFD6E0D7),
-        0.14
+        const Color(0xFFCFE8E9),
+        0.14,
       ),
       (
         Rect.fromCenter(
@@ -151,8 +147,8 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
           width: 150,
           height: 112,
         ),
-        const Color(0xFFEAD8CF),
-        -0.08
+        const Color(0xFFF7D5E2),
+        -0.08,
       ),
     ]) {
       canvas.save();
@@ -180,11 +176,7 @@ class _MemoryMascotBackgroundPainter extends CustomPainter {
       ..color = const Color(0xFFD9C7B8).withValues(alpha: 0.32)
       ..strokeWidth = 1;
     for (double y = 96; y < size.height; y += 92) {
-      canvas.drawLine(
-        Offset(26, y),
-        Offset(size.width - 26, y),
-        rulePaint,
-      );
+      canvas.drawLine(Offset(26, y), Offset(size.width - 26, y), rulePaint);
     }
 
     for (final pin in [

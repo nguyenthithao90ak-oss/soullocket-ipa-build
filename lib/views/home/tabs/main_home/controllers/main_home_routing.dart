@@ -7,12 +7,15 @@ extension _MainHomeRouting on _MainHomeTabState {
   Future<HomeCoupleCardDecor> _coupleDecorWithVipAccess(
     HomeCoupleCardDecor decor,
   ) async {
-    if (!HomeCoupleDecorCatalog.isVipFrame(decor.frameKey)) return decor;
+    if (!HomeCoupleDecorCatalog.isVipFrame(decor.frameKey) &&
+        !HomeCoupleDecorCatalog.isVipBackground(decor.backgroundKey)) {
+      return decor;
+    }
     final isVip = await PurchaseService()
         .isVip()
         .timeout(const Duration(seconds: 5), onTimeout: () => false)
         .catchError((_) => false);
-    return decor.withFrameAccess(isVip: isVip);
+    return decor.withPremiumAccess(isVip: isVip);
   }
 
   void _bindCoupleDecorSync({
@@ -49,6 +52,7 @@ extension _MainHomeRouting on _MainHomeTabState {
               _homeCoupleDecorRevision = snapshot.revision;
               _homeCoupleDecorLoadFuture = Future.value(decor);
               _safeSetState(() => _homeCoupleDecor = decor);
+              if (_houseId != null) _startWeatherRefreshLoop(_houseId!);
             }),
           );
         });
@@ -87,6 +91,7 @@ extension _MainHomeRouting on _MainHomeTabState {
           return;
         }
         _safeSetState(() => _homeCoupleDecor = decor);
+        if (_houseId != null) _startWeatherRefreshLoop(_houseId!);
       }),
     );
   }
@@ -144,11 +149,14 @@ extension _MainHomeRouting on _MainHomeTabState {
               padding: EdgeInsets.only(top: compactMeta ? 12 : 20),
               child: _buildModernRelationshipAction(isSingle: isSingle),
             ),
+            previewWeatherLeft: _weatherMapForRole('user1'),
+            previewWeatherRight: isSingle ? null : _weatherMapForRole('user2'),
           ),
         );
         if (!mounted || _coupleDecorScope() != scope || decor == null) return;
         _homeCoupleDecorLoadFuture = Future.value(decor);
         _safeSetState(() => _homeCoupleDecor = decor);
+        if (_houseId != null) _startWeatherRefreshLoop(_houseId!);
       }),
     );
   }

@@ -45,6 +45,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       if (AppConfig.isPurchaseEnabled) ...[
         (context.tr('p7_theme_aurora'), 'premium'),
         (context.tr('p7_theme_cosmic'), 'cosmic'),
+        (
+          '${context.tr('home_decor_background_weather_premium')}${_isVipActive ? '' : ' 🔒'}',
+          'weather_premium',
+        ),
       ],
     ];
     final heartColorOptions = [
@@ -530,6 +534,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return Icons.brightness_auto_rounded;
       case 'cosmic':
         return Icons.star_rounded;
+      case 'weather_premium':
+        return Icons.cloud_outlined;
       default:
         return Icons.palette_rounded;
     }

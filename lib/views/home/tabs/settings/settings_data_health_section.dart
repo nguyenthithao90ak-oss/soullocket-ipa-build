@@ -459,13 +459,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             status: deviceStatus,
             isReady: !_isDevicePending,
           ),
-          _buildPrivacyStatusTile(
-            icon: Icons.location_on_rounded,
-            title: context.tr('settings_gps_mode_title'),
-            status: _gpsMode == LocationService.kGpsModeAlways
-                ? context.tr('settings_gps_mode_always')
-                : context.tr('settings_gps_mode_foreground'),
-            isReady: true,
+          SettingsGpsStatus(
+            trackingState: LocationService().trackingState,
             onTap: _showGpsModeSelectorDialog,
           ),
           const SizedBox(height: 16),
@@ -519,7 +514,11 @@ extension _SettingsDataHealthSection on _SettingsTabState {
   );
 
   Future<void> _showGpsModeSelectorDialog() async {
-    final currentMode = _gpsMode;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = _houseId?.trim() ?? '';
+    final role = _activeRoleKey;
+    final currentMode = await LocationService.getGpsUpdateMode();
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return;
     final selectedMode = await showDialog<String>(
       context: context,
       builder: (_) => SettingsGpsModeDialog(
@@ -529,26 +528,38 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       ),
     );
 
-    if (selectedMode != null && selectedMode != currentMode) {
-      await LocationService.setGpsUpdateMode(selectedMode);
-      if (!mounted) return;
-      setState(() {
-        _gpsMode = selectedMode;
-      });
-
-      final houseId = _houseId?.trim() ?? '';
-      if (houseId.isNotEmpty) {
-        if (selectedMode == LocationService.kGpsModeForegroundOnly) {
-          await LocationService().stopTracking();
-          await LocationService().startTracking(houseId, _activeRoleKey);
-        } else {
-          await LocationService().startTracking(houseId, _activeRoleKey);
-        }
-      }
-
-      if (!mounted) return;
-      _showToast(context.tr('settings_gps_mode_saved'), success: true);
+    if (selectedMode == null ||
+        !mounted ||
+        FirebaseAuth.instance.currentUser?.uid != uid ||
+        (_houseId?.trim() ?? '') != houseId ||
+        _activeRoleKey != role) {
+      return;
     }
+
+    final service = LocationService();
+    final configured = await service.applyGpsUpdateMode(
+      selectedMode,
+      houseId: houseId,
+      role: role,
+      context: context,
+      requestBackgroundAccess: true,
+    );
+    final savedMode = await LocationService.getGpsUpdateMode();
+    if (!mounted ||
+        FirebaseAuth.instance.currentUser?.uid != uid ||
+        (_houseId?.trim() ?? '') != houseId ||
+        _activeRoleKey != role) {
+      return;
+    }
+    setState(() => _gpsMode = savedMode);
+
+    final state = service.trackingState.value;
+    final now = DateTime.now();
+    final ready = configured && state.isReadyAt(now);
+    _showToast(
+      context.tr(ready ? 'settings_gps_mode_saved' : state.statusKeyAt(now)),
+      success: ready,
+    );
   }
 
   Widget _buildRestoreDataGroupTile({

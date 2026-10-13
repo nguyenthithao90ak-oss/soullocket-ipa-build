@@ -284,13 +284,14 @@ class AppEntryController {
   Future<void> handleAppBackgrounded({bool keepPresenceOnline = false}) async {
     final pausedAt = DateTime.now();
     _lastPausedAt = pausedAt;
-    await _persistBackgroundTimestamp(pausedAt);
     unawaited(
       _runGuarded(
         'schedule inactivity reminder while backgrounded',
-        () => NotificationService().syncInactivityReminder(),
+        () =>
+            NotificationService().updateAppReminderActivity(foreground: false),
       ),
     );
+    await _persistBackgroundTimestamp(pausedAt);
     unawaited(_adMobService.pauseAutoInterstitialScheduler());
     EncryptionService().notifyAppBackgrounded();
     if (keepPresenceOnline) {
@@ -306,6 +307,12 @@ class AppEntryController {
     if (pendingSignedOutCleanup != null) {
       return const AppEntryResumeResult();
     }
+    unawaited(
+      _runGuarded(
+        'refresh personal reminders on resume',
+        () => NotificationService().updateAppReminderActivity(foreground: true),
+      ),
+    );
     final compromisedState = await _resolveCompromisedAuthState();
     if (compromisedState != null) {
       _lastPausedAt = null;
@@ -335,10 +342,6 @@ class AppEntryController {
     }
 
     await _runGuarded(
-      'cancel inactivity reminder on resume',
-      () => NotificationService().cancelInactivityReminder(),
-    );
-    await _runGuarded(
       'record app open metric on resume',
       () => _recordAppOpenMetric(),
     );
@@ -362,7 +365,7 @@ class AppEntryController {
     unawaited(
       _runGuarded(
         'cancel inactivity reminder while foreground',
-        () => NotificationService().cancelInactivityReminder(),
+        () => NotificationService().updateAppReminderActivity(foreground: true),
       ),
     );
     await _refreshPresenceContext();
@@ -406,8 +409,19 @@ class AppEntryController {
     return _signedOutCleanupCoordinator.run();
   }
 
-  Future<void> waitForSignedOutCleanup() =>
-      _signedOutCleanupCoordinator.waitForPending();
+  Future<void> waitForSignedOutCleanup() async {
+    try {
+      await _signedOutCleanupCoordinator.waitForPending();
+    } catch (error) {
+      // Cleanup widget/presence là best effort sau khi AuthSignInService đã
+      // xóa dữ liệu phiên nhạy cảm ở máy. Không được chặn người dùng vừa đăng
+      // nhập vào ứng dụng.
+      debugPrint(
+        '[AppEntry] Signed-out cleanup wait skipped: '
+        '${AppErrorMapper.resolve(error).message}',
+      );
+    }
+  }
 
   Future<void> _runSignedOutCleanupStep(
     String label,
@@ -445,7 +459,7 @@ class AppEntryController {
     unawaited(
       _runGuarded(
         'cancel inactivity reminder on app open',
-        () => NotificationService().cancelInactivityReminder(),
+        () => NotificationService().updateAppReminderActivity(foreground: true),
       ),
     );
 

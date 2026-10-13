@@ -8,6 +8,7 @@ import '../../../core/constants/app_locale_registry.dart';
 import '../../../utils/calendar/calendar_civil_date.dart';
 import 'settings/countdown/widgets/private_space_widgets.dart';
 import 'settings/theme/appearance_panel_widgets.dart';
+import 'settings/theme/theme_canvas_painter.dart';
 // ignore_for_file: unused_field, unused_import
 import 'dart:async';
 import 'dart:convert';
@@ -43,6 +44,7 @@ import '../../../core/sl_theme.dart';
 import 'settings/theme/theme_preview_builder.dart';
 import 'settings/widget/widget_studio_components.dart';
 import '../../../models/widget_appearance.dart';
+import '../../../models/weather_background.dart';
 import 'settings/widget/widget_couple_preview.dart';
 import 'settings/widget/widget_theme_surface.dart';
 import 'settings/widget/widget_photo_collage.dart';

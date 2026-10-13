@@ -2,6 +2,22 @@ part of '../map_screen.dart';
 
 extension _MapSearchSheetExt on _MapScreenState {
   Future<void> _showSearchSheet() async {
+    if (!await _ensureMapProFeature()) return;
+    if (!mounted) return;
+    final center = await _mapSearchCenter();
+    final place = await Navigator.of(context).push<MapPlace>(
+      MaterialPageRoute(
+        builder: (_) => MapProSearchScreen(
+          access: _mapProAccess,
+          isAllowed: () => _hasMapProAccess,
+          service: locator<MapPlaceSearchService>(),
+          center: center,
+        ),
+      ),
+    );
+    if (place != null && mounted) await _selectSearchedPlace(place);
+    return;
+    /*
     final result = await showSearch<ll.LatLng?>(
       context: context,
       delegate: MapSearchDelegate(),
@@ -10,6 +26,7 @@ extension _MapSearchSheetExt on _MapScreenState {
     if (result != null) {
       _mapController.move(result, 16);
     }
+    */
   }
 }
 

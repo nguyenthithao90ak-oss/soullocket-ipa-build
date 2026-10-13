@@ -184,7 +184,8 @@ struct WidgetCoupleHomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .modifier(WidgetHomeBackground(key: data.bgTheme,
             alternate: WidgetAppearanceDesign.alternate(at: date,
-                enabled: data.heartAnimated && !reduceMotion)))
+                enabled: data.heartAnimated && !reduceMotion),
+            weather: data.weatherBackground, referenceDate: date))
         .widgetURL(URL(string: "soullocket://widget?action=love"))
         .privacySensitive()
     }

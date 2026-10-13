@@ -268,6 +268,35 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
           }
           return;
         }
+        // Độ rộng ô đổi theo bố cục (lệch vài pixel là khác khóa) nên bản đúng
+        // cỡ hay vắng; bản gốc đã lưu khi tải lần trước vẫn còn. Dùng bản gốc
+        // thu nhỏ trên máy thay vì xin link và tải lại ảnh đã có.
+        final retainedWidth = widget.retainCacheWidth;
+        if (retainedWidth != null && retainedWidth != widget.cacheWidth) {
+          final original = await diskCache?.read(
+            uid,
+            PrivateImageDiskCache.key(
+              uid,
+              widget.houseId,
+              widget.memoryId,
+              retainedWidth,
+            ),
+          );
+          if (!current()) return;
+          if (original != null) {
+            final entry = PrivateDiaryImageCacheEntry(
+              _providerFromBytes(original),
+              DateTime.now().millisecondsSinceEpoch +
+                  PrivateImageDiskCache.ttl.inMilliseconds,
+            );
+            _cache?.put(key, entry);
+            _show(entry);
+            if (kDebugMode) {
+              debugPrint('[PrivateDiaryImage] encrypted original cache hit');
+            }
+            return;
+          }
+        }
       }
       // Bản lớn chưa có: hiện tạm ảnh nhỏ đã lưu (RAM hoặc cache đĩa mã hóa)
       // trong lúc xin quyền và tải, để mở ảnh không phải nhìn màn chờ.

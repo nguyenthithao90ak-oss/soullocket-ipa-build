@@ -342,7 +342,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     return ValueListenableBuilder<int>(
       valueListenable: _widgetPreviewTickNotifier,
       builder: (context, _, _) {
-        final themeKey = _draftWidgetThemeKey ?? 'pink';
+        final themeKey = WeatherBackgroundAccess.resolveTheme(
+          _draftWidgetThemeKey ?? 'pink',
+          isPro: _isVipActive,
+        );
         final theme = _widgetPreviewThemeSpec(themeKey);
         final textColor = theme.textColor;
         final heartPalette = _widgetHeartPalette(_widgetHeartColorKey);

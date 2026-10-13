@@ -7,6 +7,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'home_couple_decor_model.dart';
 import 'home_couple_decor_art.dart';
+import '../../../../models/weather_background.dart';
+import '../../../../widgets/weather_premium_artwork.dart';
 
 /// Dùng chung cho Home và màn trang trí để nền, khung, sticker khớp nhau.
 class HomeCoupleProfileCard extends StatelessWidget {
@@ -14,6 +16,11 @@ class HomeCoupleProfileCard extends StatelessWidget {
   final Widget center;
   final Widget right;
   final HomeCoupleCardDecor decor;
+
+  /// Presence weather của hai người. Chỉ được dùng khi chọn nền Premium
+  /// theo thời tiết; nền thường vẫn giữ nguyên hoàn toàn.
+  final Map<String, dynamic>? weatherLeft;
+  final Map<String, dynamic>? weatherRight;
   final VoidCallback? onCustomize;
   final int? selectedStickerIndex;
   final ValueChanged<int>? onSelectSticker;
@@ -35,6 +42,8 @@ class HomeCoupleProfileCard extends StatelessWidget {
       frameKey: 'doodle',
       stickers: <HomeCoupleStickerPlacement>[],
     ),
+    this.weatherLeft,
+    this.weatherRight,
     this.onCustomize,
     this.selectedStickerIndex,
     this.onSelectSticker,
@@ -50,10 +59,17 @@ class HomeCoupleProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final colors = HomeCoupleDecorCatalog.backgroundColors(
-      decor.backgroundKey,
-      dark: dark,
-    );
+    final weatherPremium = decor.backgroundKey == 'weather_premium';
+    final colors = weatherPremium
+        ? HomeCoupleDecorCatalog.weatherBackgroundColors(
+            left: weatherLeft,
+            right: weatherRight,
+            dark: dark,
+          )
+        : HomeCoupleDecorCatalog.backgroundColors(
+            decor.backgroundKey,
+            dark: dark,
+          );
     final ink = dark ? const Color(0xFFF5DFE7) : const Color(0xFF715665);
     final canLongPressCustomize =
         onCustomize != null && onSelectSticker == null && !drawingEnabled;
@@ -162,6 +178,34 @@ class HomeCoupleProfileCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (weatherPremium)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: _HomeCoupleWeatherOverlay(
+                      left: weatherLeft,
+                      right: weatherRight,
+                      isDark: dark,
+                    ),
+                  ),
+                ),
+              if (weatherPremium) ...[
+                PositionedDirectional(
+                  top: 52,
+                  start: 12,
+                  child: _HomeCoupleWeatherBadge(
+                    weather: weatherLeft,
+                    isDark: dark,
+                  ),
+                ),
+                PositionedDirectional(
+                  top: 52,
+                  end: 12,
+                  child: _HomeCoupleWeatherBadge(
+                    weather: weatherRight,
+                    isDark: dark,
+                  ),
+                ),
+              ],
               Positioned.fill(
                 child: IgnorePointer(
                   child: _HomeCoupleDrawingLayer(
@@ -336,6 +380,61 @@ class HomeCoupleProfileCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HomeCoupleWeatherBadge extends StatelessWidget {
+  final Map<String, dynamic>? weather;
+  final bool isDark;
+
+  const _HomeCoupleWeatherBadge({required this.weather, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WeatherBackgroundState.fromWeather(weather);
+    if (state == WeatherBackgroundState.unknown) return const SizedBox.shrink();
+    final (icon, color) = switch (state) {
+      WeatherBackgroundState.rain => ('🌧️', const Color(0xFF3D78B5)),
+      WeatherBackgroundState.lightning => ('⛈️', const Color(0xFF7653A8)),
+      WeatherBackgroundState.cloudy => ('☁️', const Color(0xFF6489A7)),
+      WeatherBackgroundState.cold => ('🥶', const Color(0xFF4E94B7)),
+      _ => ('☀️', const Color(0xFFDA9A35)),
+    };
+    return Semantics(
+      label: context.tr(state.labelKey),
+      excludeSemantics: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: (isDark ? const Color(0xFF282531) : Colors.white).withValues(
+            alpha: .68,
+          ),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: color.withValues(alpha: .30)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: Text(icon, style: const TextStyle(fontSize: 15, height: 1)),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeCoupleWeatherOverlay extends StatelessWidget {
+  final Map<String, dynamic>? left;
+  final Map<String, dynamic>? right;
+  final bool isDark;
+
+  const _HomeCoupleWeatherOverlay({
+    required this.left,
+    required this.right,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) => WeatherPremiumArtwork(
+    weather: WeatherBackgroundSnapshot.fromPresence(left: left, right: right),
+    dark: isDark,
+  );
 }
 
 class _HomeCoupleDrawingLayer extends StatelessWidget {

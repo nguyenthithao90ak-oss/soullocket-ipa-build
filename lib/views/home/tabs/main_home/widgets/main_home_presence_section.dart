@@ -26,6 +26,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             children: [
               HomeCoupleProfileCard(
                 decor: _homeCoupleDecor,
+                weatherLeft: _weatherMapForRole('user1'),
+                weatherRight: isSingle ? null : _weatherMapForRole('user2'),
                 onCustomize: _openCoupleDecorEditor,
                 left: _buildModernUserColumn(
                   name: nameU1,

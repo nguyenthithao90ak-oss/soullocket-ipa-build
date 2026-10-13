@@ -626,8 +626,16 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     }
   }
 
+  bool get _needsWeatherData => WeatherBackgroundAccess.needsWeather(
+    showWeather: _showWeather,
+    homeBackground: _homeCoupleDecor.backgroundKey,
+    widgetBackground: _weatherWidgetBackgroundActive
+        ? WeatherBackgroundAccess.themeKey
+        : 'pink',
+  );
+
   void _startWeatherRefreshLoop(String houseId) {
-    if (!_isTabActive || !_showWeather) {
+    if (!_isTabActive || !_needsWeatherData) {
       _weatherRefreshTimer?.cancel();
       _weatherRefreshTimer = null;
       return;
@@ -644,7 +652,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     if (_houseId == null ||
         _weatherSyncInFlight ||
         !_isTabActive ||
-        !_showWeather) {
+        !_needsWeatherData) {
       return;
     }
     _weatherSyncInFlight = true;

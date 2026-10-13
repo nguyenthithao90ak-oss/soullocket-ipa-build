@@ -1,5 +1,20 @@
 part of '../../tabs/main_home_tab.dart';
 
+/// Lề hai bên chung cho mọi khối Home: gần sát mép màn hình trên điện thoại
+/// (10–12dp, đủ chỗ cho bóng đổ), rộng hơn trên máy tính bảng.
+double _homeSidePadding(double width) => width < 340
+    ? 10
+    : SLResponsive.horizontalPaddingForWidth(
+        width,
+        compactPadding: 12,
+        handsetPadding: 16,
+        tabletPadding: 28,
+      );
+
+/// Lối đi của bé đồng hành nằm ngay trong lề, cách mép khối 1dp như thiết kế
+/// cũ (lối 32 + lề 33) để bé vẫn đi vòng qua cạnh khối được.
+double _homeCompanionLane(double sidePadding) => max(0.0, sidePadding - 1);
+
 class _ModernHomeBody extends StatelessWidget {
   final _MainHomeTabState state;
   final bool isSingle;
@@ -118,6 +133,8 @@ class _ModernHomeBody extends StatelessWidget {
     required bool hasLetter,
     required VoidCallback openLetter,
   }) {
+    final sidePadding = _homeSidePadding(MediaQuery.sizeOf(context).width);
+    final companionLane = _homeCompanionLane(sidePadding);
     return HomeCompanionScene(
       followScroll: true,
       calm: true,
@@ -145,12 +162,12 @@ class _ModernHomeBody extends StatelessWidget {
         firstGuideSettingsKey: state.widget.firstGuideSettingsKey,
       ),
       safeInsets: EdgeInsets.fromLTRB(
-        HomeCompanionPainter.horizontalClearance,
+        companionLane,
         max(
           MediaQuery.paddingOf(context).top + 60,
           HomeCompanionPainter.topClearance,
         ),
-        HomeCompanionPainter.horizontalClearance,
+        companionLane,
         MediaQuery.paddingOf(context).bottom + 92,
       ),
       child: Stack(
@@ -162,18 +179,8 @@ class _ModernHomeBody extends StatelessWidget {
           ),
           LayoutBuilder(
             builder: (context, constraints) {
-              // Giữ lối đi nhỏ ở hai bên cả trên điện thoại hẹp 320dp.
-              final horizontalPadding = max(
-                uiState.homeCompanionEnabled
-                    ? HomeCompanionPainter.horizontalClearance + 1
-                    : 0.0,
-                SLResponsive.horizontalPaddingForWidth(
-                  constraints.maxWidth,
-                  compactPadding: 13,
-                  handsetPadding: 17,
-                  tabletPadding: 28,
-                ),
-              );
+              // Mọi khối dùng chung lề này để rộng gần sát mép trên mọi máy.
+              final horizontalPadding = sidePadding;
               final contentWidth = SLResponsive.maxContentWidthForWidth(
                 constraints.maxWidth,
                 handsetMax: 540,
@@ -313,12 +320,9 @@ class _ModernHomeBody extends StatelessWidget {
                               isSingle: isSingle,
                             ),
                           ),
-                          RepaintBoundary(
-                            child: state._buildCompactQuickActions(
-                              isSingle: isSingle,
-                            ),
-                          ),
-                          SLSpacing.h20,
+                          // Hàng nút nhanh (Nhật ký, Nhắn ngay, Lịch chung,
+                          // Chơi cùng, Ghim thêm) đã gỡ khỏi Home theo yêu cầu
+                          // chủ dự án 12/10/2026 cho đỡ chật.
                           RepaintBoundary(
                             child: state._buildCompactUpcoming(
                               startDate: startDate,

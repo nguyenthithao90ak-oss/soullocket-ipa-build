@@ -43,6 +43,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mbx;
 
 import 'package:soullocket_app/utils/services/connectivity_service.dart';
 import 'package:soullocket_app/utils/services/local_database_service.dart';
@@ -55,6 +56,7 @@ import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/utils/services/performance_profile_service.dart';
+import 'core/constants/app_config.dart';
 
 /// Build signature verification đã chuyển sang BuildSignatureService (lib/utils/build_signature_service.dart)
 
@@ -153,6 +155,9 @@ void main() {
   runZonedGuarded(
     () async {
       final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+      if (AppConfig.hasMapboxPublicToken) {
+        mbx.MapboxOptions.setAccessToken(AppConfig.mapboxPublicToken);
+      }
       SoulLocketSecurityWatermark.registerWatermark();
 
       // Tắt toàn bộ debugPrint trong bản Release để tránh rò rỉ log

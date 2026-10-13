@@ -8,124 +8,162 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
   }
 
   Map<String, dynamic>? _normalizePhotoItem(Map<String, dynamic> item) {
-    final rawUrl = item['url'] ?? item['imageUrl'] ?? item['downloadUrl'];
-    if (rawUrl is! String || rawUrl.trim().isEmpty) {
-      return null;
-    }
-    final url = rawUrl.trim();
-    final rawThumbUrl = item['thumbUrl'] ??
-        item['thumbnailUrl'] ??
-        item['thumbnail'] ??
-        item['previewUrl'];
-    final thumbUrl = rawThumbUrl is String && rawThumbUrl.trim().isNotEmpty
-        ? rawThumbUrl.trim()
-        : '';
-
-    final rawTs = item['ts'] ?? item['timestamp'] ?? item['createdAt'];
-    int ts = 0;
-    if (rawTs is int) {
-      ts = rawTs;
-    } else if (rawTs is num) {
-      ts = rawTs.toInt();
-    } else if (rawTs is String) {
-      ts = int.tryParse(rawTs) ?? 0;
-    }
-
-    if (ts == 0) {
-      final rawDate = item['date'];
-      if (rawDate is String && rawDate.trim().isNotEmpty) {
-        ts = DateTime.tryParse(rawDate)?.millisecondsSinceEpoch ?? 0;
+    final private = PrivateMemoryLinkPolicy.isPrivate(item);
+    final normalized = CollageMemoryPhotos.normalize(item);
+    if (normalized == null) return null;
+    if (private) {
+      // Chỉ dùng URL do PrivateMediaUrlService vừa cấp; URL lưu trong record/cache
+      // private không có giá trị sử dụng và không được đưa vào PNG.
+      final resolved = item['_resolvedPrivateUrl'] == true
+          ? CollageMemoryPhotos.firstText(item, const ['url', 'resolvedUrl'])
+          : '';
+      if (resolved.isNotEmpty && !isDiaryMemoryVideoUrl(resolved)) {
+        normalized['url'] = resolved;
+        normalized['collageUrl'] = resolved;
       }
+    } else {
+      final url = CollageMemoryPhotos.firstText(item, const [
+        'url',
+        'resolvedUrl',
+        'imageUrl',
+        'downloadUrl',
+        'mediaUrl',
+      ]);
+      if (url.isEmpty || isDiaryMemoryVideoUrl(url)) return null;
+      normalized['url'] = url;
+      normalized['collageUrl'] = CollageMemoryPhotos.firstText(item, const [
+        'thumbUrl',
+        'thumbnailUrl',
+        'thumbnail',
+        'previewUrl',
+        'url',
+      ]);
     }
-
-    return {
-      ...item,
-      'url': url,
-      'collageUrl': thumbUrl.isNotEmpty ? thumbUrl : url,
-      'ts': ts,
-    };
+    return normalized;
   }
 
   String _photoCollageUrl(Map<String, dynamic> item) {
-    final raw = item['collageUrl'] ?? item['url'];
-    return raw is String ? raw.trim() : raw.toString().trim();
+    // PNG xuất luôn lấy media gốc; thumbnail chỉ phục vụ khay xem trước.
+    final raw = item['url'] ?? item['collageUrl'];
+    return raw is String ? raw.trim() : raw?.toString().trim() ?? '';
   }
 
   Future<void> _fetchMemoryPhotos() async {
-    try {
-      final results = await Future.wait([
-        FirebaseFirestore.instance
-            .collection('houses')
-            .doc(widget.houseId)
-            .collection('album')
-            .orderBy('ts', descending: true)
-            .limit(60)
-            .get(),
-        FirebaseFirestore.instance
-            .collection('houses')
-            .doc(widget.houseId)
-            .collection('memories')
-            .orderBy('ts', descending: true)
-            .limit(60)
-            .get(),
-      ]);
+    if (_isMemoryLoading) return;
+    await _memoryLibrary.load();
+  }
 
-      final Map<String, Map<String, dynamic>> dedupedPhotos = {};
-      final Set<String> monthsSet = {};
-
-      for (final snap in results) {
-        for (final doc in snap.docs) {
-          final raw = doc.data();
-          final item = Map<String, dynamic>.from(raw);
-          item.putIfAbsent('id', () => doc.id);
-          final normalized = _normalizePhotoItem(item);
-          if (normalized == null) {
-            continue;
-          }
-          final url = (normalized['url'] as String).trim();
-          if (url.isEmpty) {
-            continue;
-          }
-          final existing = dedupedPhotos[url];
-          final currentTs = normalized['ts'] as int? ?? 0;
-          final existingTs = existing?['ts'] as int? ?? 0;
-          if (existing == null || currentTs > existingTs) {
-            dedupedPhotos[url] = normalized;
-          }
-          if (currentTs > 0) {
-            final date = DateTime.fromMillisecondsSinceEpoch(currentTs);
-            monthsSet
-                .add('${date.year}-${date.month.toString().padLeft(2, '0')}');
-          }
-        }
-      }
-
-      final photos = dedupedPhotos.values.toList()
-        ..sort(
-          (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0),
+  Future<void> _showMemoryPickerSheet() async {
+    if (_memoryPhotos.isEmpty) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, sheetSetState) {
+            final bottom = MediaQuery.paddingOf(context).bottom;
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+              ),
+              padding: EdgeInsets.fromLTRB(16, 14, 16, bottom + 12),
+              decoration: BoxDecoration(
+                color: _paperShell,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
+                border: Border.all(color: _paperLine),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          context.tr('home_nhknim_6f622f'),
+                          style: _editorialStyle(
+                            size: 22,
+                            color: _paperInk,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: context.tr('core_close'),
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    context.tr('util_chmchnnhyu_f0ebaa'),
+                    style: SLTheme.quicksand(
+                      color: _paperMuted,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.only(top: 4),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.92,
+                          ),
+                      itemCount: _memoryPhotos.length,
+                      itemBuilder: (context, index) {
+                        final item = _memoryPhotos[index];
+                        return _buildMemoryCoverTile(
+                          item,
+                          compact: true,
+                          onTap: () {
+                            _toggleMemoryPhoto(item);
+                            sheetSetState(() {});
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
-      final monthsList = monthsSet.toList()..sort((a, b) => b.compareTo(a));
-      final existingPhotoKeys =
-          photos.map(_memoryPhotoKey).where((key) => key.isNotEmpty).toSet();
-      _hiddenMemoryPhotoKeys.removeWhere(
-        (key) => !existingPhotoKeys.contains(key),
-      );
+      },
+    );
+  }
 
-      if (mounted) {
-        setState(() {
-          _memoryPhotos = photos;
-          _availableMonths = monthsList;
-          _markCollagePreviewDirty();
-          if (_selectedMonth != 'all' && !monthsList.contains(_selectedMonth)) {
-            _selectedMonth = 'all';
-          }
-        });
-        _scheduleAutoGenerate(immediate: true);
-      }
-    } catch (e) {
-      debugPrint(
-          'Error fetching memory photos: ${AppErrorMapper.resolve(e).message}');
-    }
+  Future<void> _hydratePrivateMemoryUrls(
+    List<Map<String, dynamic>> items,
+    String houseId,
+  ) async {
+    final candidates = items.where((item) {
+      final id = item['id']?.toString().trim() ?? '';
+      final privateMedia = PrivateMemoryLinkPolicy.isPrivate(item);
+      return id.isNotEmpty && privateMedia;
+    });
+    await Future.wait(
+      candidates.map((item) async {
+        try {
+          final result = await _privateMediaUrlService.resolve(
+            houseId: houseId,
+            mediaId: item['id'].toString(),
+            kind: 'memory_image',
+          );
+          item['url'] = result.url;
+          item['_resolvedPrivateUrl'] = true;
+          item['urlExpiresAt'] = result.expiresAt;
+        } catch (_) {
+          // Ảnh riêng tư lỗi URL vẫn được giữ trong kho để lần mở sau thử lại.
+        }
+      }),
+    );
   }
 
   List<String> _getFilteredUrls() {
@@ -133,7 +171,10 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
       return _deviceFiles.map((f) => f.path).toList();
     }
 
-    return _getFilteredMemoryItems().map(_photoCollageUrl).toList();
+    return _getFilteredMemoryItems()
+        .map(_photoCollageUrl)
+        .where((url) => url.isNotEmpty)
+        .toList();
   }
 
   List<Map<String, dynamic>> _getFilteredMemoryItems() {
@@ -142,7 +183,10 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     }
     final visiblePhotos = _memoryPhotos.where((item) {
       final key = _memoryPhotoKey(item);
-      return key.isEmpty || !_hiddenMemoryPhotoKeys.contains(key);
+      return key.isNotEmpty &&
+          !_hiddenMemoryPhotoKeys.contains(key) &&
+          (!_hasSuggestedMemorySelection ||
+              _selectedMemoryPhotoKeys.contains(key));
     }).toList();
     if (_selectedMonth == 'all') {
       return visiblePhotos;
@@ -213,6 +257,9 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     if (parts.length != 2) {
       return key;
     }
-    return UiCopy.text('copy_fb0b15c2163c', {'value1': parts[1], 'value2': parts[0]});
+    return UiCopy.text('copy_fb0b15c2163c', {
+      'value1': parts[1],
+      'value2': parts[0],
+    });
   }
 }

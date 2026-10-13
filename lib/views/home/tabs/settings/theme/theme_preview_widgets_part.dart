@@ -18,151 +18,105 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
     final accent = _previewThemeAccent(resolvedThemeKey);
     final gradient = _previewThemeGradient(resolvedThemeKey, isDark);
 
+    final reduced = _draftLiteMode || graphicsKey == 'low';
+    final fontKey = _draftFontKey ?? ui.fontKey;
     return RepaintBoundary(
-      child: Center(
-        child: Container(
-          width: 320,
-          height: 480,
-          margin: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.16),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+      child: AppearancePreviewCard(
+        title: context.tr('util_xemtrc_1507b5'),
+        sampleLabel: context.tr('cycle_ui_sample'),
+        description: context.tr('theme_preview_desc'),
+        colors: gradient,
+        accent: accent,
+        themeKey: resolvedThemeKey,
+        effectKey: resolvedEffectKey,
+        isDark: isDark,
+        reduced: reduced,
+        background: imageUrl.isEmpty
+            ? null
+            : Opacity(
+                opacity: reduced ? .12 : .24,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 600,
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
+                ),
               ),
-            ],
-            border: Border.all(
-              color: const Color(0xFFFFD6E4).withValues(alpha: 0.4),
-              width: 2,
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(26),
-            child: Stack(
-              fit: StackFit.expand,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final extent = ((_localCountdownSize ?? ui.countdownSizePx) * .38)
+                .clamp(108.0, math.min(158.0, constraints.maxWidth * .58))
+                .toDouble();
+            return Row(
               children: [
-                // Background
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradient,
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                SizedBox.square(
+                  dimension: extent,
+                  child: AppearanceCountdownPreview(
+                    styleKey: _draftCountdownStyleKey ?? ui.countdownStyleKey,
+                    valueText: '240',
+                    topLabel: _themePreviewLabel(
+                      ui.countdownTopLabel,
+                      fallback: context.tr('p7_days_together_upper'),
+                      uppercase: true,
                     ),
+                    bottomLabel: _themePreviewLabel(
+                      ui.countdownBottomLabel,
+                      fallback: context.tr('p7_love_upper'),
+                      uppercase: true,
+                    ),
+                    textStyle: _themeFontStyle(
+                      fontKey,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    transparent: _draftTransparentMode ?? ui.transparentMode,
+                    isDark: isDark,
                   ),
                 ),
-                if (imageUrl.isNotEmpty)
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: ui.liteMode ? 0.12 : 0.28,
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 600,
-                        errorWidget: (_, _, _) => const SizedBox.shrink(),
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
                     ),
-                  ),
-                // Effect layer
-                if (resolvedEffectKey != 'off' &&
-                    !ui.liteMode &&
-                    graphicsKey != 'low')
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: _buildThemePreviewEffectLayer(
-                        resolvedEffectKey,
-                        accent,
-                        isDark,
-                      ),
+                    decoration: _previewHomeCardDecoration(
+                      _draftHomeBlockToneKey ?? ui.homeBlockToneKey,
+                      isDark,
+                    ).copyWith(borderRadius: BorderRadius.circular(20)),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SlAvatarFrame(
+                          frameKey: _draftAvatarFrameKey ?? ui.avatarFrameKey,
+                          size: 48,
+                          animate: false,
+                          accentColor: accent,
+                          child: _buildThemePreviewAvatarImage(
+                            '',
+                            accent,
+                            context.tr('p7_preview_you'),
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        Text(
+                          context.tr('p7_preview_you'),
+                          textAlign: TextAlign.center,
+                          style: _themeFontStyle(
+                            fontKey,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : SLSettingsColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Icon(Icons.favorite_rounded, size: 14, color: accent),
+                      ],
                     ),
-                  ),
-                // Main Content inside phone mockup
-                SafeArea(
-                  minimum: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // Header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(
-                            Icons.cloud_queue_rounded,
-                            size: 16,
-                            color: isDark
-                                ? Colors.white70
-                                : const Color(0xFF5F4C58),
-                          ),
-                          Text(
-                            'SoulLocket',
-                            style: _themeFontStyle(
-                              _draftFontKey ?? ui.fontKey,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFFD81B60),
-                            ),
-                          ),
-                          Icon(
-                            Icons.settings_rounded,
-                            size: 16,
-                            color: isDark
-                                ? Colors.white70
-                                : const Color(0xFF5F4C58),
-                          ),
-                        ],
-                      ),
-                      const Spacer(flex: 2),
-                      // Countdown Circle
-                      _buildThemePreviewCountdownCircle(
-                        size: _localCountdownSize != null
-                            ? (_localCountdownSize! * 0.36).clamp(90.0, 150.0)
-                            : 110.0,
-                        fontKey: _draftFontKey ?? ui.fontKey,
-                        visual: _themePreviewCountdownVisual(
-                          _draftCountdownStyleKey ?? ui.countdownStyleKey,
-                        ),
-                        topLabel: _themePreviewLabel(
-                          ui.countdownTopLabel,
-                          fallback: context.tr('p7_days_together_upper'),
-                          uppercase: true,
-                        ),
-                        valueText: '240',
-                        bottomLabel: _themePreviewLabel(
-                          ui.countdownBottomLabel,
-                          fallback: context.tr('p7_love_upper'),
-                          uppercase: true,
-                        ),
-                        styleKey:
-                            _draftCountdownStyleKey ?? ui.countdownStyleKey,
-                        transparentMode:
-                            _draftTransparentMode ?? ui.transparentMode,
-                      ),
-                      const Spacer(flex: 2),
-                      // Presence Card
-                      _buildThemePreviewPresenceCard(
-                        fontKey: _draftFontKey ?? ui.fontKey,
-                        avatarFrameKey:
-                            _draftAvatarFrameKey ?? ui.avatarFrameKey,
-                        homeToneKey:
-                            _draftHomeBlockToneKey ?? ui.homeBlockToneKey,
-                        isDark: isDark,
-                      ),
-                      const Spacer(flex: 3),
-                      // Bottom navigation dock preview
-                      _buildThemePreviewDock(
-                        fontKey: _draftFontKey ?? ui.fontKey,
-                        accent: accent,
-                        isDark: isDark,
-                      ),
-                    ],
                   ),
                 ),
               ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

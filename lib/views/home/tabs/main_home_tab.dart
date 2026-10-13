@@ -28,8 +28,10 @@ import 'package:soullocket_app/views/home/widgets/main_home/home_partner_letter.
 import 'package:soullocket_app/views/home/widgets/main_home/home_couple_profile_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_couple_decor_model.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_couple_decor_editor_screen.dart';
+import 'package:soullocket_app/views/home/widgets/home_drawing_host.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
+import '../../../models/weather_background.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/widgets/sl_bouncing_button.dart';
@@ -414,6 +416,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _showStatus = true;
   bool _showWeather = true;
+  bool _weatherWidgetBackgroundActive = false;
+  int? _widgetWeatherProExpiresAtMs;
   String? _houseId;
   HomeCoupleCardDecor _homeCoupleDecor = HomeCoupleCardDecor.defaultValue();
   String? _homeCoupleDecorScope;
@@ -475,6 +479,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   // ignore: prefer_final_fields
   List<SharedNote> _noteHighlights = [];
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
+  // Truy vấn lịch đang nghe (nhà|múi giờ|ngày), để không gắn lại khi trùng.
+  String? _homeCalendarQueryKey;
   StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
   List<Map<String, dynamic>> _homeCalendarEvents = [];
   HomeCalendarLoadState _homeCalendarLoadState = HomeCalendarLoadState.loading;

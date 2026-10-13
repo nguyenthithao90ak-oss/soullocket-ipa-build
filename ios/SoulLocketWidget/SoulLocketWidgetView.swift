@@ -116,6 +116,12 @@ struct WidgetTheme {
                 chipBackground: Color.black.opacity(0.4),
                 chipBorder: Color(hex: "FFF0BD").opacity(0.35)
             )
+        case "weather_premium":
+            return WidgetTheme(
+                gradient: [Color(hex: "E7EDF4"), Color(hex: "F4EFF8"), Color(hex: "E8F1F3")],
+                textColor: Color(hex: "3C4F69"), secondaryTextColor: Color(hex: "526780"),
+                accentColor: Color(hex: "7954AA"), chipBackground: Color.white.opacity(0.74),
+                chipBorder: Color(hex: "C9DCEA"))
         case "pink":
             fallthrough
         default:
@@ -249,7 +255,7 @@ struct SoulLocketWidgetView16: View {
     let entry: CoupleEntry
     @Environment(\.widgetFamily) var family
     var body: some View {
-        let theme = WidgetTheme.from(entry.data.bgTheme)
+        let theme = WidgetTheme.from(entry.data.weatherBackground.allowedTheme(entry.data.bgTheme, at: entry.date))
         if family == .accessoryCircular || family == .accessoryRectangular || family == .accessoryInline {
             LockScreenWidgetView(data: entry.data, family: family, theme: theme, date: entry.date)
         } else if entry.data.widgetStyleKey == "soulevent" {
@@ -267,7 +273,7 @@ struct SoulLocketWidgetView15: View {
         if entry.data.widgetStyleKey == "soulevent" {
             WidgetUtilityView(kind: .event, data: UtilityWidgetData.load(), date: entry.date)
         } else {
-            WidgetCoupleHomeView(data: entry.data, theme: WidgetTheme.from(entry.data.bgTheme),
+            WidgetCoupleHomeView(data: entry.data, theme: WidgetTheme.from(entry.data.weatherBackground.allowedTheme(entry.data.bgTheme, at: entry.date)),
                 date: entry.date, family: family)
         }
     }

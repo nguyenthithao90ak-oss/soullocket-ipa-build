@@ -282,6 +282,8 @@ class PurchaseService with WidgetsBindingObserver {
   VipAccessInfo? _cachedAccessInfo;
   String? _cachedAccessUid;
   int? _cachedAccessCheckedAt;
+  Future<VipAccessInfo>? _pendingAccessInfo;
+  String? _pendingAccessUid;
   final PurchaseProcessingQueue _purchaseQueue = PurchaseProcessingQueue();
   final Map<String, String> _purchaseOwners = <String, String>{};
   bool _openingPurchase = false;
@@ -920,7 +922,26 @@ class PurchaseService with WidgetsBindingObserver {
   }
 
   Future<VipAccessInfo> getVipAccessInfo({bool forceRefresh = false}) async {
-    final access = await _loadVipAccessInfo(forceRefresh: forceRefresh);
+    // Nhiều màn hỏi cùng lúc khi cache vừa hết hạn: dùng chung một lượt đọc
+    // thay vì mỗi nơi đọc `users/{uid}/vip` và `houses/{id}/vip` riêng.
+    final pending = _pendingAccessInfo;
+    if (!forceRefresh &&
+        pending != null &&
+        _pendingAccessUid == _auth.currentUser?.uid) {
+      return pending;
+    }
+    final load = _loadVipAccessInfo(forceRefresh: forceRefresh);
+    _pendingAccessInfo = load;
+    _pendingAccessUid = _auth.currentUser?.uid;
+    final VipAccessInfo access;
+    try {
+      access = await load;
+    } finally {
+      if (identical(_pendingAccessInfo, load)) {
+        _pendingAccessInfo = null;
+        _pendingAccessUid = null;
+      }
+    }
     // Tiện ích Pro (Chat thân thiện) mở chat hay lời mời nâng cấp theo kết quả này.
     UtilityService.setProAccess(access.isVip);
     return access;

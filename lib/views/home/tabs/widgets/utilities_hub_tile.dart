@@ -178,7 +178,7 @@ class UtilitiesHubTile extends StatelessWidget {
   final double stickerSize;
   final bool isPinned;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
   final double labelFontSize;
 
   @override

@@ -120,6 +120,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _isUploadingSoulAsset = false;
   bool _callRouteOpen = false;
   final ScrollController _chatScrollController = ScrollController();
+  final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
+  SoulMessageWindow? _pinnedWindow;
+  String? _pinnedTargetId;
+  bool _isViewingPinnedWindow = false;
+  bool _isLoadingPinnedMessage = false;
+  int _pinnedJumpGeneration = 0;
   bool _overlayEnabled = false;
   StreamSubscription<dynamic>? _overlayListenerSub;
 
@@ -982,51 +988,51 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _interactiveEventsSub = _mergeService
         .watchInteractiveEvents(houseId: houseId)
         .listen((event) {
-      if (!mounted ||
-          !isScreenActive ||
-          !_scopeIsCurrent ||
-          _houseId != houseId) {
-        return;
-      }
-      if (event.isEmpty) return;
-      final sender = event['sender']?.toString();
-      if (sender == _myRole) return; // ignore my own
+          if (!mounted ||
+              !isScreenActive ||
+              !_scopeIsCurrent ||
+              _houseId != houseId) {
+            return;
+          }
+          if (event.isEmpty) return;
+          final sender = event['sender']?.toString();
+          if (sender == _myRole) return; // ignore my own
 
-      final type = event['type']?.toString();
-      if (type == 'photo_shot') {
-        final url = event['url']?.toString() ?? '';
-        final x = (event['x'] as num?)?.toDouble() ?? 0.0;
-        final y = (event['y'] as num?)?.toDouble() ?? 0.0;
+          final type = event['type']?.toString();
+          if (type == 'photo_shot') {
+            final url = event['url']?.toString() ?? '';
+            final x = (event['x'] as num?)?.toDouble() ?? 0.0;
+            final y = (event['y'] as num?)?.toDouble() ?? 0.0;
 
-        final pos = Offset(
-          x > 0 ? x : MediaQuery.of(context).size.width / 2,
-          y > 0 ? y : MediaQuery.of(context).size.height / 2,
-        );
-        setState(() => _heartPulse++);
-        if (url.isNotEmpty) {
-          _spawnPhotoExplosion(
-            specificItem: {
-              'url': url,
-              'type': 'photo',
-              'mood': '💖',
-              'text': '',
-              'dateStr': '',
-            },
-            specificPosition: Offset(pos.dx, pos.dy - 100),
-          );
-        }
-      } else if (type == 'persistent_photo') {
-        final url = event['url']?.toString() ?? '';
-        if (url.isNotEmpty) {
-          setState(() {
-            _persistentPhotos.add(url);
-            if (_persistentPhotos.length > 3) {
-              _persistentPhotos.removeAt(0);
+            final pos = Offset(
+              x > 0 ? x : MediaQuery.of(context).size.width / 2,
+              y > 0 ? y : MediaQuery.of(context).size.height / 2,
+            );
+            setState(() => _heartPulse++);
+            if (url.isNotEmpty) {
+              _spawnPhotoExplosion(
+                specificItem: {
+                  'url': url,
+                  'type': 'photo',
+                  'mood': '💖',
+                  'text': '',
+                  'dateStr': '',
+                },
+                specificPosition: Offset(pos.dx, pos.dy - 100),
+              );
             }
-          });
-        }
-      }
-    });
+          } else if (type == 'persistent_photo') {
+            final url = event['url']?.toString() ?? '';
+            if (url.isNotEmpty) {
+              setState(() {
+                _persistentPhotos.add(url);
+                if (_persistentPhotos.length > 3) {
+                  _persistentPhotos.removeAt(0);
+                }
+              });
+            }
+          }
+        });
   }
 
   void _listenSoulMessages() {
@@ -1046,6 +1052,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 !_chatScrollController.hasClients ||
                 _chatScrollController.offset < 48;
             _messageHistory.applyLatest(list);
+            if (_pinnedWindow != null) {
+              for (final message in list) {
+                final id = message['id']?.toString() ?? '';
+                if (id.isNotEmpty) {
+                  _pinnedWindow!.applyMessage(id, message);
+                }
+              }
+            }
             final visibleHistory = _visibleSoulMessages;
             _messageOutbox.reconcile(visibleHistory);
             if (_replyTarget != null) {
@@ -1135,7 +1149,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
             setState(() {
               _chatHistory = _decorateMessageDelivery(
-                _messageOutbox.merge(visibleHistory),
+                _isViewingPinnedWindow
+                    ? _visiblePinnedMessages
+                    : _messageOutbox.merge(visibleHistory),
               );
               _hasLoadedMessages = true;
               _latestMessagesFailed = false;
@@ -1154,7 +1170,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               });
             }
 
-            if (wasNearBottom) _scrollChatToBottom();
+            if (wasNearBottom && !_isViewingPinnedWindow) {
+              _scrollChatToBottom();
+            }
           },
           onError: (Object error) {
             if (!mounted ||
@@ -1184,7 +1202,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ScrollDirection.idle) {
       return;
     }
-    if (_chatScrollController.position.extentAfter < 100) {
+    final position = _chatScrollController.position;
+    if (_isViewingPinnedWindow) {
+      if (position.extentAfter < 100 &&
+          position.userScrollDirection == ScrollDirection.reverse) {
+        unawaited(_loadPinnedOlderMessages());
+      } else if (position.pixels < 100 &&
+          position.userScrollDirection == ScrollDirection.forward) {
+        unawaited(_loadPinnedNewerMessages());
+      }
+      return;
+    }
+    if (position.extentAfter < 100) {
       unawaited(_loadOlderMessages());
     }
   }
@@ -1200,6 +1229,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   Future<void> _loadOlderMessages() async {
+    if (_isViewingPinnedWindow) {
+      await _loadPinnedOlderMessages();
+      return;
+    }
     final before = _messageHistory.before;
     final houseId = _houseId;
     if (_isLoadingOlderMessages ||
@@ -1233,6 +1266,257 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     } finally {
       if (mounted) setState(() => _isLoadingOlderMessages = false);
     }
+  }
+
+  Future<void> _loadPinnedOlderMessages() async {
+    final window = _pinnedWindow;
+    final houseId = _houseId;
+    final before = window?.before;
+    final generation = _pinnedJumpGeneration;
+    if (_isLoadingPinnedMessage ||
+        window == null ||
+        !window.hasOlder ||
+        before == null ||
+        houseId == null ||
+        !_scopeIsCurrent ||
+        !isScreenActive) {
+      return;
+    }
+    setState(() {
+      _isLoadingPinnedMessage = true;
+      _historyLoadFailed = false;
+    });
+    try {
+      final page = await _mergeService.loadOlderSoulMessages(
+        houseId: houseId,
+        before: before,
+      );
+      if (!mounted ||
+          !isScreenActive ||
+          !_scopeIsCurrent ||
+          _houseId != houseId ||
+          generation != _pinnedJumpGeneration ||
+          _pinnedWindow != window) {
+        return;
+      }
+      window.applyOlder(page, requestedBefore: before);
+      setState(() {
+        _chatHistory = _decorateMessageDelivery(_visiblePinnedMessages);
+      });
+    } catch (error) {
+      if (mounted && isScreenActive && generation == _pinnedJumpGeneration) {
+        setState(() => _historyLoadFailed = true);
+      }
+      debugPrint(
+        '[SoulMergeScreen] Pinned older load failed: ${error.runtimeType}',
+      );
+    } finally {
+      if (mounted && generation == _pinnedJumpGeneration) {
+        setState(() => _isLoadingPinnedMessage = false);
+      }
+    }
+  }
+
+  Future<void> _loadPinnedNewerMessages() async {
+    final window = _pinnedWindow;
+    final houseId = _houseId;
+    final after = window?.after;
+    final generation = _pinnedJumpGeneration;
+    if (_isLoadingPinnedMessage ||
+        window == null ||
+        !window.hasNewer ||
+        after == null ||
+        houseId == null ||
+        !_scopeIsCurrent ||
+        !isScreenActive) {
+      return;
+    }
+    setState(() {
+      _isLoadingPinnedMessage = true;
+      _historyLoadFailed = false;
+    });
+    try {
+      final page = await _mergeService.loadNewerSoulMessages(
+        houseId: houseId,
+        after: after,
+      );
+      if (!mounted ||
+          !isScreenActive ||
+          !_scopeIsCurrent ||
+          _houseId != houseId ||
+          generation != _pinnedJumpGeneration ||
+          _pinnedWindow != window) {
+        return;
+      }
+      window.applyNewer(page, requestedAfter: after);
+      setState(() {
+        _chatHistory = _decorateMessageDelivery(_visiblePinnedMessages);
+      });
+    } catch (error) {
+      if (mounted && isScreenActive && generation == _pinnedJumpGeneration) {
+        setState(() => _historyLoadFailed = true);
+      }
+      debugPrint(
+        '[SoulMergeScreen] Pinned newer load failed: ${error.runtimeType}',
+      );
+    } finally {
+      if (mounted && generation == _pinnedJumpGeneration) {
+        setState(() => _isLoadingPinnedMessage = false);
+      }
+    }
+  }
+
+  void _showPinnedUnavailable() {
+    if (!mounted || !isScreenActive) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.tr('p4_soul_reply_unavailable'))),
+    );
+  }
+
+  Future<void> _jumpToPinnedMessage(Map<String, dynamic> pinned) async {
+    final houseId = _houseId;
+    final id = pinned['id']?.toString() ?? '';
+    if (!isScreenActive || !_scopeIsCurrent || houseId == null || id.isEmpty) {
+      return;
+    }
+    final generation = ++_pinnedJumpGeneration;
+    _messageKeys.putIfAbsent(id, GlobalKey.new);
+
+    // A search filter can hide the target. Clear the old window while the
+    // bounded read is in flight so a second pin tap cannot show stale data.
+    if (mounted) {
+      setState(() {
+        _pinnedWindow = null;
+        _pinnedTargetId = null;
+        _isViewingPinnedWindow = false;
+        _isLoadingPinnedMessage = true;
+        _historyLoadFailed = false;
+        _messageSearchQuery = '';
+        _messageSearchOpen = false;
+        _chatHistory = _decorateMessageDelivery(
+          _messageOutbox.merge(_visibleSoulMessages),
+        );
+      });
+    }
+
+    var target = <String, dynamic>{...pinned, 'id': id};
+    var timestamp = (target['timestamp'] as num?)?.toInt() ?? 0;
+    if (timestamp <= 0) {
+      try {
+        final resolved = await _mergeService.getSoulMessage(
+          houseId: houseId,
+          messageId: id,
+        );
+        if (resolved != null) {
+          target = resolved;
+          timestamp = (resolved['timestamp'] as num?)?.toInt() ?? 0;
+        }
+      } catch (error) {
+        debugPrint(
+          '[SoulMergeScreen] Pinned message lookup failed: ${error.runtimeType}',
+        );
+      }
+    }
+    try {
+      if (!mounted ||
+          !isScreenActive ||
+          !_scopeIsCurrent ||
+          generation != _pinnedJumpGeneration ||
+          _houseId != houseId) {
+        return;
+      }
+      if (timestamp <= 0) {
+        _showPinnedUnavailable();
+        return;
+      }
+
+      final page = await _mergeService.loadSoulMessagesAround(
+        houseId: houseId,
+        target: SoulMessageCursor(timestamp, id),
+      );
+      if (!mounted ||
+          !isScreenActive ||
+          !_scopeIsCurrent ||
+          generation != _pinnedJumpGeneration ||
+          _houseId != houseId) {
+        return;
+      }
+
+      final window = SoulMessageWindow(
+        page,
+        target: SoulMessageCursor(timestamp, id),
+      );
+      final targetMessage = window.messages.where(
+        (message) =>
+            message['id']?.toString() == id &&
+            SoulMessageActions.visibleTo(message, _screenOwnerUid),
+      );
+      if (targetMessage.isEmpty) {
+        _showPinnedUnavailable();
+        return;
+      }
+
+      _pinnedWindow = window;
+      _pinnedTargetId = id;
+      _isViewingPinnedWindow = true;
+      setState(() {
+        _chatHistory = _decorateMessageDelivery(_visiblePinnedMessages);
+      });
+      await _scrollToLoadedMessage(id, generation);
+    } catch (error) {
+      if (mounted && isScreenActive && generation == _pinnedJumpGeneration) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('calendar_retry_load'))),
+        );
+      }
+      debugPrint(
+        '[SoulMergeScreen] Pinned message window load failed: '
+        '${error.runtimeType}',
+      );
+    } finally {
+      if (mounted && generation == _pinnedJumpGeneration) {
+        setState(() => _isLoadingPinnedMessage = false);
+      }
+    }
+  }
+
+  Future<void> _scrollToLoadedMessage(String id, int generation) async {
+    for (var attempt = 0; attempt < 6; attempt++) {
+      if (!mounted || !isScreenActive || generation != _pinnedJumpGeneration) {
+        return;
+      }
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || !isScreenActive || generation != _pinnedJumpGeneration) {
+        return;
+      }
+      final targetContext = _messageKeys[id]?.currentContext;
+      if (targetContext != null && targetContext.mounted) {
+        await Scrollable.ensureVisible(
+          targetContext,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+    }
+  }
+
+  void _returnToLatestMessages() {
+    ++_pinnedJumpGeneration;
+    _pinnedWindow = null;
+    _pinnedTargetId = null;
+    _isViewingPinnedWindow = false;
+    _isLoadingPinnedMessage = false;
+    _historyLoadFailed = false;
+    if (!mounted || !isScreenActive) return;
+    setState(() {
+      _chatHistory = _decorateMessageDelivery(
+        _messageOutbox.merge(_visibleSoulMessages),
+      );
+    });
+    _scrollChatToBottom();
   }
 
   void _listenBackground() {
@@ -1335,12 +1619,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   Future<void> _pickSoulAvatar() async {
     final houseId = _houseId;
     final ownerUid = _screenOwnerUid;
-    bool isCurrent() => mounted && _scopeIsCurrent &&
-        ownerUid != null && _screenOwnerUid == ownerUid && _houseId == houseId;
+    bool isCurrent() =>
+        mounted &&
+        _scopeIsCurrent &&
+        ownerUid != null &&
+        _screenOwnerUid == ownerUid &&
+        _houseId == houseId;
     if (_isUploadingSoulAsset || houseId == null || !_scopeIsCurrent) return;
     setState(() => _isUploadingSoulAsset = true);
     try {
-      var image = await StorageService.instance.pickImage(preserveOriginal: true);
+      var image = await StorageService.instance.pickImage(
+        preserveOriginal: true,
+      );
       if (image == null ||
           !mounted ||
           !_scopeIsCurrent ||
@@ -1357,7 +1647,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         isScopeCurrent: isCurrent,
       );
       if (image == null || !isCurrent()) return;
-      if (await _mergeService.getCurrentHouseId() != houseId || !isCurrent()) return;
+      if (await _mergeService.getCurrentHouseId() != houseId || !isCurrent())
+        return;
       // Avatar Soul Merge phải dùng session ảnh công khai Firebase Storage.
       // Đường managed generic trả URL R2 r2.dev đã đóng public (401), khiến
       // CachedNetworkImage không thể đọc dù upload đã báo thành công.
@@ -1674,7 +1965,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       }
       return;
     }
-
   }
 
   List<Map<String, dynamic>> get _visibleSoulMessages => _messageHistory
@@ -1683,6 +1973,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         (message) => SoulMessageActions.visibleTo(message, _screenOwnerUid),
       )
       .toList();
+
+  List<Map<String, dynamic>> get _visiblePinnedMessages =>
+      _pinnedWindow?.messages
+          .where(
+            (message) =>
+                SoulMessageActions.visibleTo(message, _screenOwnerUid),
+          )
+          .toList(growable: false) ??
+      const <Map<String, dynamic>>[];
 
   void _listenReadReceipts() {
     final houseId = _houseId;
@@ -1801,7 +2100,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (!mounted || !isScreenActive || !_scopeIsCurrent) return;
     setState(() {
       _messageHistory.applyMessage(id, message);
-      _chatHistory = _visibleSoulMessages;
+      _pinnedWindow?.applyMessage(id, message);
+      _chatHistory = _decorateMessageDelivery(
+        _isViewingPinnedWindow
+            ? _visiblePinnedMessages
+            : _visibleSoulMessages,
+      );
       if (_replyTarget?['id'] == id) {
         _replyTarget =
             message != null &&
@@ -2111,6 +2415,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       isMerged: _isMerged,
       isLoadingHistory:
           _isLoadingOlderMessages ||
+          _isLoadingPinnedMessage ||
           (!_hasLoadedMessages && !_latestMessagesFailed),
       historyLoadFailed: _historyLoadFailed || _latestMessagesFailed,
       onRetryHistory: _retryHistory,
@@ -2151,9 +2456,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         }
       },
       pinnedMessages: _pinnedDisplayMessages,
+      onPinnedMessageTap: (message) => unawaited(_jumpToPinnedMessage(message)),
+      onReturnToLatest: _isViewingPinnedWindow
+          ? _returnToLatestMessages
+          : null,
       onPinMessage: _pinSoulMessage,
       onUnpinMessage: _unpinSoulMessage,
       isMessagePinned: _isMessagePinned,
+      messageKeys: _messageKeys,
     );
   }
 

@@ -355,9 +355,7 @@ class SoulMergeService {
                 }
                 try {
                   final messageSnapshot = await _db
-                      .ref(
-                        'houses/$resolvedHouseId/soul_merge/chat/$messageId',
-                      )
+                      .ref('houses/$resolvedHouseId/soul_merge/chat/$messageId')
                       .get();
                   final message = messageSnapshot.value;
                   if (message is Map) {
@@ -442,6 +440,69 @@ class SoulMergeService {
       before: before,
     ).get();
     return _readSoulMessages(snapshot);
+  }
+
+  /// Load only a bounded window around a pinned message.
+  ///
+  /// Firebase Realtime Database cannot seek by an arbitrary child key, so the
+  /// window is composed from two small ordered queries. The target is included
+  /// in both bounds (and de-duplicated), while the rest of the conversation is
+  /// never read.
+  Future<List<Map<String, dynamic>>> loadSoulMessagesAround({
+    required String houseId,
+    required SoulMessageCursor target,
+    int radius = SoulMessageHistory.pageSize ~/ 2,
+  }) async {
+    if (houseId.isEmpty || !SoulMessageActions.validId(target.id)) {
+      return const [];
+    }
+    final reference = _db.ref('houses/$houseId/soul_merge/chat');
+    final snapshots = await Future.wait(
+      SoulMessageHistory.around(
+        reference,
+        target,
+        radius: radius,
+      ).map((query) => query.get()),
+    );
+    final byId = <String, Map<String, dynamic>>{};
+    for (final snapshot in snapshots) {
+      for (final message in _readSoulMessages(snapshot)) {
+        final id = message['id']?.toString() ?? '';
+        if (id.isNotEmpty) byId[id] = message;
+      }
+    }
+    return byId.values.toList()..sort(SoulMessageHistory.compareMessages);
+  }
+
+  Future<List<Map<String, dynamic>>> loadNewerSoulMessages({
+    required String houseId,
+    required SoulMessageCursor after,
+  }) async {
+    if (houseId.isEmpty || !SoulMessageActions.validId(after.id)) {
+      return const [];
+    }
+    final snapshot = await SoulMessageHistory.newer(
+      _db.ref('houses/$houseId/soul_merge/chat'),
+      after,
+    ).get();
+    return _readSoulMessages(snapshot);
+  }
+
+  Future<Map<String, dynamic>?> getSoulMessage({
+    required String houseId,
+    required String messageId,
+  }) async {
+    if (houseId.isEmpty || !SoulMessageActions.validId(messageId)) return null;
+    final snapshot = await _db
+        .ref('houses/$houseId/soul_merge/chat/$messageId')
+        .get();
+    final raw = snapshot.value;
+    if (raw is! Map) return null;
+    return <String, dynamic>{
+      ...Map<String, dynamic>.from(raw),
+      'id': messageId,
+      'timestamp': (raw['timestamp'] as num?)?.toInt() ?? 0,
+    };
   }
 
   List<Map<String, dynamic>> _readSoulMessages(DataSnapshot snapshot) {
@@ -596,8 +657,9 @@ class SoulMergeService {
         _interactivePresenceHouse = houseId;
         _interactivePresenceRole = oppositeRole;
         _interactivePresenceCheckedAt = now;
-        _interactivePresenceOnline =
-            PresenceService.isPresenceOnline(presenceData);
+        _interactivePresenceOnline = PresenceService.isPresenceOnline(
+          presenceData,
+        );
       }
 
       // Nếu người kia offline, không ghi event tạm thời mà họ chắc chắn không

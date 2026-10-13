@@ -54,6 +54,33 @@ class SoulMessageHistory {
     return query.limitToLast(pageSize);
   }
 
+  static List<Query> around(
+    Query reference,
+    SoulMessageCursor target, {
+    int radius = pageSize ~/ 2,
+  }) {
+    final boundedRadius = radius < 1
+        ? 1
+        : radius > pageSize
+        ? pageSize
+        : radius;
+    return [
+      reference
+          .orderByChild('timestamp')
+          .endAt(target.timestamp, key: target.id)
+          .limitToLast(boundedRadius),
+      reference
+          .orderByChild('timestamp')
+          .startAt(target.timestamp, key: target.id)
+          .limitToFirst(boundedRadius),
+    ];
+  }
+
+  static Query newer(Query reference, SoulMessageCursor after) => reference
+      .orderByChild('timestamp')
+      .startAfter(after.timestamp, key: after.id)
+      .limitToFirst(pageSize);
+
   void applyLatest(List<Map<String, dynamic>> page) {
     final ordered = [...page]..sort(compareMessages);
     final incomingIds = ordered
@@ -104,7 +131,16 @@ class SoulMessageHistory {
     hasOlder = ordered.length == pageSize;
   }
 
+  /// Merge a bounded page fetched around a pinned message without changing
+  /// the cursor used by the normal newest/older pagination.
+  void applyAround(List<Map<String, dynamic>> page) {
+    final ordered = [...page]..sort(compareMessages);
+    _merge(ordered);
+  }
+
   bool isLatest(String id) => _latestIds.contains(id);
+
+  bool contains(String id) => _byId.containsKey(id);
 
   void applyMessage(String id, Map<String, dynamic>? message) {
     if (message == null) {
@@ -124,3 +160,98 @@ class SoulMessageHistory {
     }
   }
 }
+
+/// A contiguous, bounded view of the conversation centred on a pinned item.
+/// It has independent cursors so a jump never creates a fake gap in the main
+/// latest-history cursor.
+class SoulMessageWindow {
+  SoulMessageWindow(
+    List<Map<String, dynamic>> page, {
+    required SoulMessageCursor target,
+    int radius = SoulMessageHistory.pageSize ~/ 2,
+  }) {
+    final ordered = [...page]..sort(SoulMessageHistory.compareMessages);
+    _merge(ordered);
+    if (ordered.isEmpty) return;
+    before = SoulMessageCursor.fromMessage(ordered.first);
+    after = SoulMessageCursor.fromMessage(ordered.last);
+    final targetMessage = <String, dynamic>{
+      'id': target.id,
+      'timestamp': target.timestamp,
+    };
+    final targetIndex = ordered.indexWhere(
+      (message) => message['id']?.toString() == target.id,
+    );
+    if (targetIndex >= 0) {
+      // The around query includes the target in both halves. A full half
+      // (radius - 1 neighbours plus the target) means more data may exist.
+      hasOlder = targetIndex >= radius - 1;
+      hasNewer = ordered.length - targetIndex - 1 >= radius - 1;
+    } else {
+      hasOlder = ordered.any(
+        (message) =>
+            SoulMessageHistory.compareMessages(message, targetMessage) < 0,
+      );
+      hasNewer = ordered.any(
+        (message) =>
+            SoulMessageHistory.compareMessages(message, targetMessage) > 0,
+      );
+    }
+  }
+
+  final Map<String, Map<String, dynamic>> _byId = {};
+  SoulMessageCursor? before;
+  SoulMessageCursor? after;
+  bool hasOlder = false;
+  bool hasNewer = false;
+
+  List<Map<String, dynamic>> get messages =>
+      _byId.values.toList()..sort(SoulMessageHistory.compareMessages);
+
+  bool contains(String id) => _byId.containsKey(id);
+
+  void applyOlder(
+    List<Map<String, dynamic>> page, {
+    required SoulMessageCursor requestedBefore,
+  }) {
+    if (before != requestedBefore) return;
+    final ordered = [...page]..sort(SoulMessageHistory.compareMessages);
+    _merge(ordered);
+    if (ordered.isNotEmpty) {
+      before = SoulMessageCursor.fromMessage(ordered.first);
+    }
+    hasOlder = ordered.length == SoulMessageHistory.pageSize;
+  }
+
+  void applyNewer(
+    List<Map<String, dynamic>> page, {
+    required SoulMessageCursor requestedAfter,
+  }) {
+    if (after != requestedAfter) return;
+    final ordered = [...page]..sort(SoulMessageHistory.compareMessages);
+    _merge(ordered);
+    if (ordered.isNotEmpty) {
+      after = SoulMessageCursor.fromMessage(ordered.last);
+    }
+    hasNewer = ordered.length == SoulMessageHistory.pageSize;
+  }
+
+  void applyMessage(String id, Map<String, dynamic>? message) {
+    if (!_byId.containsKey(id)) return;
+    if (message == null) {
+      _byId.remove(id);
+    } else {
+      _byId[id] = {...message, 'id': id};
+    }
+  }
+
+  void _merge(List<Map<String, dynamic>> page) {
+    for (final message in page) {
+      final id = message['id']?.toString() ?? '';
+      if (id.isNotEmpty) {
+        _byId[id] = Map<String, dynamic>.from(message);
+      }
+    }
+  }
+}
+

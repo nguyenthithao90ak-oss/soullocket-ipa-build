@@ -83,6 +83,10 @@ class AppConfig {
     'NOMINATIM_REVERSE_URL',
     defaultValue: 'https://nominatim.openstreetmap.org/reverse',
   );
+  static const String nominatimSearchUrl = String.fromEnvironment(
+    'NOMINATIM_SEARCH_URL',
+    defaultValue: 'https://nominatim.openstreetmap.org/search',
+  );
   static const String androidPackageName = 'com.soullocket.app';
   static const String appStoreId = '6764673408';
   static const String androidStoreUrl =

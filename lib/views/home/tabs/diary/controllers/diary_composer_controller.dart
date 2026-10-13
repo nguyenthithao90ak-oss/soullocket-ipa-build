@@ -120,14 +120,15 @@ class DiaryComposerController {
             )
             .catchError((_) => null);
         // Gửi push notification tới người bên kia kèm nội dung nhật ký
-        final preview = content.length > 60
-            ? '${content.substring(0, 60)}...'
-            : content;
         NotificationService()
             .sendPartnerNotification(
               houseId: houseId,
               title: L10nService().format('ui_home_value1_value2_just_wrote_a_confession_f3dc57', {'value1': authorName, 'value2': mood}),
-              body: preview,
+              // Không đưa nội dung tâm sự lên lock screen; người nhận sẽ xem
+              // đầy đủ sau khi mở app và qua luồng khóa riêng tư.
+              body: L10nService().format('diary_partner_new_diary', {
+                'author': authorName,
+              }),
               data: const {'screen': 'diary', 'type': 'diary_post'},
             )
             .ignore();

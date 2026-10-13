@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
@@ -55,9 +56,12 @@ class SoulMergeChatBar extends StatelessWidget {
     this.onSearchChanged,
     this.onCloseSearch,
     this.pinnedMessages = const [],
+    this.onPinnedMessageTap,
+    this.onReturnToLatest,
     this.onPinMessage,
     this.onUnpinMessage,
     this.isMessagePinned,
+    this.messageKeys = const <String, GlobalKey>{},
   });
 
   final List<Map<String, dynamic>> chatHistory;
@@ -99,9 +103,12 @@ class SoulMergeChatBar extends StatelessWidget {
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onCloseSearch;
   final List<Map<String, dynamic>> pinnedMessages;
+  final ValueChanged<Map<String, dynamic>>? onPinnedMessageTap;
+  final VoidCallback? onReturnToLatest;
   final Future<void> Function(Map<String, dynamic>)? onPinMessage;
   final Future<void> Function(Map<String, dynamic>)? onUnpinMessage;
   final bool Function(Map<String, dynamic>)? isMessagePinned;
+  final Map<String, GlobalKey> messageKeys;
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +159,11 @@ class SoulMergeChatBar extends StatelessWidget {
               const SizedBox(height: 8),
             ],
             if (pinnedMessages.isNotEmpty) ...[
-              _PinnedMessageStrip(messages: pinnedMessages),
+              _PinnedMessageStrip(
+                messages: pinnedMessages,
+                onMessageTap: onPinnedMessageTap,
+                onReturnToLatest: onReturnToLatest,
+              ),
               const SizedBox(height: 8),
             ],
             Expanded(
@@ -180,7 +191,9 @@ class SoulMergeChatBar extends StatelessWidget {
                 onPinMessage: onPinMessage,
                 onUnpinMessage: onUnpinMessage,
                 isMessagePinned: isMessagePinned,
+                messageKeys: messageKeys,
                 searchQuery: searchQuery,
+                isPinnedWindow: onReturnToLatest != null,
               ),
             ),
             if (presets.isNotEmpty) ...[
@@ -287,22 +300,42 @@ class _MergeSearchBarState extends State<_MergeSearchBar> {
 }
 
 class _PinnedMessageStrip extends StatelessWidget {
-  const _PinnedMessageStrip({required this.messages});
+  const _PinnedMessageStrip({
+    required this.messages,
+    this.onMessageTap,
+    this.onReturnToLatest,
+  });
 
   final List<Map<String, dynamic>> messages;
+  final ValueChanged<Map<String, dynamic>>? onMessageTap;
+  final VoidCallback? onReturnToLatest;
 
   @override
   Widget build(BuildContext context) {
     final colors = SoulMergeColors(context);
     return SizedBox(
-      height: 42,
+      height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: messages.length,
+        itemCount: messages.length + (onReturnToLatest == null ? 0 : 1),
         separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
+          if (onReturnToLatest != null && index == messages.length) {
+            return ActionChip(
+              avatar: Icon(
+                Icons.vertical_align_bottom_rounded,
+                size: 16,
+                color: colors.rose,
+              ),
+              label: Text(context.tr('comm_minhtlnu_e9f8eb')),
+              onPressed: onReturnToLatest,
+              backgroundColor: colors.surface,
+              side: BorderSide(color: colors.line),
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+            );
+          }
           final message = messages[index];
-          return Chip(
+          return ActionChip(
             avatar: Icon(Icons.push_pin_rounded, size: 15, color: colors.rose),
             label: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 190),
@@ -312,8 +345,12 @@ class _PinnedMessageStrip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            onPressed: onMessageTap == null
+                ? null
+                : () => onMessageTap!(message),
             backgroundColor: colors.blush,
             side: BorderSide(color: colors.line),
+            materialTapTargetSize: MaterialTapTargetSize.padded,
           );
         },
       ),
@@ -386,7 +423,9 @@ class _MergeChatHistory extends StatelessWidget {
     this.onPinMessage,
     this.onUnpinMessage,
     this.isMessagePinned,
+    this.messageKeys = const <String, GlobalKey>{},
     this.searchQuery,
+    this.isPinnedWindow = false,
   });
 
   final List<Map<String, dynamic>> history;
@@ -412,7 +451,9 @@ class _MergeChatHistory extends StatelessWidget {
   final Future<void> Function(Map<String, dynamic>)? onPinMessage;
   final Future<void> Function(Map<String, dynamic>)? onUnpinMessage;
   final bool Function(Map<String, dynamic>)? isMessagePinned;
+  final Map<String, GlobalKey> messageKeys;
   final String? searchQuery;
+  final bool isPinnedWindow;
 
   @override
   Widget build(BuildContext context) {
@@ -461,6 +502,12 @@ class _MergeChatHistory extends StatelessWidget {
                 child: ListView.builder(
                   controller: controller,
                   reverse: true,
+                  // A pin window is capped at 20 messages. Build that bounded
+                  // window eagerly so ensureVisible uses the actual bubble
+                  // height, including long text and media.
+                  scrollCacheExtent: ScrollCacheExtent.pixels(
+                    isPinnedWindow ? 100000 : 600,
+                  ),
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(4, 18, 4, 12),
                   keyboardDismissBehavior:
@@ -579,7 +626,8 @@ class _MergeChatHistory extends StatelessWidget {
                               ),
                       ),
                     );
-                    return watchMessage == null || onMessageChanged == null
+                    final item =
+                        watchMessage == null || onMessageChanged == null
                         ? bubble
                         : SoulMergeLiveMessage(
                             key: ValueKey(message['id']),
@@ -593,6 +641,11 @@ class _MergeChatHistory extends StatelessWidget {
                             onChanged: onMessageChanged!,
                             child: bubble,
                           );
+                    final messageId = message['id']?.toString() ?? '';
+                    final itemKey = messageKeys[messageId];
+                    return itemKey == null
+                        ? item
+                        : KeyedSubtree(key: itemKey, child: item);
                   },
                 ),
               ),

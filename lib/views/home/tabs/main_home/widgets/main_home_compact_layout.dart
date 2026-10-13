@@ -73,6 +73,8 @@ extension _MainHomeCompactLayout on _MainHomeTabState {
     return actions;
   }
 
+  // Tạm không hiện trên Home (gỡ 12/10/2026 cho đỡ chật); giữ lại để bật lại dễ.
+  // ignore: unused_element
   Widget _buildCompactQuickActions({required bool isSingle}) {
     final actions = _buildHomeQuickActions(isSingle: isSingle);
     if (actions.isEmpty) return const SizedBox.shrink();

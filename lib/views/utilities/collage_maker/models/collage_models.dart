@@ -2,18 +2,17 @@ part of '../../collage_maker_screen.dart';
 
 class _EditableCollagePhoto {
   final String source;
+  final String stableKey;
   double scale;
   Offset offset;
 
-  _EditableCollagePhoto({
-    required this.source,
-  })  : scale = 1,
-        offset = Offset.zero;
+  _EditableCollagePhoto({required this.source, String? stableKey})
+    : stableKey = stableKey ?? source,
+      scale = 1,
+      offset = Offset.zero;
 
-  CollagePhotoTransform get transform => CollagePhotoTransform(
-        scale: scale,
-        offset: offset,
-      );
+  CollagePhotoTransform get transform =>
+      CollagePhotoTransform(scale: scale, offset: offset);
 }
 
 class _FramePinchSession {

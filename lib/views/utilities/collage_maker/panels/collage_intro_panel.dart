@@ -86,13 +86,19 @@ extension _CollageIntroPanel on _CollageMakerScreenState {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFF8F1), Color(0xFFF4E9DE)],
+          colors: [Color(0xFF4B3A68), Color(0xFF87618D), Color(0xFFC77C9C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: _paperLine.withValues(alpha: 0.9)),
-        boxShadow: _paperShadow(_paperRoseDeep),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
+        boxShadow: [
+          BoxShadow(
+            color: _paperCocoa.withValues(alpha: 0.20),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,13 +108,13 @@ extension _CollageIntroPanel on _CollageMakerScreenState {
             height: 50,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _paperRoseDeep.withValues(alpha: 0.12),
+              color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _paperRoseDeep.withValues(alpha: 0.22)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.26)),
             ),
             child: const Icon(
               Icons.auto_awesome_mosaic_rounded,
-              color: _paperRoseDeep,
+              color: Colors.white,
               size: 27,
             ),
           ),
@@ -120,7 +126,7 @@ extension _CollageIntroPanel on _CollageMakerScreenState {
                 Text(
                   context.tr('collage_subtitle'),
                   style: SLTheme.quicksand(
-                    color: _paperInk,
+                    color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
                     height: 1.2,
@@ -134,7 +140,7 @@ extension _CollageIntroPanel on _CollageMakerScreenState {
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    color: _paperMuted,
+                    color: Colors.white.withValues(alpha: 0.80),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     height: 1.35,

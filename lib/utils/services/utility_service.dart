@@ -113,6 +113,7 @@ class UtilityService {
     'cinema',
     'surprise_maker',
   };
+
   /// Tiện ích dành cho tài khoản Pro: vẫn hiện cho mọi người kèm nhãn VIP;
   /// tài khoản thường mở ra sẽ thấy lời mời nâng cấp. Server chặn riêng
   /// (functions/index.js), đây chỉ là lớp hiển thị.
@@ -146,6 +147,8 @@ class UtilityService {
   static bool isUtilityVisibleInCurrentBuild(String id) {
     // Giftcode đã chuyển vào Cài đặt Android, không còn là một tiện ích.
     if (id == 'giftcode') return false;
+    // Tạm thời ẩn "Hiểu tui hông?" vì tính năng chưa hoàn thiện
+    if (id == 'understand_me') return false;
     if (!kIsWeb &&
         defaultTargetPlatform == TargetPlatform.iOS &&
         id == 'soul_events') {
@@ -199,7 +202,13 @@ class UtilityService {
       'couple_connect',
     ],
     UtilityCategory.care: ['habit', 'health', 'sleep_tracker'],
-    UtilityCategory.fun: ['tarot', 'wheel', 'drawing', 'friendly_chat'],
+    UtilityCategory.fun: [
+      'tarot',
+      'wheel',
+      'drawing',
+      'friendly_chat',
+      'understand_me',
+    ],
     UtilityCategory.other: ['vault', 'diary_export', 'store'],
   };
 
@@ -267,6 +276,13 @@ class UtilityService {
       icon: Icons.smart_toy_rounded,
       colors: [const Color(0xFFD81B60), const Color(0xFFFF8FB7)],
       isTool: false,
+    ),
+    UtilityApp(
+      id: 'understand_me',
+      title: 'utility_title_understand_me',
+      icon: Icons.psychology_alt_rounded,
+      colors: [const Color(0xFFE65372), const Color(0xFFF4A37A)],
+      isTool: true,
     ),
     UtilityApp(
       id: 'capsule',

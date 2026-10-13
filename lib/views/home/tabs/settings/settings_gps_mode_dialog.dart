@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../utils/services/gps_tracking_state.dart';
 import '../../../../utils/services/l10n_service.dart';
 import '../../../../widgets/sl_detail_widgets.dart';
 import '../../../../widgets/sl_dialog.dart';
@@ -25,6 +29,7 @@ class _SettingsGpsModeDialogState extends State<SettingsGpsModeDialog> {
 
   @override
   Widget build(BuildContext context) => SLAlertDialog(
+    scrollable: true,
     title: SLDialogHeading(
       icon: Icons.location_on_outlined,
       title: context.tr('settings_gps_mode_title'),
@@ -66,4 +71,73 @@ class _SettingsGpsModeDialogState extends State<SettingsGpsModeDialog> {
       ),
     ],
   );
+}
+
+/// Nhãn lấy từ luồng GPS/ack thật, không lấy dấu chọn trong SharedPreferences.
+class SettingsGpsStatus extends StatefulWidget {
+  const SettingsGpsStatus({
+    super.key,
+    required this.trackingState,
+    required this.onTap,
+    this.now,
+  });
+
+  final ValueListenable<GpsTrackingState> trackingState;
+  final VoidCallback onTap;
+  final DateTime Function()? now;
+
+  @override
+  State<SettingsGpsStatus> createState() => _SettingsGpsStatusState();
+}
+
+class _SettingsGpsStatusState extends State<SettingsGpsStatus>
+    with WidgetsBindingObserver {
+  Timer? _freshnessTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _syncTimer();
+  }
+
+  void _syncTimer() {
+    _freshnessTimer?.cancel();
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle == null || lifecycle == AppLifecycleState.resumed) {
+      // Chỉ cập nhật tuổi dữ liệu trên UI; không tạo heartbeat hay lượt tải mạng.
+      _freshnessTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _syncTimer();
+    if (state == AppLifecycleState.resumed && mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _freshnessTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      ValueListenableBuilder<GpsTrackingState>(
+        valueListenable: widget.trackingState,
+        builder: (context, state, _) {
+          final now = (widget.now ?? DateTime.now)();
+          return SLDetailStatusRow(
+            icon: Icons.location_on_rounded,
+            title: context.tr('settings_gps_mode_title'),
+            status: context.tr(state.statusKeyAt(now)),
+            ready: state.isReadyAt(now),
+            onTap: widget.onTap,
+          );
+        },
+      );
 }

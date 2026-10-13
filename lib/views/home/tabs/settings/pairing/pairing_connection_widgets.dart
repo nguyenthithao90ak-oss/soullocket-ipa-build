@@ -4,9 +4,11 @@ import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
+import 'package:soullocket_app/utils/services/breakup_service.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
+import '../relationship/relationship_actions.dart';
 import 'pairing_connection_date.dart';
 
 String? pairingAvatarUrl(Map settings, String role) {
@@ -126,6 +128,12 @@ class PairingConnectedView extends StatelessWidget {
     required this.onEditSecond,
     required this.onRetry,
     this.now,
+    this.breakupRequest,
+    this.breakupBusy = false,
+    this.currentUid,
+    this.onRequestBreakup,
+    this.onApproveBreakup,
+    this.onWithdrawBreakup,
   });
 
   final String firstName;
@@ -140,6 +148,14 @@ class PairingConnectedView extends StatelessWidget {
   final VoidCallback onEditSecond;
   final VoidCallback onRetry;
   final DateTime? now;
+
+  /// Yêu cầu hủy ghép nối đang có của House (null khi chưa có yêu cầu).
+  final BreakupRequestData? breakupRequest;
+  final bool breakupBusy;
+  final String? currentUid;
+  final VoidCallback? onRequestBreakup;
+  final VoidCallback? onApproveBreakup;
+  final VoidCallback? onWithdrawBreakup;
 
   @override
   Widget build(BuildContext context) {

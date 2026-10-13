@@ -1,5 +1,7 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import '../../models/widget_appearance.dart';
+import '../../models/weather_background.dart';
+import 'purchase_service.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -38,6 +40,56 @@ import 'package:soullocket_app/models/soul_event.dart';
 import 'holiday_service.dart';
 
 class WidgetService {
+  static final weatherBackgroundNotifier =
+      ValueNotifier<WeatherBackgroundSnapshot>(
+        const WeatherBackgroundSnapshot(),
+      );
+  static int _weatherPreviewReadRevision = 0;
+
+  /// Preview đọc snapshot local dùng chung với native, không thêm API thời tiết.
+  static Future<void> refreshWeatherBackgroundPreview() async {
+    if (!supportsMobileWidgets) return;
+    final revision = ++_weatherPreviewReadRevision;
+    try {
+      await ensureInitialized();
+      final values = await Future.wait([
+        _readWidgetData<String>('weatherState1'),
+        _readWidgetData<String>('weatherState2'),
+      ]);
+      if (revision != _weatherPreviewReadRevision) return;
+      weatherBackgroundNotifier.value = WeatherBackgroundSnapshot(
+        left: WeatherBackgroundState.normalize(values[0]),
+        right: WeatherBackgroundState.normalize(values[1]),
+      );
+    } catch (_) {
+      if (revision == _weatherPreviewReadRevision) {
+        weatherBackgroundNotifier.value = const WeatherBackgroundSnapshot();
+      }
+    }
+  }
+
+  static Future<String> _saveWeatherThemeAccess(String theme) async {
+    if (theme != WeatherBackgroundAccess.themeKey) return theme;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    const noAccess = VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
+    final access = await PurchaseService()
+        .getVipAccessInfo()
+        .timeout(const Duration(seconds: 3), onTimeout: () => noAccess)
+        .catchError((_) => noAccess);
+    final enabled =
+        uid != null &&
+        uid == FirebaseAuth.instance.currentUser?.uid &&
+        access.isVip &&
+        (access.expiresAtMs == null ||
+            access.expiresAtMs! > DateTime.now().millisecondsSinceEpoch);
+    await _saveWidgetDataIfChanged<bool>('weatherPremiumEnabled', enabled);
+    await _saveWidgetDataIfChanged<int>(
+      'weatherPremiumExpiresAtMs',
+      enabled ? access.expiresAtMs ?? 0 : 0,
+    );
+    return WeatherBackgroundAccess.resolveTheme(theme, isPro: enabled);
+  }
+
   static bool get supportsAndroidWidgets => !kIsWeb && Platform.isAndroid;
   static bool get supportsMobileWidgets =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
@@ -256,6 +308,8 @@ class WidgetService {
   static Future<void> resetWidgetState({bool refresh = true}) async {
     if (kIsWeb) return;
 
+    _weatherPreviewReadRevision++;
+    weatherBackgroundNotifier.value = const WeatherBackgroundSnapshot();
     _sleepSyncRevision++;
     _calendarSyncRevision++;
     await ensureInitialized();
@@ -277,6 +331,10 @@ class WidgetService {
     );
     await HomeWidget.saveWidgetData<bool>('se_has_event', false);
     await clearCalendarWidgetData();
+    await HomeWidget.saveWidgetData<String>('weatherState1', 'unknown');
+    await HomeWidget.saveWidgetData<String>('weatherState2', 'unknown');
+    await HomeWidget.saveWidgetData<bool>('weatherPremiumEnabled', false);
+    await HomeWidget.saveWidgetData<int>('weatherPremiumExpiresAtMs', 0);
     await _updateAuxiliaryWidget(
       androidName: androidWidgetSleepName,
       qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
@@ -432,6 +490,10 @@ class WidgetService {
     await _saveIfMissing<bool>('isOnline2', false);
     await _saveIfMissing<String>('weather1', '');
     await _saveIfMissing<String>('weather2', '');
+    await _saveIfMissing<String>('weatherState1', 'unknown');
+    await _saveIfMissing<String>('weatherState2', 'unknown');
+    await _saveIfMissing<bool>('weatherPremiumEnabled', false);
+    await _saveIfMissing<int>('weatherPremiumExpiresAtMs', 0);
     await _saveIfMissing<String>('stars1', '--');
     await _saveIfMissing<String>('stars2', '--');
     await _saveIfMissing<String>('bgTheme', 'pink');
@@ -662,6 +724,8 @@ class WidgetService {
     bool isOnline2 = true,
     String weather1 = '',
     String weather2 = '',
+    WeatherBackgroundSnapshot weatherBackground =
+        const WeatherBackgroundSnapshot(),
     String stars1 = '--',
     String stars2 = '--',
     String bgTheme = 'pink',
@@ -691,9 +755,10 @@ class WidgetService {
         heartAnimated: heartAnimated,
       );
       final normalizedHeartStyleKey = normalizeHeartStyleKey(heartStyleKey);
+      final allowedTheme = await _saveWeatherThemeAccess(bgTheme);
       final themeChanged = await _saveWidgetDataIfChanged<String>(
         'bgTheme',
-        bgTheme,
+        allowedTheme,
       );
       final motionChanged = await _saveWidgetDataIfChanged<bool>(
         'heartAnimated',
@@ -714,6 +779,16 @@ class WidgetService {
       await _saveWidgetDataIfChanged<bool>('isOnline2', isOnline2);
       await _saveWidgetDataIfChanged<String>('weather1', weather1);
       await _saveWidgetDataIfChanged<String>('weather2', weather2);
+      final weatherLeftChanged = await _saveWidgetDataIfChanged<String>(
+        'weatherState1',
+        weatherBackground.left.name,
+      );
+      final weatherRightChanged = await _saveWidgetDataIfChanged<String>(
+        'weatherState2',
+        weatherBackground.right.name,
+      );
+      _weatherPreviewReadRevision++;
+      weatherBackgroundNotifier.value = weatherBackground;
       await _saveWidgetDataIfChanged<String>('stars1', stars1);
       await _saveWidgetDataIfChanged<String>('stars2', stars2);
       await _saveWidgetDataIfChanged<String>(
@@ -841,7 +916,11 @@ class WidgetService {
       );
 
       await _dispatchWidgetUpdate(
-        includeUtilities: themeChanged || motionChanged,
+        includeUtilities:
+            themeChanged ||
+            motionChanged ||
+            (allowedTheme == WeatherBackgroundAccess.themeKey &&
+                (weatherLeftChanged || weatherRightChanged)),
       );
     } catch (e) {
       debugPrint(
@@ -853,7 +932,8 @@ class WidgetService {
   static Future<void> updateWidgetTheme(String bgTheme) async {
     try {
       await ensureInitialized();
-      await _saveWidgetDataIfChanged<String>('bgTheme', bgTheme);
+      final allowedTheme = await _saveWeatherThemeAccess(bgTheme);
+      await _saveWidgetDataIfChanged<String>('bgTheme', allowedTheme);
       await _dispatchWidgetUpdate(includeUtilities: true);
     } catch (e) {
       debugPrint(
@@ -886,7 +966,8 @@ class WidgetService {
         heartAnimated: heartAnimated,
       );
       final normalizedHeartStyleKey = normalizeHeartStyleKey(heartStyleKey);
-      await _saveWidgetDataIfChanged<String>('bgTheme', bgTheme);
+      final allowedTheme = await _saveWeatherThemeAccess(bgTheme);
+      await _saveWidgetDataIfChanged<String>('bgTheme', allowedTheme);
       await _saveWidgetDataIfChanged<String>(
         'widgetStyleKey',
         normalizedWidgetStyleKey,

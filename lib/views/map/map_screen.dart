@@ -19,6 +19,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'map_location_access.dart';
+import 'map_pro_access.dart';
+import 'widgets/map_pro_layers_sheet.dart';
+import 'widgets/map_pro_search_screen.dart';
 import 'widgets/map_refresh_widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
@@ -41,10 +44,14 @@ import '../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../utils/services/sleep_mode_service.dart';
 import '../../utils/services/music_service.dart';
 import '../../utils/services/purchase_service.dart';
+import '../../core/service_locator.dart';
+import '../../utils/services/map_place_search_service.dart';
+import '../../widgets/pro_upsell_dialog.dart';
 
 part 'dialogs/map_checkin_sheet.dart';
 part 'dialogs/map_detail_dialogs.dart';
 part 'dialogs/map_search_sheet.dart';
+part 'map_pro_features.dart';
 part 'map_location_logic.dart';
 part 'map_location_marker_pipeline.dart';
 part 'map_screen_helpers.dart';
@@ -125,6 +132,21 @@ class _MapScreenState extends State<MapScreen>
   mbx.PolylineAnnotationManager? _mapboxPolylineManager;
   dynamic _mapboxPointTapSubscription;
   int _mapboxSyncGeneration = 0;
+  Future<void>? _mapboxSyncInFlight;
+  bool _mapboxSyncPending = false;
+  int _mapSurfaceGeneration = 0;
+  final MapProAccess _mapProAccess = MapProAccess();
+  MapProViewOptions _mapProView = const MapProViewOptions();
+  MapPlace? _searchedPlace;
+  int _mapboxStyleGeneration = 0;
+  bool _mapboxStyleReady = false;
+  bool _mapboxStyleBusy = false;
+  Future<void>? _mapboxStyleApplyInFlight;
+  bool _mapboxStyleApplyPending = false;
+  Timer? _mapProExpiry;
+  StreamSubscription<User?>? _mapProAuthSub;
+  final Map<String, Future<Uint8List>> _mapboxMarkerImageCache =
+      <String, Future<Uint8List>>{};
   final LocationService _locationService = LocationService();
   final NotificationService _notificationService = NotificationService();
   final MapPinLimitService _mapPinLimitService = MapPinLimitService();
@@ -216,6 +238,7 @@ class _MapScreenState extends State<MapScreen>
   StreamSubscription<DatabaseEvent>? _checkinsSub;
   StreamSubscription<SleepModeState?>? _sleepModeSub;
   StreamSubscription<DatabaseEvent>? _musicSub;
+  StreamSubscription<VipAccessInfo>? _vipMapProviderSub;
   SleepModeState? _partnerSleepState;
   String? _currentMusicTitle;
 
@@ -282,6 +305,11 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
+  void _setMapProState(VoidCallback update) {
+    if (!mounted) return;
+    setState(update);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -289,23 +317,238 @@ class _MapScreenState extends State<MapScreen>
     _setViewingMap(true);
     WidgetsBinding.instance.addObserver(this);
     _setPartnerListenerActive(true);
+    _watchVipMapProvider();
     unawaited(_resolveMapProvider());
     _initMap();
   }
 
+  bool get _canUseMapboxSdk =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS) &&
+      AppConfig.hasMapboxPublicToken;
+
+  void _watchVipMapProvider() {
+    _bindMapProSession(FirebaseAuth.instance.currentUser?.uid);
+    _mapProAuthSub = FirebaseAuth.instance.userChanges().listen((user) {
+      if (user?.uid != _mapProAccess.uid) _bindMapProSession(user?.uid);
+    });
+  }
+
+  void _bindMapProSession(String? uid) {
+    _vipMapProviderSub?.cancel();
+    _mapProExpiry?.cancel();
+    final session = _mapProAccess.bind(uid);
+    _syncMapProProvider();
+    if (uid == null) return;
+    _vipMapProviderSub = PurchaseService().vipAccessStream().listen(
+      (access) => _receiveMapProAccess(uid, session, access),
+      onError: (Object error, StackTrace stack) {
+        debugPrint('[Map] Không theo dõi được quyền PRO: $error');
+      },
+    );
+  }
+
   Future<void> _resolveMapProvider() async {
-    if (!AppConfig.hasMapboxPublicToken) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final session = _mapProAccess.session;
     try {
-      final isVip = await PurchaseService().isVip();
-      if (!mounted || !isVip) return;
-      setState(() {
-        _useMapboxTiles = false;
-        _useMapboxSdk = true;
-      });
-      unawaited(_syncMapboxAnnotations());
+      final access = await PurchaseService().getVipAccessInfo();
+      _receiveMapProAccess(uid, session, access);
     } catch (error) {
       debugPrint('[Map] Không xác định được quyền Mapbox PRO: $error');
     }
+  }
+
+  void _receiveMapProAccess(String uid, int session, VipAccessInfo access) {
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return;
+    final expires = access.expiresAtMs;
+    final allowed = access.isVip &&
+        (expires == null || expires > DateTime.now().millisecondsSinceEpoch);
+    if (!_mapProAccess.receive(uid, session, allowed)) return;
+    _mapProExpiry?.cancel();
+    if (allowed && expires != null) {
+      _mapProExpiry = Timer(
+        Duration(milliseconds: expires - DateTime.now().millisecondsSinceEpoch),
+        () {
+          if (!mounted || !_mapProAccess.receive(uid, session, false)) return;
+          _syncMapProProvider();
+        },
+      );
+    }
+    _syncMapProProvider();
+  }
+
+  void _syncMapProProvider() {
+    if (!mounted) return;
+    final native = _mapProAccess.value && _canUseMapboxSdk;
+    if (!_mapProAccess.value) {
+      _searchedPlace = null;
+      _mapProView = const MapProViewOptions();
+      if (locator.isRegistered<MapPlaceSearchService>()) {
+        locator<MapPlaceSearchService>().clear();
+      }
+    }
+    if (native == _useMapboxSdk) {
+      setState(() {});
+      return;
+    }
+    _disposeMapboxSurface();
+    setState(() {
+      _useMapboxTiles = false;
+      _useMapboxSdk = native;
+      _isMapReady = false;
+      _mapInitError = null;
+      _mapSurfaceGeneration++;
+    });
+    debugPrint(native
+        ? '[Map] PRO đã xác minh; chuyển sang Mapbox SDK.'
+        : '[Map] Quyền PRO đã kết thúc; dùng bản đồ hiện tại.');
+    _scheduleMapReadyWatchdog();
+    unawaited(_syncMapboxAnnotations());
+  }
+
+  void _disposeMapboxSurface() {
+    _mapboxStyleGeneration++;
+    _mapboxStyleReady = false;
+    _mapboxStyleBusy = false;
+    _mapboxSyncGeneration++;
+    _mapboxSyncPending = false;
+    _mapboxPointTapSubscription?.cancel();
+    _mapboxPointTapSubscription = null;
+    _mapboxPointManager = null;
+    _mapboxPolylineManager = null;
+    // MapWidget owns the native controller lifecycle. The widget disposes it
+    // when this surface is unmounted; disposing here would run twice during
+    // MapScreen.dispose() and trigger "MapboxMap was used after being disposed".
+    _mapboxMap = null;
+  }
+
+  void _onMapboxCreated(mbx.MapboxMap map) {
+    if (!mounted || !_useMapboxSdk) {
+      // MapWidget owns this controller and disposes it when its platform view unmounts.
+      return;
+    }
+
+    if (_mapboxMap != null && !identical(_mapboxMap, map)) {
+      _disposeMapboxSurface();
+    }
+    _mapboxMap = map;
+    _isMapReady = true;
+    _mapInitError = null;
+    _mapReadyTimeout?.cancel();
+    triggerMapStateUpdate();
+    unawaited(_configureMapboxSurface(map));
+    Future<void>.delayed(const Duration(milliseconds: 350), () {
+      if (mounted && identical(_mapboxMap, map)) {
+        unawaited(_focusCameraNearMe());
+      }
+    });
+  }
+
+  Future<void> _configureMapboxSurface(mbx.MapboxMap map) async {
+    final ornamentBottomMargin =
+        MediaQuery.sizeOf(context).height * _panelExtent.value + 28;
+    final mapLoadErrorMessage = context.tr('map_bnopenstre_1e6bc7');
+    try {
+      final pointManager = await map.annotations.createPointAnnotationManager(
+        id: 'soullocket_map_points',
+      );
+      final polylineManager = await map.annotations
+          .createPolylineAnnotationManager(id: 'soullocket_map_lines');
+      if (!mounted ||
+          !_useMapboxSdk ||
+          !identical(_mapboxMap, map) ||
+          _mapInitError != null) {
+        await pointManager.deleteAll();
+        await polylineManager.deleteAll();
+        return;
+      }
+
+      await pointManager.setTextAllowOverlap(true);
+      await pointManager.setTextIgnorePlacement(true);
+      _mapboxPointManager = pointManager;
+      _mapboxPolylineManager = polylineManager;
+      _mapboxPointTapSubscription = pointManager.tapEvents(
+        onTap: _handleMapboxAnnotationTap,
+      );
+
+      map.addInteraction(
+        mbx.TapInteraction.onMap((gesture) {
+          _handleMapTapForCheckin(_mapboxGesturePoint(gesture));
+        }),
+        interactionID: 'soullocket_map_tap',
+      );
+      map.addInteraction(
+        mbx.LongTapInteraction.onMap((gesture) {
+          unawaited(_handleMapLongPress(_mapboxGesturePoint(gesture)));
+        }),
+        interactionID: 'soullocket_map_long_press',
+      );
+
+      await map.logo.updateSettings(
+        mbx.LogoSettings(
+          enabled: true,
+          position: mbx.OrnamentPosition.BOTTOM_LEFT,
+          marginLeft: 12,
+          marginBottom: ornamentBottomMargin,
+        ),
+      );
+      await map.attribution.updateSettings(
+        mbx.AttributionSettings(
+          enabled: true,
+          position: mbx.OrnamentPosition.BOTTOM_RIGHT,
+          marginRight: 12,
+          marginBottom: ornamentBottomMargin,
+        ),
+      );
+      await _syncMapboxAnnotations();
+    } catch (error) {
+      if (!mounted || !identical(_mapboxMap, map)) return;
+      debugPrint('[Mapbox] Không khởi tạo được lớp dữ liệu: $error');
+      _handleMapboxLoadError(mapLoadErrorMessage);
+    }
+  }
+
+  ll.LatLng _mapboxGesturePoint(mbx.MapContentGestureContext gesture) {
+    final position = gesture.point.coordinates;
+    return ll.LatLng(position.lat.toDouble(), position.lng.toDouble());
+  }
+
+  void _handleMapboxAnnotationTap(mbx.PointAnnotation annotation) {
+    final id = annotation.customData?['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    for (final marker in <_MapMarkerSpec>[
+      ..._staticMapMarkerSpecs,
+      ..._liveMapMarkerSpecs,
+    ]) {
+      if (marker.id == id) {
+        marker.onTap();
+        return;
+      }
+    }
+  }
+
+  void _handleMapboxLoadError(String message) {
+    if (!mounted || !_useMapboxSdk) return;
+    _disposeMapboxSurface();
+    setState(() {
+      _isMapReady = false;
+      _mapInitError = message;
+    });
+  }
+
+  void _onMapboxLoaded() {
+    if (!mounted || !_useMapboxSdk) return;
+    _mapReadyTimeout?.cancel();
+    if (!_isMapReady) {
+      setState(() {
+        _isMapReady = true;
+        _mapInitError = null;
+      });
+    }
+    unawaited(_syncMapboxAnnotations());
   }
 
   @override
@@ -324,9 +567,12 @@ class _MapScreenState extends State<MapScreen>
     _checkinsSub?.cancel();
     _sleepModeSub?.cancel();
     _musicSub?.cancel();
+    _vipMapProviderSub?.cancel();
+    _mapProAuthSub?.cancel();
+    _mapProExpiry?.cancel();
+    _mapProAccess.dispose();
     _mapController.dispose();
-    _mapboxPointTapSubscription?.cancel();
-    _mapboxMap?.dispose();
+    _disposeMapboxSurface();
     _panelController.dispose();
     _panelExtent.dispose();
     _staticMarkersVN.dispose();
@@ -358,6 +604,7 @@ class _MapScreenState extends State<MapScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(_resolveMapProvider());
       MapScreen.isMapScreenActive.value = isScreenActive;
       _setViewingMap(isScreenActive);
       _setPartnerListenerActive(true);
@@ -758,6 +1005,14 @@ class _MapScreenState extends State<MapScreen>
       );
     }
     if (!mounted || !_isMapReady) return;
+    if (_useMapboxSdk) {
+      try {
+        await _fitMapboxCamera([point.latLng], maxZoom: 16);
+      } catch (error) {
+        debugPrint('[Mapbox] Không di chuyển camera: $error');
+      }
+      return;
+    }
     _mapController.fitCamera(
       fm.CameraFit.coordinates(
         coordinates: [ll.LatLng(point.lat, point.lng)],
@@ -775,6 +1030,46 @@ class _MapScreenState extends State<MapScreen>
       math.max(0.0, size.height - top - 120),
     );
     return EdgeInsets.fromLTRB(40, top, 40, bottom.toDouble());
+  }
+
+  mbx.MbxEdgeInsets get _mapboxCameraPadding {
+    final padding = _mapCameraPadding;
+    return mbx.MbxEdgeInsets(
+      top: padding.top,
+      left: padding.left,
+      bottom: padding.bottom,
+      right: padding.right,
+    );
+  }
+
+  Future<bool> _fitMapboxCamera(
+    Iterable<ll.LatLng> points, {
+    required double maxZoom,
+    int durationMs = 240,
+  }) async {
+    final map = _mapboxMap;
+    if (!_useMapboxSdk || map == null) return false;
+    final validPoints = _validMapboxPoints(points);
+    if (validPoints.isEmpty) return false;
+    final padding = _mapboxCameraPadding;
+    final camera = await map.cameraForCoordinatesPadding(
+      validPoints.map(_mapboxPoint).toList(growable: false),
+      mbx.CameraOptions(
+        padding: padding,
+        pitch: _mapProView.threeDimensional ? 55 : 0,
+      ),
+      padding,
+      maxZoom,
+      null,
+    );
+    if (!mounted ||
+        !_useMapboxSdk ||
+        !identical(_mapboxMap, map) ||
+        !_isMapReady) {
+      return false;
+    }
+    await map.easeTo(camera, mbx.MapAnimationOptions(duration: durationMs));
+    return true;
   }
 
   Future<void> _handleMyLocationTap() async {
@@ -1164,6 +1459,8 @@ class _MapScreenState extends State<MapScreen>
 
   List<_MapMarkerSpec> _buildStaticMapMarkerSpecs() {
     final specs = <_MapMarkerSpec>[];
+    final searched = _searchedPlaceMarker;
+    if (searched != null) specs.add(searched);
     for (final memory in _memories.take(_kMaxRenderedMemoryMarkers)) {
       specs.add(
         _MapMarkerSpec(
@@ -1214,50 +1511,127 @@ class _MapScreenState extends State<MapScreen>
     unawaited(_syncMapboxAnnotations());
   }
 
-  mbx.Point _mapboxPoint(ll.LatLng point) => mbx.Point(
-        coordinates: mbx.Position(point.longitude, point.latitude),
-      );
+  mbx.Point _mapboxPoint(ll.LatLng point) =>
+      mbx.Point(coordinates: mbx.Position(point.longitude, point.latitude));
 
   List<ll.LatLng> _validMapboxPoints(Iterable<ll.LatLng> points) => points
       .where((point) => _isValidCoordinate(point.latitude, point.longitude))
       .toList(growable: false);
 
+  Future<Uint8List> _mapboxMarkerImage(_MapMarkerSpec marker) {
+    final key =
+        '${marker.color.toARGB32()}:${marker.compact ? 'compact' : 'full'}';
+    return _mapboxMarkerImageCache.putIfAbsent(key, () async {
+      const size = 72.0;
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      final path = Path()
+        ..moveTo(size / 2, size - 4)
+        ..cubicTo(size * .18, size * .58, size * .16, size * .26, size / 2, 8)
+        ..cubicTo(
+          size * .84,
+          size * .26,
+          size * .82,
+          size * .58,
+          size / 2,
+          size - 4,
+        )
+        ..close();
+      canvas.drawShadow(path, Colors.black.withValues(alpha: 0.28), 5, false);
+      canvas.drawPath(path, Paint()..color = marker.color);
+      canvas.drawCircle(
+        const Offset(size / 2, size * .34),
+        marker.compact ? 13 : 17,
+        Paint()..color = Colors.white.withValues(alpha: 0.95),
+      );
+      final image = await recorder.endRecording().toImage(
+        size.toInt(),
+        size.toInt(),
+      );
+      final bytes = await image.toByteData(format: ImageByteFormat.png);
+      image.dispose();
+      if (bytes == null) {
+        throw StateError('Mapbox marker image encoding failed');
+      }
+      return bytes.buffer.asUint8List();
+    });
+  }
+
   Future<void> _syncMapboxAnnotations() async {
     if (!_useMapboxSdk || _mapboxMap == null || _mapboxPointManager == null) {
       return;
     }
-    final pointManager = _mapboxPointManager!;
+    final inFlight = _mapboxSyncInFlight;
+    if (inFlight != null) {
+      _mapboxSyncPending = true;
+      await inFlight;
+      return;
+    }
+
+    final future = _syncMapboxAnnotationsNow();
+    _mapboxSyncInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_mapboxSyncInFlight, future)) {
+        _mapboxSyncInFlight = null;
+      }
+    }
+    if (_mapboxSyncPending && mounted && _useMapboxSdk) {
+      _mapboxSyncPending = false;
+      await _syncMapboxAnnotations();
+    }
+  }
+
+  Future<void> _syncMapboxAnnotationsNow() async {
+    final map = _mapboxMap;
+    final pointManager = _mapboxPointManager;
+    if (!_useMapboxSdk || map == null || pointManager == null) return;
     final polylineManager = _mapboxPolylineManager;
     final generation = ++_mapboxSyncGeneration;
     try {
       await pointManager.deleteAll();
       await polylineManager?.deleteAll();
-      if (!mounted || generation != _mapboxSyncGeneration) return;
+      if (!mounted ||
+          generation != _mapboxSyncGeneration ||
+          !identical(_mapboxMap, map) ||
+          !identical(_mapboxPointManager, pointManager)) {
+        return;
+      }
 
       final markerSpecs = <_MapMarkerSpec>[
         ..._staticMapMarkerSpecs,
         ..._liveMapMarkerSpecs,
       ];
       if (markerSpecs.isNotEmpty) {
-        final options = markerSpecs
-            .map(
-              (marker) => mbx.PointAnnotationOptions(
-                geometry: _mapboxPoint(marker.point),
-                textField: marker.title,
-                textSize: marker.compact ? 11 : 13,
-                textColor: marker.color.value,
-                textHaloColor: Colors.white.value,
-                textHaloWidth: 1.4,
-                textOffset: const [0, -1.4],
-                textAnchor: mbx.TextAnchor.BOTTOM,
-                customData: <String, Object>{'id': marker.id},
-              ),
-            )
-            .toList(growable: false);
+        final options = <mbx.PointAnnotationOptions>[];
+        for (final marker in markerSpecs) {
+          options.add(
+            mbx.PointAnnotationOptions(
+              geometry: _mapboxPoint(marker.point),
+              image: await _mapboxMarkerImage(marker),
+              iconAnchor: mbx.IconAnchor.BOTTOM,
+              iconSize: marker.compact ? 0.68 : 0.82,
+              textField: marker.title,
+              textSize: marker.compact ? 11 : 13,
+              textColor: marker.color.toARGB32(),
+              textHaloColor: Colors.white.toARGB32(),
+              textHaloWidth: 1.4,
+              textOffset: const [0, -2.4],
+              textAnchor: mbx.TextAnchor.BOTTOM,
+              customData: <String, Object>{'id': marker.id},
+            ),
+          );
+        }
         await pointManager.createMulti(options);
       }
 
-      if (polylineManager == null) return;
+      if (polylineManager == null ||
+          !mounted ||
+          generation != _mapboxSyncGeneration ||
+          !identical(_mapboxMap, map)) {
+        return;
+      }
       final lineOptions = <mbx.PolylineAnnotationOptions>[];
       void addLine(
         Iterable<ll.LatLng> source, {
@@ -1270,14 +1644,13 @@ class _MapScreenState extends State<MapScreen>
         lineOptions.add(
           mbx.PolylineAnnotationOptions(
             geometry: mbx.LineString(
-              coordinates: points.map((point) => mbx.Position(
-                point.longitude,
-                point.latitude,
-              )).toList(growable: false),
+              coordinates: points
+                  .map((point) => mbx.Position(point.longitude, point.latitude))
+                  .toList(growable: false),
             ),
-            lineColor: color.value,
+            lineColor: color.toARGB32(),
             lineWidth: width,
-            lineBorderColor: _kMapRouteBorder.value,
+            lineBorderColor: _kMapRouteBorder.toARGB32(),
             lineBorderWidth: borderWidth,
             lineJoin: mbx.LineJoin.ROUND,
           ),
@@ -1286,14 +1659,18 @@ class _MapScreenState extends State<MapScreen>
 
       if (_historyBundle.myPoints.length >= 2) {
         addLine(
-          _compressHistoryPoints(_historyBundle.myPoints).map((point) => point.latLng),
+          _compressHistoryPoints(
+            _historyBundle.myPoints,
+          ).map((point) => point.latLng),
           color: _kMapBlue,
           width: 4.8,
         );
       }
       if (_historyBundle.partnerPoints.length >= 2) {
         addLine(
-          _compressHistoryPoints(_historyBundle.partnerPoints).map((point) => point.latLng),
+          _compressHistoryPoints(
+            _historyBundle.partnerPoints,
+          ).map((point) => point.latLng),
           color: _kMapPinkDeep,
           width: 4.8,
         );
@@ -1310,7 +1687,12 @@ class _MapScreenState extends State<MapScreen>
       final routePoints = _routeSnapshot?.points;
       if (routePoints != null && routePoints.length >= 2) {
         addLine(routePoints, color: _kMapRouteGlow, width: 9.5, borderWidth: 0);
-        addLine(routePoints, color: _kMapPinkDeep, width: 5.8, borderWidth: 2.3);
+        addLine(
+          routePoints,
+          color: _kMapPinkDeep,
+          width: 5.8,
+          borderWidth: 2.3,
+        );
       }
       if (lineOptions.isNotEmpty) {
         await polylineManager.createMulti(lineOptions);
@@ -1569,6 +1951,11 @@ class _MapScreenState extends State<MapScreen>
       final zoom = _myLocation != null
           ? (_isRoleLive(widget.myRole) ? 16.2 : 15.6)
           : (_partnerLocation != null ? 15.2 : 14.8);
+      if (_useMapboxSdk) {
+        await _fitMapboxCamera([focusPoint], maxZoom: zoom);
+        _didAutoFit = true;
+        return;
+      }
       _mapController.fitCamera(
         fm.CameraFit.coordinates(
           coordinates: [focusPoint],
@@ -1621,6 +2008,14 @@ class _MapScreenState extends State<MapScreen>
 
     _isFitting = true;
     try {
+      if (_useMapboxSdk) {
+        await _fitMapboxCamera(
+          uniquePoints,
+          maxZoom: uniquePoints.length == 1 ? 15.8 : 15.4,
+        );
+        _didAutoFit = true;
+        return;
+      }
       _mapController.fitCamera(
         fm.CameraFit.coordinates(
           coordinates: uniquePoints,
@@ -2150,9 +2545,11 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _retryMapSurface() {
+    _disposeMapboxSurface();
     setState(() {
       _mapInitError = null;
       _isMapReady = false;
+      _mapSurfaceGeneration++;
     });
     _scheduleMapReadyWatchdog();
   }

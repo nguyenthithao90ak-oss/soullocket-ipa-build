@@ -19,7 +19,7 @@ class UtilitiesRecentRow extends StatelessWidget {
   final List<UtilityApp> apps;
   final Set<String> pinnedIds;
   final ValueChanged<UtilityApp> onTap;
-  final ValueChanged<UtilityApp> onLongPress;
+  final ValueChanged<UtilityApp>? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,9 @@ class UtilitiesRecentRow extends StatelessWidget {
                       app: app,
                       isPinned: pinnedIds.contains(app.id),
                       onTap: () => onTap(app),
-                      onLongPress: () => onLongPress(app),
+                      onLongPress: onLongPress == null
+                          ? null
+                          : () => onLongPress!(app),
                     ),
                   ),
                 ),
@@ -71,7 +73,7 @@ class _RecentItem extends StatelessWidget {
   final UtilityApp app;
   final bool isPinned;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {

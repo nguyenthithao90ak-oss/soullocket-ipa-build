@@ -16,6 +16,7 @@ import 'revenue_security_telemetry_service.dart';
 import 'security_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
 enum BreakupStatus {
   none,
@@ -316,49 +317,38 @@ class BreakupService {
       );
     }
 
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final expireAt = isSingleRelationship ? 0 : now + (30 * 86400000);
-    final deleteAt = isSingleRelationship ? now + (3 * 86400000) : 0;
-    final deviceMeta = await getTrustedDevicesMeta(
-      houseId: houseId,
-      currentUid: userUid,
-    );
-    final deviceId = deviceMeta.currentDeviceId;
-
-    final payload = <String, dynamic>{
-      'status': isSingleRelationship ? 'scheduled' : 'pending',
-      'requestedAt': now,
-      'expireAt': expireAt,
-      'deleteAt': deleteAt,
-      'requestedByDevice': deviceId,
-      'requestedByRole': role,
-      'requestedByName': userName,
-      'requestedByUid': userUid,
-      'pinRequired': pinRequired,
-      'reason': isSingleRelationship ? 'single_scheduled_3_days' : '',
-      'scheduledAt': isSingleRelationship ? now : 0,
-      'processingAt': 0,
-      'canceledAt': 0,
-      'canceledByDevice': '',
-      'canceledByRole': '',
-      'canceledByName': '',
-      'approvals': {
-        deviceId: {
-          'ts': now,
-          'role': role,
-          'type': 'owner_request',
-        },
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'requestBreakupSecure',
+      requireAppCheck: true,
+      payload: <String, dynamic>{
+        'houseId': houseId,
+        'userName': userName,
+        'pinRequired': pinRequired,
       },
-    };
+      fallbackErrorMessage: L10nService().translate('breakup_req_sent'),
+    );
+    final data = _toMap(response.data);
+    final request = _requestFromResponse(data);
+    if (data['success'] != true || request == null) {
+      return BreakupActionResult(
+        success: false,
+        message: (data['message'] ?? '').toString().trim().isNotEmpty
+            ? data['message'].toString()
+            : L10nService().translate('breakup_req_sent'),
+        request: request,
+      );
+    }
 
-    await _requestRef(houseId).set(payload);
-    final request = BreakupRequestData.fromMap(payload);
-
-    final message = isSingleRelationship
-        ? L10nService().format('breakup_single_scheduled', {'value1': _formatDateTime(deleteAt)})
-        : deviceMeta.hasOtherTrusted
-            ? L10nService().translate('breakup_sent_trusted')
-            : L10nService().format('breakup_sent_waiting', {'value1': _formatDateOnly(expireAt)});
+    final isSingle = request.isScheduled && request.expireAt <= 0;
+    final message = isSingle
+        ? L10nService().format(
+            'breakup_single_scheduled',
+            {'value1': _formatDateTime(request.deleteAt)},
+          )
+        : L10nService().format(
+            'breakup_sent_waiting',
+            {'value1': _formatDateOnly(request.expireAt)},
+          );
 
     return BreakupActionResult(
       success: true,
@@ -381,55 +371,41 @@ class BreakupService {
       );
     }
 
-    final meta = await getTrustedDevicesMeta(
-      houseId: houseId,
-      currentUid: currentUid,
-    );
-    if (!meta.isCurrentTrusted) {
-      return BreakupActionResult(
-        success: false,
-        message: L10nService().translate('breakup_device_untrusted'),
-      );
-    }
-    if (meta.currentDeviceId == request.requestedByDevice) {
+    final uid =
+        (currentUid ?? FirebaseAuth.instance.currentUser?.uid ?? '').trim();
+    if (uid.isNotEmpty && uid == request.requestedByUid) {
       return BreakupActionResult(
         success: false,
         message: L10nService().translate('breakup_same_device'),
-      );
-    }
-    if (request.isApprovedBy(meta.currentDeviceId)) {
-      return BreakupActionResult(
-        success: false,
-        message: L10nService().translate('breakup_already_approved'),
+        request: request,
       );
     }
 
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final deleteAt = now + 86400000;
-    final ref = _requestRef(houseId);
-
-    await ref.child('approvals/${meta.currentDeviceId}').set({
-      'ts': now,
-      'role': role,
-      'type': 'trusted_partner',
-      'name': userName,
-    });
-    await ref.update({
-      'status': 'scheduled',
-      'reason': 'partner_approved',
-      'scheduledAt': now,
-      'deleteAt': deleteAt,
-    });
-
-    final next = await getBreakupRequest(houseId);
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'approveBreakupSecure',
+      requireAppCheck: true,
+      payload: <String, dynamic>{
+        'houseId': houseId,
+        'userName': userName,
+      },
+      fallbackErrorMessage: L10nService().translate('breakup_no_pending'),
+    );
+    final data = _toMap(response.data);
+    final next = _requestFromResponse(data);
+    final success = data['success'] == true && next != null;
     return BreakupActionResult(
-      success: true,
-      message:
-          L10nService().format('breakup_approved', {'value1': _formatDateTime(deleteAt)}),
-      request: next,
+      success: success,
+      message: success
+          ? L10nService().format(
+              'breakup_approved',
+              {'value1': _formatDateTime(next.deleteAt)},
+            )
+          : ((data['message'] ?? '').toString().trim().isNotEmpty
+              ? data['message'].toString()
+              : L10nService().translate('breakup_no_pending')),
+      request: next ?? request,
     );
   }
-
   Future<BreakupActionResult> cancelBreakupRequest({
     required String houseId,
     required String role,
@@ -466,23 +442,26 @@ class BreakupService {
       );
     }
 
-    final deviceMeta = await getTrustedDevicesMeta(
-      houseId: houseId,
-      currentUid: currentUid,
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'cancelBreakupSecure',
+      requireAppCheck: true,
+      payload: <String, dynamic>{
+        'houseId': houseId,
+        'userName': userName,
+      },
+      fallbackErrorMessage: L10nService().translate('breakup_no_request'),
     );
-    await _requestRef(houseId).update({
-      'status': 'canceled',
-      'canceledAt': now,
-      'canceledByDevice': deviceMeta.currentDeviceId,
-      'canceledByRole': role,
-      'canceledByName': userName,
-    });
-
-    final next = await getBreakupRequest(houseId);
+    final data = _toMap(response.data);
+    final next = _requestFromResponse(data);
+    final success = data['success'] == true && next != null;
     return BreakupActionResult(
-      success: true,
-      message: L10nService().translate('breakup_canceled'),
-      request: next,
+      success: success,
+      message: success
+          ? L10nService().translate('breakup_canceled')
+          : ((data['message'] ?? '').toString().trim().isNotEmpty
+              ? data['message'].toString()
+              : L10nService().translate('breakup_no_request')),
+      request: next ?? request,
     );
   }
 
@@ -492,56 +471,24 @@ class BreakupService {
       return request;
     }
 
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final ref = _requestRef(houseId);
-
-    if (request.isPending) {
-      final approvedByPartner = request.approvedByPartner;
-      final expired = request.expireAt > 0 && now >= request.expireAt;
-
-      if (!approvedByPartner && !expired) {
-        return request;
+    try {
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'evaluateBreakupSecure',
+        requireAppCheck: true,
+        payload: <String, dynamic>{'houseId': houseId},
+        fallbackErrorMessage: L10nService().translate('breakup_processing'),
+      );
+      final data = _toMap(response.data);
+      final evaluated = _requestFromResponse(data) ?? request;
+      if (evaluated.isProcessing) {
+        await executePermanentBreakupDelete(houseId);
+        return getBreakupRequest(houseId);
       }
-
-      final latest = await getBreakupRequest(houseId);
-      if (latest == null || !latest.isPending) {
-        return latest;
-      }
-
-      final deleteAt = now + 86400000;
-      await ref.update({
-        'status': 'scheduled',
-        'reason': approvedByPartner ? 'partner_approved' : 'expired_30_days',
-        'scheduledAt': now,
-        'deleteAt': deleteAt,
-      });
-      return getBreakupRequest(houseId);
+      return evaluated;
+    } catch (_) {
+      // Giữ trạng thái hiển thị khi mạng hoặc App Check tạm thời lỗi.
+      return request;
     }
-
-    if (request.isScheduled) {
-      if (request.deleteAt <= 0 || now < request.deleteAt) {
-        return request;
-      }
-
-      final latest = await getBreakupRequest(houseId);
-      if (latest == null || !latest.isScheduled) {
-        return latest;
-      }
-
-      await ref.update({
-        'status': 'processing',
-        'processingAt': now,
-      });
-      await executePermanentBreakupDelete(houseId);
-      return getBreakupRequest(houseId);
-    }
-
-    if (request.isProcessing) {
-      await executePermanentBreakupDelete(houseId);
-      return getBreakupRequest(houseId);
-    }
-
-    return request;
   }
 
   Future<void> executePermanentBreakupDelete(String houseId) async {
@@ -669,6 +616,12 @@ class BreakupService {
     await prefs.remove('il_auth_uid');
     await prefs.remove('il_rel_mode');
     await AuthService().signOut();
+  }
+
+  BreakupRequestData? _requestFromResponse(Map<String, dynamic> data) {
+    final map = _toMap(data['request']);
+    if (map.isEmpty) return null;
+    return BreakupRequestData.fromMap(map);
   }
 
   Map<String, dynamic> _tryDecodeJson(String raw) {

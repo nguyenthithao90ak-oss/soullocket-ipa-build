@@ -45,6 +45,10 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _handleWidgetThemeChanged(String value) async {
+    if (value == WeatherBackgroundAccess.themeKey && !_isVipActive) {
+      _showToast(context.tr('home_lachnnyang_d9f089'), success: false);
+      return;
+    }
     _updateThemeDraft(() => _draftWidgetThemeKey = value);
     await _persistAndSyncWidgetAppearance();
   }

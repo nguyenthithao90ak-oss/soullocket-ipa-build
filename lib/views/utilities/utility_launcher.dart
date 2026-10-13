@@ -4,12 +4,14 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/core/sl_route.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/military_lock_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'calendar_screen.dart';
 import 'capsule_screen.dart';
@@ -90,6 +92,16 @@ abstract final class UtilityLauncher {
     }
     if (id == 'local_album') {
       await slPush<void>(context, const LocalAlbumScreen());
+      return;
+    }
+    if (id == 'understand_me') {
+      final opened = await launchUrl(
+        AppConfig.webUri('/understand-me'),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && context.mounted) {
+        SLNotice.showInfo(context, context.tr('understand_me_web_open_failed'));
+      }
       return;
     }
     final resolvedHouseId = houseId?.trim() ?? '';

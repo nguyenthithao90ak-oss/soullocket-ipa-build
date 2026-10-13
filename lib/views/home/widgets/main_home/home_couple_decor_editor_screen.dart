@@ -20,6 +20,8 @@ class HomeCoupleDecorEditorScreen extends StatefulWidget {
     this.previewLeft,
     this.previewCenter,
     this.previewRight,
+    this.previewWeatherLeft,
+    this.previewWeatherRight,
     this.isScopeCurrent,
     this.onSaved,
   });
@@ -32,6 +34,8 @@ class HomeCoupleDecorEditorScreen extends StatefulWidget {
   final Widget? previewLeft;
   final Widget? previewCenter;
   final Widget? previewRight;
+  final Map<String, dynamic>? previewWeatherLeft;
+  final Map<String, dynamic>? previewWeatherRight;
   final bool Function()? isScopeCurrent;
   final ValueChanged<HomeCoupleCardDecor>? onSaved;
 
@@ -63,7 +67,7 @@ class _HomeCoupleDecorEditorScreenState
   HomeCoupleCardDecor _normalizedInitialDecor() {
     return HomeCoupleCardDecor.fromJson(
       widget.initialDecor.toJson(),
-    ).withFrameAccess(isVip: widget.isVip);
+    ).withPremiumAccess(isVip: widget.isVip);
   }
 
   @override
@@ -349,7 +353,7 @@ class _HomeCoupleDecorEditorScreenState
     final latest = _conflict;
     if (latest == null) return;
     setState(() {
-      _draft = latest.decor.withFrameAccess(isVip: widget.isVip);
+      _draft = latest.decor.withPremiumAccess(isVip: widget.isVip);
       _base = _draft;
       _revision = latest.revision;
       _selected = null;
@@ -452,6 +456,8 @@ class _HomeCoupleDecorEditorScreenState
                   child: HomeCoupleProfileCard(
                     key: const ValueKey('home-couple-decor-preview'),
                     decor: _draft,
+                    weatherLeft: widget.previewWeatherLeft,
+                    weatherRight: widget.previewWeatherRight,
                     selectedStickerIndex: _selected,
                     drawingEnabled: _section == 3,
                     activeDrawingListenable: _activeDrawing,
@@ -708,18 +714,29 @@ class _HomeCoupleDecorEditorScreenState
               selected: _draft.backgroundKey == key,
               child: InkWell(
                 key: ValueKey('home-decor-background-$key'),
-                onTap: () => setState(
-                  () => _draft = _draft.copyWith(backgroundKey: key),
-                ),
+                onTap: () {
+                  if (HomeCoupleDecorCatalog.isVipBackground(key) &&
+                      !widget.isVip) {
+                    _showVipDialog(featureKey: 'home_decor_background_$key');
+                    return;
+                  }
+                  setState(() => _draft = _draft.copyWith(backgroundKey: key));
+                },
                 borderRadius: BorderRadius.circular(18),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: HomeCoupleDecorCatalog.backgroundColors(
-                        key,
-                        dark: dark,
-                      ),
+                      colors: key == 'weather_premium'
+                          ? HomeCoupleDecorCatalog.weatherBackgroundColors(
+                              left: widget.previewWeatherLeft,
+                              right: widget.previewWeatherRight,
+                              dark: dark,
+                            )
+                          : HomeCoupleDecorCatalog.backgroundColors(
+                              key,
+                              dark: dark,
+                            ),
                     ),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
@@ -734,13 +751,15 @@ class _HomeCoupleDecorEditorScreenState
                       Icon(
                         _draft.backgroundKey == key
                             ? Icons.check_circle_outline_rounded
+                            : HomeCoupleDecorCatalog.isVipBackground(key)
+                            ? Icons.diamond_outlined
                             : Icons.favorite_border_rounded,
                         color: ink,
                         size: 28,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        context.tr('home_decor_background_$key'),
+                        '${context.tr('home_decor_background_$key')}${HomeCoupleDecorCatalog.isVipBackground(key) && !widget.isVip ? ' 🔒' : ''}',
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           color: ink,
@@ -758,8 +777,8 @@ class _HomeCoupleDecorEditorScreenState
     ),
   );
 
-  Future<void> _showVipDialog() async {
-    final feature = context.tr('home_decor_frame_rainbow_vip');
+  Future<void> _showVipDialog({String? featureKey}) async {
+    final feature = context.tr(featureKey ?? 'home_decor_frame_rainbow_vip');
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => SLAlertDialog(

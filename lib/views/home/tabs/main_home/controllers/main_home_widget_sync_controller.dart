@@ -108,6 +108,39 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
   _loadWidgetAppearancePrefsImpl(String houseId) async {
     final prefs = await SharedPreferences.getInstance();
     final accountKey = _widgetAccountKeyImpl(houseId);
+    final selectedTheme =
+        prefs.getString('il_widget_theme_$accountKey') ??
+        prefs.getString('il_widget_theme') ??
+        'pink';
+    var allowedTheme = selectedTheme;
+    int? weatherProExpiry;
+    if (selectedTheme == WeatherBackgroundAccess.themeKey) {
+      const noAccess = VipAccessInfo(
+        isVip: false,
+        planId: '',
+        expiresAtMs: null,
+      );
+      final access = await PurchaseService()
+          .getVipAccessInfo()
+          .timeout(const Duration(seconds: 3), onTimeout: () => noAccess)
+          .catchError((_) => noAccess);
+      allowedTheme = WeatherBackgroundAccess.resolveTheme(
+        selectedTheme,
+        isPro: access.isVip,
+      );
+      weatherProExpiry = access.expiresAtMs;
+    }
+    if (mounted &&
+        _houseId == houseId &&
+        accountKey == _widgetAccountKeyImpl(houseId)) {
+      final nextWeatherActive =
+          allowedTheme == WeatherBackgroundAccess.themeKey;
+      final weatherAccessChanged =
+          nextWeatherActive != _weatherWidgetBackgroundActive;
+      _weatherWidgetBackgroundActive = nextWeatherActive;
+      _widgetWeatherProExpiresAtMs = weatherProExpiry;
+      if (weatherAccessChanged) _startWeatherRefreshLoop(houseId);
+    }
     final showDiaryOnWidget =
         prefs.getBool('il_widget_show_diary_$accountKey') ??
         prefs.getBool('il_widget_show_diary') ??
@@ -121,10 +154,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       heartAnimated: heartAnimated,
     );
     return (
-      bgTheme:
-          prefs.getString('il_widget_theme_$accountKey') ??
-          prefs.getString('il_widget_theme') ??
-          'pink',
+      bgTheme: allowedTheme,
       widgetStyleKey: WidgetService.normalizeWidgetStyleKey(
         prefs.getString('il_widget_style_$accountKey') ??
             prefs.getString('il_widget_style') ??
@@ -298,6 +328,10 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
 
       final w1 = _widgetLocationTextForRole('user1');
       final w2 = _widgetLocationTextForRole('user2');
+      final weatherBackground = WeatherBackgroundSnapshot.fromPresence(
+        left: _weatherMapForRole('user1'),
+        right: _weatherMapForRole('user2'),
+      );
 
       final stars1Text = _zodiacAndAgeForRoleImpl('user1');
       final stars2Text = _zodiacAndAgeForRoleImpl('user2');
@@ -364,6 +398,9 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'market': MarketService.instance.marketCode,
         'weather1': w1,
         'weather2': w2,
+        'weatherState1': weatherBackground.left.name,
+        'weatherState2': weatherBackground.right.name,
+        'weatherProExpiry': _widgetWeatherProExpiresAtMs,
         'stars1': stars1Text,
         'stars2': stars2Text,
         'bgTheme': appearance.bgTheme,
@@ -396,6 +433,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         isOnline2: isOnline2,
         weather1: w1,
         weather2: w2,
+        weatherBackground: weatherBackground,
         stars1: stars1Text,
         stars2: stars2Text,
         bgTheme: appearance.bgTheme,

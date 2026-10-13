@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../core/sl_theme.dart';
 import 'widget_theme_surface.dart';
 import '../../../../../models/widget_appearance.dart';
+import '../../../../../models/weather_background.dart';
 
 class WidgetStickerArtwork extends StatelessWidget {
   const WidgetStickerArtwork({
@@ -44,6 +45,7 @@ class WidgetCouplePreview extends StatelessWidget {
     this.backgroundOverlay,
     this.themeKey = 'pink',
     this.themeAnimated = false,
+    this.weather,
     this.footer,
   });
   final String sizeKey,
@@ -62,6 +64,7 @@ class WidgetCouplePreview extends StatelessWidget {
   final Widget? backgroundOverlay, footer;
   final String themeKey;
   final bool themeAnimated;
+  final WeatherBackgroundSnapshot? weather;
 
   @override
   Widget build(BuildContext context) {
@@ -297,6 +300,7 @@ class WidgetCouplePreview extends StatelessWidget {
                   themeKey: themeKey,
                   colors: colors,
                   animated: themeAnimated,
+                  weather: weather,
                   child: Stack(
                     children: [
                       Padding(

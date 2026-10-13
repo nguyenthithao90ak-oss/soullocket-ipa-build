@@ -52,6 +52,8 @@ post_install do |installer|
         'PERMISSION_MICROPHONE=1',
         'PERMISSION_PHOTOS=1',
         'PERMISSION_PHOTOS_ADD_ONLY=1',
+        # Chỉ xin Always sau lựa chọn và giải thích ở màn GPS trong app.
+        'PERMISSION_LOCATION=1',
       ]
       if target.name == 'geolocator_apple'
         defs += ['BYPASS_PERMISSION_LOCATION_ALWAYS=1']

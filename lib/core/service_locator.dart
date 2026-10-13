@@ -15,6 +15,7 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import '../utils/services/map_place_search_service.dart';
 import '../utils/services/app_referral_service.dart';
 import '../utils/services/games/soul_block_memory_service.dart';
 import '../utils/services/market_service.dart';
@@ -26,6 +27,7 @@ import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
 import 'package:soullocket_app/utils/services/home_shared_note_service.dart';
 import 'package:soullocket_app/utils/services/home_couple_decor_sync_service.dart';
+import 'package:soullocket_app/utils/services/home_drawing_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
@@ -77,6 +79,7 @@ void setupLocator() {
     () => HomeCoupleDecorSyncService(),
     dispose: (service) => service.dispose(),
   );
+  locator.registerLazySingleton(() => HomeDrawingService());
 
   // ── Realtime / Presence ─────────────────────────────────────────────────
   locator.registerLazySingleton(() => PresenceService());
@@ -98,6 +101,7 @@ void setupLocator() {
   );
 
   // ── Insight / Utility ───────────────────────────────────────────────────
+  locator.registerLazySingleton(() => MapPlaceSearchService());
   locator.registerLazySingleton(() => LoveInsightService());
   locator.registerLazySingleton(() => UtilityService());
   locator.registerLazySingleton(() => NoteService());

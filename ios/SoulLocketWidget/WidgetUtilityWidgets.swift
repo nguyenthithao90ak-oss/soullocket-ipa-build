@@ -124,6 +124,7 @@ struct SleepWidgetPerson {
 struct UtilityWidgetData {
     var values: [String: String] = [:]
     var themeKey = "pink"
+    var weatherBackground = WidgetWeatherSnapshot()
     var cycleEnabled = false
     var calendarEnabled = false
     var calendarPayloadVersion = 0
@@ -168,6 +169,7 @@ struct UtilityWidgetData {
             "sleep_my_time", "sleep_partner_time", "sleep_summary"]
         var data = UtilityWidgetData()
         data.themeKey = WidgetAppearanceDesign.theme(defaults?.string(forKey: "bgTheme") ?? "pink")
+        data.weatherBackground = WidgetWeatherSnapshot.load(defaults)
         for key in keys { data.values[key] = defaults?.string(forKey: key) ?? "" }
         data.sleepers = SleepWidgetPerson.load()
         data.hasEvent = defaults?.bool(forKey: "se_has_event") ?? false
@@ -262,7 +264,11 @@ struct UtilityWidgetProvider: TimelineProvider {
         calendar.timeZone = TimeZone(identifier: data.calendarTimeZone) ?? .current
         if let zoneMidnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)),
            zoneMidnight < now.addingTimeInterval(21600) { dates.append(zoneMidnight) }
-        let entries = dates.sorted().map { UtilityWidgetEntry(date: $0, data: data) }
+        if data.weatherBackground.proExpiresAtMs > 0 {
+            let expiry = Date(timeIntervalSince1970: data.weatherBackground.proExpiresAtMs / 1000)
+            if expiry > now && expiry < now.addingTimeInterval(21600) { dates.append(expiry) }
+        }
+        let entries = Array(Set(dates)).sorted().map { UtilityWidgetEntry(date: $0, data: data) }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
@@ -353,7 +359,7 @@ struct WidgetUtilityView: View {
                     planContent(height: proxy.size.height)
                 }.padding(large ? 16 : small ? 9 : 12).frame(width: proxy.size.width, height: proxy.size.height)
             }.clipShape(RoundedRectangle(cornerRadius: 24))
-                .modifier(WidgetUtilityBackground(kind: kind, themeKey: data.themeKey, alternate: alternate))
+                .modifier(WidgetUtilityBackground(kind: kind, themeKey: data.themeKey, alternate: alternate, weather: data.weatherBackground, referenceDate: date))
                 .animation(data.animated && !reduceMotion ? .easeInOut(duration: 0.4) : nil, value: alternate)
                 .widgetURL(URL(string: "soullocket://widget?action=" + kind.action)).privacySensitive()
                 .environment(\.layoutDirection, kind == .calendar ?
@@ -460,12 +466,20 @@ private struct WidgetUtilityBackdrop: View {
     let kind: UtilityWidgetKind
     let themeKey: String
     let alternate: Bool
+    let weather: WidgetWeatherSnapshot
+    let referenceDate: Date
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            LinearGradient(colors: kind.palette(for: themeKey), startPoint:.topLeading,endPoint:.bottomTrailing)
+            let allowedTheme = weather.allowedTheme(themeKey, at: referenceDate)
+            if allowedTheme == "weather_premium" {
+                WidgetWeatherBackdrop(weather: weather, alternate: alternate,
+                    artworkOpacity: kind == .sleep ? 0.22 : 0.18)
+            } else {
+            LinearGradient(colors: kind.palette(for: allowedTheme), startPoint:.topLeading,endPoint:.bottomTrailing)
             // Lớp họa tiết chủ đề chung chỉ ở mức nhẹ; nền ngủ/sự kiện vẫn giữ bản sắc riêng.
-            Image("widget_theme_" + WidgetAppearanceDesign.theme(themeKey) + (alternate ? "_twinkle" : ""))
+            Image("widget_theme_" + allowedTheme + (alternate ? "_twinkle" : ""))
                 .resizable().renderingMode(.original).opacity(kind == .sleep ? 0.22 : 0.18)
+            }
             WidgetArtwork(name:kind.artwork).frame(width:105,height:105)
                 .opacity(kind == .sleep ? 0.08 : 0.14).padding(12)
         }.clipShape(RoundedRectangle(cornerRadius:24))
@@ -475,9 +489,11 @@ private struct WidgetUtilityBackground: ViewModifier {
     let kind: UtilityWidgetKind
     let themeKey: String
     let alternate: Bool
+    let weather: WidgetWeatherSnapshot
+    let referenceDate: Date
     @ViewBuilder func body(content:Content)->some View {
-        if #available(iOSApplicationExtension 17.0,*) { content.containerBackground(for:.widget) { WidgetUtilityBackdrop(kind:kind, themeKey:themeKey, alternate:alternate) } }
-        else { content.background(WidgetUtilityBackdrop(kind:kind, themeKey:themeKey, alternate:alternate)) }
+        if #available(iOSApplicationExtension 17.0,*) { content.containerBackground(for:.widget) { WidgetUtilityBackdrop(kind:kind, themeKey:themeKey, alternate:alternate, weather:weather, referenceDate:referenceDate) } }
+        else { content.background(WidgetUtilityBackdrop(kind:kind, themeKey:themeKey, alternate:alternate, weather:weather, referenceDate:referenceDate)) }
     }
 }
 struct WidgetSleepEventView: View {

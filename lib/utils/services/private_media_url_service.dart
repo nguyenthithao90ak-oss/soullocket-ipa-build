@@ -54,6 +54,7 @@ class PrivateMediaUrlService {
   // trước hạn server, tối đa 45 phút, để ảnh/video đang hiện không xin link lại mỗi 90 giây.
   static const Duration _maximumCacheLifetime = Duration(minutes: 45);
   static const Duration _appCheckFailureCooldown = Duration(seconds: 30);
+  static const Duration _batchWindow = Duration(milliseconds: 120);
 
   final String? Function() _currentUid;
   final Stream<String?> Function() _authChanges;
@@ -307,7 +308,10 @@ class PrivateMediaUrlService {
       _batches.remove(key);
       unawaited(_sendBatch(batch));
     }
-    _batchTimer ??= Timer(const Duration(milliseconds: 20), () {
+    // Lướt album thì ô mới hiện dần: chờ 20 ms chỉ gom ~2 ảnh/lượt (đo 13/10/2026,
+    // 99 ảnh = 45 lượt, mỗi lượt máy chủ tốn ~24 thao tác cố định). Chờ 120 ms để
+    // gom nhiều ảnh hơn; ô vừa hiện chỉ chậm thêm ~0,1 giây.
+    _batchTimer ??= Timer(_batchWindow, () {
       _batchTimer = null;
       final batches = _batches.values.toList();
       _batches.clear();

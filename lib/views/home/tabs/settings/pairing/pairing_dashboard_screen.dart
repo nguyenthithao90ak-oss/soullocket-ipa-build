@@ -6,6 +6,7 @@ import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
+import 'package:soullocket_app/utils/services/breakup_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_code_sheet.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
@@ -23,6 +24,7 @@ import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_connecti
 import 'pairing_display_cache.dart';
 import 'pairing_shortcut_state.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
+import '../relationship/relationship_actions.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -62,6 +64,10 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   Stream<List<PairingRequest>>? _incomingRequestsStream;
   String? _respondingRequestId;
   PairingShortcutState _displayCacheState = PairingShortcutState();
+  final SettingsRelationshipWatcher _breakupWatcher =
+      SettingsRelationshipWatcher();
+  BreakupRequestData? _breakupRequest;
+  bool _breakupBusy = false;
 
   String _t(String key) => context.tr(key);
 
@@ -83,6 +89,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     _settingsSub?.cancel();
     _membersSub?.cancel();
     _connectionDateSub?.cancel();
+    _breakupWatcher.dispose();
     super.dispose();
   }
 
@@ -107,6 +114,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     unawaited(_settingsSub?.cancel());
     unawaited(_membersSub?.cancel());
     unawaited(_connectionDateSub?.cancel());
+    _breakupWatcher.dispose();
     setState(() {
       _isLoading = true;
       _loadError = false;
@@ -127,6 +135,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       _avatarU1 = null;
       _avatarU2 = null;
       _incomingRequestsStream = null;
+      _breakupRequest = null;
+      _breakupBusy = false;
       _displayCacheState = cachedState;
       _myHouseId = cachedHouseId;
       _isPaired = cachedState.ready && cachedState.paired;
@@ -216,6 +226,14 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
 
     _incomingRequestsStream = PairingService.instance.listenToIncomingRequests(
       houseId,
+    );
+    _breakupWatcher.bind(
+      houseId: houseId,
+      onChanged: (request) {
+        if (!isCurrent()) return;
+        setState(() => _breakupRequest = request);
+      },
+      getFallbackRequest: () => _breakupRequest,
     );
 
     // Đây là màn đọc trạng thái. Không tự ghi isPaired hay sửa chế độ ghép nối.
@@ -713,6 +731,197 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     );
   }
 
+  Map? _currentMember() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.trim().isEmpty) return null;
+    final direct = _members[uid];
+    if (direct is Map) return direct;
+    for (final value in _members.values) {
+      if (value is Map && value['uid']?.toString() == uid) return value;
+    }
+    return null;
+  }
+
+  String _currentRole() {
+    final role = _currentMember()?['role']?.toString().trim().toLowerCase();
+    if (role == 'user2') return 'user2';
+    return 'user1';
+  }
+
+  String _currentName() {
+    final value = _currentMember()?['displayName']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+    final role = _currentRole();
+    final saved = role == 'user2' ? _nameU2 : _nameU1;
+    if (saved != null && saved.trim().isNotEmpty) return saved.trim();
+    return _t(
+      RoleUtils.defaultNameKey(role, genderSwapped: _genderSwapped),
+    );
+  }
+
+  Future<bool> _confirmBreakupAction({
+    required String title,
+    required String message,
+    required String confirmLabel,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(_t('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    return result == true;
+  }
+
+  void _showBreakupMessage(String message) {
+    if (!mounted || message.trim().isEmpty) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SLSnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _requestBreakupFromPairing() async {
+    final houseId = _myHouseId;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (houseId == null || uid == null || _breakupBusy) return;
+    final confirmed = await _confirmBreakupAction(
+      title: _t('home_chiatayxad_3b2b07'),
+      message: _t('home_bnsptoyucu_809644'),
+      confirmLabel: _t('home_xcnhngiyuc_81446c'),
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _breakupBusy = true);
+    try {
+      final result = await SettingsRelationshipActionRunner().requestBreakup(
+        houseId: houseId,
+        role: _currentRole(),
+        userName: _currentName(),
+        userUid: uid,
+        isSingleRelationship: false,
+        pinRequired: false,
+      );
+      if (mounted) {
+        _breakupRequest = result.request ?? _breakupRequest;
+        _showBreakupMessage(result.message);
+      }
+      await _breakupWatcher.refresh(
+        houseId: houseId,
+        onChanged: (request) {
+          if (mounted) setState(() => _breakupRequest = request);
+        },
+        evaluate: false,
+      );
+    } catch (error) {
+      if (mounted) {
+        _showBreakupMessage(
+          AppErrorMapper.resolve(
+            error,
+            fallbackMessage: _t('home_chathrtliy_6cc6e9'),
+          ).message,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _breakupBusy = false);
+    }
+  }
+
+  Future<void> _approveBreakupFromPairing() async {
+    final houseId = _myHouseId;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (houseId == null || uid == null || _breakupBusy) return;
+    final confirmed = await _confirmBreakupAction(
+      title: _t('home_bnkiaangch_b287d3'),
+      message: _t('home_bnsptoyucu_809644'),
+      confirmLabel: _t('home_xcnhn_1e2eb2'),
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _breakupBusy = true);
+    try {
+      final result = await BreakupService().approveBreakup(
+        houseId: houseId,
+        role: _currentRole(),
+        userName: _currentName(),
+        currentUid: uid,
+      );
+      if (mounted) {
+        _breakupRequest = result.request ?? _breakupRequest;
+        _showBreakupMessage(result.message);
+      }
+      await _breakupWatcher.refresh(
+        houseId: houseId,
+        onChanged: (request) {
+          if (mounted) setState(() => _breakupRequest = request);
+        },
+        evaluate: false,
+      );
+    } catch (error) {
+      if (mounted) {
+        _showBreakupMessage(
+          AppErrorMapper.resolve(
+            error,
+            fallbackMessage: _t('breakup_no_pending'),
+          ).message,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _breakupBusy = false);
+    }
+  }
+
+  Future<void> _withdrawBreakupFromPairing() async {
+    final houseId = _myHouseId;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (houseId == null || uid == null || _breakupBusy) return;
+    final confirmed = await _confirmBreakupAction(
+      title: _t('home_rtliyucu_29ae92'),
+      message: _t('home_bnchcchnmu_a5cf3b'),
+      confirmLabel: _t('home_rtliyucu_29ae92'),
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _breakupBusy = true);
+    try {
+      final result = await SettingsRelationshipActionRunner().withdrawBreakup(
+        houseId: houseId,
+        role: _currentRole(),
+        userName: _currentName(),
+        currentUid: uid,
+      );
+      if (mounted) {
+        _breakupRequest = result.request ?? _breakupRequest;
+        _showBreakupMessage(result.message);
+      }
+      await _breakupWatcher.refresh(
+        houseId: houseId,
+        onChanged: (request) {
+          if (mounted) setState(() => _breakupRequest = request);
+        },
+        evaluate: false,
+      );
+    } catch (error) {
+      if (mounted) {
+        _showBreakupMessage(
+          AppErrorMapper.resolve(
+            error,
+            fallbackMessage: _t('home_chathrtliy_6cc6e9'),
+          ).message,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _breakupBusy = false);
+    }
+  }
+
   Widget _buildPairedState() {
     String nameForRole(String? saved, String role, String fallback) {
       if (saved != null && saved.trim().isNotEmpty) return saved.trim();
@@ -753,6 +962,12 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       onEditFirst: () => _updateAvatar('user1'),
       onEditSecond: () => _updateAvatar('user2'),
       onRetry: _loadHouseId,
+      breakupRequest: _breakupRequest,
+      breakupBusy: _breakupBusy,
+      currentUid: FirebaseAuth.instance.currentUser?.uid,
+      onRequestBreakup: () => unawaited(_requestBreakupFromPairing()),
+      onApproveBreakup: () => unawaited(_approveBreakupFromPairing()),
+      onWithdrawBreakup: () => unawaited(_withdrawBreakupFromPairing()),
     );
   }
 

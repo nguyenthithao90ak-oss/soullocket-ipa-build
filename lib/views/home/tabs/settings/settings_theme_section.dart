@@ -151,7 +151,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       avatarFrames: [
         (context.tr('home_ttkhngckhu_37eb33'), 'off'),
         for (final key in KeepsakePalette.newStyleKeys)
-          (context.tr('keepsake_' + key), key),
+          (context.tr('keepsake_$key'), key),
         (context.tr('frame_circle'), 'circle'),
         (context.tr('frame_rounded'), 'rounded'),
         (context.tr('p7_frame_squircle'), 'squircle'),
@@ -168,7 +168,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       countdownStyles: [
         (context.tr('countdown_love_letter'), 'default', false),
         for (final key in KeepsakePalette.newStyleKeys)
-          (context.tr('countdown_' + key), key, false),
+          (context.tr('countdown_$key'), key, false),
         (context.tr('countdown_floating_hearts'), 'floating_hearts', true),
         (context.tr('countdown_glass'), 'glass', false),
         (context.tr('countdown_glow'), 'glow', false),
@@ -320,9 +320,19 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Preview sống động: phản ánh ngay theme, hiệu ứng, khung và font
+              // hiện tại trước khi người dùng mở từng nhóm điều chỉnh.
+              _buildThemeHomeLikePreviewCard(
+                selection.previewBackground,
+                themeKey: selection.themeKey,
+                effectKey: selection.effectKey,
+                graphicsKey: selection.graphicsKey,
+              ),
               // 1. Hình nền & Hiệu ứng
               AppearanceSectionCard(
                 icon: Icons.palette_rounded,
+                accentColor: SLSettingsColors.rose,
+                artKind: AppearanceArtKind.palette,
                 title: context.tr('theme_bg_effect_title'),
                 description: context.tr('theme_bg_effect_desc'),
 
@@ -340,7 +350,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 12),
                     _buildLabel(context.tr('theme_falling_effect')),
-                    _buildThemeDropdownField(
+                    AppearanceEffectGrid(
                       value: selection.effectKey,
                       options: config.effects,
                       onChanged: (value) =>
@@ -350,121 +360,71 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     ValueListenableBuilder<UiPrefsState>(
                       key: const ValueKey('ui-action-sound-toggle'),
                       valueListenable: UiPrefs.notifier,
-                      builder: (context, prefs, _) => MergeSemantics(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _SettingsToggleRow(
-                              icon: Icons.music_note_rounded,
-                              iconColor: SLSettingsColors.rose,
-                              label: context.tr('touch_sound'),
-                              switchValue: prefs.touchSound,
-                              onSwitchChanged: (enabled) async {
-                                try {
-                                  await UiPrefs.setTouchSound(enabled);
-                                  if (!mounted) return;
-                                  _touchSound =
-                                      UiPrefs.notifier.value.touchSound;
-                                } catch (_) {
-                                  if (!mounted) return;
-                                  _showToast(
-                                    this.context.tr('legacy_save_failed'),
-                                    success: false,
-                                  );
-                                }
-                              },
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-                              child: Text(
-                                context.tr('ui_action_sound_subtitle'),
-                                style: SLSettingsText.caption(
-                                  SLSettingsColors.inkSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      builder: (context, prefs, _) => AppearanceToggleRow(
+                        icon: Icons.music_note_rounded,
+                        accentColor: SLSettingsColors.rose,
+                        label: context.tr('touch_sound'),
+                        subtitle: context.tr('ui_action_sound_subtitle'),
+                        value: prefs.touchSound,
+                        onChanged: (enabled) async {
+                          try {
+                            await UiPrefs.setTouchSound(enabled);
+                            if (!mounted) return;
+                            _touchSound = UiPrefs.notifier.value.touchSound;
+                          } catch (_) {
+                            if (!mounted) return;
+                            _showToast(
+                              this.context.tr('legacy_save_failed'),
+                              success: false,
+                            );
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(height: 8),
                     ValueListenableBuilder<UiPrefsState>(
                       key: const ValueKey('home-companion-toggle'),
                       valueListenable: UiPrefs.notifier,
-                      builder: (context, prefs, _) => MergeSemantics(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _SettingsToggleRow(
-                              icon: Icons.pets_rounded,
-                              iconColor: SLSettingsColors.rose,
-                              label: context.tr('home_companion_setting_title'),
-                              switchValue: prefs.homeCompanionEnabled,
-                              onSwitchChanged: (enabled) async {
-                                try {
-                                  await UiPrefs.setHomeCompanionEnabled(
-                                    enabled,
-                                  );
-                                } catch (_) {
-                                  if (!mounted) return;
-                                  _showToast(
-                                    this.context.tr('legacy_save_failed'),
-                                    success: false,
-                                  );
-                                }
-                              },
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-                              child: Text(
-                                context.tr('home_companion_setting_subtitle'),
-                                style: SLSettingsText.caption(
-                                  SLSettingsColors.inkSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      builder: (context, prefs, _) => AppearanceToggleRow(
+                        icon: Icons.pets_rounded,
+                        accentColor: SLSettingsColors.rose,
+                        label: context.tr('home_companion_setting_title'),
+                        subtitle: context.tr('home_companion_setting_subtitle'),
+                        value: prefs.homeCompanionEnabled,
+                        onChanged: (enabled) async {
+                          try {
+                            await UiPrefs.setHomeCompanionEnabled(enabled);
+                          } catch (_) {
+                            if (!mounted) return;
+                            _showToast(
+                              this.context.tr('legacy_save_failed'),
+                              success: false,
+                            );
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(height: 8),
                     ValueListenableBuilder<UiPrefsState>(
                       key: const ValueKey('home-companion-sound-toggle'),
                       valueListenable: UiPrefs.notifier,
-                      builder: (context, prefs, _) => MergeSemantics(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _SettingsToggleRow(
-                              icon: Icons.volume_down_rounded,
-                              iconColor: SLSettingsColors.rose,
-                              label: context.tr('home_companion_sound_title'),
-                              switchValue: prefs.homeCompanionSoundEnabled,
-                              onSwitchChanged: (enabled) async {
-                                try {
-                                  await UiPrefs.setHomeCompanionSoundEnabled(
-                                    enabled,
-                                  );
-                                } catch (_) {
-                                  if (!mounted) return;
-                                  _showToast(
-                                    this.context.tr('legacy_save_failed'),
-                                    success: false,
-                                  );
-                                }
-                              },
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-                              child: Text(
-                                context.tr('home_companion_sound_subtitle'),
-                                style: SLSettingsText.caption(
-                                  SLSettingsColors.inkSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      builder: (context, prefs, _) => AppearanceToggleRow(
+                        icon: Icons.volume_down_rounded,
+                        accentColor: SLSettingsColors.rose,
+                        label: context.tr('home_companion_sound_title'),
+                        subtitle: context.tr('home_companion_sound_subtitle'),
+                        value: prefs.homeCompanionSoundEnabled,
+                        onChanged: (enabled) async {
+                          try {
+                            await UiPrefs.setHomeCompanionSoundEnabled(enabled);
+                          } catch (_) {
+                            if (!mounted) return;
+                            _showToast(
+                              this.context.tr('legacy_save_failed'),
+                              success: false,
+                            );
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -510,6 +470,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               // 2. Khung & Kích thước
               AppearanceSectionCard(
                 icon: Icons.aspect_ratio_rounded,
+                accentColor: SLSettingsColors.sky,
+                artKind: AppearanceArtKind.frames,
                 title: context.tr('appearance_frame_title'),
                 description: context.tr('theme_frame_size_desc'),
 
@@ -559,6 +521,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               // 3. Font chữ & Ngôn ngữ
               AppearanceSectionCard(
                 icon: Icons.font_download_rounded,
+                accentColor: SLSettingsColors.violet,
+                artKind: AppearanceArtKind.typography,
                 title: context.tr('appearance_font_title'),
                 description: context.tr('theme_font_lang_desc'),
 
@@ -617,6 +581,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               // 4. Thêm kỷ niệm
               AppearanceSectionCard(
                 icon: Icons.calendar_month_rounded,
+                accentColor: SLSettingsColors.amber,
+                artKind: AppearanceArtKind.calendar,
                 title: context.tr('theme_add_new_memory'),
                 description: context.tr('theme_memory_desc'),
 
@@ -726,6 +692,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               // 5. Hiệu năng & Quyền hạn — ít dùng nhất, để cuối
               AppearanceSectionCard(
                 icon: Icons.settings_suggest_rounded,
+                accentColor: SLSettingsColors.sage,
+                artKind: AppearanceArtKind.performance,
                 title: context.tr('theme_perf_title'),
                 description: context.tr('theme_perf_desc'),
 
@@ -903,7 +871,10 @@ class _SliderWithLabelState extends State<_SliderWithLabel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          L10nScope.of(context).format('ui_home_value1_value2_px_419aad', {'value1': context.tr('theme_countdown_size'), 'value2': _value.round()}),
+          L10nScope.of(context).format('ui_home_value1_value2_px_419aad', {
+            'value1': context.tr('theme_countdown_size'),
+            'value2': _value.round(),
+          }),
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w800,

@@ -31,7 +31,7 @@ class UtilitiesTabBody extends StatefulWidget {
   final UtilityDailyPick? dailyPick;
   final UtilityApp? dailyPickApp;
   final ValueChanged<String> onAppTap;
-  final ValueChanged<UtilityApp> onAppLongPress;
+  final ValueChanged<UtilityApp>? onAppLongPress;
   final bool showCompanionJourney;
 
   @override
@@ -214,9 +214,9 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
       children.add(const HomeCompanionJourneyCard());
     }
 
-    children
-      ..add(const _LongPressHint())
-      ..add(const SizedBox(height: 120));
+    // Gợi ý nhấn giữ chỉ hiện khi màn có thao tác nhấn giữ.
+    if (widget.onAppLongPress != null) children.add(const _LongPressHint());
+    children.add(const SizedBox(height: 120));
     return children;
   }
 

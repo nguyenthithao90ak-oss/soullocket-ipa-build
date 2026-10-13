@@ -87,9 +87,26 @@ extension _MainHomeListeners on _MainHomeTabState {
   }
 
   void _listenHomeCalendarEvents(String houseId) {
-    _pauseHomeCalendarEvents();
     final uid = _auth.currentUser?.uid;
     final lifecycle = WidgetsBinding.instance.lifecycleState;
+    final timeZoneId = MarketService.instance.preferences.timeZoneId;
+    final queryKey =
+        '$houseId|$timeZoneId|${CalendarCivilDate.key(CalendarTimeZone.fromMilliseconds(DateTime.now().millisecondsSinceEpoch, timeZoneId))}';
+    // Mở lại app và đổi tab có thể gọi hàm này hai lần liền: đang nghe đúng
+    // truy vấn (cùng nhà, múi giờ, ngày) và chưa lỗi thì giữ nguyên, không gỡ
+    // rồi gắn lại (mỗi lần gắn là thêm lượt thao tác RTDB).
+    if (_homeCalendarSubscription != null &&
+        _homeCalendarQueryKey == queryKey &&
+        _homeCalendarUid == uid &&
+        _homeCalendarLoadState != HomeCalendarLoadState.failed &&
+        mounted &&
+        _isTabActive &&
+        _houseId == houseId &&
+        !_homeCalendarRouteIsOpen &&
+        (lifecycle == null || lifecycle == AppLifecycleState.resumed)) {
+      return;
+    }
+    _pauseHomeCalendarEvents();
     if (!mounted ||
         !_isTabActive ||
         uid == null ||
@@ -137,6 +154,7 @@ extension _MainHomeListeners on _MainHomeTabState {
         .startAt(todayStr)
         .endAt(endStr)
         .limitToFirst(31);
+    _homeCalendarQueryKey = queryKey;
     _homeCalendarSubscription = calendarRef.onValue.listen(
       (event) {
         if (!isCurrent()) return;

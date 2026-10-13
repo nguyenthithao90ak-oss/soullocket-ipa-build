@@ -58,7 +58,12 @@ class DeeplinkService {
       _sub = _appLinks.uriLinkStream.listen(
         (uri) {
           unawaited(
-            _handleUri(uri, onJoinHouse, onOpenLoveCard, onPasswordResetLink),
+            _handleUri(
+              uri,
+              onJoinHouse,
+              onOpenLoveCard,
+              onPasswordResetLink,
+            ),
           );
         },
         onError: (Object error) {

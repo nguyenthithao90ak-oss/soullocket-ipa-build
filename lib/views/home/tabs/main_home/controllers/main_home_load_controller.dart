@@ -132,7 +132,12 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 ? data['msg'].toString().trim()
                 : msgNewDeviceBody;
 
-            _showLatestSnackBarImpl(L10nScope.of(context).format('ui_home_value1_value2_e3b4c7', {'value1': title, 'value2': body}));
+            _showLatestSnackBarImpl(
+              L10nScope.of(context).format('ui_home_value1_value2_e3b4c7', {
+                'value1': title,
+                'value2': body,
+              }),
+            );
           },
           onError: (Object error) {
             if (error.toString().contains('permission-denied')) {
@@ -379,7 +384,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       if (!mounted || isStale()) return;
       _wrapSetup(() => _bindHomeMapPreview(houseId), 'MapPreview');
       unawaited(_ensureAppWideLocationTracking(houseId));
-      if (_showWeather) {
+      if (_needsWeatherData) {
         _startWeatherRefreshLoop(houseId);
       }
     });
@@ -538,9 +543,13 @@ extension _MainHomeLoadController on _MainHomeTabState {
     );
     roleData[field] = value;
     if (field == 'sleep_updated_at' && _houseId != null) {
-      unawaited(WidgetService.syncSleepWidgetData(houseId: _houseId!).catchError((Object error) {
-        debugPrint('[SleepWidget] Refresh failed: $error');
-      }));
+      unawaited(
+        WidgetService.syncSleepWidgetData(houseId: _houseId!).catchError((
+          Object error,
+        ) {
+          debugPrint('[SleepWidget] Refresh failed: $error');
+        }),
+      );
     }
     final nextPresence = Map<String, dynamic>.from(_presenceData);
     nextPresence[role] = roleData;
@@ -580,32 +589,53 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _presenceSubList.clear();
 
     final roles = ['user1', 'user2'];
-    final fields = [
-      'status',
-      'lastSeen',
-      'device',
-      'weather',
-      'city',
-      'activeSessionCount',
-      'sleep_updated_at',
+    // Nghe theo hai dải khóa (sắp theo tên) thay vì 7 nhánh lẻ mỗi vai: mỗi lần
+    // nối lại database chỉ gắn lại 4 thay vì 14 listener. Hai dải cố ý bỏ qua
+    // `sessions` (nhịp online ghi 90 giây/lần) để không tải thêm dữ liệu.
+    const ranges = <(String, String, List<String>)>[
+      (
+        'activeSessionCount',
+        'lastSeen',
+        ['activeSessionCount', 'city', 'device', 'lastSeen'],
+      ),
+      (
+        'sleep_updated_at',
+        'weather',
+        ['sleep_updated_at', 'status', 'weather'],
+      ),
     ];
 
     for (final role in roles) {
-      for (final field in fields) {
+      for (final (startKey, endKey, fields) in ranges) {
+        // Giá trị đã áp dụng gần nhất: chỉ chuyển ô thật sự đổi, vì một số ô
+        // kéo theo việc phụ (vd. `sleep_updated_at` đồng bộ widget giấc ngủ).
+        final applied = <String, String>{};
         final sub = _dbRef
-            .child('houses/$houseId/presence/$role/$field')
+            .child('houses/$houseId/presence/$role')
+            .orderByKey()
+            .startAt(startKey)
+            .endAt(endKey)
             .onValue
             .listen(
               (event) {
                 if (isStale() || !_isTabActive) return;
-                _pendingPresenceUpdates['$role/$field'] = () {
-                  _updatePresenceField(
-                    role,
-                    field,
-                    event.snapshot.value,
-                    isStale: isStale,
-                  );
-                };
+                final raw = event.snapshot.value;
+                final values = raw is Map ? raw : const {};
+                for (final field in fields) {
+                  final value = values[field];
+                  String signature;
+                  try {
+                    signature = jsonEncode(value);
+                  } catch (_) {
+                    signature = '${DateTime.now().microsecondsSinceEpoch}';
+                  }
+                  if (applied[field] == signature) continue;
+                  applied[field] = signature;
+                  _pendingPresenceUpdates['$role/$field'] = () {
+                    _updatePresenceField(role, field, value, isStale: isStale);
+                  };
+                }
+                if (_pendingPresenceUpdates.isEmpty) return;
                 _presenceBatchTimer?.cancel();
                 _presenceBatchTimer = Timer(
                   const Duration(milliseconds: 80),
@@ -622,7 +652,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
               },
               onError: (Object error) {
                 debugPrint(
-                  'Home presence field $role/$field listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgPresenceFail).message}',
+                  'Home presence $role/$startKey..$endKey listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: msgPresenceFail).message}',
                 );
                 if (mounted) {
                   _safeSetState(() {

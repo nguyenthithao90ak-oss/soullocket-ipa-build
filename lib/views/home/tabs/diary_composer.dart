@@ -369,6 +369,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
   Widget _buildMoodShelf(BuildContext context, bool locked) {
     final palette = DiaryComposerPalette.of(context);
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
         color: palette.paper.withValues(alpha: 0.6),
@@ -378,7 +379,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (widget.moods.isEmpty) return const SizedBox.shrink();
-          const spacing = 8.0;
+          const spacing = 6.0;
           final textScaler = MediaQuery.textScalerOf(context);
           final scale = textScaler.scale(11) / 11;
           final minWidth = 82.0 + (scale - 1).clamp(0, 4) * 48;

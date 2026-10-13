@@ -1,4 +1,7 @@
 import 'dart:async';
+import '../../../../../models/weather_background.dart';
+import '../../../../../widgets/weather_premium_artwork.dart';
+import '../../../../../utils/services/widget_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../utils/screen_activity_mixin.dart';
@@ -16,6 +19,7 @@ abstract final class WidgetThemeDesign {
     'red',
     'premium',
     'cosmic',
+    'weather_premium',
   ];
   static const intervals = {
     'pink': 3200,
@@ -28,6 +32,7 @@ abstract final class WidgetThemeDesign {
     'red': 3500,
     'premium': 2700,
     'cosmic': 4300,
+    'weather_premium': 3200,
   };
   static const palettes = {
     'pink': [Color(0xFFFFF3E5), Color(0xFFFFDDE7), Color(0xFFDAD8FF)],
@@ -45,6 +50,11 @@ abstract final class WidgetThemeDesign {
       Color(0xFF7C3AED),
     ],
     'cosmic': [Color(0xFF17142F), Color(0xFF322952), Color(0xFF514563)],
+    'weather_premium': [
+      Color(0xFFE7EDF4),
+      Color(0xFFF4EFF8),
+      Color(0xFFE8F1F3),
+    ],
   };
   static String normalize(String key) => keys.contains(key) ? key : 'pink';
 
@@ -68,6 +78,7 @@ abstract final class WidgetThemeDesign {
     'orange' => const Color(0xFFE65100),
     'purple' => const Color(0xFF6A1B9A),
     'green' => const Color(0xFF1B5E20),
+    'weather_premium' => const Color(0xFF3C4F69),
     _ => const Color(0xFF333333),
   };
 
@@ -81,6 +92,7 @@ abstract final class WidgetThemeDesign {
     'red' => const Color(0xFFFFE1AB),
     'dark' || 'premium' => Colors.white,
     'cosmic' => const Color(0xFFFFE396),
+    'weather_premium' => const Color(0xFF7954AA),
     _ => const Color(0xFFFF4D73),
   };
 
@@ -112,6 +124,7 @@ class WidgetThemeSurface extends StatefulWidget {
     this.twinkle = false,
     this.artworkOpacity = 1,
     this.drawBorder = true,
+    this.weather,
     this.child,
   });
   final String themeKey;
@@ -121,6 +134,7 @@ class WidgetThemeSurface extends StatefulWidget {
   final double artworkOpacity;
   final bool drawBorder;
   final Widget? child;
+  final WeatherBackgroundSnapshot? weather;
 
   @override
   State<WidgetThemeSurface> createState() => _WidgetThemeSurfaceState();
@@ -131,6 +145,17 @@ class _WidgetThemeSurfaceState extends State<WidgetThemeSurface>
   Timer? _timer;
   bool _alternate = false;
   bool _motion = false;
+  bool _weatherPreviewLoaded = false;
+
+  void _loadWeatherPreview() {
+    if (widget.themeKey != WeatherBackgroundAccess.themeKey ||
+        widget.weather != null ||
+        _weatherPreviewLoaded) {
+      return;
+    }
+    _weatherPreviewLoaded = true;
+    unawaited(WidgetService.refreshWeatherBackgroundPreview());
+  }
 
   void _syncMotion() {
     _timer?.cancel();
@@ -158,11 +183,14 @@ class _WidgetThemeSurfaceState extends State<WidgetThemeSurface>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _syncMotion();
+    _loadWeatherPreview();
   }
 
   @override
   void didUpdateWidget(WidgetThemeSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.themeKey != widget.themeKey) _weatherPreviewLoaded = false;
+    _loadWeatherPreview();
     if (oldWidget.themeKey != widget.themeKey ||
         oldWidget.animated != widget.animated) {
       _syncMotion();
@@ -177,6 +205,23 @@ class _WidgetThemeSurfaceState extends State<WidgetThemeSurface>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.themeKey == WeatherBackgroundAccess.themeKey &&
+        widget.weather == null) {
+      return ValueListenableBuilder<WeatherBackgroundSnapshot>(
+        valueListenable: WidgetService.weatherBackgroundNotifier,
+        builder: (context, weather, _) => _buildSurface(context, weather),
+      );
+    }
+    return _buildSurface(
+      context,
+      widget.weather ?? const WeatherBackgroundSnapshot(),
+    );
+  }
+
+  Widget _buildSurface(
+    BuildContext context,
+    WeatherBackgroundSnapshot weather,
+  ) {
     final key = WidgetThemeDesign.normalize(widget.themeKey);
     final alternate = widget.twinkle || (_motion && _alternate);
     return ClipRRect(
@@ -185,7 +230,9 @@ class _WidgetThemeSurfaceState extends State<WidgetThemeSurface>
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: widget.colors ?? WidgetThemeDesign.palettes[key]!,
+            colors: key == WeatherBackgroundAccess.themeKey
+                ? WeatherBackgroundDesign.colors(weather)
+                : widget.colors ?? WidgetThemeDesign.palettes[key]!,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -200,13 +247,19 @@ class _WidgetThemeSurfaceState extends State<WidgetThemeSurface>
                   duration: _motion
                       ? const Duration(milliseconds: 420)
                       : Duration.zero,
-                  child: SvgPicture.asset(
-                    'assets/images/widget_stickers/theme_$key${alternate ? '_twinkle' : ''}.svg',
-                    key: ValueKey('theme-art-$key-$alternate'),
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.fill,
-                  ),
+                  child: key == WeatherBackgroundAccess.themeKey
+                      ? WeatherPremiumArtwork(
+                          key: ValueKey(('weather-art', weather, alternate)),
+                          weather: weather,
+                          alternate: alternate,
+                        )
+                      : SvgPicture.asset(
+                          'assets/images/widget_stickers/theme_$key${alternate ? '_twinkle' : ''}.svg',
+                          key: ValueKey('theme-art-$key-$alternate'),
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.fill,
+                        ),
                 ),
               ),
             ),

@@ -33,7 +33,6 @@ import 'app_entry/app_entry_deeplink_handler.dart';
 import 'app_entry/widgets/blocked_scaffold.dart';
 import 'app_entry/widgets/locked_scaffold.dart';
 import 'app_entry/widgets/loading_scaffold.dart';
-import 'app_entry/widgets/session_cleanup_gate.dart';
 import 'auth/auth_action_screen.dart';
 import 'auth/lock_appeal_screen.dart';
 import 'consent/consent_gate.dart';
@@ -594,17 +593,27 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
         final user = snapshot.data;
         if (user == null) {
-          _signedOutCleanup ??= _appEntryController.handleSignedOutSession();
+          if (_signedOutCleanup == null) {
+            final cleanup = _appEntryController.handleSignedOutSession();
+            _signedOutCleanup = cleanup;
+            unawaited(
+              cleanup.then<void>(
+                (_) {},
+                onError: (Object error, StackTrace stackTrace) {
+                  debugPrint(
+                    '[AppEntry] Signed-out background cleanup failed: '
+                    '${AppErrorMapper.resolve(error).message}',
+                  );
+                },
+              ),
+            );
+          }
           _lastUserId = null;
           _restoreNoticeCheckedUserId = null;
           _hasTriggeredInitialAppOpenAd = false;
           _initialAccessState = null;
           _accessStateFuture = null;
-          return SessionCleanupGate(
-            cleanup: _signedOutCleanup!,
-            onRetry: _appEntryController.handleSignedOutSession,
-            onReady: (_) => const ConsentGate(child: LoginScreen()),
-          );
+          return const ConsentGate(child: LoginScreen());
         }
 
         Widget buildSignedInContent(BuildContext context) {
@@ -695,15 +704,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           );
         }
 
-        if (_appEntryController.pendingSignedOutCleanup != null) {
-          return SessionCleanupGate(
-            key: ValueKey('signed-in-cleanup-${user.uid}'),
-            cleanup: _signedOutCleanup ??= _appEntryController
-                .waitForSignedOutCleanup(),
-            onRetry: _appEntryController.waitForSignedOutCleanup,
-            onReady: buildSignedInContent,
-          );
-        }
         return buildSignedInContent(context);
       },
     );

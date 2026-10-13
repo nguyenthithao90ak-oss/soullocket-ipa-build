@@ -998,17 +998,13 @@ class CollageGenerator {
     String title,
     CollageDecor decor,
   ) {
-    final double headerHeight =
-        decor.showBlessing && decor.message.trim().isNotEmpty ? 270 : 210;
-    final headerRect = RRect.fromRectAndCorners(
-      Rect.fromLTWH(36, 30, width - 72, headerHeight),
-      topLeft: const Radius.circular(34),
-      topRight: const Radius.circular(16),
-      bottomLeft: const Radius.circular(18),
-      bottomRight: const Radius.circular(38),
+    final hasMessage = decor.showBlessing && decor.message.trim().isNotEmpty;
+    final headerHeight = hasMessage ? 246.0 : 196.0;
+    final headerRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(28, 24, width - 56, headerHeight),
+      const Radius.circular(34),
     );
-    final double headerCenterX = headerRect.outerRect.center.dx;
-
+    final center = headerRect.outerRect.center.dx;
     canvas.drawRRect(
       headerRect,
       Paint()
@@ -1016,196 +1012,142 @@ class CollageGenerator {
           headerRect.outerRect.topLeft,
           headerRect.outerRect.bottomRight,
           [
-            Colors.white.withValues(alpha: 0.96),
-            decor.secondary.withValues(alpha: 0.26),
-            const Color(0xFFF5E8DA).withValues(alpha: 0.92),
+            decor.primary.withValues(alpha: 0.98),
+            decor.primary.withValues(alpha: 0.72),
+            decor.secondary.withValues(alpha: 0.94),
           ],
-          [0.0, 0.48, 1.0],
+          [0.0, 0.55, 1.0],
         ),
     );
     canvas.drawRRect(
       headerRect,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..shader = ui.Gradient.linear(
-          headerRect.outerRect.topLeft,
-          headerRect.outerRect.topRight,
-          [
-            decor.primary.withValues(alpha: 0.42),
-            const Color(0xFFD7C4B8).withValues(alpha: 0.40),
-          ],
-        ),
+        ..strokeWidth = 2
+        ..color = Colors.white.withValues(alpha: 0.38),
+    );
+    // Hai chấm sáng tạo cảm giác bìa tạp chí, không che phần chữ.
+    _drawSparkle(
+      canvas,
+      Offset(width - 76, 58),
+      15,
+      Colors.white.withValues(alpha: 0.66),
+    );
+    _drawSparkle(
+      canvas,
+      Offset(72, headerHeight + 4),
+      8,
+      Colors.white.withValues(alpha: 0.44),
     );
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(62, 48, 30, 42),
-        const Radius.circular(12),
-      ),
-      Paint()..color = decor.secondary.withValues(alpha: 0.58),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(width - 92, 48, 30, 42),
-        const Radius.circular(12),
-      ),
-      Paint()..color = decor.primary.withValues(alpha: 0.20),
-    );
-
-    final double ribbonWidth = min(390, max(220, width - 84)).toDouble();
-    final ribbonRect = RRect.fromRectAndRadius(
+    final ribbon = RRect.fromRectAndRadius(
       Rect.fromCenter(
-        center: Offset(headerCenterX, 64),
-        width: ribbonWidth,
-        height: 44,
+        center: Offset(center, 58),
+        width: min(330, width - 120),
+        height: 34,
       ),
       const Radius.circular(999),
     );
     canvas.drawRRect(
-      ribbonRect,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          ribbonRect.outerRect.centerLeft,
-          ribbonRect.outerRect.centerRight,
-          [decor.primary, decor.secondary],
-        ),
+      ribbon,
+      Paint()..color = Colors.white.withValues(alpha: 0.18),
     );
     _drawCenteredTextInRect(
       canvas,
       UiCopy.text('copy_ddd02b1c9d5d'),
-      ribbonRect.outerRect,
+      ribbon.outerRect,
       Colors.white,
-      width < 420 ? 15 : 18,
-      letterSpacing: 1.2,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
+      width < 420 ? 12 : 14,
+      letterSpacing: 1.0,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
     );
 
-    final double badgeWidth = min(
-      max(148, decor.badge.length * 10.0 + 36),
-      width - 120,
+    final badgeWidth = min(
+      max(138, decor.badge.length * 8.0 + 30),
+      width - 100,
     ).toDouble();
-    final badgeRect = RRect.fromRectAndRadius(
+    final badge = RRect.fromRectAndRadius(
       Rect.fromCenter(
-        center: Offset(headerCenterX, 133),
+        center: Offset(center, 103),
         width: badgeWidth,
-        height: 38,
+        height: 28,
       ),
       const Radius.circular(999),
     );
     canvas.drawRRect(
-      badgeRect,
-      Paint()..color = Colors.white.withValues(alpha: 0.78),
+      badge,
+      Paint()..color = Colors.white.withValues(alpha: 0.86),
     );
     _drawText(
       canvas,
       decor.badge.toUpperCase(),
-      headerCenterX,
-      123,
+      center,
+      95,
       decor.primary,
-      width < 420 ? 12 : 14,
-      maxWidth: badgeWidth - 18,
-      centerWidth: badgeWidth - 18,
-      letterSpacing: 1.1,
+      width < 420 ? 10 : 11,
+      maxWidth: badgeWidth - 14,
+      centerWidth: badgeWidth - 14,
+      letterSpacing: 0.8,
     );
 
-    const double titleY = 154;
-    final double titleSize = width < 420 ? 44 : 58;
-    final double titleMaxWidth = min(
-      max(190, width - 132).toDouble(),
-      headerRect.outerRect.width - 82,
+    final titleMaxWidth = min(
+      width - 100,
+      headerRect.outerRect.width - 48,
+    ).toDouble();
+    final titleSize = width < 420 ? 35.0 : 48.0;
+    final titleY = hasMessage ? 124.0 : 122.0;
+    final titleH = _drawText(
+      canvas,
+      title,
+      center,
+      titleY,
+      Colors.white,
+      titleSize,
+      maxWidth: titleMaxWidth,
+      centerWidth: titleMaxWidth,
     );
+    final occasionY = titleY + titleH + 6;
     _drawText(
       canvas,
-      title,
-      headerCenterX + 2,
-      titleY + 2,
-      decor.primary.withValues(alpha: 0.16),
-      titleSize,
-      maxWidth: titleMaxWidth,
-      centerWidth: titleMaxWidth,
-    );
-    final double titleH = _drawText(
-      canvas,
-      title,
-      headerCenterX,
-      titleY,
-      decor.primary,
-      titleSize,
-      maxWidth: titleMaxWidth,
-      centerWidth: titleMaxWidth,
-    );
-
-    final double occasionY = titleY + titleH + 14;
-    final double occasionMaxWidth = min(
-      headerRect.outerRect.width - 120,
-      titleMaxWidth + 8,
-    );
-    final double occasionH = _drawText(
-      canvas,
       decor.occasionLabel,
-      headerCenterX,
+      center,
       occasionY,
-      const Color(0xFF5F4B43),
-      25,
-      maxWidth: occasionMaxWidth,
-      centerWidth: occasionMaxWidth,
+      Colors.white.withValues(alpha: 0.88),
+      width < 420 ? 16 : 19,
+      maxWidth: titleMaxWidth,
+      centerWidth: titleMaxWidth,
       isBold: false,
       fontStyle: FontStyle.italic,
     );
-
-    // 4. Message (Lời chúc) - Chỉ vẽ nếu có
-    if (decor.showBlessing && decor.message.trim().isNotEmpty) {
-      final double messageY = occasionY + occasionH + 18;
-      final double messageBoxW = min(
-        width - 136,
-        headerRect.outerRect.width - 56,
-      );
-
-      // Đo chiều cao message để vẽ background chuẩn
-      final paragraphStyle = ui.ParagraphStyle(
-        textAlign: TextAlign.center,
-        fontSize: 19,
-        fontWeight: FontWeight.normal,
-        maxLines: 3,
-        ellipsis: '...',
-      );
-      final paragraphBuilder = ui.ParagraphBuilder(paragraphStyle)
-        ..pushStyle(ui.TextStyle(color: const Color(0xFF6A4C40)))
-        ..addText(decor.message);
-      final paragraph = paragraphBuilder.build()
-        ..layout(ui.ParagraphConstraints(width: messageBoxW - 40));
-
-      final double messageBoxH = paragraph.height + 28;
-      final double messageBoxX = headerCenterX - messageBoxW / 2;
-
+    if (hasMessage) {
+      final messageWidth = min(
+        width - 112,
+        headerRect.outerRect.width - 46,
+      ).toDouble();
       final messageRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(messageBoxX, messageY, messageBoxW, messageBoxH),
-        const Radius.circular(24),
+        Rect.fromLTWH(
+          center - messageWidth / 2,
+          headerHeight - 54,
+          messageWidth,
+          34,
+        ),
+        const Radius.circular(17),
       );
       canvas.drawRRect(
         messageRect,
-        Paint()
-          ..shader = ui.Gradient.linear(
-            messageRect.outerRect.centerLeft,
-            messageRect.outerRect.centerRight,
-            [
-              decor.secondary.withValues(alpha: 0.24),
-              Colors.white.withValues(alpha: 0.70),
-              const Color(0xFFC7D4C8).withValues(alpha: 0.18),
-            ],
-            [0.0, 0.54, 1.0],
-          ),
+        Paint()..color = Colors.white.withValues(alpha: 0.17),
       );
-      canvas.drawRRect(
-        messageRect,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.4
-          ..color = decor.primary.withValues(alpha: 0.16),
+      _drawText(
+        canvas,
+        decor.message,
+        center,
+        headerHeight - 47,
+        Colors.white.withValues(alpha: 0.9),
+        13,
+        maxWidth: messageWidth - 20,
+        centerWidth: messageWidth - 20,
+        isBold: false,
       );
-
-      canvas.drawParagraph(paragraph, Offset(messageBoxX + 20, messageY + 14));
     }
   }
 
@@ -1244,6 +1186,205 @@ class CollageGenerator {
       isBold: false,
       fontStyle: FontStyle.italic,
     );
+  }
+
+  /// Họa tiết nền riêng cho từng bố cục. Lớp này nằm dưới ảnh nên tạo chiều sâu
+  /// mà không làm mất trọng tâm là kỷ niệm của người dùng.
+  static void _drawStyleAtmosphere(
+    Canvas canvas,
+    double width,
+    double height,
+    String style,
+    CollageDecor decor,
+    CollageRenderOptions options,
+  ) {
+    final soft = Paint()
+      ..color = decor.primary.withValues(alpha: 0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    final faint = Paint()
+      ..color = decor.secondary.withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    switch (style) {
+      case 'grid':
+        for (var x = 70.0; x < width; x += 180) {
+          canvas.drawLine(Offset(x, 246), Offset(x, height - 72), faint);
+        }
+        for (var y = 286.0; y < height - 70; y += 180) {
+          canvas.drawLine(Offset(34, y), Offset(width - 34, y), faint);
+        }
+        for (var i = 0; i < 10; i++) {
+          _drawSparkle(
+            canvas,
+            Offset(
+              58 + ((i * 137) % max(1, width - 116)).toDouble(),
+              268 + ((i * 83) % max(1, height - 350)).toDouble(),
+            ),
+            5 + (i % 3) * 2,
+            decor.primary.withValues(alpha: 0.22),
+          );
+        }
+        break;
+      case 'masonry':
+        final path = Path()
+          ..moveTo(36, 300)
+          ..cubicTo(
+            width * .10,
+            height * .42,
+            width * .04,
+            height * .58,
+            40,
+            height - 110,
+          )
+          ..moveTo(width - 36, 300)
+          ..cubicTo(
+            width * .90,
+            height * .44,
+            width * .96,
+            height * .62,
+            width - 42,
+            height - 110,
+          );
+        canvas.drawPath(path, soft);
+        for (final point in <Offset>[
+          const Offset(58, 370),
+          const Offset(76, 520),
+          Offset(width - 60, 430),
+          Offset(width - 78, 620),
+        ]) {
+          _drawLeaf(
+            canvas,
+            point,
+            decor.secondary.withValues(alpha: 0.36),
+            point.dx < width / 2 ? -0.5 : 0.5,
+          );
+        }
+        break;
+      case 'polaroid':
+        for (final tape in <(Offset, double)>[
+          (Offset(width * .18, 278), -0.16),
+          (Offset(width * .76, 328), 0.12),
+          (Offset(width * .34, height - 122), 0.08),
+        ]) {
+          canvas.save();
+          canvas.translate(tape.$1.dx, tape.$1.dy);
+          canvas.rotate(tape.$2);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              const Rect.fromLTWH(-48, -13, 96, 26),
+              const Radius.circular(5),
+            ),
+            Paint()..color = decor.secondary.withValues(alpha: 0.34),
+          );
+          canvas.restore();
+        }
+        break;
+      case 'scatter':
+        canvas.drawOval(
+          Rect.fromLTWH(70, 250, width - 140, height - 330),
+          faint,
+        );
+        canvas.drawOval(
+          Rect.fromLTWH(120, 300, width - 240, height - 430),
+          soft,
+        );
+        for (var i = 0; i < 9; i++) {
+          final angle = (i / 9) * pi * 2;
+          _drawSparkle(
+            canvas,
+            Offset(
+              width / 2 + cos(angle) * (width * .38),
+              height / 2 + sin(angle) * (height * .35),
+            ),
+            7,
+            decor.primary.withValues(alpha: 0.28),
+          );
+        }
+        break;
+      case 'story':
+        const x = 48.0;
+        canvas.drawLine(Offset(x, 286), Offset(x, height - 90), soft);
+        for (var i = 0; i < 5; i++) {
+          final y = 330 + i * ((height - 460) / 4);
+          canvas.drawCircle(
+            Offset(x, y),
+            8,
+            Paint()..color = decor.primary.withValues(alpha: 0.25),
+          );
+          canvas.drawCircle(
+            Offset(x, y),
+            3,
+            Paint()..color = decor.primary.withValues(alpha: 0.72),
+          );
+        }
+        break;
+      case 'poster':
+        final center = Offset(width * .83, 270);
+        for (var i = 0; i < 14; i++) {
+          final angle = -pi * .95 + i * (pi * 1.9 / 13);
+          final end =
+              center +
+              Offset(cos(angle) * width * .72, sin(angle) * width * .72);
+          canvas.drawLine(center, end, faint);
+        }
+        _drawSun(canvas, center, 42, decor.secondary.withValues(alpha: 0.34));
+        break;
+      case 'heart':
+        for (final point in <Offset>[
+          Offset(width * .14, 310),
+          Offset(width * .86, 320),
+          Offset(width * .12, height - 150),
+          Offset(width * .88, height - 150),
+        ]) {
+          _drawHeart(canvas, point, 20, decor.primary.withValues(alpha: 0.24));
+        }
+        break;
+    }
+  }
+
+  static void _drawLeaf(
+    Canvas canvas,
+    Offset center,
+    Color color,
+    double rotation,
+  ) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotation);
+    final path = Path()
+      ..moveTo(0, -18)
+      ..cubicTo(15, -13, 17, 5, 0, 18)
+      ..cubicTo(-17, 5, -15, -13, 0, -18)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+    canvas.drawLine(
+      const Offset(0, -12),
+      const Offset(0, 12),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.38)
+        ..strokeWidth = 2,
+    );
+    canvas.restore();
+  }
+
+  static void _drawSun(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Color color,
+  ) {
+    canvas.drawCircle(center, radius, Paint()..color = color);
+    for (var i = 0; i < 8; i++) {
+      final angle = i * pi / 4;
+      canvas.drawLine(
+        center + Offset(cos(angle) * (radius + 8), sin(angle) * (radius + 8)),
+        center + Offset(cos(angle) * (radius + 21), sin(angle) * (radius + 21)),
+        Paint()
+          ..color = color.withValues(alpha: 0.7)
+          ..strokeWidth = 4,
+      );
+    }
   }
 
   static void _drawSelectedStickers(
@@ -1562,8 +1703,8 @@ class CollageGenerator {
     final int cols = sqrt(n).ceil();
     final int rows = (n / cols).ceil();
     const double padding = 22.0;
-    const double headerH = 320.0; // Tăng từ 260 lên 320
-    const double footerH = 120.0;
+    const double headerH = 270.0;
+    const double footerH = 84.0;
     final double photoScale = options.safePhotoScale;
     final double cellW = 280.0 * photoScale;
     final double cellH = 280.0 * photoScale;
@@ -1576,6 +1717,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'grid',
+      decor,
+      options,
+    );
     _drawHeader(
       canvas,
       contentWidth,
@@ -1628,8 +1777,8 @@ class CollageGenerator {
 
     final double colWidth = 280.0 * options.safePhotoScale;
     const double padding = 22.0;
-    const double headerH = 320.0;
-    const double footerH = 120.0;
+    const double headerH = 270.0;
+    const double footerH = 84.0;
     final double tileHeight = colWidth * 1.02;
 
     final double contentWidth = cols * colWidth + padding * (cols + 1);
@@ -1669,6 +1818,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'masonry',
+      decor,
+      options,
+    );
     _drawHeader(
       canvas,
       contentWidth,
@@ -1727,6 +1884,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'polaroid',
+      decor,
+      options,
+    );
     _drawHeader(
       canvas,
       contentWidth,
@@ -1735,7 +1900,7 @@ class CollageGenerator {
     );
 
     const double marginX = 200;
-    const double marginY = 320;
+    const double marginY = 270;
     final double availW = contentWidth - marginX * 2;
     final double availH = contentHeight - marginY - 200;
 
@@ -1835,6 +2000,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'scatter',
+      decor,
+      options,
+    );
 
     _drawHeader(
       canvas,
@@ -1844,7 +2017,7 @@ class CollageGenerator {
     );
 
     const double marginX = 150;
-    const double marginY = 320;
+    const double marginY = 270;
     final double availW = contentWidth - marginX * 2;
     final double availH = contentHeight - marginY - 170;
 
@@ -1916,8 +2089,8 @@ class CollageGenerator {
   ) {
     final double photoScale = options.safePhotoScale;
     const double padding = 28.0;
-    const double headerH = 320.0;
-    const double footerH = 118.0;
+    const double headerH = 270.0;
+    const double footerH = 84.0;
     final double contentWidth = max(940.0, 1020.0 * photoScale);
     final double innerWidth = contentWidth - padding * 2;
     final double heroHeight = innerWidth * 0.92;
@@ -1964,6 +2137,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'story',
+      decor,
+      options,
+    );
     _drawHeader(
       canvas,
       contentWidth,
@@ -2017,8 +2198,8 @@ class CollageGenerator {
   ) {
     final double photoScale = options.safePhotoScale;
     const double padding = 28.0;
-    const double headerH = 320.0;
-    const double footerH = 118.0;
+    const double headerH = 270.0;
+    const double footerH = 84.0;
     final double contentWidth = max(1180.0, 1320.0 * photoScale);
     final double innerWidth = contentWidth - padding * 2;
     final double leadWidth = images.length == 1
@@ -2097,6 +2278,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'poster',
+      decor,
+      options,
+    );
     _drawHeader(
       canvas,
       contentWidth,
@@ -2147,6 +2336,14 @@ class CollageGenerator {
     _drawBackground(canvas, frame.width, frame.height, decor, options);
     canvas.save();
     canvas.translate(frame.offsetX, frame.offsetY);
+    _drawStyleAtmosphere(
+      canvas,
+      contentWidth,
+      contentHeight,
+      'heart',
+      decor,
+      options,
+    );
     _drawHeader(
       canvas,
       contentWidth,

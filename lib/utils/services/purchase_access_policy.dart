@@ -16,10 +16,11 @@ String purchaseAccountToken(String uid) {
       '${value.substring(20)}';
 }
 
-/// Giữ kết quả VIP 2 phút (trước là 10 giây): nhiều màn hình hỏi VIP khi mở app làm đọc lặp
-/// `users/{uid}/vip` và `houses/{id}/vip`. Luồng mua/khôi phục luôn `forceRefresh`, hết hạn
-/// gói vẫn chặn ngay theo `expiresAtMs`; hạn mức thật do máy chủ quyết định.
-const int purchaseAccessReuseWindowMs = 120000;
+/// Giữ kết quả VIP 10 phút (trước là 2 phút, rồi 10 giây): ba màn hình nghe `vipAccessStream`
+/// hỏi lại mỗi 2 giây, nên hết hạn cache là đọc lại `users/{uid}/vip` và `houses/{id}/vip`
+/// (đo 13/10/2026: 2 phút/lần khi để yên app). Mở lại app, luồng mua/khôi phục luôn làm mới;
+/// hết hạn gói vẫn chặn ngay theo `expiresAtMs`; hạn mức thật do máy chủ quyết định.
+const int purchaseAccessReuseWindowMs = 600000;
 
 bool canReusePurchaseAccess({
   required String uid,

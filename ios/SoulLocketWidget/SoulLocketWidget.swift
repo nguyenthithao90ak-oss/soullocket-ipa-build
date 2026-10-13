@@ -37,6 +37,7 @@ struct CoupleWidgetData {
     var diaryLayoutKey: String = "single"
     var loveDateText: String = ""
     var relationshipTimeZone: String = ""
+    var weatherBackground = WidgetWeatherSnapshot()
 
     var relationshipCalendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -141,7 +142,8 @@ struct CoupleWidgetData {
             photoFrameKey: WidgetAppearanceDesign.frame(defaults?.string(forKey: "photoFrameKey") ?? "rounded"),
             diaryLayoutKey: WidgetAppearanceDesign.layout(defaults?.string(forKey: "diaryLayoutKey") ?? "single"),
             loveDateText: defaults?.string(forKey: "loveDateText") ?? "",
-            relationshipTimeZone: defaults?.string(forKey: "relationshipTimeZone") ?? ""
+            relationshipTimeZone: defaults?.string(forKey: "relationshipTimeZone") ?? "",
+            weatherBackground: WidgetWeatherSnapshot.load(defaults)
         )
     }
 }
@@ -176,7 +178,11 @@ struct CoupleWidgetProvider: TimelineProvider {
             dates.append(midnight)
             dates = Array(Set(dates)).sorted()
         }
-        let entries = dates.map { CoupleEntry(date: $0, data: data) }
+        if data.weatherBackground.proExpiresAtMs > 0 {
+            let expiry = Date(timeIntervalSince1970: data.weatherBackground.proExpiresAtMs / 1000)
+            if expiry > now, let last = dates.last, expiry <= last { dates.append(expiry) }
+        }
+        let entries = Array(Set(dates)).sorted().map { CoupleEntry(date: $0, data: data) }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 }

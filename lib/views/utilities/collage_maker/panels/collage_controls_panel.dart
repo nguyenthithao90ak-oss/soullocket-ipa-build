@@ -55,80 +55,83 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: presets.map((preset) {
-                final style = preset['style']! as String;
-                final aspect = preset['aspect']! as String;
-                final selected =
-                    _selectedStyle == style && _selectedAspectRatio == aspect;
-                final icon = preset['icon']! as IconData;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      setState(() {
-                        _selectedStyle = style;
-                        _selectedAspectRatio = aspect;
-                        _generatedCollageBytes = null;
-                        _hasFullQualityRender = false;
-                      });
-                      if (_getFilteredUrls().isNotEmpty) {
-                        _generateCollage(
-                          bypassDebounce: true,
-                          randomizeLayout: true,
-                        );
-                      }
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: 112,
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? const Color(0xFFF2E4DA)
-                            : Colors.white.withValues(alpha: 0.74),
-                        borderRadius: _paperRadius(flipped: !selected),
-                        border: Border.all(
-                          color: selected ? _paperRoseDeep : _paperLine,
-                          width: selected ? 2 : 1.2,
-                        ),
-                        boxShadow: _paperShadow(
-                          selected ? _paperRoseDeep : _paperCocoa,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                           _buildQuickPresetPreview(
-                             style: style,
-                             icon: icon,
-                             selected: selected,
-                           ),
-                           const SizedBox(height: 8),
-                          Text(
-                            preset['label']! as String,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 12.6,
-                              fontWeight: FontWeight.w900,
-                              color: selected ? _paperRoseDeep : _paperInk,
+              children: presets
+                  .map((preset) {
+                    final style = preset['style']! as String;
+                    final aspect = preset['aspect']! as String;
+                    final selected =
+                        _selectedStyle == style &&
+                        _selectedAspectRatio == aspect;
+                    final icon = preset['icon']! as IconData;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() {
+                            _selectedStyle = style;
+                            _selectedAspectRatio = aspect;
+                            _generatedCollageBytes = null;
+                            _hasFullQualityRender = false;
+                          });
+                          if (_getFilteredUrls().isNotEmpty) {
+                            _generateCollage(
+                              bypassDebounce: true,
+                              randomizeLayout: true,
+                            );
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 112,
+                          padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? const Color(0xFFF2E4DA)
+                                : Colors.white.withValues(alpha: 0.74),
+                            borderRadius: _paperRadius(flipped: !selected),
+                            border: Border.all(
+                              color: selected ? _paperRoseDeep : _paperLine,
+                              width: selected ? 2 : 1.2,
+                            ),
+                            boxShadow: _paperShadow(
+                              selected ? _paperRoseDeep : _paperCocoa,
                             ),
                           ),
-                          const SizedBox(height: 1),
-                          Text(
-                            preset['hint']! as String,
-                            style: SLTheme.quicksand(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: _paperMuted,
-                            ),
+                          child: Column(
+                            children: [
+                              _buildQuickPresetPreview(
+                                style: style,
+                                icon: icon,
+                                selected: selected,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                preset['label']! as String,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                  fontSize: 12.6,
+                                  fontWeight: FontWeight.w900,
+                                  color: selected ? _paperRoseDeep : _paperInk,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                preset['hint']! as String,
+                                style: SLTheme.quicksand(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: _paperMuted,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }).toList(growable: false),
+                    );
+                  })
+                  .toList(growable: false),
             ),
           ),
         ],
@@ -155,37 +158,127 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
     switch (style) {
       case 'story':
         blocks = [
-          Positioned(left: 16, top: 3, bottom: 3, width: 24, child: DecoratedBox(decoration: image)),
-          Positioned(left: 44, top: 9, right: 9, height: 12, child: DecoratedBox(decoration: image)),
-          Positioned(left: 44, bottom: 9, right: 9, height: 12, child: DecoratedBox(decoration: image)),
+          Positioned(
+            left: 16,
+            top: 3,
+            bottom: 3,
+            width: 24,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 44,
+            top: 9,
+            right: 9,
+            height: 12,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 44,
+            bottom: 9,
+            right: 9,
+            height: 12,
+            child: DecoratedBox(decoration: image),
+          ),
         ];
         break;
       case 'poster':
         blocks = [
-          Positioned(left: 6, top: 7, right: 6, height: 18, child: DecoratedBox(decoration: image)),
-          Positioned(left: 14, bottom: 6, width: 25, height: 8, child: DecoratedBox(decoration: image)),
-          Positioned(right: 14, bottom: 6, width: 25, height: 8, child: DecoratedBox(decoration: image)),
+          Positioned(
+            left: 6,
+            top: 7,
+            right: 6,
+            height: 18,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 14,
+            bottom: 6,
+            width: 25,
+            height: 8,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            right: 14,
+            bottom: 6,
+            width: 25,
+            height: 8,
+            child: DecoratedBox(decoration: image),
+          ),
         ];
         break;
       case 'polaroid':
         blocks = [
-          Positioned(left: 9, top: 7, width: 25, height: 24, child: DecoratedBox(decoration: image)),
-          Positioned(right: 9, top: 11, width: 25, height: 24, child: DecoratedBox(decoration: image)),
+          Positioned(
+            left: 9,
+            top: 7,
+            width: 25,
+            height: 24,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            right: 9,
+            top: 11,
+            width: 25,
+            height: 24,
+            child: DecoratedBox(decoration: image),
+          ),
         ];
         break;
       case 'heart':
         blocks = [
-          Positioned(left: 17, top: 6, width: 20, height: 18, child: DecoratedBox(decoration: image)),
-          Positioned(right: 17, top: 6, width: 20, height: 18, child: DecoratedBox(decoration: image)),
-          Positioned(left: 25, bottom: 4, width: 20, height: 17, child: DecoratedBox(decoration: image)),
+          Positioned(
+            left: 17,
+            top: 6,
+            width: 20,
+            height: 18,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            right: 17,
+            top: 6,
+            width: 20,
+            height: 18,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 25,
+            bottom: 4,
+            width: 20,
+            height: 17,
+            child: DecoratedBox(decoration: image),
+          ),
         ];
         break;
       default:
         blocks = [
-          Positioned(left: 7, top: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
-          Positioned(right: 7, top: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
-          Positioned(left: 7, bottom: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
-          Positioned(right: 7, bottom: 6, width: 22, height: 13, child: DecoratedBox(decoration: image)),
+          Positioned(
+            left: 7,
+            top: 6,
+            width: 22,
+            height: 13,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            right: 7,
+            top: 6,
+            width: 22,
+            height: 13,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 7,
+            bottom: 6,
+            width: 22,
+            height: 13,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            right: 7,
+            bottom: 6,
+            width: 22,
+            height: 13,
+            child: DecoratedBox(decoration: image),
+          ),
         ];
     }
 
@@ -231,93 +324,100 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: _CollageMakerScreenState._aspectPresets.map((preset) {
-              final bool isSelected = preset.id == _selectedAspectRatio;
-              final double previewWidth = preset.ratio >= 1 ? 30 : 20;
-              final double previewHeight =
-                  preset.ratio >= 1 ? previewWidth / preset.ratio : 34;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    setState(() {
-                      _selectedAspectRatio = preset.id;
-                      _generatedCollageBytes = null;
-                    });
-                    if (_getFilteredUrls().isNotEmpty) {
-                      _generateCollage();
-                    }
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: compact ? 102 : 112,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFF2E4DA)
-                          : const Color(0xFFFFF8F2),
-                      borderRadius: _paperRadius(flipped: !isSelected),
-                      border: Border.all(
-                        color: isSelected ? _paperRoseDeep : _paperLine,
-                        width: isSelected ? 2 : 1.2,
-                      ),
-                      boxShadow: _paperShadow(
-                        isSelected ? _paperRoseDeep : _paperCocoa,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 36,
-                          height: 34,
-                          child: Center(
-                            child: Container(
-                              width: previewWidth,
-                              height: previewHeight,
-                              decoration: BoxDecoration(
-                                color: isSelected ? _paperRoseDeep : _paperMist,
-                                borderRadius: _paperRadius(flipped: true),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  width: 1.2,
+            children: _CollageMakerScreenState._aspectPresets
+                .map((preset) {
+                  final bool isSelected = preset.id == _selectedAspectRatio;
+                  final double previewWidth = preset.ratio >= 1 ? 30 : 20;
+                  final double previewHeight = preset.ratio >= 1
+                      ? previewWidth / preset.ratio
+                      : 34;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        setState(() {
+                          _selectedAspectRatio = preset.id;
+                          _generatedCollageBytes = null;
+                        });
+                        if (_getFilteredUrls().isNotEmpty) {
+                          _generateCollage();
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: compact ? 102 : 112,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFFF2E4DA)
+                              : const Color(0xFFFFF8F2),
+                          borderRadius: _paperRadius(flipped: !isSelected),
+                          border: Border.all(
+                            color: isSelected ? _paperRoseDeep : _paperLine,
+                            width: isSelected ? 2 : 1.2,
+                          ),
+                          boxShadow: _paperShadow(
+                            isSelected ? _paperRoseDeep : _paperCocoa,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 36,
+                              height: 34,
+                              child: Center(
+                                child: Container(
+                                  width: previewWidth,
+                                  height: previewHeight,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? _paperRoseDeep
+                                        : _paperMist,
+                                    borderRadius: _paperRadius(flipped: true),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      width: 1.2,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Text(
+                              preset.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isSelected ? _paperRoseDeep : _paperInk,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              preset.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 10.2,
+                                fontWeight: FontWeight.w700,
+                                color: _paperMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          preset.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: isSelected ? _paperRoseDeep : _paperInk,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          preset.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 10.2,
-                            fontWeight: FontWeight.w700,
-                            color: _paperMuted,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(growable: false),
+                  );
+                })
+                .toList(growable: false),
           ),
         ),
         SLSpacing.h8,
@@ -508,88 +608,90 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: _CollageMakerScreenState._backgroundPresets.map((preset) {
-              final bool selected = preset.id == _selectedBackgroundTheme;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    setState(() {
-                      _selectedBackgroundTheme = preset.id;
-                      _generatedCollageBytes = null;
-                    });
-                    if (_getFilteredUrls().isNotEmpty) {
-                      _generateCollage();
-                    }
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: compact ? 112 : 124,
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? preset.background
-                          : const Color(0xFFFFF9F2),
-                      borderRadius: _paperRadius(flipped: !selected),
-                      border: Border.all(
-                        color: selected ? preset.accent : _paperLine,
-                        width: selected ? 2 : 1.2,
-                      ),
-                      boxShadow: _paperShadow(
-                        selected ? preset.accent : _paperCocoa,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 34,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: preset.accent.withValues(
-                                alpha: selected ? 0.42 : 0.22,
+            children: _CollageMakerScreenState._backgroundPresets
+                .map((preset) {
+                  final bool selected = preset.id == _selectedBackgroundTheme;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        setState(() {
+                          _selectedBackgroundTheme = preset.id;
+                          _generatedCollageBytes = null;
+                        });
+                        if (_getFilteredUrls().isNotEmpty) {
+                          _generateCollage();
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: compact ? 112 : 124,
+                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? preset.background
+                              : const Color(0xFFFFF9F2),
+                          borderRadius: _paperRadius(flipped: !selected),
+                          border: Border.all(
+                            color: selected ? preset.accent : _paperLine,
+                            width: selected ? 2 : 1.2,
+                          ),
+                          boxShadow: _paperShadow(
+                            selected ? preset.accent : _paperCocoa,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 34,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.72),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: preset.accent.withValues(
+                                    alpha: selected ? 0.42 : 0.22,
+                                  ),
+                                ),
+                              ),
+                              child: Icon(
+                                preset.icon,
+                                size: 19,
+                                color: preset.accent,
                               ),
                             ),
-                          ),
-                          child: Icon(
-                            preset.icon,
-                            size: 19,
-                            color: preset.accent,
-                          ),
+                            const SizedBox(height: 9),
+                            Text(
+                              preset.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 13.2,
+                                fontWeight: FontWeight.w800,
+                                color: selected ? preset.accent : _paperInk,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              preset.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 10.2,
+                                fontWeight: FontWeight.w700,
+                                color: _paperMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 9),
-                        Text(
-                          preset.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 13.2,
-                            fontWeight: FontWeight.w800,
-                            color: selected ? preset.accent : _paperInk,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          preset.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 10.2,
-                            fontWeight: FontWeight.w700,
-                            color: _paperMuted,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(growable: false),
+                  );
+                })
+                .toList(growable: false),
           ),
         ),
         SLSpacing.h8,
@@ -717,37 +819,99 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
 
   Widget _buildMemorySourceOptions({required bool compact}) {
     final hasPhotos = _memoryPhotos.isNotEmpty;
+    final selectedCount = _getFilteredMemoryItems().length;
     return Container(
       key: const ValueKey('memory-source-options'),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      padding: EdgeInsets.fromLTRB(12, compact ? 12 : 14, 12, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8EFE5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _paperLine.withValues(alpha: 0.85)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF7EF), Color(0xFFF8EFE6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _paperRose.withValues(alpha: 0.42)),
+        boxShadow: [
+          BoxShadow(
+            color: _paperRoseDeep.withValues(alpha: 0.07),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.collections_bookmark_rounded,
-                color: _paperRoseDeep,
-                size: 18,
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  _allMemoryPhotosLabel(),
-                  style: SLTheme.quicksand(
-                    color: _paperInk,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w900,
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _paperRoseDeep.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _paperRoseDeep.withValues(alpha: 0.18),
                   ),
                 ),
+                child: const Icon(
+                  Icons.auto_stories_rounded,
+                  color: _paperRoseDeep,
+                  size: 20,
+                ),
               ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('home_nhknim_6f622f'),
+                      style: SLTheme.quicksand(
+                        color: _paperInk,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasPhotos
+                          ? L10nScope.of(context).format(
+                              'ui_utilities_value1_photos_df06c7',
+                              {'value1': selectedCount},
+                            )
+                          : _allMemoryPhotosLabel(),
+                      style: SLTheme.quicksand(
+                        color: _paperMuted,
+                        fontSize: 11.2,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: context.tr('auth_guide_short'),
+                onPressed: _isMemoryLoading ? null : _fetchMemoryPhotos,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  foregroundColor: _paperRoseDeep,
+                  backgroundColor: Colors.white.withValues(alpha: 0.64),
+                ),
+                icon: _isMemoryLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 19),
+              ),
+              const SizedBox(width: 4),
               _buildMemoryInfoChip(
-                icon: Icons.cloud_done_rounded,
+                icon: hasPhotos
+                    ? Icons.cloud_done_rounded
+                    : Icons.cloud_off_rounded,
                 label: hasPhotos
                     ? context.tr('memory_puzzle_cached')
                     : context.tr('util_0nh_e58f05'),
@@ -755,8 +919,47 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
               ),
             ],
           ),
+          if (_isMemoryLoading && !hasPhotos) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: const LinearProgressIndicator(
+                minHeight: 4,
+                backgroundColor: Color(0xFFEAD8CA),
+                valueColor: AlwaysStoppedAnimation<Color>(_paperRoseDeep),
+              ),
+            ),
+          ],
+          if (hasPhotos) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              height: compact ? 82 : 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: min(_memoryPhotos.length, 12),
+                separatorBuilder: (_, __) => const SizedBox(width: 9),
+                itemBuilder: (context, index) => _buildMemoryCoverTile(
+                  _memoryPhotos[index],
+                  compact: compact,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => _showMemoryPickerSheet(),
+                icon: const Icon(Icons.tune_rounded, size: 17),
+                label: Text(context.tr('util_tchn_0513f1')),
+                style: TextButton.styleFrom(
+                  foregroundColor: _paperRoseDeep,
+                  minimumSize: const Size(48, 42),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                ),
+              ),
+            ),
+          ],
           if (_availableMonths.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             Text(
               context.tr('collage_choose_time'),
               style: SLTheme.quicksand(
@@ -784,7 +987,8 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                           final ts = item['ts'] as int? ?? 0;
                           if (ts == 0) return false;
                           final date = DateTime.fromMillisecondsSinceEpoch(ts);
-                          return '${date.year}-${date.month.toString().padLeft(2, '0')}' == month;
+                          return '${date.year}-${date.month.toString().padLeft(2, '0')}' ==
+                              month;
                         }).length,
                       ),
                     ),
@@ -795,7 +999,11 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
           ],
           const SizedBox(height: 8),
           Text(
-            context.tr('ui_utilities_choose_2_to_9_photos_choose_a_a76a0d'),
+            _hasMemoryLoadError
+                ? context.tr('util_chathchnnh_f9d997')
+                : context.tr(
+                    'ui_utilities_choose_2_to_9_photos_choose_a_a76a0d',
+                  ),
             maxLines: compact ? 3 : 2,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
@@ -810,7 +1018,122 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
     );
   }
 
-  Widget _buildMemoryMonthChip({required String keyValue, required String label}) {
+  Widget _buildMemoryCoverTile(
+    Map<String, dynamic> item, {
+    required bool compact,
+    VoidCallback? onTap,
+  }) {
+    final url = CollageMemoryPhotos.thumbnail(item);
+    final selected = _selectedMemoryPhotoKeys.contains(_memoryPhotoKey(item));
+    final isPrivate = PrivateMemoryLinkPolicy.isPrivate(item);
+    final ts = item['ts'] as int? ?? 0;
+    final date = ts > 0 ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
+    final width = compact ? 106.0 : 124.0;
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap ?? () => _toggleMemoryPhoto(item),
+          borderRadius: BorderRadius.circular(17),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(17),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(
+                  color: const Color(0xFFEEDFD3),
+                  child: isPrivate
+                      ? PrivateDiaryImage(
+                          houseId: widget.houseId,
+                          memoryId: _memoryPhotoKey(item),
+                          fit: BoxFit.cover,
+                          cacheWidth: 360,
+                          placeholderCacheWidth: 360,
+                        )
+                      : url.isEmpty
+                      ? const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: _paperMuted,
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 360,
+                          placeholder: (_, __) => const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const Icon(
+                            Icons.broken_image_outlined,
+                            color: _paperMuted,
+                          ),
+                        ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.56),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (selected)
+                  Positioned(
+                    top: 7,
+                    right: 7,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: _paperRoseDeep,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                if (date != null)
+                  Positioned(
+                    left: 8,
+                    right: 8,
+                    bottom: 7,
+                    child: Text(
+                      _formatDateLabel(date),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMemoryMonthChip({
+    required String keyValue,
+    required String label,
+  }) {
     final selected = _selectedMonth == keyValue;
     return Padding(
       padding: const EdgeInsets.only(right: 7),
@@ -854,7 +1177,9 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
           Text(
             count == 0
                 ? context.tr('collage_tap_select_photos')
-                : context.tr('collage_selected_photo_count').replaceAll('{count}', '$count'),
+                : context
+                      .tr('collage_selected_photo_count')
+                      .replaceAll('{count}', '$count'),
             style: SLTheme.quicksand(
               color: _paperInk,
               fontSize: 12.5,
