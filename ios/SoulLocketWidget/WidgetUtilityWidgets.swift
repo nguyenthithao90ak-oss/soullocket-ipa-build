@@ -586,7 +586,7 @@ struct WidgetSleepEventView: View {
                 }
             }.padding(large ? 16 : 12).frame(width:proxy.size.width,height:proxy.size.height)
         }.clipShape(RoundedRectangle(cornerRadius:24))
-         .modifier(WidgetUtilityBackground(kind:kind, themeKey:data.themeKey, alternate:alternate))
+         .modifier(WidgetUtilityBackground(kind:kind, themeKey:data.themeKey, alternate:alternate, weather:data.weatherBackground, referenceDate:date))
          .animation(data.animated && !reduceMotion ? .easeInOut(duration:0.4) : nil, value:alternate)
          .widgetURL(URL(string:"soullocket://widget?action="+kind.action)).privacySensitive()
     }
