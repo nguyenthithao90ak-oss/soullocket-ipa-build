@@ -155,10 +155,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _syncBgmWithSound() {
     // Tuần tự hóa lệnh: trở lại app tiếp tục bản nhạc đang phát.
     _bgmSyncQueue = _bgmSyncQueue.then((_) async {
-      if (!mounted ||
-          _audioDisposed ||
-          !_audioSettingsLoaded ||
-          !_audioReady) {
+      if (!mounted || _audioDisposed || !_audioSettingsLoaded || !_audioReady) {
         return;
       }
       try {
@@ -665,7 +662,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final Color accent =
         _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)];
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
-    const bool simpleParticles = true;
+    const bool simpleParticles = false;
     final int particleCount = subtle
         ? min((4 + clearedCount).clamp(4, 8), profile.subtleParticleCap)
         : min((7 + (clearedCount * 2)).clamp(8, 14), profile.strongParticleCap);

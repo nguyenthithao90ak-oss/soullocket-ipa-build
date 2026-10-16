@@ -6,6 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/gps_history_cleanup.dart';
 
 typedef GeofenceCallback =
     void Function(String zoneName, double distanceMeters);
@@ -299,10 +300,13 @@ class GpsTrackerService {
       return;
     }
 
-    final updates = <String, dynamic>{
-      for (final key in raw.keys) 'gps_history/$houseId/$role/$key': null,
-    };
-    await _db.ref().update(updates);
+    for (final updates in expiredGpsHistoryDeletionBatches(
+      houseId: houseId,
+      role: role,
+      expiredDays: raw,
+    )) {
+      await _db.ref().update(updates);
+    }
   }
 
   Future<void> _trimOverflowHistoryPoints({

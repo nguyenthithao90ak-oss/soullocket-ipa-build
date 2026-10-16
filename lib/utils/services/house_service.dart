@@ -19,19 +19,6 @@ import 'offline_cache_service.dart';
 import 'secure_storage_service.dart';
 import 'device_installation_identity.dart';
 
-class HouseCreationOtpRequiredException implements Exception {
-  final String maskedEmail;
-  final int createdCount;
-
-  const HouseCreationOtpRequiredException({
-    required this.maskedEmail,
-    required this.createdCount,
-  });
-
-  @override
-  String toString() => UiCopy.text('copy_982f13993be4');
-}
-
 class HouseService {
   HouseService({
     DatabaseReference? databaseRef,
@@ -284,29 +271,6 @@ class HouseService {
         (_isDebugAppCheckFailure(error));
   }
 
-  HouseCreationOtpRequiredException? _otpRequiredFromError(
-    FirebaseFunctionsException error,
-  ) {
-    final message = (error.message ?? '').trim();
-    final details = error.details;
-    Map<String, dynamic>? detailMap;
-    if (details is Map) {
-      detailMap = Map<String, dynamic>.from(
-        Map<dynamic, dynamic>.from(details),
-      );
-    }
-    final reason = detailMap?['reason']?.toString().trim() ?? '';
-    if (message != 'HOUSE_CREATION_OTP_REQUIRED' &&
-        reason != 'house_creation_otp_required') {
-      return null;
-    }
-    return HouseCreationOtpRequiredException(
-      maskedEmail: detailMap?['maskedEmail']?.toString().trim() ?? '',
-      createdCount:
-          int.tryParse(detailMap?['createdCount']?.toString() ?? '') ?? 3,
-    );
-  }
-
   bool _isDeviceRequiredError(FirebaseFunctionsException error) {
     final message = (error.message ?? '').trim();
     final details = error.details;
@@ -323,6 +287,55 @@ class HouseService {
     return false;
   }
 
+  // iPhone mở app lần đầu phải lấy mã DeviceCheck trước khi gửi, còn máy chủ
+  // cần ~7–8 giây để tạo nhà; mức 12 giây cũ từng hết giờ đúng lúc nhà vừa tạo xong.
+  static const Duration _createHouseCallTimeout = Duration(seconds: 40);
+
+  bool _mayHaveCreatedHouse(FirebaseFunctionsException error) {
+    final code = error.code.trim().toLowerCase();
+    return code == 'deadline-exceeded' ||
+        code == 'unavailable' ||
+        code == 'aborted' ||
+        code == 'internal' ||
+        code == 'unknown';
+  }
+
+  /// Lượt gọi tạo nhà bị hết giờ/mất kết nối vẫn có thể đã được máy chủ làm xong
+  /// (`createHouseSecure` idempotent theo UID). Đọc lại vài lần trước khi báo lỗi
+  /// để người dùng không bị kẹt ở màn tạo nhà dù nhà đã có.
+  @visibleForTesting
+  Future<String?> recoverHouseCreatedByServer(
+    String uid, {
+    List<Duration> delays = const [
+      Duration.zero,
+      Duration(seconds: 2),
+      Duration(seconds: 4),
+    ],
+  }) async {
+    for (final delay in delays) {
+      if (delay > Duration.zero) {
+        await Future<void>.delayed(delay);
+      }
+      if (_auth.currentUser?.uid != uid) return null;
+      try {
+        final snap = await _dbRef
+            .child('users/$uid/houseId')
+            .get()
+            .timeout(const Duration(seconds: 5));
+        if (_auth.currentUser?.uid != uid) return null;
+        final houseId = snap.value?.toString().trim() ?? '';
+        if (houseId.isNotEmpty &&
+            await _validateHouseMembership(uid, houseId)) {
+          if (_auth.currentUser?.uid != uid) return null;
+          return houseId;
+        }
+      } catch (error) {
+        debugPrint('[HouseService] Recover created house skipped: $error');
+      }
+    }
+    return null;
+  }
+
   Future<HttpsCallableResult<dynamic>> _callCreateHouseSecureWithRetry(
     Map<String, dynamic> payload, {
     required String expectedUid,
@@ -334,14 +347,10 @@ class HouseService {
       return await CloudFunctionsHelper.callSecure<dynamic>(
         'createHouseSecure',
         payload: payload,
-        timeout: const Duration(seconds: 12),
+        timeout: _createHouseCallTimeout,
         throwOriginalException: true,
       );
     } on FirebaseFunctionsException catch (error) {
-      final otpRequired = _otpRequiredFromError(error);
-      if (otpRequired != null) {
-        throw otpRequired;
-      }
       if (!_shouldRetryCreateHouse(error)) {
         rethrow;
       }
@@ -355,7 +364,7 @@ class HouseService {
       return await CloudFunctionsHelper.callSecure<dynamic>(
         'createHouseSecure',
         payload: payload,
-        timeout: const Duration(seconds: 12),
+        timeout: _createHouseCallTimeout,
         throwOriginalException: true,
       );
     }
@@ -375,8 +384,8 @@ class HouseService {
     required String relationshipMode,
     String? recoveryQuestion,
     String? recoveryAnswer,
+    String? houseCreationOtp,
     String createdWith = 'email',
-    String? otp,
     String? customHouseId,
   }) async {
     var user = _auth.currentUser;
@@ -429,12 +438,13 @@ class HouseService {
         'relationshipMode': normalizedRelationshipMode,
         'recoveryQuestion': normalizedRecoveryQuestion,
         'recoveryAnswer': normalizedRecoveryAnswer,
+        if ((houseCreationOtp ?? '').trim().isNotEmpty)
+          'houseCreationOtp': houseCreationOtp!.trim(),
         'createdWith': normalizedCreatedWith,
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
         'deviceProof': identity.proof,
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
-        if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
         if ((customHouseId ?? '').trim().isNotEmpty)
           'customHouseId': customHouseId!.trim(),
       }, expectedUid: creationUid);
@@ -459,14 +469,12 @@ class HouseService {
         _requireCreationSession(creationUid);
       }
       return createdHouseId;
-    } on HouseCreationOtpRequiredException {
-      rethrow;
     } on FirebaseFunctionsException catch (error) {
-      final otpRequired = _otpRequiredFromError(error);
-      if (otpRequired != null) {
-        throw otpRequired;
-      }
       final message = error.message?.trim();
+      if (_mayHaveCreatedHouse(error)) {
+        final recovered = await recoverHouseCreatedByServer(creationUid);
+        if (recovered != null) return recovered;
+      }
       if (message == 'house_creation_in_progress' ||
           message == 'house_creation_lease_expired' ||
           message == 'house_creation_membership_requires_review') {
@@ -475,8 +483,13 @@ class HouseService {
       if (_isDeviceRequiredError(error)) {
         throw UiCopyException('copy_457a7add0800');
       }
-      if (message == 'HOUSE_CREATION_EMAIL_VERIFICATION_REQUIRED') {
-        throw UiCopyException('copy_570732d848d8');
+      if (message == 'house_creation_otp_required') {
+        rethrow;
+      }
+      // Tạo nhà không còn bước xác minh Gmail: mã cũ kiểu HOUSE_CREATION_* (nếu
+      // máy chủ cũ còn trả) chỉ hiện câu lỗi chung, không hiện mã thô hay đòi mã Gmail.
+      if (message != null && message.startsWith('HOUSE_CREATION_')) {
+        throw UiCopyException('copy_7af94c91604b');
       }
       if (message != null && message.isNotEmpty) {
         throw Exception(message);
@@ -486,6 +499,8 @@ class HouseService {
       debugPrint(
         '[HouseService] createHouseSecure timed out: ${AppErrorMapper.resolve(error, fallbackMessage: 'Tạo nhà đang mất quá nhiều thời gian.').message}',
       );
+      final recovered = await recoverHouseCreatedByServer(creationUid);
+      if (recovered != null) return recovered;
       throw UiCopyException('copy_d106c4f33dee');
     }
   }

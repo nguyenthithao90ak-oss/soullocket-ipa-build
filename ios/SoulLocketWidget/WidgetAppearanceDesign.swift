@@ -51,7 +51,7 @@ enum WidgetAppearanceDesign {
         "red": ["60213D", "973D52", "B9676A"],
         "premium": ["FF5FA2", "FFB86B", "67E8F9", "7C3AED"],
         "cosmic": ["17142F", "322952", "514563"],
-        "weather_premium": ["E7EDF4", "F4EFF8", "E8F1F3"],
+        "weather_premium": ["DCE7F1", "F7F3FA", "DCEDED"],
     ]
     static func heart(_ key: String) -> String { hearts[key] ?? "widget_heart_red" }
     static func theme(_ key: String) -> String { palettes[key] == nil ? "pink" : key }
@@ -147,12 +147,12 @@ struct WidgetWeatherSnapshot {
     var proEnabled = false
     var proExpiresAtMs: Double = 0
     static let palettes: [String: [String]] = [
-        "unknown": ["E7EDF4", "F4EFF8", "E8F1F3"],
-        "sunny": ["FFE6A8", "FFF3D8", "FFD7E8"],
-        "cloudy": ["D9E6F4", "ECE7F8", "D7EFF0"],
-        "rain": ["B8D0EC", "D7D3ED", "BBDCE0"],
-        "lightning": ["B8A5D3", "E1C5E8", "FFE0A8"],
-        "cold": ["C9E8F4", "E4F2FA", "D7DDF7"],
+        "unknown": ["DCE7F1", "F7F3FA", "DCEDED"],
+        "sunny": ["FFC96B", "FFF0C9", "F5CBDD"],
+        "cloudy": ["B5CBE0", "E8E6F2", "B9D9D7"],
+        "rain": ["7FA5CF", "BEC8E4", "9FCACD"],
+        "lightning": ["6D639F", "9C8CC0", "F0C47D"],
+        "cold": ["A8D8E9", "E0F1FA", "BBC7EC"],
     ]
     static func normalize(_ raw: String?) -> String {
         guard let raw = raw, palettes[raw] != nil else { return "unknown" }
@@ -219,8 +219,14 @@ struct WidgetWeatherArtwork: View {
         let u = max(0.5, min(1.5, min(w / 150, h / 180)))
         let palette = WidgetWeatherSnapshot.palettes[state] ?? WidgetWeatherSnapshot.palettes["unknown"]!
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
-            Gradient(colors: [Color(hex: palette[0]).opacity(0.35), Color(hex: palette[2]).opacity(0.2)]),
-            startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+            Gradient(colors: [Color(hex: palette[0]).opacity(0.72), Color(hex: palette[1]).opacity(0.52), Color(hex: palette[2]).opacity(0.68)]),
+            startPoint: .zero, endPoint: CGPoint(x: w, y: h)))
+        let glowPoint = CGPoint(x: state == "lightning" ? w * 0.76 : w * 0.28,
+            y: state == "cold" ? h * 0.72 : h * 0.18)
+        context.fill(Path(ellipseIn: CGRect(x: glowPoint.x - max(w, h) * 0.64,
+            y: glowPoint.y - max(w, h) * 0.64, width: max(w, h) * 1.28, height: max(w, h) * 1.28)),
+            with: .radialGradient(Gradient(colors: [weatherAccent(state, bright: true).opacity(0.22), weatherAccent(state, bright: false).opacity(0.04), .clear]),
+                center: glowPoint, startRadius: 0, endRadius: max(w, h) * 0.64))
         let cx = w * 0.22, cy = h * 0.16 + (alternate ? 3 * u : 0)
         func circle(_ x: CGFloat, _ y: CGFloat, _ radius: CGFloat) -> Path {
             Path(ellipseIn: CGRect(x: x-radius, y: y-radius, width: radius*2, height: radius*2))
@@ -237,46 +243,89 @@ struct WidgetWeatherArtwork: View {
         let stroke = StrokeStyle(lineWidth: 1.8*u, lineCap: .round, lineJoin: .round)
         switch state {
         case "sunny":
-            context.fill(circle(cx, cy, 16*u), with: .color(Color(hex:"F4BA52").opacity(0.68)))
+            context.fill(circle(cx, cy, 34*u), with: .radialGradient(Gradient(colors: [Color(hex:"FFFFF0").opacity(0.72), Color(hex:"FFFFCF67").opacity(0.24), .clear]), center: CGPoint(x:cx,y:cy), startRadius:0, endRadius:34*u))
             var rays = Path()
-            for index in 0..<10 {
-                let angle = Double(index) * Double.pi / 5 + (alternate ? 0.12 : 0)
-                let dx = CGFloat(cos(angle)), dy = CGFloat(sin(angle))
-                rays.move(to:CGPoint(x:cx+dx*22*u,y:cy+dy*22*u))
-                rays.addLine(to:CGPoint(x:cx+dx*29*u,y:cy+dy*29*u))
-            }
-            context.stroke(rays,with:.color(Color(hex:"E3A239").opacity(0.52)),style:stroke)
-        case "cloudy":
-            context.fill(cloud(cx+6*u,cy,u),with:.color(Color.white.opacity(0.64)))
-            context.fill(cloud(w*0.83,h*0.83,u*0.72),with:.color(Color.white.opacity(0.64)))
-        case "rain", "lightning":
-            context.fill(cloud(cx+6*u,cy,u),with:.color(Color.white.opacity(0.64)))
-            var drops = Path()
             for index in 0..<12 {
-                let x = w*(0.1+CGFloat(index%4)*0.25)
-                let y = h*(0.34+CGFloat(index/4)*0.23)+(alternate ? 7*u : 0)
-                drops.move(to:CGPoint(x:x,y:y)); drops.addLine(to:CGPoint(x:x-4*u,y:y+11*u))
+                let angle = Double(index) * Double.pi / 6 + (alternate ? 0.10 : 0)
+                let dx = CGFloat(cos(angle)), dy = CGFloat(sin(angle))
+                rays.move(to:CGPoint(x:cx+dx*22*u,y:cy+dy*22*u)); rays.addLine(to:CGPoint(x:cx+dx*31*u,y:cy+dy*31*u))
             }
-            context.stroke(drops,with:.color(Color(hex:"4D8BB8").opacity(0.46)),style:stroke)
+            context.stroke(rays,with:.color(Color(hex:"FFC45C").opacity(0.66)),style:StrokeStyle(lineWidth:2.2*u,lineCap:.round))
+            context.fill(circle(cx, cy, 16*u), with: .radialGradient(Gradient(colors: [Color(hex:"FFFFF1A8"), Color(hex:"F5B948")]), center: CGPoint(x:cx-4*u,y:cy-5*u), startRadius:0, endRadius:20*u))
+            context.fill(circle(cx-4*u, cy-5*u, 4*u), with: .color(.white.opacity(0.28)))
+        case "cloudy":
+            drawCloud(context: &context, x: cx+8*u, y: cy+u, scale: u, muted: false, storm: false)
+            drawCloud(context: &context, x: w*0.82, y: h*0.78, scale: u*0.62, muted: true, storm: false)
+            drawMist(context: &context, y: h*0.84, scale: u, color: .white, opacity: 0.16)
+        case "rain", "lightning":
+            drawCloud(context: &context, x: cx+8*u, y: cy+u, scale: u, muted: false, storm: true)
+            if state == "lightning" { drawCloud(context: &context, x: w*0.80, y: h*0.30, scale: u*0.52, muted: true, storm: true) }
+            var drops = Path()
+            for index in 0..<18 {
+                let column = index % 6, row = index / 6
+                let x = w*(0.06+CGFloat(column)*0.18)+(row % 2 == 0 ? 3*u : 0)
+                let y = h*(0.34+CGFloat(row)*0.22)+(alternate ? 6*u : 0)
+                drops.move(to:CGPoint(x:x,y:y)); drops.addLine(to:CGPoint(x:x-4*u,y:y+(row == 0 ? 8 : 12)*u))
+            }
+            context.stroke(drops,with:.color(Color(hex:"3978B4").opacity(state == "lightning" ? 0.54 : 0.42)),style:StrokeStyle(lineWidth:1.9*u,lineCap:.round))
+            drawMist(context: &context, y: state == "lightning" ? h*0.91 : h*0.88, scale: u, color: state == "lightning" ? Color(hex:"F5D89E") : Color(hex:"B9E4E5"), opacity: state == "lightning" ? 0.14 : 0.20)
             if state == "lightning" {
                 let x=w*0.82,y=h*0.21
                 var bolt=Path(); bolt.move(to:CGPoint(x:x,y:y))
                 bolt.addLine(to:CGPoint(x:x-10*u,y:y+20*u)); bolt.addLine(to:CGPoint(x:x+u,y:y+17*u))
                 bolt.addLine(to:CGPoint(x:x-7*u,y:y+38*u))
-                context.stroke(bolt,with:.color(Color(hex:"DFA137").opacity(alternate ? 0.9 : 0.75)),
-                    style:StrokeStyle(lineWidth:3*u,lineCap:.round,lineJoin:.round))
+                context.stroke(bolt,with:.color(Color(hex:"FFE29A").opacity(0.34)),style:StrokeStyle(lineWidth:10*u,lineCap:.round,lineJoin:.round))
+                context.stroke(bolt,with:.color(Color(hex:"FFF4C5").opacity(alternate ? 0.98 : 0.88)),style:StrokeStyle(lineWidth:3*u,lineCap:.round,lineJoin:.round))
             }
         case "cold":
             var flakes=Path()
-            for point in [CGPoint(x:cx,y:cy),CGPoint(x:w*0.84,y:h*0.28),CGPoint(x:w*0.15,y:h*0.81),CGPoint(x:w*0.83,y:h*0.84)] {
+            for point in [CGPoint(x:cx,y:cy),CGPoint(x:w*0.82,y:h*0.26),CGPoint(x:w*0.14,y:h*0.74),CGPoint(x:w*0.82,y:h*0.78),CGPoint(x:w*0.42,y:h*0.54)] {
                 for index in 0..<3 {
                     let angle=Double(index)*Double.pi/3
-                    let dx=CGFloat(cos(angle))*7*u,dy=CGFloat(sin(angle))*7*u
+                    let radius = (index % 2 == 0 ? 8 : 5.5)*u
+                    let dx=CGFloat(cos(angle))*radius,dy=CGFloat(sin(angle))*radius
                     flakes.move(to:CGPoint(x:point.x-dx,y:point.y-dy)); flakes.addLine(to:CGPoint(x:point.x+dx,y:point.y+dy))
+                    let bx = dx*0.56, by = dy*0.56
+                    flakes.move(to:CGPoint(x:point.x-bx,y:point.y-by)); flakes.addLine(to:CGPoint(x:point.x-bx-dy*0.22,y:point.y-by+dx*0.22))
+                    flakes.move(to:CGPoint(x:point.x+bx,y:point.y+by)); flakes.addLine(to:CGPoint(x:point.x+bx+dy*0.22,y:point.y+by-dx*0.22))
                 }
             }
-            context.stroke(flakes,with:.color(Color(hex:"579BBF").opacity(0.52)),style:stroke)
+            context.stroke(flakes,with:.color(Color(hex:"4F9FC3").opacity(0.48)),style:stroke)
+            drawMist(context: &context, y: h*0.82, scale: u, color: Color(hex:"F4FCFF"), opacity: 0.24)
         default: break
         }
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(colors: [.white.opacity(0.08), .clear, .black.opacity(0.025)]), startPoint: .zero, endPoint: CGPoint(x:w,y:h)))
+    }
+
+    private func weatherAccent(_ state: String, bright: Bool) -> Color {
+        switch state {
+        case "sunny": return Color(hex: bright ? "FFFFF0" : "FFFFB946")
+        case "cloudy": return Color(hex: bright ? "F8FCFF" : "EDF5FF")
+        case "rain": return Color(hex: bright ? "D4F3FF" : "6B9FD2")
+        case "lightning": return Color(hex: bright ? "FFF7D1" : "FFD36D")
+        case "cold": return Color(hex: bright ? "F1FFFF" : "B9F1FF")
+        default: return Color(hex: bright ? "FFFFFF" : "EFFFFB")
+        }
+    }
+
+    private func drawCloud(context: inout GraphicsContext, x: CGFloat, y: CGFloat, scale: CGFloat, muted: Bool, storm: Bool) {
+        func c(_ dx: CGFloat, _ dy: CGFloat, _ radius: CGFloat) -> Path { Path(ellipseIn: CGRect(x:x+dx*scale-radius*scale,y:y+dy*scale-radius*scale,width:radius*2*scale,height:radius*2*scale)) }
+        let body = storm ? Color(hex:"E7EDF9").opacity(muted ? 0.28 : 0.66) : Color.white.opacity(muted ? 0.34 : 0.72)
+        let shadow = (storm ? Color(hex:"465878") : Color(hex:"657B99")).opacity(storm ? 0.30 : 0.15)
+        let circles = [(CGFloat(-16),CGFloat(5),CGFloat(13)),(CGFloat(-2),CGFloat(-5),CGFloat(18)),(CGFloat(16),CGFloat(4),CGFloat(12))]
+        for (dx,dy,r) in circles { context.fill(c(dx+1,dy+2,r),with:.color(shadow)) }
+        var shadowBase = Path()
+        shadowBase.addRoundedRect(in: CGRect(x:x-26*scale,y:y+scale,width:52*scale,height:18*scale), cornerSize:CGSize(width:9*scale,height:9*scale))
+        context.fill(shadowBase,with:.color(shadow))
+        for (dx,dy,r) in circles { context.fill(c(dx,dy,r),with:.color(body)) }
+        var bodyBase = Path()
+        bodyBase.addRoundedRect(in: CGRect(x:x-26*scale,y:y-2*scale,width:52*scale,height:18*scale), cornerSize:CGSize(width:9*scale,height:9*scale))
+        context.fill(bodyBase,with:.color(body))
+        context.fill(c(-7,-10,5),with:.color(.white.opacity(muted ? 0.18 : storm ? 0.24 : 0.38)))
+    }
+
+    private func drawMist(context: inout GraphicsContext, y: CGFloat, scale: CGFloat, color: Color, opacity: Double) {
+        let width = 210*scale, height = 30*scale
+        context.fill(Path(ellipseIn:CGRect(x:-width/2,y:y-height/2,width:width,height:height)),with:.radialGradient(Gradient(colors:[color.opacity(opacity),.clear]),center:CGPoint(x:0,y:y),startRadius:0,endRadius:width/2))
     }
 }

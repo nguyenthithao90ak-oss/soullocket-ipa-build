@@ -30,7 +30,11 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
   bool _showHeartNotif = false;
   bool _listening = false;
   int _activityGeneration = 0;
+  String? _lastBubbleMessageKey;
+  String? _lastBubbleEventKey;
   bool get _isStickerActive => isScreenActive && widget.activeIndex == 0;
+
+  static const _bubbleReenabledPreference = 'soul_merge_bubble_reenabled_v1';
 
   static const List<String> _appTips = [
     'copy_75353c695990',
@@ -105,6 +109,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
       _bubbleHideTimer?.cancel();
       _bubbleHideTimer = null;
       _showBubble = false;
+      _lastBubbleMessageKey = null;
+      _lastBubbleEventKey = null;
       return;
     }
     if (!_listening) {
@@ -121,9 +127,16 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    // Bản thử nghiệm trước đã lưu false ở một số máy. Chỉ migrate một lần
+    // để bản chính thức bật lại bong bóng theo yêu cầu, sau đó vẫn tôn trọng
+    // lựa chọn bật/tắt của người dùng.
+    if (!(prefs.getBool(_bubbleReenabledPreference) ?? false)) {
+      await prefs.setBool('soul_merge_show_heart_notif', true);
+      await prefs.setBool(_bubbleReenabledPreference, true);
+    }
     if (mounted) {
       setState(() {
-        _showHeartNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
+        _showHeartNotif = prefs.getBool('soul_merge_show_heart_notif') ?? true;
         if (!_showHeartNotif) {
           _showBubble = false;
         }
@@ -164,10 +177,17 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
 
       final type = event['type']?.toString();
       if (type == 'photo_shot') {
+        final eventKey = [
+          type,
+          sender ?? '',
+          event['timestamp'] ?? event['ts'] ?? '',
+        ].join('|');
+        if (_lastBubbleEventKey == eventKey) return;
+        _lastBubbleEventKey = eventKey;
         // 1. Hiển thị thông báo bằng chữ nếu được bật
         if (_showHeartNotif) {
           _showFloatingMessage(
-            context.tr('ui_home_he_just_gave_you_his_heart_460cf6'),
+            L10nService().translate('ui_home_he_just_gave_you_his_heart_460cf6'),
           );
         }
 
@@ -175,6 +195,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
         // - Chúng ta đang ở màn hình home (luôn bay ở home)
         if (widget.activeIndex == 0) {
           final prefs = await SharedPreferences.getInstance();
+          if (!mounted) return;
           final style = prefs.getString('soul_merge_heart_style') ?? 'basic';
           if (_isStickerActive && generation == _activityGeneration) {
             setState(() {
@@ -220,6 +241,14 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
         final now = DateTime.now().millisecondsSinceEpoch;
         // Chỉ hiển thị tin nhắn mới trong vòng 10 giây gần nhất
         if ((now - msgTime).abs() < 10000) {
+          final messageKey = [
+            lastMsg['id'] ?? lastMsg['messageId'] ?? '',
+            sender ?? '',
+            msgTime,
+            displayTxt,
+          ].join('|');
+          if (_lastBubbleMessageKey == messageKey) return;
+          _lastBubbleMessageKey = messageKey;
           _showFloatingMessage(displayTxt);
         }
       }
@@ -247,6 +276,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
     // [Fix] Chỉ hiển thị thông báo bong bóng khi ở màn hình chính (tab 0)
     // theo yêu cầu của người dùng, tránh đè lên các tính năng ở tab khác.
     if (widget.activeIndex != 0) return;
+
+    if (_showBubble && _bubbleText == text) return;
 
     setState(() {
       _bubbleText = text;
@@ -302,109 +333,111 @@ class SoulMergeStickerState extends State<SoulMergeSticker>
         return Positioned(
           left: pos.dx,
           top: pos.dy,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Bong bóng chat hiển thị tin nhắn / mẹo dạng viên nang Glassmorphic lơ lửng cực sang trọng
-              Positioned(
-                bottom: 60,
-                left: tooltipLeft,
-                child: AnimatedOpacity(
-                  opacity: _showBubble ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 250),
-                  child: _showBubble && _bubbleText != null
-                      ? Container(
-                          width: 212,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 9,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: const Color(
-                                0xFFFFC0D3,
-                              ).withValues(alpha: 0.65),
-                              width: 1.2,
+          child: RepaintBoundary(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Bong bóng chat hiển thị tin nhắn / mẹo dạng viên nang Glassmorphic lơ lửng cực sang trọng
+                Positioned(
+                  bottom: 60,
+                  left: tooltipLeft,
+                  child: AnimatedOpacity(
+                    opacity: _showBubble ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    child: _showBubble && _bubbleText != null
+                        ? Container(
+                            width: 212,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 9,
                             ),
-                            boxShadow: [
-                              BoxShadow(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
                                 color: const Color(
-                                  0xFFFFB3CA,
-                                ).withValues(alpha: 0.22),
-                                blurRadius: 16,
-                                spreadRadius: 1,
-                                offset: const Offset(0, 6),
+                                  0xFFFFC0D3,
+                                ).withValues(alpha: 0.65),
+                                width: 1.2,
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            _bubbleText!,
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              color: const Color(0xFF4A3445),
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.w800,
-                              height: 1.35,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFFFB3CA,
+                                  ).withValues(alpha: 0.22),
+                                  blurRadius: 16,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                top: 0,
-                width: 52,
-                height: 52,
-                child: IgnorePointer(
-                  child: TapHeartsOverlay(
-                    key: _globalHeartsKey,
-                    style: _globalHeartStyle,
+                            child: Text(
+                              _bubbleText!,
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                color: const Color(0xFF4A3445),
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w800,
+                                height: 1.35,
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ),
-              ),
-              GestureDetector(
-                onPanStart: (details) {
-                  _dragOffset = details.globalPosition - pos;
-                },
-                onPanUpdate: (details) {
-                  setState(() {
-                    final targetPos = details.globalPosition - _dragOffset;
-                    _position = Offset(
-                      targetPos.dx.clamp(
-                        0.0,
-                        MediaQuery.sizeOf(context).width - 52,
-                      ),
-                      targetPos.dy.clamp(
-                        0.0,
-                        MediaQuery.sizeOf(context).height - 150,
-                      ),
-                    );
-                  });
-                },
-                onPanEnd: (_) {
-                  if (_position != null) _savePosition(_position!);
-                },
-                onTap: () async {
-                  if (_isSingle) {
-                    _showPairingBottomSheet(context);
-                  } else {
-                    await slPush(
-                      context,
-                      const SoulMergeScreen(),
-                      fullscreenDialog: true,
-                    );
-                    _loadSettings();
-                  }
-                },
-                child: Tooltip(
-                  message: context.tr('p4_soul_title'),
-                  child: const SoulMergeMark(size: 52, framed: true),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  width: 52,
+                  height: 52,
+                  child: IgnorePointer(
+                    child: TapHeartsOverlay(
+                      key: _globalHeartsKey,
+                      style: _globalHeartStyle,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                GestureDetector(
+                  onPanStart: (details) {
+                    _dragOffset = details.globalPosition - pos;
+                  },
+                  onPanUpdate: (details) {
+                    setState(() {
+                      final targetPos = details.globalPosition - _dragOffset;
+                      _position = Offset(
+                        targetPos.dx.clamp(
+                          0.0,
+                          MediaQuery.sizeOf(context).width - 52,
+                        ),
+                        targetPos.dy.clamp(
+                          0.0,
+                          MediaQuery.sizeOf(context).height - 150,
+                        ),
+                      );
+                    });
+                  },
+                  onPanEnd: (_) {
+                    if (_position != null) _savePosition(_position!);
+                  },
+                  onTap: () async {
+                    if (_isSingle) {
+                      _showPairingBottomSheet(context);
+                    } else {
+                      await slPush(
+                        context,
+                        const SoulMergeScreen(),
+                        fullscreenDialog: true,
+                      );
+                      _loadSettings();
+                    }
+                  },
+                  child: Tooltip(
+                    message: context.tr('p4_soul_title'),
+                    child: const SoulMergeMark(size: 52, framed: true),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

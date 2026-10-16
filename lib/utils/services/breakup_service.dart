@@ -30,11 +30,13 @@ class BreakupApproval {
   final int ts;
   final String role;
   final String type;
+  final String actorUid;
 
   const BreakupApproval({
     required this.ts,
     required this.role,
     required this.type,
+    this.actorUid = '',
   });
 
   factory BreakupApproval.fromMap(Map<String, dynamic> map) {
@@ -42,6 +44,7 @@ class BreakupApproval {
       ts: _toInt(map['ts']),
       role: (map['role'] ?? '').toString(),
       type: (map['type'] ?? '').toString(),
+      actorUid: (map['actorUid'] ?? '').toString(),
     );
   }
 }
@@ -90,8 +93,12 @@ class BreakupRequestData {
   bool get isProcessing => status == BreakupStatus.processing;
   bool get isCanceled => status == BreakupStatus.canceled;
   bool get isActive => isPending || isScheduled || isProcessing;
-  bool get approvedByPartner =>
-      approvals.keys.any((deviceId) => deviceId != requestedByDevice);
+  bool get approvedByPartner => approvals.values.any(
+        (approval) =>
+            approval.type == 'trusted_partner' &&
+            approval.actorUid.isNotEmpty &&
+            approval.actorUid != requestedByUid,
+      );
 
   bool isApprovedBy(String deviceId) => approvals.containsKey(deviceId);
 
@@ -396,10 +403,7 @@ class BreakupService {
     return BreakupActionResult(
       success: success,
       message: success
-          ? L10nService().format(
-              'breakup_approved',
-              {'value1': _formatDateTime(next.deleteAt)},
-            )
+          ? L10nService().translate('breakup_processing')
           : ((data['message'] ?? '').toString().trim().isNotEmpty
               ? data['message'].toString()
               : L10nService().translate('breakup_no_pending')),

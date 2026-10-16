@@ -42,7 +42,7 @@ class FirebaseHomeDrawingRemote implements HomeDrawingRemote {
 
 class HomeDrawingLocalStore {
   HomeDrawingLocalStore({HomeDrawingPreferences? preferences})
-      : _preferences = preferences ?? SharedPreferences.getInstance;
+    : _preferences = preferences ?? SharedPreferences.getInstance;
 
   final HomeDrawingPreferences _preferences;
   static const _prefix = 'home_drawing_draft_v1_';
@@ -76,7 +76,14 @@ class HomeDrawingLocalStore {
   }
 }
 
-enum HomeDrawingSaveStatus { saved, unchanged, conflict, expired, rateLimited, failed }
+enum HomeDrawingSaveStatus {
+  saved,
+  unchanged,
+  conflict,
+  expired,
+  rateLimited,
+  failed,
+}
 
 class HomeDrawingSaveResult {
   const HomeDrawingSaveResult({
@@ -104,8 +111,8 @@ class HomeDrawingService {
   HomeDrawingService({
     HomeDrawingRemote? remote,
     HomeDrawingLocalStore? localStore,
-  })  : _remote = remote ?? const FirebaseHomeDrawingRemote(),
-        _localStore = localStore ?? HomeDrawingLocalStore();
+  }) : _remote = remote ?? const FirebaseHomeDrawingRemote(),
+       _localStore = localStore ?? HomeDrawingLocalStore();
 
   final HomeDrawingRemote _remote;
   final HomeDrawingLocalStore _localStore;
@@ -158,7 +165,8 @@ class HomeDrawingService {
   }) async {
     final key = scope(uid, houseId);
     final cached = _statusCache[key];
-    if (!force && cached != null &&
+    if (!force &&
+        cached != null &&
         DateTime.now().difference(cached.cachedAt) < statusCacheTtl) {
       return cached.status;
     }
@@ -177,8 +185,10 @@ class HomeDrawingService {
       'requestId': _requestId(),
     });
     final status = HomeDrawingStatus.fromRaw(raw);
-    _statusCache[scope(uid, houseId)] =
-        _HomeDrawingCachedStatus(status, DateTime.now());
+    _statusCache[scope(uid, houseId)] = _HomeDrawingCachedStatus(
+      status,
+      DateTime.now(),
+    );
     return status;
   }
 
@@ -188,14 +198,18 @@ class HomeDrawingService {
     required bool Function() isCurrent,
   }) {
     final key = scope(uid, houseId);
-    return _remote.watch(houseId).where((_) => isCurrent()).map((raw) {
-      if (!isCurrent()) return HomeDrawingBoard.empty();
-      try {
-        return HomeDrawingBoard.fromRaw(raw);
-      } catch (_) {
-        return HomeDrawingBoard.empty();
-      }
-    }).where((board) => isCurrent() && key == scope(uid, houseId));
+    return _remote
+        .watch(houseId)
+        .where((_) => isCurrent())
+        .map((raw) {
+          if (!isCurrent()) return HomeDrawingBoard.empty();
+          try {
+            return HomeDrawingBoard.fromRaw(raw);
+          } catch (_) {
+            return HomeDrawingBoard.empty();
+          }
+        })
+        .where((board) => isCurrent() && key == scope(uid, houseId));
   }
 
   Future<HomeDrawingSaveResult> save({

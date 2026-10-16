@@ -83,6 +83,7 @@ class SettingsSyncService {
     'il_notif_chat',
     'il_notif_friend',
     'il_notif_heart',
+    'il_priority_notifications_enabled',
     'il_smart_reminder_diary',
     'il_smart_reminder_capsule',
     'il_smart_reminder_love_note',

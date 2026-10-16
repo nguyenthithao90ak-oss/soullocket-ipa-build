@@ -6,8 +6,10 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/services/l10n_service.dart';
@@ -16,6 +18,7 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/secure_storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/offline_cache_service.dart';
+import '../../utils/services/error_logger_service.dart';
 import '../../utils/flexible_date_input.dart';
 import '../app_entry.dart';
 import 'dart:ui';
@@ -100,6 +103,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   String? _autoCreateFailureDetail;
   int _authSyncRetryCount = 0;
   int _transientCreateRetryCount = 0;
+  String? _houseCreationOtp;
   String _selectedSecurityQuestion = L10nService().translate(
     'Ngày sinh của bạn?',
   );
@@ -695,17 +699,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return raw.length > 260 ? '${raw.substring(0, 260)}...' : raw;
   }
 
-  bool _needsEmailVerification(Object? error, String message) {
-    final normalized =
-        '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
-    return normalized.contains('resource-exhausted') ||
-        normalized.contains('giới hạn') ||
-        normalized.contains('too many') ||
-        normalized.contains('quá nhiều') ||
-        normalized.contains('verify') ||
-        normalized.contains('xác minh');
-  }
-
   String _clearCreateFailureMessage(String message, Object? error) {
     final normalized =
         '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
@@ -719,9 +712,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         normalized.contains('debug token') ||
         normalized.contains('play integrity')) {
       return L10nService().translate('ui_auth_the_device_is_being_authenticated_for_security_6e0332');
-    }
-    if (_needsEmailVerification(error, message)) {
-      return L10nService().translate('ui_auth_gmail_verification_is_required_to_continue_creating_982f13');
     }
     if (normalized.contains('dữ liệu nhà') ||
         normalized.contains('đã có nhà') ||
@@ -737,170 +727,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       return L10nService().translate('ui_auth_the_connection_or_server_is_responding_slowly_0d6850');
     }
     return message;
-  }
-
-  Future<void> _sendGmailVerification() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      final email = (user?.email ?? '').trim();
-      if (user == null || email.isEmpty) {
-        throw Exception(
-          L10nService().translate('ui_auth_the_login_session_is_synchronizing_please_try_a6cb29'),
-        );
-      }
-
-      final maskedEmail = _authService.maskEmail(email);
-      final otp = await _promptHouseCreationOtp(
-        HouseCreationOtpRequiredException(
-          maskedEmail: maskedEmail,
-          createdCount: 3,
-        ),
-      );
-      if (!mounted) return;
-      if (otp == null || otp.trim().isEmpty) {
-        return;
-      }
-
-      await _createHouse(houseCreationOtp: otp.trim());
-    } catch (error) {
-      if (!mounted) return;
-      _setAutoCreateFailureMessage(
-        AppErrorMapper.resolve(error).message,
-        error: error,
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<String?> _promptHouseCreationOtp(
-    HouseCreationOtpRequiredException gate,
-  ) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final email = (user?.email ?? '').trim();
-    if (email.isEmpty) {
-      _setAutoCreateFailureMessage(
-        context.tr('ui_auth_the_account_needs_a_valid_gmail_to_d8c4c6'),
-        error: gate,
-      );
-      return null;
-    }
-
-    try {
-      await _authService.sendOtpEmail(email);
-    } catch (error) {
-      if (!mounted) return null;
-      _setAutoCreateFailureMessage(
-        AppErrorMapper.resolve(error).message,
-        error: error,
-      );
-      return null;
-    }
-    if (!mounted) return null;
-
-    var otpValue = '';
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return SLAlertDialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-
-          title: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEEF5),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.mark_email_read_rounded,
-                  color: Color(0xFFD81B60),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: Text(context.tr('ui_auth_verify_gmail_6f83fb'))),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  L10nScope.of(context).format('ui_auth_enter_the_confirmation_code_sent_to_value1_5204f5', {'value1': gate.maskedEmail.isNotEmpty ? gate.maskedEmail : email}),
-                  style: SLTheme.quicksand(
-                    color: SLColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF6FA),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFFFD3E4)),
-                  ),
-                  child: TextField(
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    maxLength: 6,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      labelText: context.tr('ui_auth_gmail_6_digit_code_e509b3'),
-                      counterText: '',
-                      border: InputBorder.none,
-                    ),
-                    onChanged: (value) {
-                      otpValue = value.trim();
-                      if (otpValue.length == 6) {
-                        Navigator.of(dialogContext).pop(otpValue);
-                      }
-                    },
-                    onSubmitted: (_) {
-                      if (otpValue.length == 6) {
-                        Navigator.of(dialogContext).pop(otpValue);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            SLDialogAction(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(context.tr('p5_later')),
-            ),
-            SLDialogAction(
-              primary: true,
-
-              onPressed: () {
-                if (otpValue.isNotEmpty) {
-                  Navigator.of(dialogContext).pop(otpValue);
-                }
-              },
-
-              child: Text(context.tr('auth_refresh_verify_action')),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _setAutoCreateFailureMessage(String message, {Object? error}) {
@@ -968,7 +794,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   }
 
   Future<void> _createHouse({
-    String? houseCreationOtp,
     String? customHouseId,
   }) async {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1041,7 +866,13 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      // Lượt mới đang chạy: bỏ lỗi của lượt trước để hiện màn chờ, tránh người dùng
+      // nhìn thấy lỗi cũ trong khi nhà đã/đang được tạo.
+      _autoCreateFailureMessage = null;
+      _autoCreateFailureDetail = null;
+    });
     debugPrint(
       '[HouseOnboarding] _createHouse start '
       '(autoCreateOnly: ${widget.autoCreateOnly}, role: $myRole, mode: $relationshipMode)',
@@ -1088,17 +919,18 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
             relationshipMode: relationshipMode,
             recoveryQuestion: _enableRecovery ? recoveryQuestion : null,
             recoveryAnswer: _enableRecovery ? recoveryAnswer : null,
+            houseCreationOtp: _houseCreationOtp,
             createdWith: 'email',
-            otp: houseCreationOtp,
             customHouseId: customHouseId,
           )
           .timeout(
-            const Duration(seconds: 90),
+            const Duration(seconds: 150),
             onTimeout: () {
               throw TimeoutException('_createHouse timed out');
             },
           );
       debugPrint('[HouseOnboarding] _createHouse success: $createdHouseId');
+      _houseCreationOtp = null;
       _authSyncRetryCount = 0;
       _transientCreateRetryCount = 0;
       if (!mounted) return;
@@ -1154,25 +986,17 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         MaterialPageRoute(builder: (_) => const AppEntry()),
         (route) => false,
       );
-    } on HouseCreationOtpRequiredException catch (e) {
-      debugPrint(
-        '[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(e, fallbackMessage: context.tr('ui_auth_gmail_verification_is_required_to_continue_creating_982f13')).message}',
-      );
-      if (!mounted) return;
-      final otp = await _promptHouseCreationOtp(e);
-      if (!mounted) return;
-      if (otp == null || otp.trim().isEmpty) {
-        _setAutoCreateFailureMessage(
-          context.tr('ui_auth_need_to_enter_gmail_code_to_continue_61d746'),
-          error: e,
-        );
-        return;
+    } catch (e, stackTrace) {
+      // Tới được đây nghĩa là bước bàn giao (nếu đã bắt đầu) không xong: phải mở
+      // khóa nút ở `finally`, nếu không màn lỗi giữ nút bị vô hiệu.
+      handedOffToParent = false;
+      if (_isHouseCreationOtpRequired(e)) {
+        final otp = await _requestHouseCreationOtp(user);
+        if (otp == null || !mounted) return;
+        _houseCreationOtp = otp;
+        return _createHouse(customHouseId: customHouseId);
       }
-      return _createHouse(
-        houseCreationOtp: otp.trim(),
-        customHouseId: customHouseId,
-      );
-    } catch (e) {
+      _houseCreationOtp = null;
       final errorInfo = AppErrorMapper.resolve(e);
       debugPrint('[HouseOnboarding] _createHouse failed: ${errorInfo.message}');
       if (!mounted) return;
@@ -1199,7 +1023,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         await Future.delayed(Duration(milliseconds: 700 * _authSyncRetryCount));
         if (mounted) {
           return _createHouse(
-            houseCreationOtp: houseCreationOtp,
             customHouseId: customHouseId,
           );
         }
@@ -1210,6 +1033,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           widget.autoCreateOnly &&
           _transientCreateRetryCount < 2 &&
           (e is TimeoutException ||
+              (e is UiCopyException && e.key == 'copy_d106c4f33dee') ||
               normalizedError.contains('timeout') ||
               normalizedError.contains('timed out') ||
               normalizedError.contains('network') ||
@@ -1226,7 +1050,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         await Future.delayed(Duration(seconds: _transientCreateRetryCount));
         if (mounted) {
           return _createHouse(
-            houseCreationOtp: houseCreationOtp,
             customHouseId: customHouseId,
           );
         }
@@ -1290,6 +1113,13 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         }
       }
 
+      // Báo lỗi gốc (non-fatal, theo đồng ý thu thập) để lần sau biết đúng nguyên nhân
+      // thay vì chỉ thấy câu đã được dịch lại trên màn hình.
+      unawaited(
+        ErrorLoggerService.instance
+            .logError(e, stackTrace, reason: 'house_create_failed')
+            .catchError((_) {}),
+      );
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(message, error: e);
       } else {
@@ -1300,6 +1130,79 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  bool _isHouseCreationOtpRequired(Object error) {
+    return error is FirebaseFunctionsException &&
+        error.message?.trim() == 'house_creation_otp_required';
+  }
+
+  Future<String?> _requestHouseCreationOtp(User user) async {
+    final email = user.email?.trim().toLowerCase() ?? '';
+    if (email.isEmpty || !mounted) return null;
+    try {
+      await _authService.sendOtpEmail(email);
+    } catch (_) {
+      if (mounted) {
+        _showError(L10nService().translate('forgot_pwd_err_send_code_failed'));
+      }
+      return null;
+    }
+
+    if (!mounted) return null;
+
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => SLAlertDialog(
+        title: Text(context.tr('forgot_pwd_step4_title_enter')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              L10nService().format('forgot_pwd_step4_desc_sent', {
+                'email': _authService.maskEmail(email),
+              }),
+            ),
+            SLSpacing.h16,
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(6),
+              ],
+              decoration: InputDecoration(
+                labelText: context.tr('forgot_pwd_label_otp'),
+                hintText: context.tr('forgot_pwd_label_otp'),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SLDialogAction(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.tr('forgot_pwd_btn_back_step')),
+          ),
+          SLDialogAction(
+            primary: true,
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(context.tr('forgot_pwd_btn_continue')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (result == null || result.length != 6) {
+      if (mounted) {
+        _showError(L10nService().translate('forgot_pwd_err_enter_otp'));
+      }
+      return null;
+    }
+    return result;
   }
 
   Future<String?> _recoverExistingHouseId(User user) async {
@@ -1960,36 +1863,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                   ),
                                 ),
                               ),
-                              if (_needsEmailVerification(
-                                null,
-                                _autoCreateFailureMessage ?? '',
-                              )) ...[
-                                const SizedBox(height: 10),
-                                OutlinedButton.icon(
-                                  onPressed: _isLoading
-                                      ? null
-                                      : _sendGmailVerification,
-                                  icon: const Icon(
-                                    Icons.mark_email_read_rounded,
-                                  ),
-                                  label: Text(
-                                    context.tr('ui_auth_verify_gmail_6f83fb'),
-                                    style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFFD81B60),
-                                    side: const BorderSide(
-                                      color: Color(0xFFD81B60),
-                                    ),
-                                    minimumSize: const Size.fromHeight(50),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                  ),
-                                ),
-                              ],
                               const SizedBox(height: 14),
                               Container(
                                 padding: const EdgeInsets.symmetric(

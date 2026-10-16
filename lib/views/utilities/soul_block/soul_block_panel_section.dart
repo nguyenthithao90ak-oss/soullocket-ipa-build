@@ -238,6 +238,7 @@ class _SoulExplosionPainter extends CustomPainter {
     ..filterQuality = FilterQuality.low;
   final Paint _edgePaint = Paint()..style = PaintingStyle.stroke;
   final Paint _ringPaint = Paint()..style = PaintingStyle.stroke;
+  final Paint _impactPaint = Paint()..style = PaintingStyle.fill;
   static const Rect _unitPhotoRect = Rect.fromLTWH(-.5, -.5, 1, 1);
   static final List<Path> _photoShards = [
     Path()
@@ -261,6 +262,23 @@ class _SoulExplosionPainter extends CustomPainter {
     final double rawProgress = progress.value.clamp(0.0, 1.0).toDouble();
     if (rawProgress <= 0) {
       return;
+    }
+
+    final impactProgress = (rawProgress / .26).clamp(0.0, 1.0).toDouble();
+    final impactOpacity =
+        (1 - Curves.easeOutCubic.transform(impactProgress)) * .38;
+    if (impactOpacity > .01) {
+      final impactRadius =
+          12 + (Curves.easeOutBack.transform(impactProgress) * 42);
+      _impactPaint.shader = RadialGradient(
+        colors: <Color>[
+          Colors.white.withValues(alpha: impactOpacity),
+          accent.withValues(alpha: impactOpacity * .72),
+          Colors.transparent,
+        ],
+        stops: const <double>[0, .34, 1],
+      ).createShader(Rect.fromCircle(center: center, radius: impactRadius));
+      canvas.drawCircle(center, impactRadius, _impactPaint);
     }
 
     // Vòng sáng đơn giản cho combo, chỉ một nét vẽ mỗi khung nên nhẹ hơn hạt dày.
@@ -369,8 +387,8 @@ class _SoulExplosionPainter extends CustomPainter {
           path.lineTo(-r * 0.7, 0);
           path.close();
           canvas.drawPath(path, _particlePaint);
-        } else if (particle.shapeType == 3 || particle.isShard) {
-          // Draw Heart instead of Shard
+        } else if (particle.shapeType == 3) {
+          // Một ít trái tim giữ chất SoulLocket trong vụ nổ combo.
           final Path path = Path();
           final double r = width / 1.5;
           path.moveTo(0, r * 0.35);
@@ -378,6 +396,16 @@ class _SoulExplosionPainter extends CustomPainter {
           path.cubicTo(r * 1.8, r * 0.6, r * 1.2, -r * 0.8, 0, r * 0.35);
           path.close();
           canvas.drawPath(path, _particlePaint);
+        } else if (particle.isShard) {
+          final shardRect = Rect.fromCenter(
+            center: Offset.zero,
+            width: width * 1.45,
+            height: width * .72,
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(shardRect, Radius.circular(width * .16)),
+            _particlePaint,
+          );
         } else {
           // Draw Circle
           final double radius = width / 2.3;

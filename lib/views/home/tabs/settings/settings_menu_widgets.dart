@@ -301,6 +301,7 @@ class SettingsQuickTile extends StatelessWidget {
     this.captionTone = SLSettingsTone.neutral,
     this.semanticLabel,
     this.isDark = false,
+    this.badge,
   });
 
   final String title;
@@ -314,6 +315,7 @@ class SettingsQuickTile extends StatelessWidget {
   final SLSettingsTone captionTone;
   final String? semanticLabel;
   final bool isDark;
+  final Widget? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -353,16 +355,27 @@ class SettingsQuickTile extends StatelessWidget {
                 children: [
                   SizedBox(
                     height: 40,
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child:
-                          leading ??
-                          SLSettingsIconTile(
-                            icon: icon ?? Icons.circle_outlined,
-                            color: color,
-                            size: 40,
-                            isDark: isDark,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child:
+                              leading ??
+                              SLSettingsIconTile(
+                                icon: icon ?? Icons.circle_outlined,
+                                color: color,
+                                size: 40,
+                                isDark: isDark,
+                              ),
+                        ),
+                        if (badge != null)
+                          PositionedDirectional(
+                            top: 0,
+                            end: 0,
+                            child: badge!,
                           ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),

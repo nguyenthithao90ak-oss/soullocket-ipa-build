@@ -1032,6 +1032,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await prefs.setBool('il_notif_chat', _notifChat);
       await prefs.setBool('il_notif_friend', _notifFriend);
       await prefs.setBool('il_notif_heart', _notifHeart);
+      await prefs.setBool(
+        'il_priority_notifications_enabled',
+        _priorityNotificationsEnabled,
+      );
       await prefs.setBool('il_smart_reminder_diary', _smartDiaryReminder);
       await prefs.setBool('il_smart_reminder_capsule', _smartCapsuleReminder);
       await prefs.setBool(
@@ -1046,6 +1050,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
       await prefs.setBool('il_show_weather', _showWeather);
       await prefs.setBool('il_show_status', _showStatus);
       await prefs.setString('il_auto_reply_text', _autoReplyCtrl.text.trim());
+      await NotificationService().setPriorityNotificationsEnabled(
+        _priorityNotificationsEnabled,
+      );
       localSaved = true;
 
       final ui = UiPrefs.notifier.value;

@@ -14,7 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mbx;
+// Mapbox đã gỡ khỏi app (nhánh này luôn tắt); bật lại: docs/MAPBOX_REMOVAL_2026-10-14.md.
+import 'mapbox_sdk_stub.dart' as mbx;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
@@ -322,11 +323,11 @@ class _MapScreenState extends State<MapScreen>
     _initMap();
   }
 
-  bool get _canUseMapboxSdk =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS) &&
-      AppConfig.hasMapboxPublicToken;
+  // Bản đồ hiện hành của SoulLocket dùng FlutterMap cho cả tài khoản thường
+  // và PRO. Giữ SDK Mapbox trong source để không làm vỡ cấu hình native đã
+  // có, nhưng không cho quyền PRO chuyển renderer hoặc phát sinh lượt tải
+  // tile/MAU Mapbox.
+  bool get _canUseMapboxSdk => false;
 
   void _watchVipMapProvider() {
     _bindMapProSession(FirebaseAuth.instance.currentUser?.uid);
@@ -402,8 +403,8 @@ class _MapScreenState extends State<MapScreen>
       _mapInitError = null;
       _mapSurfaceGeneration++;
     });
-    debugPrint(native
-        ? '[Map] PRO đã xác minh; chuyển sang Mapbox SDK.'
+    debugPrint(_mapProAccess.value
+        ? '[Map] PRO đã xác minh; giữ renderer FlutterMap hiện tại.'
         : '[Map] Quyền PRO đã kết thúc; dùng bản đồ hiện tại.');
     _scheduleMapReadyWatchdog();
     unawaited(_syncMapboxAnnotations());

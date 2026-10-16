@@ -51,9 +51,9 @@ abstract final class WidgetThemeDesign {
     ],
     'cosmic': [Color(0xFF17142F), Color(0xFF322952), Color(0xFF514563)],
     'weather_premium': [
-      Color(0xFFE7EDF4),
-      Color(0xFFF4EFF8),
-      Color(0xFFE8F1F3),
+      Color(0xFFDCE7F1),
+      Color(0xFFF7F3FA),
+      Color(0xFFDCEDED),
     ],
   };
   static String normalize(String key) => keys.contains(key) ? key : 'pink';

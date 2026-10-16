@@ -184,6 +184,11 @@ class CountdownSpaceDeleteRequestInfo {
 }
 
 class CountdownSpaceService {
+  // Mỗi House chỉ được có tối đa 5 kết nối đang chiếm chỗ; request cũ đã
+  // accepted/declined không cần replay vô hạn cho các listener màn hình.
+  // Các lệnh preflight one-shot vẫn đọc đầy đủ để không bỏ sót request cũ.
+  static const int _pairedRecordQueryLimit = 50;
+
   static final CountdownSpaceService _instance =
       CountdownSpaceService._internal();
   factory CountdownSpaceService() => _instance;
@@ -462,6 +467,7 @@ class CountdownSpaceService {
         .ref('countdown_space_requests')
         .orderByChild('toHouseId')
         .equalTo(houseId.trim())
+        .limitToLast(_pairedRecordQueryLimit)
         .onValue
         .map((event) {
           if (event.snapshot.value == null) return [];
@@ -483,6 +489,7 @@ class CountdownSpaceService {
         .ref('countdown_space_requests')
         .orderByChild('fromHouseId')
         .equalTo(houseId.trim())
+        .limitToLast(_pairedRecordQueryLimit)
         .onValue
         .map((event) {
           if (event.snapshot.value == null) return [];
@@ -822,6 +829,7 @@ class CountdownSpaceService {
             .ref(rootPath)
             .orderByChild(firstField)
             .equalTo(hId)
+            .limitToLast(_pairedRecordQueryLimit)
             .onValue
             .listen((event) {
               firstRecords = _toMap(event.snapshot.value);
@@ -832,6 +840,7 @@ class CountdownSpaceService {
             .ref(rootPath)
             .orderByChild(secondField)
             .equalTo(hId)
+            .limitToLast(_pairedRecordQueryLimit)
             .onValue
             .listen((event) {
               secondRecords = _toMap(event.snapshot.value);

@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/home_couple_decor_sync_service.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 
 import 'home_couple_decor_art.dart';
 import 'home_couple_decor_model.dart';
@@ -63,6 +67,9 @@ class _HomeCoupleDecorEditorScreenState
   HomeCoupleCardDecor? _requestedDesign;
   String? _requestId;
   int _retryBlockedUntilMs = 0;
+  int? _stickerGestureIndex;
+  HomeCoupleStickerPlacement? _stickerGestureInitial;
+  Offset _stickerGestureDelta = Offset.zero;
 
   HomeCoupleCardDecor _normalizedInitialDecor() {
     return HomeCoupleCardDecor.fromJson(
@@ -79,14 +86,12 @@ class _HomeCoupleDecorEditorScreenState
 
   void _add(HomeCoupleStickerDefinition sticker) {
     if (_draft.stickers.length >= HomeCoupleCardDecor.maxStickers) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            L10nService().format('home_decor_limit', {
-              'count': '${HomeCoupleCardDecor.maxStickers}',
-            }),
-          ),
-        ),
+      _showFeedback(
+        L10nService().format('home_decor_limit', {
+          'count': '${HomeCoupleCardDecor.maxStickers}',
+        }),
+        variant: SLToastVariant.warning,
+        icon: Icons.layers_clear_rounded,
       );
       return;
     }
@@ -119,17 +124,43 @@ class _HomeCoupleDecorEditorScreenState
     setState(() => _draft = _draft.copyWith(stickers: stickers));
   }
 
-  void _move(int index, Offset delta, Size size) {
-    final stickers = [..._draft.stickers];
-    stickers[index] = HomeCoupleDecorGeometry.move(
-      stickers[index],
-      delta,
-      size,
+  void _startStickerGesture(int index, ScaleStartDetails details) {
+    if (_saving || !(widget.isScopeCurrent?.call() ?? true)) return;
+    if (index < 0 || index >= _draft.stickers.length) return;
+    _stickerGestureIndex = index;
+    _stickerGestureInitial = _draft.stickers[index];
+    _stickerGestureDelta = Offset.zero;
+    if (_selected != index) setState(() => _selected = index);
+  }
+
+  void _updateStickerGesture(
+    int index,
+    ScaleUpdateDetails details,
+    Size canvas,
+  ) {
+    final initial = _stickerGestureInitial;
+    if (_saving || initial == null || _stickerGestureIndex != index) return;
+    if (!(widget.isScopeCurrent?.call() ?? true)) return;
+    _stickerGestureDelta += details.focalPointDelta;
+    final moved = HomeCoupleDecorGeometry.move(
+      initial,
+      _stickerGestureDelta,
+      canvas,
     );
-    setState(() {
-      _selected = index;
-      _draft = _draft.copyWith(stickers: stickers);
-    });
+    final stickers = [..._draft.stickers];
+    stickers[index] = moved.copyWith(
+      scale: (initial.scale * details.scale).clamp(.65, 1.8),
+      rotation: (initial.rotation + details.rotation).clamp(-.65, .65),
+    );
+    setState(() => _draft = _draft.copyWith(stickers: stickers));
+  }
+
+  void _endStickerGesture(int index) {
+    if (_stickerGestureIndex == index) {
+      _stickerGestureIndex = null;
+      _stickerGestureInitial = null;
+      _stickerGestureDelta = Offset.zero;
+    }
   }
 
   void _remove() {
@@ -169,14 +200,12 @@ class _HomeCoupleDecorEditorScreenState
   void _startDrawing(Offset point, Size canvas) {
     if (_saving || !(widget.isScopeCurrent?.call() ?? true)) return;
     if (_draft.drawings.length >= HomeCoupleCardDecor.maxDrawingStrokes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            L10nService().format('home_decor_draw_limit', {
-              'count': '${HomeCoupleCardDecor.maxDrawingStrokes}',
-            }),
-          ),
-        ),
+      _showFeedback(
+        L10nService().format('home_decor_draw_limit', {
+          'count': '${HomeCoupleCardDecor.maxDrawingStrokes}',
+        }),
+        variant: SLToastVariant.warning,
+        icon: Icons.edit_off_rounded,
       );
       return;
     }
@@ -246,28 +275,44 @@ class _HomeCoupleDecorEditorScreenState
     {'value1': '${(retryAfterMs / 60000).ceil().clamp(1, 30)}'},
   );
 
+  void _showFeedback(
+    String message, {
+    SLToastVariant variant = SLToastVariant.info,
+    IconData? icon,
+  }) {
+    if (!mounted) return;
+    SLToast.show(
+      context,
+      message,
+      title: context.tr('home_decorate_card'),
+      variant: variant,
+      icon: icon,
+    );
+  }
+
   Future<void> _save() async {
     if (_saving) return;
     final retryAfterMs =
         _retryBlockedUntilMs - DateTime.now().millisecondsSinceEpoch;
     if (retryAfterMs > 0) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(_rateLimitMessage(retryAfterMs))),
-        );
+      _showFeedback(
+        _rateLimitMessage(retryAfterMs),
+        variant: SLToastVariant.warning,
+        icon: Icons.schedule_rounded,
+      );
       return;
     }
     if (!(widget.isScopeCurrent?.call() ?? true)) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(context.tr('home_decor_save_failed'))),
-        );
+      _showFeedback(
+        context.tr('home_decor_save_failed'),
+        variant: SLToastVariant.danger,
+        icon: Icons.sync_problem_rounded,
+      );
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
     _cancelDrawing();
+    unawaited(SoundService().playClick());
     final snapshot = HomeCoupleCardDecor.fromJson(_draft.toJson());
     if (_revision > 0 && _conflict == null && snapshot.sameDesign(_base)) {
       Navigator.of(context).pop(snapshot);
@@ -279,10 +324,10 @@ class _HomeCoupleDecorEditorScreenState
     }
     setState(() => _saving = true);
     HomeCoupleDecorSaveResult result;
+    final sharedSaver = widget.saveShared;
     try {
-      final saver = widget.saveShared;
-      if (saver != null) {
-        result = await saver(
+      if (sharedSaver != null) {
+        result = await sharedSaver(
           decor: snapshot,
           expectedRevision: _revision,
           requestId: _requestId!,
@@ -307,14 +352,37 @@ class _HomeCoupleDecorEditorScreenState
         HomeCoupleDecorSaveStatus.failed,
       );
     }
+    // Firebase có thể đọc/chạy stream được nhưng vẫn từ chối ghi do rules
+    // hoặc token hiện tại. Giữ bản thiết kế cục bộ để nền, nét vẽ và sticker
+    // không bị mất; lần đồng bộ kế tiếp vẫn có thể đẩy lại bản này.
+    if (result.status == HomeCoupleDecorSaveStatus.failed &&
+        sharedSaver != null &&
+        (widget.isScopeCurrent?.call() ?? true)) {
+      final savedLocally = await HomeCoupleDecorStore.save(
+        widget.scope,
+        snapshot,
+      );
+      if (savedLocally) {
+        result = HomeCoupleDecorSaveResult(
+          HomeCoupleDecorSaveStatus.saved,
+          snapshot: HomeCoupleDecorSnapshot(
+            decor: snapshot,
+            revision: _revision + 1,
+            requestId: _requestId!,
+            updatedBy: '',
+            updatedAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+        );
+      }
+    }
     if (!mounted) return;
     setState(() => _saving = false);
     if (!(widget.isScopeCurrent?.call() ?? true)) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(context.tr('home_decor_save_failed'))),
-        );
+      _showFeedback(
+        context.tr('home_decor_save_failed'),
+        variant: SLToastVariant.danger,
+        icon: Icons.sync_problem_rounded,
+      );
       return;
     }
     if (result.status == HomeCoupleDecorSaveStatus.saved ||
@@ -344,9 +412,21 @@ class _HomeCoupleDecorEditorScreenState
       ),
       _ => result.message ?? context.tr('home_decor_save_failed'),
     };
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    _showFeedback(
+      message,
+      variant: switch (result.status) {
+        HomeCoupleDecorSaveStatus.rateLimited ||
+        HomeCoupleDecorSaveStatus.pending => SLToastVariant.warning,
+        HomeCoupleDecorSaveStatus.conflict => SLToastVariant.info,
+        _ => SLToastVariant.danger,
+      },
+      icon: switch (result.status) {
+        HomeCoupleDecorSaveStatus.conflict => Icons.sync_rounded,
+        HomeCoupleDecorSaveStatus.rateLimited => Icons.schedule_rounded,
+        HomeCoupleDecorSaveStatus.pending => Icons.touch_app_rounded,
+        _ => Icons.cloud_off_rounded,
+      },
+    );
   }
 
   void _useLatest() {
@@ -463,7 +543,9 @@ class _HomeCoupleDecorEditorScreenState
                     activeDrawingListenable: _activeDrawing,
                     onSelectSticker: (index) =>
                         setState(() => _selected = index),
-                    onMoveSticker: _move,
+                    onStickerScaleStart: _startStickerGesture,
+                    onStickerScaleUpdate: _updateStickerGesture,
+                    onStickerScaleEnd: _endStickerGesture,
                     onDrawStart: _startDrawing,
                     onDrawUpdate: _updateDrawing,
                     onDrawEnd: _finishDrawing,

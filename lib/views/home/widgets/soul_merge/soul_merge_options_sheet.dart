@@ -85,7 +85,8 @@ class SoulMergeOptionsSheet extends StatelessWidget {
                   onTap: () =>
                       Navigator.pop(context, SoulMergeOption.removeBackground),
                 ),
-              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+              if (!kIsWeb &&
+                  defaultTargetPlatform == TargetPlatform.android)
                 SwitchListTile(
                   secondary: const Icon(Icons.chat_bubble_outline_rounded),
                   title: Text(context.tr('p4_soul_overlay_title')),

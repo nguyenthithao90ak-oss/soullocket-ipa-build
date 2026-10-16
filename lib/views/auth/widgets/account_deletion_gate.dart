@@ -11,12 +11,17 @@ class AccountDeletionGate extends StatefulWidget {
     required this.cancelRequest,
     required this.signOut,
     required this.childBuilder,
+    this.loadingBuilder,
   });
 
   final Future<AccountDeletionStatus?> Function() loadStatus;
   final Future<void> Function() cancelRequest;
   final Future<void> Function() signOut;
   final WidgetBuilder childBuilder;
+
+  /// Màn hiện trong lần kiểm tra đầu (chưa biết trạng thái). Nơi gọi truyền màn
+  /// tải chung để nối liền với màn phía sau; mặc định là nền trống.
+  final WidgetBuilder? loadingBuilder;
 
   @override
   State<AccountDeletionGate> createState() => _AccountDeletionGateState();
@@ -103,6 +108,12 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
   Widget build(BuildContext context) {
     if (!_busy && _error == null && _checked && _status == null) {
       return widget.childBuilder(context);
+    }
+    if (!_checked && _status == null && _error == null) {
+      // Lần kiểm tra đầu thường dưới 1 giây và gần như luôn "không có lệnh xóa":
+      // không hiện màn chữ "Đang kiểm tra…" chớp lên rồi tắt, chỉ giữ màn tải.
+      return widget.loadingBuilder?.call(context) ??
+          Scaffold(backgroundColor: Theme.of(context).colorScheme.surface);
     }
     final status = _status;
     final date = status == null || status.scheduledAtMs <= 0

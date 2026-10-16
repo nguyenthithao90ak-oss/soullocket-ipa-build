@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'ui_copy.dart';
 
@@ -261,7 +262,9 @@ class AppErrorMapper {
       if (code == 'permission-denied') {
         return AppErrorInfo(
           kind: AppErrorKind.user,
-          message: cleanMsg.isEmpty || cleanMsg == defaultServerMessage
+          message: cleanMsg.isEmpty ||
+                  cleanMsg == defaultServerMessage ||
+                  _containsVietnameseText(cleanMsg)
               ? L10nService().translate('err_permission_denied')
               : cleanMsg,
         );
@@ -319,7 +322,7 @@ class AppErrorMapper {
         normalized.contains('sai mật khẩu') ||
         normalized.contains('thông tin đăng nhập') ||
         normalized.contains('tài khoản không tồn tại') ||
-        normalized.contains('tối đa 3 tài khoản') ||
+        normalized.contains('tài khoản mới trong 1 ngày') ||
         normalized.contains('already in use') ||
         normalized.contains('already-in-use') ||
         normalized.contains('email-already-in-use') ||
@@ -410,10 +413,16 @@ class AppErrorMapper {
         normalized.contains('thông tin đăng nhập')) {
       return L10nService().translate('err_auth_invalid_credential');
     }
+    // Giới hạn số tài khoản mới mỗi ngày trên máy (AuthSignInService) khác với
+    // lỗi nhập sai nhiều lần: báo đúng lý do để người dùng không thử lại vô ích.
+    if (normalized.contains('tài khoản mới trong 1 ngày')) {
+      return L10nService()
+          .translate('err_auth_device_daily_login_limit')
+          .replaceAll('{count}', '${AppConfig.maxNewLoginsPerDay}');
+    }
     if (normalized.contains('too many requests') ||
         normalized.contains('too-many-requests') ||
-        normalized.contains('blocked all requests') ||
-        normalized.contains('tối đa 3 tài khoản')) {
+        normalized.contains('blocked all requests')) {
       return L10nService().translate('err_auth_too_many_requests');
     }
     if (normalized.contains('user not found') ||
@@ -476,6 +485,19 @@ class AppErrorMapper {
     if (message.isEmpty) {
       return fallbackMessage ?? defaultServerMessage;
     }
+    // Backend cũ vẫn có thể trả câu tiếng Việt trực tiếp. Không để câu đó
+    // lọt lên UI của người dùng quốc tế; caller thường đã truyền fallback
+    // theo locale hiện tại nên thông báo vẫn giữ đúng ngôn ngữ.
+    if (_containsVietnameseText(message)) {
+      return fallbackMessage ?? defaultServerMessage;
+    }
     return message;
+  }
+
+  static bool _containsVietnameseText(String message) {
+    return RegExp(
+      r'[àáảãạăằắẳẵặâầấẩẫậđèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ]',
+      caseSensitive: false,
+    ).hasMatch(message);
   }
 }

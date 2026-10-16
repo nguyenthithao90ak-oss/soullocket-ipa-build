@@ -74,6 +74,7 @@ class CloudflareDataService {
     'memories',
     'capsules',
     'finances',
+    'diary-reactions',
   };
 
   final http.Client _client;
@@ -141,6 +142,60 @@ class CloudflareDataService {
       }
     }
   }
+
+  /// Ghi một mutation nhỏ lên Worker sau khi đã kiểm tra lại UID + House.
+  /// Caller chỉ gửi metadata ngắn; không dùng endpoint này cho media hoặc
+  /// payload lớn.
+  Future<Map<String, dynamic>> write({
+    required String houseId,
+    required String resource,
+    required Map<String, dynamic> body,
+    String? idempotencyKey,
+  }) async {
+    if (_disposed) throw StateError('Cloudflare data service is disposed');
+    if (!_isValidOrigin ||
+        !_resources.contains(resource) ||
+        !RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(houseId)) {
+      throw ArgumentError('Invalid Cloudflare write scope');
+    }
+    final uid = _uidProvider();
+    if (uid == null) throw FirebaseAuthException(code: 'user-token-expired');
+    final encoded = utf8.encode(jsonEncode(body));
+    if (encoded.length > 32 * 1024) {
+      throw ArgumentError('Cloudflare write body is too large');
+    }
+    await _requireScope(uid, houseId);
+    final uri = _baseUrl.replace(path: '/api/v1/$resource');
+    final abort = Completer<void>();
+    _aborts.add(abort);
+    try {
+      return await _write(
+        uid,
+        houseId,
+        uri,
+        encoded,
+        abort,
+        idempotencyKey: idempotencyKey,
+      ).timeout(
+        _timeout,
+        onTimeout: () {
+          if (!abort.isCompleted) abort.complete();
+          throw TimeoutException('Metadata write timed out');
+        },
+      );
+    } finally {
+      if (!abort.isCompleted) abort.complete();
+      _aborts.remove(abort);
+    }
+  }
+
+  bool get _isValidOrigin =>
+      _baseUrl.scheme == 'https' &&
+      _baseUrl.host.isNotEmpty &&
+      _baseUrl.userInfo.isEmpty &&
+      !_baseUrl.hasQuery &&
+      !_baseUrl.hasFragment &&
+      (_baseUrl.path.isEmpty || _baseUrl.path == '/');
 
   Future<void> _requireScope(String uid, String houseId) async {
     if (_disposed || _uidProvider() != uid) {
@@ -222,6 +277,72 @@ class CloudflareDataService {
       );
       rethrow;
     }
+  }
+
+  Future<Map<String, dynamic>> _write(
+    String uid,
+    String houseId,
+    Uri uri,
+    List<int> body,
+    Completer<void> abort, {
+    String? idempotencyKey,
+  }) async {
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final token = await _tokenProvider(attempt > 0);
+      await _requireScope(uid, houseId);
+      if (abort.isCompleted) throw TimeoutException('Metadata write timed out');
+      if (token == null || token.isEmpty) {
+        throw FirebaseAuthException(code: 'user-token-expired');
+      }
+      final appCheckToken = await _appCheckTokenProvider(attempt > 0);
+      await _requireScope(uid, houseId);
+      if (appCheckToken == null || appCheckToken.trim().isEmpty) {
+        throw FirebaseException(
+          plugin: 'firebase_app_check',
+          code: 'app-check-token-missing',
+        );
+      }
+      final request =
+          http.AbortableRequest('POST', uri, abortTrigger: abort.future)
+            ..followRedirects = false
+            ..headers.addAll({
+              'Authorization': 'Bearer $token',
+              'X-Firebase-AppCheck': appCheckToken,
+              'X-House-ID': houseId,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              if (idempotencyKey != null && idempotencyKey.trim().isNotEmpty)
+                'Idempotency-Key': idempotencyKey.trim(),
+            })
+            ..bodyBytes = body;
+      final response = await _client.send(request).timeout(_timeout);
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in response.stream.timeout(_timeout)) {
+        if (bytes.length + chunk.length > maxResponseBytes) {
+          throw const FormatException('Metadata response exceeds limit');
+        }
+        bytes.add(chunk);
+      }
+      await _requireScope(uid, houseId);
+      if (response.statusCode == 401 && attempt == 0) continue;
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        final retrySeconds = int.tryParse(
+          response.headers['retry-after'] ?? '',
+        );
+        throw CloudflareDataException(
+          response.statusCode,
+          retryAfter: retrySeconds != null && retrySeconds >= 0
+              ? Duration(seconds: retrySeconds)
+              : null,
+        );
+      }
+      final decoded = jsonDecode(utf8.decode(bytes.takeBytes()));
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Invalid metadata response');
+      }
+      return decoded;
+    }
+    throw const CloudflareDataException(401);
   }
 
   void dispose() {

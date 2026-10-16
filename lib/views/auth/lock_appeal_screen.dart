@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import '../../utils/services/house_service.dart';
 import '../../core/sl_theme.dart';
@@ -199,6 +198,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       _showSnack(context.tr('ui_auth_an_appeal_cannot_be_submitted_at_this_7c7848'));
     } finally {
       if (mounted) {
@@ -589,9 +589,10 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
     final reply = item['adminReply']?.toString().trim() ?? '';
     final ts = (item['ts'] as num?)?.toInt() ?? 0;
     final dt = ts > 0
-        ? DateFormat(
-            'HH:mm - dd/MM/yyyy',
-          ).format(DateTime.fromMillisecondsSinceEpoch(ts))
+        ? LocaleDateFormat.timeAndDate(
+            DateTime.fromMillisecondsSinceEpoch(ts),
+            separator: ' - ',
+          )
         : L10nService().translate('ui_auth_time_synchronization_a7fbef');
 
     return Container(

@@ -407,23 +407,52 @@ class _SoulPhotoTilePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    final tileSide = size.shortestSide;
     final shell = RRect.fromRectAndRadius(
-      rect.deflate(.65),
-      Radius.circular(size.shortestSide * .16),
+      rect.deflate(.8),
+      Radius.circular(tileSide * .18),
     );
     final frame = gold
         ? const Color(0xFFFFD787)
         : bomb
         ? const Color(0xFFFFA4AD)
         : const Color(0xFFE5EFFF);
-    canvas.drawRRect(shell, Paint()..color = const Color(0xFF080F22));
+    final glowAmount = clearing > 0
+        ? .18 + (clearing * .45)
+        : gold || bomb
+        ? .22
+        : preview
+        ? .10
+        : 0.0;
+    if (glowAmount > 0) {
+      canvas.drawRRect(
+        shell.inflate(1.5),
+        Paint()
+          ..color = frame.withValues(alpha: glowAmount.clamp(0.0, .62))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+    }
+    canvas.drawRRect(
+      shell,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: <Color>[
+            Color(0xFF15233D),
+            Color(0xFF080F22),
+            Color(0xFF050914),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(rect),
+    );
+    final innerRect = rect.deflate(1.8);
     canvas.save();
     canvas.clipRRect(shell);
     if (image != null) {
       canvas.drawImageRect(
         image!,
         _sourcePhotoRect(image!, crop),
-        rect,
+        innerRect,
         Paint()
           ..filterQuality = FilterQuality.low
           ..color = Colors.white.withValues(alpha: preview ? .55 : 1),
@@ -431,7 +460,7 @@ class _SoulPhotoTilePainter extends CustomPainter {
     } else {
       // Khi chưa có ảnh: bề mặt khắc trung tính, vẫn phân biệt ô đã đặt.
       canvas.drawRect(
-        rect,
+        innerRect,
         Paint()
           ..shader = const LinearGradient(
             colors: [Color(0xFF536078), Color(0xFF26334B)],
@@ -447,11 +476,11 @@ class _SoulPhotoTilePainter extends CustomPainter {
       }
     }
     canvas.drawRect(
-      rect,
+      innerRect,
       Paint()
         ..shader = LinearGradient(
           colors: [
-            Colors.white.withValues(alpha: .15),
+            Colors.white.withValues(alpha: preview ? .22 : .18),
             Colors.transparent,
             Colors.black.withValues(alpha: .22),
           ],
@@ -460,10 +489,38 @@ class _SoulPhotoTilePainter extends CustomPainter {
           end: Alignment.bottomRight,
         ).createShader(rect),
     );
+    canvas.drawRect(
+      innerRect,
+      Paint()
+        ..shader = LinearGradient(
+          colors: <Color>[
+            frame.withValues(alpha: .16),
+            Colors.transparent,
+            frame.withValues(alpha: .08),
+          ],
+          stops: const <double>[0, .52, 1],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(innerRect),
+    );
     if (clearing > 0) {
-      canvas.drawRect(
-        rect,
-        Paint()..color = Colors.white.withValues(alpha: clearing * .85),
+      final clearCenter = Offset(size.width * .5, size.height * .42);
+      final clearRadius = tileSide * (.28 + clearing * .55);
+      canvas.drawCircle(
+        clearCenter,
+        clearRadius,
+        Paint()
+          ..shader =
+              RadialGradient(
+                colors: <Color>[
+                  Colors.white.withValues(alpha: clearing * .86),
+                  frame.withValues(alpha: clearing * .50),
+                  Colors.transparent,
+                ],
+                stops: const <double>[0, .42, 1],
+              ).createShader(
+                Rect.fromCircle(center: clearCenter, radius: clearRadius),
+              ),
       );
     }
     canvas.restore();
@@ -471,15 +528,28 @@ class _SoulPhotoTilePainter extends CustomPainter {
       shell,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = (gold || bomb || preview) ? 1.6 : 1
-        ..color = frame.withValues(alpha: preview || floating ? .95 : .68),
+        ..strokeWidth = (gold || bomb || preview || clearing > 0) ? 1.7 : 1.05
+        ..color = frame.withValues(
+          alpha: preview || floating || clearing > 0 ? .98 : .72,
+        ),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        rect.deflate(2.7),
+        Radius.circular(tileSide * .14),
+      ),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .65
+        ..color = Colors.white.withValues(alpha: preview ? .22 : .10),
     );
     canvas.drawLine(
       Offset(size.width * .2, 1.6),
       Offset(size.width * .8, 1.6),
       Paint()
-        ..strokeWidth = 1.1
-        ..color = Colors.white.withValues(alpha: .7),
+        ..strokeWidth = tileSide < 18 ? .8 : 1.2
+        ..strokeCap = StrokeCap.round
+        ..color = Colors.white.withValues(alpha: preview ? .82 : .62),
     );
   }
 

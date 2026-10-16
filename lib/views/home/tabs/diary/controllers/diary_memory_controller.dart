@@ -73,15 +73,25 @@ class DiaryMemoryController extends ChangeNotifier {
     _resetMemoriesPagination();
   }
 
-  static const int _webMemoryCacheLimit = 120;
-  static const int _appMemoryCacheLimit = 200;
+  // Listener chỉ giữ một cửa sổ live; các trang cũ được đọc riêng khi người
+  // dùng cuộn tới. Giảm cửa sổ này tránh tải lại cả album (có thể hàng trăm
+  // KB metadata/URL) mỗi lần một bản ghi mới thay đổi.
+  // Giữ một cửa sổ nhỏ cho listener live; lịch sử cũ tải theo cursor ở trang
+  // 30 bản ghi khi người dùng cuộn. Mỗi lần có thay đổi vì thế chỉ gửi lại
+  // khoảng một trang metadata thay vì cả hai trang đang mở.
+  static const int _webMemoryCacheLimit = 40;
+  static const int _appMemoryCacheLimit = 30;
   static const Duration _memoryDownloadCacheTtl = PrivateImageDiskCache.ttl;
   static const String _pendingUploadPrefsKey = 'diary_memory_pending_upload_v1';
 
   final DatabaseReference _dbRef;
   final StorageService _storageService;
   final PrivateMediaUrlService _privateMediaUrlService =
-      PrivateMediaUrlService();
+      PrivateMediaUrlService(
+        batchRequests: true,
+        cacheCompletedUrls: true,
+        maximumCacheEntries: 60,
+      );
   final MapPinLimitService _mapPinLimitService = MapPinLimitService();
 
   final ValueNotifier<int> selectionTickVN = ValueNotifier<int>(0);
@@ -328,11 +338,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (persist) {
         await _clearPendingUploadState();
       } else {
-        _setPendingUploadState(
-          remaining,
-          message: null,
-          notify: false,
-        );
+        _setPendingUploadState(remaining, message: null, notify: false);
       }
       return;
     }
@@ -867,6 +873,7 @@ class DiaryMemoryController extends ChangeNotifier {
     required int limit,
   }) {
     final photos = <Map<String, dynamic>>[];
+    final seenIds = <String>{};
     if (source == null) {
       return photos;
     }
@@ -881,6 +888,9 @@ class DiaryMemoryController extends ChangeNotifier {
           Map<dynamic, dynamic>.from(value),
         );
         item['id'] = key.toString();
+        if (!seenIds.add(item['id'].toString())) {
+          return;
+        }
         item['houseId'] = houseId;
         _normalizeMemoryPhotoUrl(item);
         photos.add(item);
@@ -891,6 +901,10 @@ class DiaryMemoryController extends ChangeNotifier {
           continue;
         }
         final normalizedItem = Map<String, dynamic>.from(item);
+        final id = normalizedItem['id']?.toString().trim() ?? '';
+        if (id.isEmpty || !seenIds.add(id)) {
+          continue;
+        }
         normalizedItem['houseId'] = houseId;
         _normalizeMemoryPhotoUrl(normalizedItem);
         photos.add(normalizedItem);
@@ -1880,6 +1894,7 @@ class DiaryMemoryController extends ChangeNotifier {
         _getTotalStorageBytes(houseId),
         uploadBytesRef.get(),
       ]);
+      if (!context.mounted) return;
 
       final vipAccess = preCheckResults[0] as VipAccessInfo;
       final totalStorageMap = preCheckResults[1] as Map<String, int>;
@@ -1945,11 +1960,19 @@ class DiaryMemoryController extends ChangeNotifier {
         final videoLimitMb = formatMb(videoLimitBytes);
         showSnackBar(
           vipAccess.isVip
-              ? L10nScope.of(context).format('ui_home_you_have_used_up_all_your_upload_955ced', {'value1': imageLimitMb, 'value2': videoLimitMb})
+              ? L10nScope.of(context).format(
+                  'ui_home_you_have_used_up_all_your_upload_955ced',
+                  {'value1': imageLimitMb, 'value2': videoLimitMb},
+                )
               : AppConfig.isPurchaseEnabled
               ? videoLimitBytes <= 0
-                    ? L10nService().format('memory_free_daily_photo_limit', {'value1': imageLimitMb})
-                    : L10nScope.of(context).format('ui_home_accounts_typically_only_upload_value1_mb_photos_c94b49', {'value1': imageLimitMb, 'value2': videoLimitMb})
+                    ? L10nService().format('memory_free_daily_photo_limit', {
+                        'value1': imageLimitMb,
+                      })
+                    : L10nScope.of(context).format(
+                        'ui_home_accounts_typically_only_upload_value1_mb_photos_c94b49',
+                        {'value1': imageLimitMb, 'value2': videoLimitMb},
+                      )
               : context.tr('ui_home_you_have_used_up_all_your_upload_44821d'),
           backgroundColor: const Color(0xFFE53935),
         );
@@ -1985,7 +2008,9 @@ class DiaryMemoryController extends ChangeNotifier {
       final blockedVideos = canUploadVideo
           ? const <XFile>[]
           : candidates.where(isVideo).toList();
-      final images = candidates.where((f) => !blockedVideos.contains(f)).toList();
+      final images = candidates
+          .where((f) => !blockedVideos.contains(f))
+          .toList();
       if (blockedVideos.isNotEmpty) {
         await _removePendingUploadedImages(blockedVideos);
         if (!context.mounted || !scopeIsCurrent()) return;
@@ -2045,6 +2070,7 @@ class DiaryMemoryController extends ChangeNotifier {
           guardController.resolveCurrentUser(),
           locationFuture,
         ]);
+      if (!context.mounted) return;
 
         final user = postPickResults[0] as User?;
         if (user == null) {
@@ -2082,7 +2108,7 @@ class DiaryMemoryController extends ChangeNotifier {
         try {
           final user = await guardController.resolveCurrentUser();
           if (user != null) {
-          await user.getIdToken();
+            await user.getIdToken();
           }
         } catch (e) {
           debugPrint(
@@ -2297,7 +2323,13 @@ class DiaryMemoryController extends ChangeNotifier {
             content: Text(
               failedCount == 0
                   ? skippedMapPinBecauseLimit
-                        ? L10nScope.of(context).format('ui_home_added_value1_memories_the_photo_is_still_991b52', {'value1': uploadedCount, 'value2': MapPinLimitService.maxPins})
+                        ? L10nScope.of(context).format(
+                            'ui_home_added_value1_memories_the_photo_is_still_991b52',
+                            {
+                              'value1': uploadedCount,
+                              'value2': MapPinLimitService.maxPins,
+                            },
+                          )
                         : L10nService().format('diary_added_new_memories', {
                             'count': uploadedCount,
                           })

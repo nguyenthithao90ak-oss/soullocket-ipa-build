@@ -275,6 +275,12 @@ class AdMobService {
 
   bool isBannerUsable(BannerAd ad) => _canUseAds && _banners.contains(ad);
   bool get canRequestAds => _canUseAds;
+  bool get hasReadyInterstitialAd {
+    final loadedAt = _interstitialLoadedAt;
+    if (_interstitialAd == null || loadedAt == null) return false;
+    return DateTime.now().difference(loadedAt) < const Duration(minutes: 55);
+  }
+
   bool get supportsSoulGameRewardedAds =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   bool get soulGameAdsDisabledByPrivacy =>
@@ -1519,6 +1525,47 @@ class AdMobService {
     ),
   );
 
+  Future<bool> showReadyInterstitialAd({bool Function()? isCurrent}) =>
+      _withFullscreenLock(
+        () => _showReadyInterstitialAd(isCurrent: isCurrent ?? () => true),
+      );
+
+  Future<bool> _showReadyInterstitialAd({
+    required bool Function() isCurrent,
+  }) async {
+    if (kIsWeb || !isCurrent() || !hasReadyInterstitialAd) return false;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final showEpoch = _privacyEpoch;
+    final ad = _interstitialAd;
+    if (uid == null || ad == null) return false;
+    bool canShow() =>
+        isCurrent() &&
+        identical(_interstitialAd, ad) &&
+        _canPresentAdFor(uid, showEpoch, blockKeyboard: true) &&
+        !hasRecentFullscreenAd();
+    if (!canShow()) return false;
+    AppLifecyclePresenceGuard.arm();
+    final outcome = await presentInterstitialAd(
+      ad: ad,
+      canShow: canShow,
+      onShown: () {
+        _nativeFullscreenVisible = true;
+        _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
+        unawaited(_sendAdImpressionPing('interstitial', ad.adUnitId));
+      },
+      onClosed: () {
+        _nativeFullscreenVisible = false;
+        if (identical(_interstitialAd, ad)) {
+          _interstitialAd = null;
+          _interstitialLoadedAt = null;
+        }
+        unawaited(loadInterstitialAd());
+        AppLifecyclePresenceGuard.settle();
+      },
+    );
+    return outcome != FullscreenAdOutcome.unavailable;
+  }
+
   Future<bool> _showInterstitialAd({
     required bool Function() isCurrent,
     required Duration preparationTimeout,
@@ -2099,48 +2146,6 @@ class AdMobService {
     return RewardClaimResult.fromResponse(receipt);
   }
 
-  /// Khôi phục biên nhận trước khi đề nghị quảng cáo mới; không cộng XP.
-  Future<RewardClaimResult> companionAdReward({bool showIfNone = false}) async {
-    const purpose = 'companion_points';
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return const RewardClaimResult(ok: false, error: 'unauthenticated');
-    }
-    final prefs = await SharedPreferences.getInstance();
-    if (FirebaseAuth.instance.currentUser?.uid != uid) {
-      return const RewardClaimResult(ok: false, error: 'unauthenticated');
-    }
-    final pendingPurpose = prefs.getString('ad_pending_purpose_$uid');
-    if (pendingPurpose != null &&
-        prefs.getString('ad_pending_nonce_$uid') != null) {
-      final receipt = await _waitForVerifiedReward(pendingPurpose);
-      final started = prefs.getInt('ad_pending_started_$uid');
-      if (receipt?['error'] == 'reward_pending' &&
-          started != null &&
-          DateTime.now().millisecondsSinceEpoch - started >
-              const Duration(hours: 24).inMilliseconds) {
-        await prefs.remove('ad_pending_nonce_$uid');
-        await prefs.remove('ad_pending_purpose_$uid');
-        await prefs.remove('ad_pending_started_$uid');
-      }
-      return RewardClaimResult.fromResponse(receipt);
-    }
-    if (!showIfNone) {
-      return const RewardClaimResult(ok: false, error: 'missing_proof');
-    }
-    final watched = await showRewardedAd(verifiedPurpose: purpose);
-    if (FirebaseAuth.instance.currentUser?.uid != uid) {
-      return const RewardClaimResult(ok: false, error: 'unauthenticated');
-    }
-    if (!watched) {
-      // Chưa được thưởng: giữ biên nhận để kiểm tra SSV trễ, không mất thưởng.
-      return const RewardClaimResult(ok: false, error: 'ad_not_completed');
-    }
-    return RewardClaimResult.fromResponse(
-      await _waitForVerifiedReward(purpose),
-    );
-  }
-
   Future<Map<String, dynamic>?> _waitForVerifiedReward(
     String purpose, {
     String? nonceOverride,
@@ -2178,7 +2183,7 @@ class AdMobService {
         if (prefs.getString('ad_pending_nonce_$uid') == pending ||
             nonceOverride != null) {
           await _clearPendingReward(uid, pending);
-          if (purpose == 'points' || purpose == 'companion_points') {
+          if (purpose == 'points') {
             await _incrementDailyRewardedAdCount();
           }
         }

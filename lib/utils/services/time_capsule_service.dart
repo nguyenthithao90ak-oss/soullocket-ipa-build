@@ -90,28 +90,25 @@ class TimeCapsuleService {
         .cast<List<Map<String, dynamic>>>();
   }
 
-  /// Lấy danh sách các rương chưa mở (Dùng cho check notification)
+  /// Lấy danh sách các rương chưa mở (Dùng cho check notification).
+  /// Lỗi được ném ra để nơi gọi biết lượt kiểm tra chưa xong mà thử lại sau.
   Future<List<Map<String, dynamic>>> getUnopenedCapsules(String houseId) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return [];
-    try {
-      final response =
-          await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
-            'listTimeCapsules',
-            payload: {'houseId': normalizedHouseId},
-            requireAppCheck: true,
-            throwOriginalException: true,
-          );
-      final raw = response.data['capsules'];
-      if (raw is! List) return [];
-      return raw
-          .whereType<Map>()
-          .map((item) => Map<String, dynamic>.from(item))
-          .where((c) => c['is_opened'] == false)
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final response =
+        await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+          'listTimeCapsules',
+          payload: {'houseId': normalizedHouseId},
+          requireAppCheck: true,
+          throwOriginalException: true,
+        );
+    final raw = response.data['capsules'];
+    if (raw is! List) return [];
+    return raw
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((c) => c['is_opened'] == false)
+        .toList();
   }
 
   /// Khui rương (Logic check Time)

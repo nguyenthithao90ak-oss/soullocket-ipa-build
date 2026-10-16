@@ -19,6 +19,7 @@ import '../utils/services/military_lock_service.dart';
 import '../utils/services/offline_cache_service.dart';
 import '../utils/services/storage/storage_service.dart';
 import '../utils/services/texas_age_gate_service.dart';
+import '../utils/services/update_checker_service.dart';
 import '../utils/services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../utils/services/settings_sync_service.dart';
@@ -37,6 +38,8 @@ import 'auth/auth_action_screen.dart';
 import 'auth/lock_appeal_screen.dart';
 import 'consent/consent_gate.dart';
 import 'home/home_screen.dart';
+import 'utilities/update_dialog_helper.dart';
+import '../widgets/local_guide_companion.dart';
 
 import 'auth/login_screen.dart';
 import 'home/tabs/diary/controllers/diary_memory_controller.dart';
@@ -72,12 +75,15 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   bool _authStreamTimeout = false;
   bool _hasTriggeredInitialAppOpenAd = false;
   bool _isCheckingRestoreNotice = false;
+  bool _isCheckingUpdate = true;
+  bool _isShowingRequiredUpdate = false;
 
   String? _lastUserId;
   String? _restoreNoticeCheckedUserId;
   Future<AppEntryAccessState>? _accessStateFuture;
   Future<void>? _signedOutCleanup;
   AppEntryAccessState? _initialAccessState;
+  AppUpdateInfo? _requiredUpdate;
   OverlayEntry? _privacyGuardEntry;
 
   @override
@@ -102,6 +108,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_checkRequiredUpdate());
       unawaited(locator<AppReferralService>().initialize());
       unawaited(WidgetActionService().initialize());
       unawaited(TexasAgeGateService().resolveAgeSignal());
@@ -321,6 +328,31 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     _applyAuthState(authState);
   }
 
+  Future<void> _checkRequiredUpdate() async {
+    final updateInfo = await UpdateCheckerService.checkUpdate();
+    if (!mounted) return;
+
+    setState(() {
+      _isCheckingUpdate = false;
+      _requiredUpdate = updateInfo?.needsUpdate == true ? updateInfo : null;
+    });
+
+    if (updateInfo?.needsUpdate == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _isShowingRequiredUpdate) return;
+        final info = _requiredUpdate;
+        if (info == null) return;
+        _isShowingRequiredUpdate = true;
+        UpdateDialogHelper.show(
+          context,
+          info.storeUrl,
+          info.latestVersion,
+          true,
+        );
+      });
+    }
+  }
+
   void _prepareHomeAssets(String houseId) {
     final future = _homeAssetPreparer.prepareIfNeeded(houseId);
     if (future != null) {
@@ -381,6 +413,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     return ConsentGate(
       key: ValueKey('house-session:$uid:$houseId'),
       onReady: () async {
+        LocalGuideSessionNotifier.instance.activate(uid: uid, houseId: houseId);
         unawaited(() async {
           try {
             debugPrint(
@@ -406,7 +439,11 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           }
         }());
       },
-      child: const HomeScreen(),
+      child: LocalGuideSessionHost(
+        uid: uid,
+        houseId: houseId,
+        child: const HomeScreen(),
+      ),
     );
   }
 
@@ -541,6 +578,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         message: context.tr('app_maintenance_message'),
         showActions: false,
       );
+    }
+    // Không dựng màn hình đăng nhập/Home trước khi biết bản cài có còn được
+    // phép sử dụng hay không. Nếu có bản mới, hộp thoại bắt buộc sẽ giữ người
+    // dùng ở đây cho tới khi họ mở cửa hàng và cập nhật.
+    if (_isCheckingUpdate || _requiredUpdate != null) {
+      return const LoadingScaffold();
     }
     return _buildContent(context);
   }

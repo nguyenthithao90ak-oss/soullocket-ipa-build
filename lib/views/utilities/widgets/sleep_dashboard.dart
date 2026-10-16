@@ -2,6 +2,7 @@ import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/sl_theme.dart';
+import '../../../utils/locale_date_format.dart';
 import '../../../utils/services/l10n_service.dart';
 import 'sleep_status_card.dart';
 
@@ -347,9 +348,9 @@ class SleepWeekCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: Semantics(
-                      label: DateFormat(
-                        'dd/MM/yyyy',
-                      ).format(DateTime(now.year, now.month, now.day - i)),
+                      label: LocaleDateFormat.date(
+                        DateTime(now.year, now.month, now.day - i),
+                      ),
                       value: sleepDurationText(
                         ((week[i] ?? 0) * 3600000).round(),
                       ),
@@ -403,7 +404,7 @@ class SleepWeekCard extends StatelessWidget {
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                DateFormat('E').format(
+                                DateFormat('E', LocaleDateFormat.intlLocale).format(
                                   DateTime(now.year, now.month, now.day - i),
                                 ),
                                 style: TextStyle(

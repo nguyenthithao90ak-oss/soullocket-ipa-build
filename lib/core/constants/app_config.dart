@@ -147,7 +147,8 @@ class AppConfig {
   static const int maxAccountsPer7Days = 10;
 
   /// Giới hạn đăng nhập tài khoản mới mỗi ngày trên 1 thiết bị
-  static const int maxNewLoginsPerDay = 3;
+  /// (chủ dự án đổi từ 3 lên 5 ngày 15/10/2026).
+  static const int maxNewLoginsPerDay = 5;
 
   /// Số bài diary lấy mỗi lần load
   static const int diaryPageSize = 50;

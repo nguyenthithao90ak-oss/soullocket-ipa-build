@@ -103,26 +103,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   bool _emailMatchesMaskedHint(String email, String masked) {
     if (masked.isEmpty || email.isEmpty) return false;
-    final parts = email.split('@');
-    if (parts.length != 2) return false;
-    final name = parts[0];
-    final domain = parts[1];
-
-    final maskedParts = masked.split('@');
-    if (maskedParts.length != 2) return false;
-    final maskedName = maskedParts[0];
-    final maskedDomain = maskedParts[1];
-
-    if (domain != maskedDomain) return false;
-    if (name.length < 2) return false;
-
-    if (!maskedName.startsWith(name[0])) return false;
-    if (!maskedName.endsWith(name[name.length - 1])) return false;
-
-    return true;
+    return _authService.maskEmail(email) == masked;
   }
 
   Future<String> _loadPublicRecoveryHint(String resolvedHouseId) async {
+    final security = await _authService.getHouseSecurityData(resolvedHouseId);
+    final callableHint = security?['maskedEmail']?.toString().trim() ?? '';
+    if (callableHint.isNotEmpty) return callableHint;
     final email = await _authService.findEmailByHouseId(resolvedHouseId);
     if (email != null && email.isNotEmpty) {
       return _authService.maskEmail(email);
@@ -244,9 +231,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final resolvedFullEmail = _normalizeRecoveryEmail(
         (secData?['email'] ?? '').toString(),
       );
+      final callableMaskedEmail =
+          (secData?['maskedEmail'] ?? '').toString().trim();
       final resolvedMaskedEmail = resolvedFullEmail.isNotEmpty
           ? _authService.maskEmail(resolvedFullEmail)
-          : publicHint;
+          : (callableMaskedEmail.isNotEmpty ? callableMaskedEmail : publicHint);
 
       if (secData == null && resolvedMaskedEmail.isEmpty) {
         _showErrorDialog(context.tr('forgot_pwd_err_house_not_found'));
@@ -264,7 +253,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // Load names in parallel (non-blocking UI)
       unawaited(_loadHouseMemberNames(resolvedHouseId));
 
-      if (question.isNotEmpty && answerHash.isNotEmpty) {
+      if (question.isNotEmpty &&
+          (resolvedAnswerHash.isNotEmpty ||
+              secData?['recoveryAvailable'] == true)) {
         setState(() => step = 2);
         return;
       }
@@ -304,7 +295,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final answer = answerCtrl.text.trim();
 
     FocusScope.of(context).unfocus();
-    final ok = _authService.matchesRecoveryAnswer(answerHash, answer);
+    final ok = answerHash.isNotEmpty
+        ? _authService.matchesRecoveryAnswer(answerHash, answer)
+        : await _authService.verifySecurityAnswer(houseId, answer);
+    if (!mounted) return;
     if (!ok) {
       _showErrorDialog(context.tr('forgot_pwd_err_wrong_answer'));
       return;

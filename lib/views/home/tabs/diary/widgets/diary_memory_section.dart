@@ -445,15 +445,21 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
     if (!mounted || photos.isEmpty) {
       return;
     }
-    final urls = <String>[
-      for (final photo in photos.take(_thumbnailWarmupCount))
-        if (!PrivateMemoryLinkPolicy.isPrivate(photo))
-          (isDiaryMemoryVideo(photo)
-                      ? resolveDiaryMemoryVideoThumbnailUrl(photo)
-                      : resolveDiaryMemoryMediaUrl(photo))
-                  ?.trim() ??
-              '',
-    ]..removeWhere((url) => url.isEmpty);
+    final urls =
+        <String>[
+          for (final photo in photos.take(_thumbnailWarmupCount))
+            if (!PrivateMemoryLinkPolicy.isPrivate(photo))
+              (isDiaryMemoryVideo(photo)
+                          ? resolveDiaryMemoryVideoThumbnailUrl(photo)
+                          : resolveDiaryMemoryMediaUrl(photo))
+                      ?.trim() ??
+                  '',
+        ]..removeWhere(
+          (url) =>
+              url.isEmpty ||
+              // Kho R2 công khai cũ đã đóng (trả 401): tải trước chỉ tốn request.
+              CloudflareR2Service.instance.isR2Url(url),
+        );
     if (urls.isEmpty) {
       return;
     }

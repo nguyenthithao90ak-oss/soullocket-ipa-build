@@ -65,6 +65,10 @@ class _CommentSheetState extends State<_CommentSheet> {
         .collection('social_posts')
         .doc(widget.postId)
         .collection('comments')
+        // Comment sheet chỉ hiển thị các comment mới nhất; listener không
+        // được tải lại toàn bộ lịch sử khi một comment mới xuất hiện.
+        .orderBy('ts', descending: true)
+        .limit(100)
         .snapshots()
         .listen(
           (snapshot) {

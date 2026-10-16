@@ -5,8 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
-/// Hiệu ứng chính khi chạm: một trái tim lớn rơi/chảy xuống trục giữa màn hình.
-/// Chỉ vẽ một hình trái tim; các lớp phụ là liquid, glow, ripple và sparkle.
+/// Hiệu ứng chính khi chạm: trái tim neo ở một vị trí cố định.
+/// Khi hai người kết nối, tim chỉ sáng lên và phát một burst ngắn; không rơi
+/// lặp lại hay tạo particle vô hạn.
 class SoulMergeTouchCascade extends StatefulWidget {
   const SoulMergeTouchCascade({super.key, required this.style});
 
@@ -240,14 +241,22 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
     if (size.isEmpty) return;
     final t = progress.clamp(0.0, 1.0);
     final width = math.min(size.width, 430.0);
-    final heartSize = (width * .57).clamp(172.0, 245.0);
+    // Tim nhỏ hơn vùng chạm để không che phần nhật ký và tin nhắn phía dưới.
+    final double heartSize = (width * .45).clamp(154.0, 208.0).toDouble();
     final centerX = size.width / 2;
     final top = -heartSize * .76;
-    final destination = size.height * .46;
+    final double destination = (size.height * .44).clamp(
+      250.0,
+      math.max(250.0, size.height - 220.0),
+    ).toDouble();
     final fall = Curves.easeOutBack.transform((t / .72).clamp(0.0, 1.0));
-    final y = top + (destination - top) * fall;
-    final settle = t > .72 ? math.sin(((t - .72) / .28) * math.pi) : 0;
-    final scale = 1 + settle * (connected ? .11 : .045);
+    // Sau khi kết nối, tim được neo ngay tại điểm đích. Chỉ lớp sáng và burst
+    // thay đổi; thân tim không rơi, nảy hoặc phóng to thêm.
+    final y = connected ? destination : top + (destination - top) * fall;
+    final double settle = !connected && t > .72
+        ? math.sin(((t - .72) / .28) * math.pi)
+        : 0.0;
+    final double scale = 1.0 + settle * .045;
     final rect = Rect.fromCenter(
       center: Offset(centerX, y),
       width: heartSize * scale,
@@ -297,7 +306,7 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
         : Curves.easeIn.transform(((t - .60) / .40).clamp(0.0, 1.0));
 
     // Một vệt liquid rơi theo trục dọc, nối trực tiếp vào tim lớn.
-    final streamTop = math.max(0.0, y - heartSize * .84);
+    final double streamTop = math.max(0.0, y - heartSize * .84).toDouble();
     final streamPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -323,7 +332,7 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
     );
 
     // Glow lớn theo nhịp rơi, có nhiều lớp mềm nhưng không tạo tim nhỏ bay loạn.
-    final glowRadius = heartSize * (.63 + endGlow * .19);
+    final double glowRadius = heartSize * (.63 + endGlow * .19);
     canvas.drawCircle(
       Offset(centerX, y),
       glowRadius,
@@ -451,13 +460,22 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
       ).createShader(rect);
     canvas.drawPath(heart, outline);
 
-    // Hai vòng lan khi tim chạm điểm giữa.
+    // Hai vòng lan ngắn khi tim chạm điểm giữa. Vòng tắt theo controller,
+    // shimmer chỉ dùng cho ánh sáng nền nên không tạo nổ lặp vô hạn.
     if (endGlow > 0) {
+      final celebrationProgress = connected
+          ? Curves.easeOutCubic.transform(((t - .08) / .92).clamp(0.0, 1.0))
+          : 0.0;
+      final celebrationPulse = connected
+          ? math.sin(celebrationProgress * math.pi)
+          : 0.0;
       for (var i = 0; i < 2; i++) {
-        final ringProgress = connected
-            ? (shimmer + i * .5) % 1
-            : ((t - .62) / .38 + i * .22).clamp(0.0, 1.0);
-        final ringRadius = heartSize * (.56 + ringProgress * .72);
+        final double ringProgress = (connected
+                ? (celebrationProgress + i * .34)
+                : ((t - .62) / .38 + i * .22))
+            .clamp(0.0, 1.0)
+            .toDouble();
+        final double ringRadius = heartSize * (.56 + ringProgress * .72);
         canvas.drawCircle(
           Offset(centerX, y),
           ringRadius,
@@ -465,21 +483,22 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2.0
             ..color = liquid.withValues(
-              alpha: (1 - ringProgress) * .48 * endGlow,
+              alpha: connected
+                  ? celebrationPulse * (1 - ringProgress) * .68
+                  : (1 - ringProgress) * .48 * endGlow,
             ),
         );
       }
       if (connected) {
-        // Burst có số tia cố định: nhìn như tim nổ sáng nhưng không tạo particle
-        // liên tục hay hàng loạt hình tim, giữ số nét vẽ ổn định khi giữ chạm.
-        final burst = Curves.easeOutCubic.transform(
-          ((t - .58) / .42).clamp(0.0, 1.0),
-        );
-        final burstAlpha = (0.98 - burst * .28) * endGlow;
+        // Burst có số tia cố định, nở một lần rồi tắt. Các tia mảnh và ngắn
+        // giữ cảm giác như một khoảnh khắc ảnh được mở ra, không giống pháo
+        // hoa dày đặc phủ kín màn hình.
+        final burst = celebrationProgress;
+        final burstAlpha = celebrationPulse * endGlow;
         final burstPaint = Paint()
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
-          ..strokeWidth = 2.4 + (1 - burst) * 1.4
+          ..strokeWidth = 2.0 + (1 - burst) * 1.2
           ..shader =
               LinearGradient(
                 colors: [
@@ -490,10 +509,10 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
                 Rect.fromCircle(center: Offset(centerX, y), radius: heartSize),
               );
         final burstCenter = Offset(centerX, y);
-        for (var i = 0; i < 12; i++) {
-          final angle = -math.pi / 2 + i * math.pi * 2 / 12;
+        for (var i = 0; i < 10; i++) {
+          final angle = -math.pi / 2 + i * math.pi * 2 / 10;
           final startRadius = heartSize * (.58 + burst * .08);
-          final endRadius = heartSize * (.82 + burst * .68);
+          final endRadius = heartSize * (.82 + burst * .56);
           final start =
               burstCenter +
               Offset(math.cos(angle), math.sin(angle)) * startRadius;

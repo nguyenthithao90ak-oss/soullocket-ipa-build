@@ -43,7 +43,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mbx;
+// Mapbox đã gỡ khỏi app; bật lại: docs/MAPBOX_REMOVAL_2026-10-14.md.
+import 'package:soullocket_app/views/map/mapbox_sdk_stub.dart' as mbx;
 
 import 'package:soullocket_app/utils/services/connectivity_service.dart';
 import 'package:soullocket_app/utils/services/local_database_service.dart';

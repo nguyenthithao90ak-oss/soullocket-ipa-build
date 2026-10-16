@@ -54,7 +54,6 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
           _boardSize = savedRun.boardSize;
           _board = _cloneBoard(savedRun.board);
           _tray = List<_SoulPieceOption>.from(savedRun.tray);
-          _holdPiece = savedRun.holdPiece;
           _recommendedMove = savedRun.recommendedMove;
           _currentSessionId = savedRun.sessionId;
           // Một snapshot Game Over vẫn được khôi phục để người chơi còn

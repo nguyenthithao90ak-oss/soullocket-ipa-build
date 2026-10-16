@@ -3,6 +3,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -49,6 +50,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   StreamSubscription<dynamic>? _overlayListenerSub;
   String? _houseId;
   StreamSubscription<DatabaseEvent>? _soulMessagesSub;
+  DateTime? _lastChatPermissionErrorAt;
 
   // Anti-spam state variables
   final List<int> _msgTimestamps = [];
@@ -62,7 +64,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   void initState() {
     super.initState();
     _myRole = widget.initialRole ?? 'user1';
-    _partnerName = widget.initialPartnerName ?? UiCopy.text('copy_145933221191');
+    _partnerName =
+        widget.initialPartnerName ?? UiCopy.text('copy_145933221191');
     _houseId = widget.initialHouseId;
 
     _animController = AnimationController(
@@ -99,7 +102,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             if (type == 'sync_credentials') {
               final hId = data['houseId']?.toString() ?? '';
               final r = data['role']?.toString() ?? 'user1';
-              final pName = data['partnerName']?.toString() ?? UiCopy.text('copy_145933221191');
+              final pName =
+                  data['partnerName']?.toString() ??
+                  UiCopy.text('copy_145933221191');
               if (hId.isNotEmpty) {
                 if (mounted) {
                   setState(() {
@@ -119,7 +124,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               if (mounted) {
                 setState(() {
                   _myRole = data['myRole'] ?? 'user1';
-                  _partnerName = data['partnerName'] ?? UiCopy.text('copy_145933221191');
+                  _partnerName =
+                      data['partnerName'] ?? UiCopy.text('copy_145933221191');
                 });
               }
             } else if (type == 'new_msg_preview') {
@@ -185,14 +191,39 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               });
             }
             if (mounted) {
-              setState(() {
+              // Khi đang thu gọn, dữ liệu vẫn được giữ trong bộ nhớ nhưng
+              // không dựng lại toàn bộ overlay theo từng thay đổi chat.
+              // Việc này tránh giật bong bóng khi tin nhắn đến liên tục.
+              if (_isExpanded) {
+                setState(() {
+                  _chatHistory = list;
+                });
+                _scrollToBottom();
+              } else {
                 _chatHistory = list;
-              });
-              _scrollToBottom();
+              }
             }
           },
           onError: (e) {
-            debugPrint('[Overlay] watch messages error: $e');
+            final now = DateTime.now();
+            final isPermissionError = e.toString().contains(
+              'permission-denied',
+            );
+            final shouldLog =
+                _lastChatPermissionErrorAt == null ||
+                now.difference(_lastChatPermissionErrorAt!) >
+                    const Duration(seconds: 30);
+            if (isPermissionError) {
+              _lastChatPermissionErrorAt = now;
+              // Khi tài khoản vừa đăng xuất/đổi House, listener cũ không còn
+              // hợp lệ. Dừng nó để tránh retry ngầm và giảm giật overlay;
+              // sync_credentials sẽ gắn lại listener với House mới.
+              unawaited(_soulMessagesSub?.cancel());
+              _soulMessagesSub = null;
+            }
+            if (shouldLog) {
+              debugPrint('[Overlay] watch messages error: $e');
+            }
           },
         );
   }
@@ -222,7 +253,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               setState(() {
                 _houseId = hId;
                 _myRole = data['role']?.toString() ?? 'user1';
-                _partnerName = data['partnerName']?.toString() ?? UiCopy.text('copy_145933221191');
+                _partnerName =
+                    data['partnerName']?.toString() ??
+                    UiCopy.text('copy_145933221191');
               });
             }
             _startListeningFirebaseChat();
@@ -251,6 +284,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   }
 
   void _onTapBubble() {
+    // Không để animation thở chạy ngầm trong lúc panel chat đang mở.
+    _breatheController.stop();
     setState(() {
       _touchScale = 1.0; // Reset scale to prevent getting stuck
       _isExpanded = true;
@@ -278,8 +313,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       final remainingMs = blockUntil - now;
       final remainingMin = (remainingMs / 60000).ceil();
       setState(() {
-        _spamWarning =
-            L10nService().format('ui_home_action_too_fast_blocked_in_value1_minutes_900f32', {'value1': remainingMin});
+        _spamWarning = L10nService().format(
+          'ui_home_action_too_fast_blocked_in_value1_minutes_900f32',
+          {'value1': remainingMin},
+        );
       });
       Timer(const Duration(seconds: 3), () {
         if (mounted) setState(() => _spamWarning = null);
@@ -290,8 +327,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     // 2. Check 5s countdown
     if (_tempBlockSecondsLeft > 0) {
       setState(() {
-        _spamWarning =
-            L10nService().format('ui_home_action_too_fast_please_wait_for_value1_d70da2', {'value1': _tempBlockSecondsLeft});
+        _spamWarning = L10nService().format(
+          'ui_home_action_too_fast_please_wait_for_value1_d70da2',
+          {'value1': _tempBlockSecondsLeft},
+        );
       });
       return true;
     }
@@ -303,8 +342,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       _tempBlockTimer?.cancel();
 
       setState(() {
-        _spamWarning =
-            L10nService().format('ui_home_action_too_fast_counting_down_value1_seconds_e39a14', {'value1': _tempBlockSecondsLeft});
+        _spamWarning = L10nService().format(
+          'ui_home_action_too_fast_counting_down_value1_seconds_e39a14',
+          {'value1': _tempBlockSecondsLeft},
+        );
       });
 
       _tempBlockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -315,8 +356,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               _spamWarning = null;
               timer.cancel();
             } else {
-              _spamWarning =
-                  L10nService().format('ui_home_action_too_fast_counting_down_value1_seconds_e39a14', {'value1': _tempBlockSecondsLeft});
+              _spamWarning = L10nService().format(
+                'ui_home_action_too_fast_counting_down_value1_seconds_e39a14',
+                {'value1': _tempBlockSecondsLeft},
+              );
             }
           });
         } else {
@@ -336,7 +379,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
           debugPrint('[SpamCheck] Error writing prefs: $e');
         }
         setState(() {
-          _spamWarning = L10nService().translate('ui_home_action_too_fast_blocked_texting_for_1_351b49');
+          _spamWarning = L10nService().translate(
+            'ui_home_action_too_fast_blocked_texting_for_1_351b49',
+          );
           _tempBlockSecondsLeft = 0;
           _tempBlockTimer?.cancel();
         });
@@ -448,65 +493,26 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               scale: _touchScale,
               duration: const Duration(milliseconds: 150),
               curve: Curves.easeOutBack,
-              child: AnimatedBuilder(
-                animation: _breatheAnimation,
-                builder: (context, child) {
-                  final scale = _breatheAnimation.value;
-                  final normalized = (scale - 1.0) / 0.06;
-                  return Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Outside breathing neon ring
-                      Container(
-                        width: 58 * scale,
-                        height: 58 * scale,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFFF4F93).withValues(
-                              alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
-                            ),
-                            width: 1.2,
-                          ),
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  size: const Size(58, 58),
+                  painter: _FloatingBubblePainter(_breatheAnimation),
+                  child: const SizedBox(
+                    width: 58,
+                    height: 58,
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                        child: R2StickerImage(
+                          'assets/images/anhtomau_stickers/sticker_33.gif',
+                          width: 38,
+                          height: 38,
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      // Central glassmorphic core
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.35),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFFFF4F93,
-                              ).withValues(alpha: 0.45),
-                              blurRadius: 12,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(25),
-                            child: const R2StickerImage(
-                              'assets/images/anhtomau_stickers/sticker_33.gif',
-                              width: 38,
-                              height: 38,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -520,6 +526,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       _isExpanded = false;
       _showPreview = false;
     });
+    _breatheController.repeat(reverse: true);
     FlutterOverlayWindow.resizeOverlay(80, 80, true);
     FlutterOverlayWindow.updateFlag(OverlayFlag.defaultFlag);
   }
@@ -579,7 +586,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              L10nScope.of(context).format('ui_home_whisper_to_value1_36ba60', {'value1': _partnerName}),
+                              L10nScope.of(context).format(
+                                'ui_home_whisper_to_value1_36ba60',
+                                {'value1': _partnerName},
+                              ),
                               style: GoogleFonts.quicksand(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -620,7 +630,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
-                              context.tr('ui_home_syncing_data_please_reopen_the_app_if_6ba23c'),
+                              context.tr(
+                                'ui_home_syncing_data_please_reopen_the_app_if_6ba23c',
+                              ),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.6),
@@ -869,4 +881,45 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       ),
     );
   }
+}
+
+/// Vẽ phần khung động bằng một layer raster riêng. Cách này giữ phần sticker
+/// tĩnh không bị dựng lại theo từng frame của animation thở.
+class _FloatingBubblePainter extends CustomPainter {
+  _FloatingBubblePainter(this.animation) : super(repaint: animation);
+
+  final Animation<double> animation;
+
+  @override
+  void paint(ui.Canvas canvas, ui.Size size) {
+    final center = ui.Offset(size.width / 2, size.height / 2);
+    final scale = animation.value;
+    final normalized = ((scale - 1.0) / 0.06).clamp(0.0, 1.0);
+
+    final ringPaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = const Color(0xFFFF4F93).withValues(
+        alpha: 0.6 * (1.0 - normalized),
+      );
+    canvas.drawCircle(center, 29 * scale, ringPaint);
+
+    final shadowPaint = ui.Paint()
+      ..color = const Color(0x73FF4F93)
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 12);
+    canvas.drawCircle(center, 25, shadowPaint);
+
+    final corePaint = ui.Paint()
+      ..color = Colors.white.withValues(alpha: 0.12);
+    canvas.drawCircle(center, 25, corePaint);
+
+    final borderPaint = ui.Paint()
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = Colors.white.withValues(alpha: 0.35);
+    canvas.drawCircle(center, 25, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _FloatingBubblePainter oldDelegate) => false;
 }

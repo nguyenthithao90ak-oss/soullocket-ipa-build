@@ -46,7 +46,10 @@ class PrivateImageDiskCache {
   }
 
   static Future<LazyBox<dynamic>> _openEncryptedBox() {
-    return _opening ??= () async {
+    final existing = _opening;
+    if (existing != null) return existing;
+
+    final opening = () async {
       const storage = FlutterSecureStorage(
         iOptions: IOSOptions(
           accessibility: KeychainAccessibility.first_unlock_this_device,
@@ -64,6 +67,18 @@ class PrivateImageDiskCache {
         compactionStrategy: (entries, deleted) => deleted > 20,
       );
     }();
+    _opening = opening;
+    // Không giữ mãi Future lỗi sau một lần mở Hive thất bại tạm thời. Lượt đọc
+    // kế tiếp phải được phép thử mở lại thay vì vô hiệu hóa cache cả phiên app.
+    unawaited(
+      opening.then<void>(
+        (_) {},
+        onError: (Object error, StackTrace stackTrace) {
+          if (identical(_opening, opening)) _opening = null;
+        },
+      ),
+    );
+    return opening;
   }
 
   final Future<LazyBox<dynamic>> Function() openBox;

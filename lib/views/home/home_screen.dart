@@ -76,6 +76,8 @@ import '../../utils/sl_notice.dart';
 import '../../utils/services/pairing_service.dart';
 import '../../utils/services/live_activity_service.dart';
 import '../../views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
+import '../../views/home/tabs/settings/pairing/pairing_quick_connect_sheet.dart';
+import '../../views/home/tabs/settings/pairing/pairing_reminder_scheduler.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
 import '../../core/fast_backdrop_filter.dart';
@@ -83,6 +85,7 @@ import '../../core/sl_page_physics.dart';
 import '../../utils/app_cache_manager.dart';
 import 'widgets/home_shell/soul_navigation_style.dart';
 import 'widgets/home_shell/navigation_restore_handle.dart';
+import '../../widgets/local_guide_companion.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -391,6 +394,11 @@ class _HomeScreenState extends State<HomeScreen>
   final _houseService = HouseService();
   final _houseSettingsService = HouseSettingsService();
   final _breakupService = BreakupService();
+  late final PairingReminderScheduler _pairingReminder =
+      PairingReminderScheduler(
+        canPresent: _canPresentPairingReminder,
+        present: _presentPairingReminder,
+      );
   late final List<_HomeTabBuilder> _tabBuilders;
   final Map<int, Widget> _tabPageCache = <int, Widget>{};
   int _homeReloadCounter = 0;
@@ -424,6 +432,8 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _prewarmMediaTimer;
   Timer? _appUpdateTimer;
   Timer? _inactivityTimer;
+  Timer? _incomingCallAlertTimer;
+  int _incomingCallAlertSequence = 0;
   bool _isShowingInactivityDialog = false;
   bool _isCheckingScheduleNotifs = false;
   DateTime? _lastScheduleNotifsCheckAt;
@@ -475,6 +485,11 @@ class _HomeScreenState extends State<HomeScreen>
     RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        LocalGuideContextNotifier.instance.setHomeTab(_currentIndex);
+      }
+    });
     _activeTabIndexNotifier = ValueNotifier<int>(_currentIndex);
     _backgroundTabIndexNotifier = ValueNotifier<int>(
       _currentIndex,
@@ -645,6 +660,7 @@ class _HomeScreenState extends State<HomeScreen>
     await _maybeShowBreakupEntryNotice();
     await _maybeShowFirstSetupGuide();
     await _maybeShowPendingDeviceNotice();
+    if (mounted) _pairingReminder.start();
     unawaited(_checkScheduleNotifs());
     if (!mounted) return;
     precacheUtilityStickerList(context);
@@ -886,6 +902,7 @@ class _HomeScreenState extends State<HomeScreen>
         'roomId': roomId,
         'callerId': callerId,
       };
+      _startIncomingCallAlert();
       unawaited(_showIncomingCallDialog());
     }
 
@@ -958,12 +975,10 @@ class _HomeScreenState extends State<HomeScreen>
             if (route.isActive) navigator.removeRoute(route);
           },
         );
-    final accepted = await navigator.push(route);
-    await statusSub.cancel();
-    if (!mounted) {
-      return;
-    }
+    bool? accepted;
     try {
+      accepted = await navigator.push(route);
+      if (!mounted) return;
       if (accepted == true) {
         await _acceptIncomingCall(incoming);
       } else if (accepted == false) {
@@ -975,7 +990,61 @@ class _HomeScreenState extends State<HomeScreen>
       }
       debugPrint('Incoming call: ${AppErrorMapper.resolve(error).message}');
     } finally {
+      await statusSub.cancel();
+      _stopIncomingCallAlert();
       _incomingCall = null;
+    }
+  }
+
+  void _startIncomingCallAlert() {
+    _incomingCallAlertTimer?.cancel();
+    final incoming = _incomingCall;
+    if (incoming == null) return;
+    _incomingCallAlertSequence = 0;
+    unawaited(
+      _showIncomingCallNotification(incoming, _incomingCallAlertSequence),
+    );
+    unawaited(HapticFeedback.vibrate());
+    _incomingCallAlertTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted || _incomingCall == null) return;
+      _incomingCallAlertSequence++;
+      unawaited(
+        _showIncomingCallNotification(
+          _incomingCall!,
+          _incomingCallAlertSequence,
+        ),
+      );
+      unawaited(HapticFeedback.vibrate());
+    });
+  }
+
+  Future<void> _showIncomingCallNotification(
+    Map<String, dynamic> incoming,
+    int sequence,
+  ) {
+    final callerName =
+        (incoming['callerName'] ?? context.tr('home_ngigi_f1117f'))
+            .toString()
+            .trim();
+    final isVideo =
+        incoming['isVideo'] == true ||
+        incoming['isVideo']?.toString().toLowerCase() == 'true';
+    return NotificationService().showIncomingCallNotification(
+      roomId: (incoming['roomId'] ?? '').toString(),
+      callerName: callerName,
+      isVideo: isVideo,
+      sequence: sequence,
+    );
+  }
+
+  void _stopIncomingCallAlert() {
+    final roomId = _incomingCall?['roomId']?.toString() ?? '';
+    _incomingCallAlertTimer?.cancel();
+    _incomingCallAlertTimer = null;
+    if (roomId.trim().isNotEmpty) {
+      unawaited(
+        NotificationService().dismissIncomingCallNotification(roomId),
+      );
     }
   }
 
@@ -1057,6 +1126,7 @@ class _HomeScreenState extends State<HomeScreen>
     // Tab mới không kế thừa trạng thái ẩn do cuộn của tab trước.
     _isBottomNavVisibleNotifier.value = true;
     _activeTabIndexNotifier.value = index;
+    LocalGuideContextNotifier.instance.setHomeTab(index);
   }
 
   @override
@@ -1064,8 +1134,10 @@ class _HomeScreenState extends State<HomeScreen>
     RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.removeListener(_handleDuplicateRoleWarning);
     _callSub?.cancel();
+    _stopIncomingCallAlert();
     _pairingSub?.cancel();
     _settingsSub?.cancel();
+    _pairingReminder.dispose();
     _widgetActionSub?.cancel();
     _detachNotificationBadgeListener(resetCounter: true);
     _startupTasksTimer?.cancel();
@@ -1253,9 +1325,11 @@ class _HomeScreenState extends State<HomeScreen>
       }
       // Tạm dừng inactivity timer khi app vào background
       _inactivityTimer?.cancel();
+      _pairingReminder.setForeground(false);
       _syncVipThemeRotateTimer();
       unawaited(_syncLiveActivity());
     } else if (state == AppLifecycleState.resumed) {
+      _pairingReminder.setForeground(true);
       unawaited(LocationService().onAppResumed());
       unawaited(_syncNotificationBadgeListener(forceRestart: true));
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());

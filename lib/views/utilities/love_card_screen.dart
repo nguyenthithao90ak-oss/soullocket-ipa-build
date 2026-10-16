@@ -247,6 +247,9 @@ class LoveCardService {
     return _db
         .ref('houses/$normalizedHouseId/love_cards')
         .orderByChild('ts')
+        // Hộp thư giới hạn 100 thẻ khi tạo; giữ cùng trần ở listener để dữ
+        // liệu cũ bất thường không làm mỗi lần mở màn tải cả nhánh.
+        .limitToLast(100)
         .onValue
         .map((event) {
           final rawValue = event.snapshot.value;

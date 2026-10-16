@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -77,22 +78,63 @@ class PairingService {
     final data = _asMap(response.data);
     final code = data['code']?.toString().trim() ?? '';
     final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
-    if (code.isEmpty || expiresAt <= DateTime.now().millisecondsSinceEpoch) {
+    final createdAt = (data['createdAt'] as num?)?.toInt() ?? 0;
+    final receivedAt = DateTime.now().millisecondsSinceEpoch;
+    // Hạn mã tính theo giờ máy chủ. Đổi sang giờ trên máy bằng thời lượng mã,
+    // để điện thoại chỉnh giờ sai vẫn đếm ngược đúng 5 phút.
+    final localExpiresAt = createdAt > 0 && expiresAt > createdAt
+        ? receivedAt + (expiresAt - createdAt)
+        : expiresAt - await _serverTimeOffsetMs();
+    if (code.isEmpty || localExpiresAt <= receivedAt) {
       throw UiCopyException('copy_ab1224a6f7a6');
     }
-    return PairingInviteCode(code: code, expiresAt: expiresAt);
+    return PairingInviteCode(code: code, expiresAt: localExpiresAt);
   }
 
-  /// Sends a pairing request using a 12-digit code
-  Future<void> sendPairingRequest(String code) async {
+  /// Độ lệch giữa giờ máy chủ và giờ trên máy (ms); giờ máy chủ = giờ máy + lệch.
+  Future<int> _serverTimeOffsetMs() async {
+    try {
+      // `.info` không đọc được bằng child()/get(); phải nghe qua ref riêng.
+      final event = await FirebaseDatabase.instance
+          .ref('.info/serverTimeOffset')
+          .onValue
+          .first
+          .timeout(const Duration(seconds: 3));
+      final value = event.snapshot.value;
+      if (value is num) return value.toInt();
+    } catch (error) {
+      debugPrint('[PairingService] serverTimeOffset: $error');
+    }
+    return 0;
+  }
+
+  /// Gửi mã 12 số của người ấy. Server mới tự chấp nhận khi mã đúng và còn hạn
+  /// (trả 'accepted'); server cũ trả 'pending' và chờ chủ nhà duyệt.
+  Future<String> sendPairingRequest(String code) async {
     final user = _auth.currentUser;
     if (user == null) throw UiCopyException('copy_3bbf8095e7db');
-    await CloudFunctionsHelper.callSecure<dynamic>(
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'requestPairingInvite',
       requireAppCheck: true,
       payload: <String, dynamic>{'code': code},
       fallbackErrorMessage: UiCopy.text('copy_8a5f1d79a6fd'),
     );
+    final status = _asMap(response.data)['status']?.toString().trim() ?? '';
+    return status.isEmpty ? 'pending' : status;
+  }
+
+  /// Theo dõi mã mình đang mở: 'active' khi chờ, 'accepted'/'pending' khi
+  /// người ấy vừa nhập mã; null khi mã đã được dùng hoặc thu hồi.
+  Stream<Map<String, dynamic>?> watchMyInvite() {
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
+    return _dbRef
+        .child('pairing_secure/creator_views/${user.uid}')
+        .onValue
+        .map((event) {
+          final value = event.snapshot.value;
+          return value is Map ? _asMap(value) : null;
+        });
   }
 
   /// Listens to the status of a request sent by the current user.
@@ -204,14 +246,20 @@ class PairingService {
         .get();
     if (!snap.exists || snap.value is! Map) return null;
     final data = _asMap(snap.value);
-    final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
-    if (data['houseId']?.toString() == houseId &&
-        data['status']?.toString() == 'active' &&
-        expiresAt > DateTime.now().millisecondsSinceEpoch) {
+    if (data['houseId']?.toString() != houseId ||
+        data['status']?.toString() != 'active') {
+      return null;
+    }
+    // Đổi mốc giờ máy chủ sang giờ trên máy: máy chỉnh giờ sai không được coi
+    // mã đã hết hạn là còn hạn (hoặc ngược lại).
+    final offset = await _serverTimeOffsetMs();
+    final expiresAt = ((data['expiresAt'] as num?)?.toInt() ?? 0) - offset;
+    final createdAt = (data['createdAt'] as num?)?.toInt() ?? 0;
+    if (expiresAt > DateTime.now().millisecondsSinceEpoch) {
       return {
         'code': data['code']?.toString(),
         'houseId': data['houseId']?.toString(),
-        'createdAt': (data['createdAt'] as num?)?.toInt() ?? 0,
+        'createdAt': createdAt > 0 ? createdAt - offset : 0,
         'expiresAt': expiresAt,
       };
     }

@@ -47,7 +47,9 @@ class ForgotGmailRecoveryHelper {
             ?.toString();
     final fullEmail = secData['email']?.toString().trim().toLowerCase() ?? '';
 
-    if (question.isEmpty) {
+    if (question.isEmpty ||
+        ((storedAnswer?.trim().isEmpty ?? true) &&
+            secData['recoveryAvailable'] != true)) {
       AuthFeedbackDialogs.showError(
         context,
         L10nService().translate('auth_err_no_security_q'),
@@ -58,10 +60,9 @@ class ForgotGmailRecoveryHelper {
     final answer = await _promptSecurityAnswer(context, question);
     if (answer == null || answer.isEmpty) return;
 
-    final isCorrect = authService.matchesRecoveryAnswer(
-      storedAnswer,
-      answer,
-    );
+    final isCorrect = storedAnswer != null && storedAnswer.trim().isNotEmpty
+        ? authService.matchesRecoveryAnswer(storedAnswer, answer)
+        : await authService.verifySecurityAnswer(houseId, answer);
 
     if (!context.mounted) return;
     if (!isCorrect) {
@@ -72,7 +73,9 @@ class ForgotGmailRecoveryHelper {
       return;
     }
 
-    final maskedEmail = authService.maskEmail(fullEmail);
+    final maskedEmail = fullEmail.isNotEmpty
+        ? authService.maskEmail(fullEmail)
+        : (secData['maskedEmail']?.toString().trim() ?? '');
     if (!context.mounted) return;
     await _promptMaskedEmail(
       context: context,
@@ -266,18 +269,31 @@ class ForgotGmailRecoveryHelper {
     if (result == null || result.isEmpty) return;
     if (!context.mounted) return;
 
-    if (result == fullEmail || (pin != null && result == pin.toLowerCase())) {
+    final normalizedResult = result.trim().toLowerCase();
+    String? verifiedEmail;
+    if (fullEmail.isNotEmpty && normalizedResult == fullEmail) {
+      verifiedEmail = fullEmail;
+    } else if (fullEmail.isEmpty &&
+        _emailMatchesMaskedHint(normalizedResult, maskedEmail)) {
+      verifiedEmail = normalizedResult;
+    } else if (fullEmail.isNotEmpty &&
+        pin != null &&
+        normalizedResult == pin.toLowerCase()) {
+      verifiedEmail = fullEmail;
+    }
+
+    if (verifiedEmail != null) {
       await _sendPasswordResetOtp(
         context: context,
         authService: authService,
-        fullEmail: fullEmail,
+        fullEmail: verifiedEmail,
         maskedEmail: maskedEmail,
         onGuardPasswordReset: onGuardPasswordReset,
       );
       return;
     }
 
-    if (isFamiliarDevice && result == 'reset') {
+    if (isFamiliarDevice && fullEmail.isNotEmpty && normalizedResult == 'reset') {
       await _sendPasswordResetOtp(
         context: context,
         authService: authService,
@@ -292,6 +308,18 @@ class ForgotGmailRecoveryHelper {
       context,
       L10nService().translate('Email hoặc Mã bảo mật không chính xác.'),
     );
+  }
+
+  static bool _emailMatchesMaskedHint(String email, String masked) {
+    final emailParts = email.split('@');
+    final maskedParts = masked.split('@');
+    if (emailParts.length != 2 || maskedParts.length != 2) return false;
+    final local = emailParts[0];
+    if (emailParts[1] != maskedParts[1] || local.isEmpty) return false;
+    final maskedLocal = local.length <= 4
+        ? '${local[0]}${'*' * (local.length - 1)}'
+        : '${local.substring(0, 2)}${'*' * (local.length - 4)}${local.substring(local.length - 2)}';
+    return maskedParts[0] == maskedLocal;
   }
 
   static Future<void> _sendPasswordResetOtp({

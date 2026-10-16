@@ -59,6 +59,24 @@ class DiaryService {
     });
   }
 
+  /// Đọc bài ghim một lần khi mở Nhật ký. Bài ghim không cần một listener
+  /// riêng vì danh sách mới đã có listener realtime và controller sẽ hợp nhất
+  /// hai nguồn theo ID.
+  Future<List<DiaryPost>> fetchPinnedDiary(String houseId) async {
+    final snapshot = await _diariesRef(
+      houseId,
+    ).where('pinned', isEqualTo: true).limit(1).get();
+    final posts = <DiaryPost>[];
+    for (final doc in snapshot.docs) {
+      try {
+        posts.add(DiaryPost.fromJson(doc.id, doc.data()));
+      } catch (error) {
+        debugPrint('[DiaryService] Bản ghi ghim lỗi ${doc.id}: $error');
+      }
+    }
+    return posts;
+  }
+
   // ── THÊM nhật ký mới (có fallback offline) ─────────────────────────────
   Future<String> addDiaryPost({
     required String houseId,

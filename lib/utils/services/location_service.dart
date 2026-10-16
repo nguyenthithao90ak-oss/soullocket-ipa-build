@@ -22,6 +22,7 @@ import 'house_service.dart';
 import 'role_utils.dart';
 import 'app_lifecycle_presence_guard.dart';
 import 'gps_tracking_state.dart';
+import '../gps_history_cleanup.dart';
 import '../../widgets/sl_dialog.dart';
 
 export 'gps_tracking_state.dart';
@@ -346,13 +347,18 @@ class LocationService {
       if (requestEpoch != _requestEpoch || requestedUid != _uidProvider()) {
         return false;
       }
-      return _startTracking(
+      final started = await _startTracking(
         targetHouse,
         targetRole,
         requestEpoch: requestEpoch,
         requestedUid: requestedUid,
         context: context != null && context.mounted ? context : null,
       );
+      // applyGpsUpdateMode reports whether the selected mode is fully
+      // configured. A foreground stream can still run while Always is
+      // waiting for the OS background permission, so keep that distinction
+      // separate from the stream-start result used by Map/Home callers.
+      return started && (mode != kGpsModeAlways || _activeBackgroundEnabled);
     }).catchError((Object error, StackTrace stack) {
       if (requestEpoch == _requestEpoch) {
         _setTrackingState(GpsTrackingIssue.unavailable);
@@ -447,6 +453,17 @@ class LocationService {
     );
   }
 
+  /// Tạm dừng stream foreground khi không còn màn hình nào dùng vị trí.
+  ///
+  /// Chế độ `always` là lựa chọn rõ ràng của người dùng nên không bị dừng ở
+  /// đây. Nếu MapScreen vừa được mở, cờ dùng chung sẽ giữ stream hoạt động.
+  Future<void> pauseForegroundTrackingIfIdle() async {
+    if (MapScreen.isMapScreenActive.value || !_appInForeground) return;
+    if (await _readMode() != kGpsModeForegroundOnly) return;
+    if (_positionStream == null) return;
+    await stopTracking(clearCachedTarget: false);
+  }
+
   Future<bool> _startTracking(
     String houseId,
     String role, {
@@ -509,7 +526,10 @@ class LocationService {
             ? GpsTrackingIssue.backgroundPermissionRequired
             : GpsTrackingIssue.none,
       );
-      return mode != kGpsModeAlways || useBackgroundSettings;
+      // The foreground stream is usable even when Always is selected without
+      // background permission. The tracking state carries the explicit
+      // backgroundPermissionRequired warning for the settings surface.
+      return true;
     }
 
     await _stopTracking(clearCachedTarget: false);
@@ -581,7 +601,10 @@ class LocationService {
     unawaited(
       _loadInitialPosition(normalizedHouseId, normalizedRole, trackingEpoch),
     );
-    return mode != kGpsModeAlways || useBackgroundSettings;
+    // A stream that was successfully registered is a usable foreground
+    // tracker. The mode-selection API wraps this result and returns false
+    // only when Always still lacks background permission.
+    return true;
   }
 
   Future<void> _loadInitialPosition(
@@ -1214,10 +1237,14 @@ class LocationService {
       return;
     }
 
-    final updates = <String, dynamic>{
-      for (final key in raw.keys) 'gps_history/$houseId/$role/$key': null,
-    };
-    await _dbRef.update(updates);
+    for (final updates in expiredGpsHistoryDeletionBatches(
+      houseId: houseId,
+      role: role,
+      expiredDays: raw,
+    )) {
+      if (!_matchesTracking(houseId, role, uid, trackingEpoch)) return;
+      await _dbRef.update(updates);
+    }
   }
 
   Future<void> _trimOverflowGpsHistoryPoints({

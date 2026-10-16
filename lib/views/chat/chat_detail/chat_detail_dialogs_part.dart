@@ -885,6 +885,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
 
   Future<void> _createGroupDraftFromChat() async {
     final snap = await _dbRef.child('friends/${widget.myHouseId}').get();
+    if (!mounted) return;
     if (!snap.exists || snap.value is! Map) {
       _showNotice(context.tr('ui_chat_you_don_t_have_friends_to_create_211177'), error: true);
       return;
@@ -1086,6 +1087,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     }
     nextDrafts.insert(0, draft);
     await prefs.setString(_groupDraftPrefsKey, jsonEncode(nextDrafts));
+    if (!mounted) return;
     _showNotice(context.tr('ui_chat_group_created_open_the_group_tab_in_72f0c7'));
   }
 
@@ -1131,6 +1133,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       _showNotice(context.tr('p5_profile_blocked'));
       Navigator.of(context).pop();
     } catch (e) {
+      if (!mounted) return;
       _showNotice(
         context.tr('home_chathchnng_81d840'),
         error: true,
@@ -1188,6 +1191,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       _replaceMessageState(const []);
       _showNotice(context.tr('ui_chat_deleted_conversation_history_671443'));
     } catch (e) {
+      if (!mounted) return;
       _showNotice(
         context.tr('ui_chat_the_chat_cannot_be_deleted_at_this_af6619'),
         error: true,
@@ -1273,8 +1277,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
         reporterHouseId: widget.myHouseId,
         reason: reason,
       );
+      if (!mounted) return;
       _showNotice(context.tr('p9_group_chat_report_success'));
     } catch (e) {
+      if (!mounted) return;
       _showNotice(
         context.tr('p9_group_chat_report_failed'),
         error: true,

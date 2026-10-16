@@ -25,6 +25,7 @@ import '../../../core/sl_theme.dart';
 import '../../../core/constants/app_config.dart';
 import '../../../models/diary_post.dart';
 import '../../../utils/services/interaction_metrics_service.dart';
+import '../../../utils/services/diary_reaction_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/admob_service.dart';
 import 'package:soullocket_app/widgets/consent_ad_view.dart';
@@ -48,6 +49,7 @@ import 'diary/utils/diary_memory_media.dart';
 import 'diary_item.dart';
 import 'diary_list.dart';
 import 'diary/widgets/diary_memory_section.dart';
+import 'diary/widgets/diary_reaction_picker.dart';
 import 'diary/widgets/diary_tab_shell_sections.dart';
 import 'diary/widgets/memory_viewer_chrome.dart';
 
@@ -80,6 +82,7 @@ class _DiaryTabState extends State<DiaryTab>
   bool get wantKeepAlive => true;
 
   final DiaryFeedController _feedController = DiaryFeedController();
+  final DiaryReactionService _diaryReactionService = DiaryReactionService();
   final DiaryComposerController _composerState = DiaryComposerController();
   final DiaryMemoryController _memoryController = DiaryMemoryController();
   final DiaryGuardController _guardController = DiaryGuardController();
@@ -102,6 +105,10 @@ class _DiaryTabState extends State<DiaryTab>
   String? _lastSyncedMemoryHouseId;
   bool _isAnimatingTabSwitch = false;
   final SingleOpenGate _memoryViewerGate = SingleOpenGate();
+  String? _diaryReactionQuerySignature;
+  Map<String, Map<String, int>> _diaryReactionCounts =
+      <String, Map<String, int>>{};
+  Map<String, String> _diaryMyReactions = <String, String>{};
 
   bool get _isLoading => _feedController.isLoading;
   bool get _isAuthenticated => _guardController.isAuthenticated;
@@ -142,7 +149,102 @@ class _DiaryTabState extends State<DiaryTab>
     } else {
       CustomMoodStickerService.instance.stopSync();
     }
+    _requestDiaryReactionSync();
     _throttledRebuild();
+  }
+
+  void _requestDiaryReactionSync() {
+    final houseId = _houseId?.trim() ?? '';
+    final posts = _feedController.postsVN.value;
+    if (houseId.isEmpty) {
+      if (_diaryReactionQuerySignature != null ||
+          _diaryReactionCounts.isNotEmpty ||
+          _diaryMyReactions.isNotEmpty) {
+        _diaryReactionQuerySignature = null;
+        _diaryReactionCounts = <String, Map<String, int>>{};
+        _diaryMyReactions = <String, String>{};
+      }
+      return;
+    }
+    final postIds = posts.map((post) => post.id.trim()).where((id) => id.isNotEmpty).toList();
+    if (postIds.isEmpty) return;
+    final signature = '$houseId|${postIds.join(',')}';
+    if (_diaryReactionQuerySignature == signature) return;
+    _diaryReactionQuerySignature = signature;
+    unawaited(_loadDiaryReactions(houseId, postIds, signature));
+  }
+
+  Future<void> _loadDiaryReactions(
+    String houseId,
+    List<String> postIds,
+    String signature,
+  ) async {
+    try {
+      final snapshot = await _diaryReactionService.fetchForPosts(
+        houseId: houseId,
+        postIds: postIds,
+      );
+      if (!mounted || _diaryReactionQuerySignature != signature) return;
+      setState(() {
+        _diaryReactionCounts = snapshot.countsByPost;
+        _diaryMyReactions = snapshot.mineByPost;
+      });
+    } catch (error) {
+      debugPrint('[DiaryReaction] Không tải được reaction: $error');
+    }
+  }
+
+  Future<void> _showDiaryReactionPicker(DiaryPost post) async {
+    final houseId = _houseId?.trim() ?? '';
+    if (houseId.isEmpty || post.id.trim().isEmpty) return;
+    final reactionId = await showDiaryReactionPicker(
+      context,
+      selectedId: _diaryMyReactions[post.id],
+      counts: _diaryReactionCounts[post.id] ?? const <String, int>{},
+    );
+    if (!mounted || reactionId == null) return;
+    try {
+      final previous = _diaryMyReactions[post.id];
+      final next = await _diaryReactionService.toggle(
+        houseId: houseId,
+        postId: post.id,
+        reactionId: reactionId,
+      );
+      if (!mounted) return;
+      final counts = <String, int>{
+        ...(_diaryReactionCounts[post.id] ?? const <String, int>{}),
+      };
+      if (previous != null) {
+        final oldCount = (counts[previous] ?? 0) - 1;
+        if (oldCount > 0) {
+          counts[previous] = oldCount;
+        } else {
+          counts.remove(previous);
+        }
+      }
+      if (next != null) counts[next] = (counts[next] ?? 0) + 1;
+      setState(() {
+        if (counts.isEmpty) {
+          _diaryReactionCounts.remove(post.id);
+        } else {
+          _diaryReactionCounts[post.id] = counts;
+        }
+        if (next == null) {
+          _diaryMyReactions.remove(post.id);
+        } else {
+          _diaryMyReactions[post.id] = next;
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      _showDiarySnackBar(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: context.tr('home_khngxactms_fea0e9'),
+        ).message,
+        backgroundColor: const Color(0xFFE53935),
+      );
+    }
   }
 
   void _handleControllerChange() {
@@ -707,6 +809,7 @@ class _DiaryTabState extends State<DiaryTab>
     _rebuildThrottleTimer?.cancel();
     _diaryScrollController.dispose();
     _feedController.dispose();
+    _diaryReactionService.dispose();
     _memoryController.dispose();
     _guardController.dispose();
     _composerState.dispose();
@@ -1324,9 +1427,9 @@ class _DiaryTabState extends State<DiaryTab>
 
   String _formatMemoryTimestamp(Map<String, dynamic> item) {
     final timestamp = item['ts'] as int? ?? 0;
-    return DateFormat(
-      'dd/MM/yyyy • HH:mm',
-    ).format(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    return LocaleDateFormat.dateTime(
+      DateTime.fromMillisecondsSinceEpoch(timestamp),
+    );
   }
 
   Future<void> _showMemoryInfoSheet(

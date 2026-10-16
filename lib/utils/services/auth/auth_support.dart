@@ -78,7 +78,15 @@ bool isGoogleSignInConfigMismatch(Object error) {
 bool isGoogleSignInNetworkIssue(Object error) {
   final raw = error.toString().toLowerCase();
   return raw.contains('network_error') ||
-      raw.contains('network-request-failed');
+      raw.contains('network-request-failed') ||
+      // Google Play Services trả các mã này khi thiết bị thiếu dịch vụ,
+      // dịch vụ chưa sẵn sàng hoặc không thể kết nối tới Google.
+      raw.contains('apiexception: 7') ||
+      raw.contains('apiexception: 8') ||
+      raw.contains('apiexception: 17') ||
+      raw.contains('statuscode=7') ||
+      raw.contains('statuscode=8') ||
+      raw.contains('statuscode=17');
 }
 
 bool isFacebookSignInConfigMismatch(Object error) {

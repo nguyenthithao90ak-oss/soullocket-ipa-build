@@ -314,7 +314,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             if (!mounted || generation != _bootstrapGeneration) return;
             _failMessengerBootstrap();
             debugPrint(
-              'Messenger friends listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('home_khngthtida_063ede')).message}',
+              'Messenger friends listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('home_khngthtida_063ede')).message}',
             );
           },
         );
@@ -393,7 +393,7 @@ class _MessengerScreenState extends State<MessengerScreen>
           },
           onError: (Object error) {
             debugPrint(
-              'Messenger partner presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_download_that_person_s_status_045f83')).message}',
+              'Messenger partner presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('ui_chat_unable_to_download_that_person_s_status_045f83')).message}',
             );
           },
         );
@@ -424,7 +424,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             if (!mounted || generation != _bootstrapGeneration) return;
             _failMessengerBootstrap();
             debugPrint(
-              'Messenger internal room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_download_recent_messages_5ea10f')).message}',
+              'Messenger internal room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('ui_chat_unable_to_download_recent_messages_5ea10f')).message}',
             );
           },
         );
@@ -516,7 +516,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             },
             onError: (Object error) {
               debugPrint(
-                'Messenger friend presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_load_friend_status_0f3380')).message}',
+              'Messenger friend presence listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('ui_chat_unable_to_load_friend_status_0f3380')).message}',
               );
             },
           );
@@ -558,7 +558,7 @@ class _MessengerScreenState extends State<MessengerScreen>
             },
             onError: (Object error) {
               debugPrint(
-                'Messenger room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_download_recent_messages_5ea10f')).message}',
+                'Messenger room meta listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('ui_chat_unable_to_download_recent_messages_5ea10f')).message}',
               );
             },
           );

@@ -6,10 +6,11 @@ import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../utils/services/deeplink_service.dart';
+import '../../utils/services/house_service.dart';
 import '../../utils/services/love_card_link_service.dart';
 
 import '../auth/auth_action_screen.dart';
-import '../relationship/couple_connect_screen.dart';
+import '../home/tabs/settings/pairing/pairing_quick_connect_sheet.dart';
 import '../utilities/love_card_public_viewer_screen.dart';
 
 typedef AppEntrySnackBarCallback =
@@ -40,10 +41,15 @@ class AppEntryDeeplinkHandler {
     }
 
     await DeeplinkService().initialize(
-      onJoinHouse: (houseId) async {
+      onJoinHouse: (_) async {
         await _openGate.run(() async {
-          if (!context.mounted) return;
-          await slPush<void>(context, CoupleConnectScreen(houseId: houseId));
+          // Link /join?house= cũ chỉ mang mã nhà người ấy, máy chủ không còn
+          // ghép bằng mã nhà: mở bảng ghép nhanh của nhà mình để nhập mã mời.
+          final ownHouseId = await HouseService().getCurrentHouseId();
+          if (!context.mounted || ownHouseId == null || ownHouseId.isEmpty) {
+            return;
+          }
+          await PairingQuickConnectSheet.show(context, houseId: ownHouseId);
         });
       },
       onOpenLoveCard: (loveCardUri) async {

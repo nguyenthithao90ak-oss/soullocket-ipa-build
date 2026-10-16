@@ -16,6 +16,31 @@ class RevenueSecurityTelemetryService {
   static const Duration _cooldownPerType = Duration(seconds: 30);
   static final Map<String, DateTime> _lastWrittenAt = {};
 
+  /// Chỉ ghi các event type liên quan đến BẢO MẬT & DOANH THU thật.
+  /// Lỗi Flutter framework / zone / platform dispatcher → Crashlytics xử lý,
+  /// KHÔNG ghi vào RTDB để tránh spam hàng chục nghìn bản ghi rác.
+  static const Set<String> _allowedTypes = {
+    'purchase_verify_failed',
+    'delete_account_failed',
+    'undo_delete_failed',
+    'auth_login_guard_failed',
+    'auth_suspicious_activity',
+    'revoke_other_sessions_failed',
+    'breakup_security',
+    'breakup_cleanup_failed',
+    'play_integrity_failed',
+    'admob_fraud_detected',
+    'reward_claim_blocked',
+    'reward_server_rejected',
+  };
+
+  /// Các type bị chặn hoàn toàn — lỗi framework thuộc về Crashlytics.
+  static const Set<String> _blockedTypes = {
+    'flutter_framework_error',
+    'uncaught_zone_error',
+    'platform_dispatcher_error',
+  };
+
   Future<void> logEvent({
     required String type,
     required String reason,
@@ -80,6 +105,10 @@ class RevenueSecurityTelemetryService {
     _lastWrittenAt[type] = now;
 
     final normalizedType = type.trim();
+    if (_blockedTypes.contains(normalizedType) ||
+        !_allowedTypes.contains(normalizedType)) {
+      return;
+    }
     final normalizedReason = reason.trim();
     final normalizedSeverity =
         severity.trim().isEmpty ? 'medium' : severity.trim();

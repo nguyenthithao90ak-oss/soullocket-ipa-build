@@ -20,8 +20,12 @@ import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/chat/watch_together_screen.dart';
 import 'package:soullocket_app/views/home/home_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
+import 'package:soullocket_app/views/map/map_screen.dart';
+import 'package:soullocket_app/views/notifications/notification_center_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/cinema_screen.dart';
+import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
+import 'package:soullocket_app/views/utilities/secret_vault_screen.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -32,6 +36,7 @@ import '../../views/utilities/calendar_screen.dart';
 import '../../views/utilities/habit_screen.dart';
 import 'soul_event_service.dart';
 import 'offline_cache_service.dart';
+import 'time_capsule_service.dart';
 import 'role_utils.dart';
 import 'widget_service.dart';
 import 'l10n_service.dart';
@@ -85,6 +90,20 @@ class NotificationService {
       NotificationReminderPlan.inactivityId;
   static const int _maxNativeScheduledNotifications = 60;
 
+  /// Chỉ các sự kiện cần phản hồi nhanh mới được dùng kênh này. Android chỉ
+  /// cho phép kênh vượt Không làm phiền sau khi người dùng cấp Notification
+  /// Policy Access trong phần Cài đặt hệ thống.
+  static const String priorityNotificationChannelId = 'soullocket_priority';
+  static const String normalNotificationChannelId =
+      'soullocket_high_importance';
+
+  static const Set<String> _priorityNotificationTypes = <String>{
+    'chat',
+    'partner_message',
+    'soul_merge',
+    'soul_merge_call',
+  };
+
   static String _sleepReminderIdKey(int offset) =>
       NotificationReminderPlan.messageKey(offset);
 
@@ -97,19 +116,158 @@ class NotificationService {
 
   // Kênh thông báo Android (phải khai báo trước khi dùng)
   static AndroidNotificationChannel get _channel => AndroidNotificationChannel(
-    'soullocket_high_importance', // id
+    normalNotificationChannelId, // id
     L10nService().translate('notifications_title'),
     description: L10nService().translate(
       'notification_partner_channel_description',
     ),
     importance: Importance.high,
     playSound: true,
+    enableVibration: true,
+    vibrationPattern: Int64List.fromList(const <int>[
+      0,
+      650,
+      300,
+      650,
+      300,
+      1000,
+    ]),
   );
 
+  static AndroidNotificationChannel get _priorityChannel =>
+      AndroidNotificationChannel(
+        priorityNotificationChannelId,
+        L10nService().translate('priority_notifications_channel_name'),
+        description: L10nService().translate(
+          'priority_notifications_channel_description',
+        ),
+        importance: Importance.high,
+        bypassDnd: true,
+        playSound: true,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList(const <int>[0, 700, 300, 900]),
+      );
+
+  AndroidFlutterLocalNotificationsPlugin? get _androidPlugin => _localNotif
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+
+  Future<bool> hasPriorityNotificationAccess() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      // iOS dùng Time Sensitive; Windows/Web không có quyền DND tương đương.
+      return true;
+    }
+    await _ensureLocalPluginInitialized();
+    try {
+      return await _androidPlugin?.hasNotificationPolicyAccess() ?? false;
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] Không kiểm tra được quyền vượt Không làm phiền: $error',
+      );
+      return false;
+    }
+  }
+
+  Future<void> _createPriorityChannelIfAllowed() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      if (await _androidPlugin?.hasNotificationPolicyAccess() == true) {
+        await _androidPlugin?.createNotificationChannel(_priorityChannel);
+      }
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] Không tạo được kênh thông báo ưu tiên: $error',
+      );
+    }
+  }
+
+  /// Mở màn hình cấp Notification Policy Access trên Android.
+  /// Kết quả `false` nghĩa là người dùng chưa bật quyền; UI sẽ kiểm tra lại
+  /// khi quay về ứng dụng.
+  Future<bool> requestPriorityNotificationAccess() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return true;
+    }
+    await _ensureLocalPluginInitialized();
+    final plugin = _androidPlugin;
+    if (plugin == null) return false;
+    try {
+      if (await plugin.hasNotificationPolicyAccess() == true) {
+        await _createPriorityChannelIfAllowed();
+        return true;
+      }
+      await plugin.requestNotificationPolicyAccess();
+      final granted = await plugin.hasNotificationPolicyAccess() ?? false;
+      if (granted) await _createPriorityChannelIfAllowed();
+      return granted;
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] Không mở được cài đặt thông báo ưu tiên: $error',
+      );
+      return false;
+    }
+  }
+
+  Future<void> openPriorityNotificationSettings() async {
+    if (kIsWeb) return;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await requestPriorityNotificationAccess();
+      return;
+    }
+    await _localNotif.openAppNotificationSettings();
+  }
+
+  Future<void> setPriorityNotificationsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('il_priority_notifications_enabled', enabled);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return;
+    try {
+      await FirebaseDatabase.instance
+          .ref('users/$uid/notificationPreferences')
+          .update({
+            'priorityNotificationsEnabled': enabled,
+            'updatedAt': ServerValue.timestamp,
+          });
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] Không đồng bộ cài đặt thông báo ưu tiên: $error',
+      );
+    }
+  }
+
+  bool _isPriorityNotificationType(Map<String, dynamic> data) {
+    final explicit = data['priority'];
+    if (explicit == true || explicit?.toString().toLowerCase() == 'true') {
+      return true;
+    }
+    final type = data['type']?.toString().trim().toLowerCase() ?? '';
+    return _priorityNotificationTypes.contains(type);
+  }
+
+  Future<bool> _shouldUsePriorityChannel(Map<String, dynamic> data) async {
+    if (!_isPriorityNotificationType(data)) return false;
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('il_priority_notifications_enabled') ?? false)) {
+      return false;
+    }
+    return hasPriorityNotificationAccess();
+  }
+
   Future<bool> hasPermission() async {
-    final settings = await _fcm.getNotificationSettings();
-    return settings.authorizationStatus == AuthorizationStatus.authorized ||
-        settings.authorizationStatus == AuthorizationStatus.provisional;
+    try {
+      final settings = await _fcm.getNotificationSettings().timeout(
+        const Duration(seconds: 4),
+      );
+      return settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] Notification permission unavailable: $error',
+      );
+      return false;
+    }
   }
 
   /// Gọi khi user chủ động bấm xin quyền
@@ -119,12 +277,14 @@ class NotificationService {
       return true;
     }
 
-    final settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
+    final settings = await _fcm
+        .requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        )
+        .timeout(const Duration(seconds: 8));
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional) {
@@ -225,7 +385,10 @@ class NotificationService {
         defaultTargetPlatform == TargetPlatform.macOS) {
       String? apnsToken;
       for (var i = 0; i < 6; i++) {
-        apnsToken = await _fcm.getAPNSToken();
+        apnsToken = await _fcm.getAPNSToken().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => null,
+        );
         if (apnsToken != null) break;
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
@@ -237,14 +400,29 @@ class NotificationService {
       }
     }
 
-    final token = await _fcm.getToken();
+    String? token;
+    try {
+      // Một số thiết bị không có Google Play Services (hoặc mạng Google bị
+      // chặn) sẽ không bao giờ trả token. Không để việc này giữ app ở trạng
+      // thái connecting; các tính năng dữ liệu vẫn hoạt động bình thường.
+      token = await _fcm.getToken().timeout(
+        const Duration(seconds: 6),
+        onTimeout: () => null,
+      );
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] FCM token unavailable; push disabled on this device: $error',
+      );
+      return;
+    }
     if (token == null || FirebaseAuth.instance.currentUser?.uid != user.uid) {
       return;
     }
 
     await FirebaseDatabase.instance
         .ref('users/${user.uid}/fcmToken')
-        .set(token);
+        .set(token)
+        .timeout(const Duration(seconds: 5));
     await _saveNotificationLocale();
 
     // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
@@ -254,10 +432,15 @@ class NotificationService {
   Future<void> _onTokenRefresh(String newToken) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    await FirebaseDatabase.instance
-        .ref('users/${user.uid}/fcmToken')
-        .set(newToken);
-    await _saveNotificationLocale();
+    try {
+      await FirebaseDatabase.instance
+          .ref('users/${user.uid}/fcmToken')
+          .set(newToken)
+          .timeout(const Duration(seconds: 5));
+      await _saveNotificationLocale();
+    } catch (error) {
+      debugPrint('[NotificationService] FCM token refresh deferred: $error');
+    }
 
     // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
     // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
@@ -284,11 +467,8 @@ class NotificationService {
     if (kIsWeb || !_localPluginReady) return;
     try {
       // Giữ ID cũ để Android bảo toàn lựa chọn âm thanh/quyền của người dùng.
-      await _localNotif
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(_channel);
+      await _androidPlugin?.createNotificationChannel(_channel);
+      await _createPriorityChannelIfAllowed();
     } catch (_) {
       debugPrint('[NotificationService] localized channel refresh unavailable');
     }
@@ -364,6 +544,8 @@ class NotificationService {
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
+    final isSoulMergeCall =
+        type == 'soul_merge_call' || screen == 'soul_merge_call';
 
     // Đồng bộ iOS Widget cho Soul Merge
     if (type == 'soul_merge' || screen == 'soul_merge') {
@@ -387,11 +569,31 @@ class NotificationService {
     }
 
     final isInteractionOrMerge =
-        type == 'soul_merge' ||
-        screen == 'soul_merge' ||
-        type == 'partner_care' ||
-        type == 'interaction' ||
-        type == 'photo_shot';
+        !isSoulMergeCall &&
+        (type == 'soul_merge' ||
+            screen == 'soul_merge' ||
+            type == 'partner_care' ||
+            type == 'interaction' ||
+            type == 'photo_shot');
+
+    if (isSoulMergeCall) {
+      final callerName = message.data['callerName']?.toString().trim() ?? '';
+      await showLocalNotification(
+        title:
+            message.notification?.title ??
+            L10nService().translate('home_cucgin_eff0b9'),
+        body:
+            message.notification?.body ??
+            L10nService().format('home_incoming_call_from', {
+              'name': callerName.isEmpty
+                  ? L10nService().translate('home_ngigi_f1117f')
+                  : callerName,
+            }),
+        data: message.data,
+        dedupeKey: _messageKey(message),
+      );
+      return;
+    }
 
     // Yêu cầu: Không hiện thông báo in-app (Overlay/Heads-up) khi đang trong app đối với sự kiện gửi icon/bắn tim/tương tác (ôm, hôn...)
     // Chỉ hiện thông báo Push Notification của Hệ thống khi khóa màn hình hoặc thoát app.
@@ -423,7 +625,7 @@ class NotificationService {
 
     // 2. Xử lý hiển thị heads-up (Local Notification)
     final notification = message.notification;
-    if (notification == null || _shouldSkipForegroundMessage(message)) return;
+    if (notification == null) return;
 
     await showLocalNotification(
       title: notification.title ?? '',
@@ -657,8 +859,106 @@ class NotificationService {
       case 'soul_merge':
         destination = const SoulMergeScreen();
         break;
+      case 'soul_merge_call':
+        // Home giữ listener cuộc gọi đến và có dialog nhận/từ chối. Khi app
+        // được mở từ notification lúc terminated, không đẩy thẳng Soul Merge
+        // vì màn đó không sở hữu listener inbox của Home.
+        destination = const HomeScreen(initialTab: 0);
+        break;
       case 'feed':
         destination = const HomeScreen(initialTab: 1);
+        break;
+      case 'notifications':
+        // Payload thông báo cũ có thể còn nằm trong khay hệ thống sau khi
+        // người dùng đổi tài khoản hoặc đổi House. Chỉ mở trung tâm khi
+        // scope hiện tại vẫn khớp payload (nếu payload có ghi scope).
+        final payloadUid = data['accountUid']?.toString();
+        final notificationPayloadHouseId =
+            data['houseId']?.toString() ?? data['house_id']?.toString();
+        if (requestUid == null ||
+            myHouseId == null ||
+            (payloadUid != null &&
+                payloadUid.isNotEmpty &&
+                payloadUid != requestUid) ||
+            (notificationPayloadHouseId != null &&
+                notificationPayloadHouseId.isNotEmpty &&
+                notificationPayloadHouseId != myHouseId) ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId(preferFresh: true) !=
+                myHouseId) {
+          return;
+        }
+        destination = const NotificationCenterScreen();
+        break;
+      case 'reward_store':
+        if (requestUid == null ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid) {
+          return;
+        }
+        destination = const RewardStoreScreen();
+        break;
+      case 'vault':
+        final vaultPayloadHouseId =
+            data['houseId']?.toString() ?? data['house_id']?.toString();
+        if (requestUid == null ||
+            myHouseId == null ||
+            (vaultPayloadHouseId != null &&
+                vaultPayloadHouseId.isNotEmpty &&
+                vaultPayloadHouseId != myHouseId) ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId(preferFresh: true) !=
+                myHouseId) {
+          return;
+        }
+        destination = SecretVaultScreen(houseId: myHouseId);
+        break;
+      case 'map':
+        final mapPayloadHouseId =
+            data['houseId']?.toString() ?? data['house_id']?.toString();
+        if (requestUid == null ||
+            myHouseId == null ||
+            (mapPayloadHouseId != null &&
+                mapPayloadHouseId.isNotEmpty &&
+                mapPayloadHouseId != myHouseId) ||
+            FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId(preferFresh: true) !=
+                myHouseId) {
+          return;
+        }
+        final prefs =
+            OfflineCacheService.getPrefsSync() ??
+            await SharedPreferences.getInstance();
+        final myRole = RoleUtils.normalize(prefs.getString('il_role'));
+        final partnerRole = myRole == 'user1' ? 'user2' : 'user1';
+        final settings = await houseService.getHouseSettings(myHouseId);
+        if (FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId() != myHouseId) {
+          return;
+        }
+        String nameForRole(String role) {
+          final key = role == 'user2' ? 'nameU2' : 'nameU1';
+          final name = settings?[key]?.toString().trim() ?? '';
+          return name.isEmpty ? UiCopy.text('copy_40ffd8d0f1c7') : name;
+        }
+
+        String avatarForRole(String role) {
+          final primary = role == 'user1' ? 'avtUser1' : 'avtUser2';
+          final alias = role == 'user1' ? 'avatarU1' : 'avatarU2';
+          return (settings?[primary] ?? settings?[alias])?.toString().trim() ??
+              '';
+        }
+
+        destination = MapScreen(
+          houseId: myHouseId,
+          myRole: myRole,
+          partnerRole: partnerRole,
+          relationshipMode:
+              settings?['relationshipMode']?.toString().trim() ?? 'single',
+          myName: nameForRole(myRole),
+          partnerName: nameForRole(partnerRole),
+          myAvatarUrl: avatarForRole(myRole),
+          partnerAvatarUrl: avatarForRole(partnerRole),
+        );
         break;
       case 'home':
       default:
@@ -704,6 +1004,15 @@ class NotificationService {
   }
 
   String _messageKey(RemoteMessage message) {
+    final type = message.data['type']?.toString() ?? '';
+    final screen = message.data['screen']?.toString() ?? '';
+    final roomId = message.data['roomId']?.toString().trim() ?? '';
+    if ((type == 'soul_merge_call' || screen == 'soul_merge_call') &&
+        roomId.isNotEmpty) {
+      // FCM và listener RTDB có thể báo cùng một cuộc gọi gần như đồng thời.
+      // Dùng roomId làm khóa chung để chỉ tạo một heads-up ban đầu.
+      return _incomingCallDedupeKey(roomId, 0);
+    }
     return message.messageId ??
         '${message.sentTime?.millisecondsSinceEpoch ?? 0}|'
             '${message.notification?.title ?? ''}|'
@@ -711,17 +1020,8 @@ class NotificationService {
             '${jsonEncode(message.data)}';
   }
 
-  bool _shouldSkipForegroundMessage(RemoteMessage message) {
-    final key = _messageKey(message);
-    final now = DateTime.now();
-    final shouldSkip =
-        _lastForegroundMessageKey == key &&
-        _lastForegroundShownAt != null &&
-        now.difference(_lastForegroundShownAt!) < const Duration(seconds: 5);
-    _lastForegroundMessageKey = key;
-    _lastForegroundShownAt = now;
-    return shouldSkip;
-  }
+  String _incomingCallDedupeKey(String roomId, int sequence) =>
+      'soul_merge_call:${roomId.trim()}:$sequence';
 
   bool _shouldSkipOpenedMessage(RemoteMessage message) {
     final key = _messageKey(message);
@@ -740,6 +1040,10 @@ class NotificationService {
     String fallbackKey,
   ) {
     final type = payloadData['type']?.toString() ?? '';
+    if (type == 'soul_merge_call') {
+      final roomId = payloadData['roomId']?.toString().trim() ?? '';
+      if (roomId.isNotEmpty) return roomId.hashCode;
+    }
     if (type == 'partner_care') {
       final careType = payloadData['careType']?.toString() ?? '';
       if (careType == 'kiss') {
@@ -750,15 +1054,29 @@ class NotificationService {
     return fallbackKey.hashCode;
   }
 
-  NotificationDetails _notificationDetails({bool isCinemaInvite = false}) {
+  NotificationDetails _notificationDetails({
+    bool isCinemaInvite = false,
+    bool isIncomingCall = false,
+    bool isPriority = false,
+  }) {
+    final channel = isPriority ? _priorityChannel : _channel;
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        _channel.id,
-        _channel.name,
-        channelDescription: _channel.description,
+        channel.id,
+        channel.name,
+        channelDescription: channel.description,
         importance: Importance.high,
         priority: Priority.high,
         playSound: true,
+        enableVibration: true,
+        vibrationPattern: isIncomingCall
+            ? Int64List.fromList(const <int>[0, 650, 300, 650, 300, 1000])
+            : null,
+        onlyAlertOnce: false,
+        ongoing: isIncomingCall,
+        autoCancel: !isIncomingCall,
+        category: isIncomingCall ? AndroidNotificationCategory.call : null,
+        fullScreenIntent: isIncomingCall,
         icon: '@mipmap/ic_launcher',
         color: const Color(0xFFFF5E7E),
         actions: isCinemaInvite
@@ -771,10 +1089,11 @@ class NotificationService {
               ]
             : null,
       ),
-      iOS: const DarwinNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        interruptionLevel: isPriority ? InterruptionLevel.timeSensitive : null,
       ),
     );
   }
@@ -800,15 +1119,71 @@ class NotificationService {
     _lastForegroundShownAt = now;
     if (shouldSkip) return;
     final isCinemaInvite = payloadData['type']?.toString() == 'cinema_invite';
+    final isIncomingCall =
+        payloadData['type']?.toString() == 'soul_merge_call' ||
+        payloadData['screen']?.toString() == 'soul_merge_call';
     final notificationId = _notificationIdForPayload(payloadData, key);
+    final isPriority = await _shouldUsePriorityChannel(payloadData);
 
     await _localNotif.show(
       id: notificationId,
       title: title,
       body: body,
-      notificationDetails: _notificationDetails(isCinemaInvite: isCinemaInvite),
+      notificationDetails: _notificationDetails(
+        isCinemaInvite: isCinemaInvite,
+        isIncomingCall: isIncomingCall,
+        isPriority: isPriority,
+      ),
       payload: jsonEncode(payloadData),
     );
+  }
+
+  /// Hiển thị/rung lại cảnh báo cuộc gọi bằng notification native.
+  /// `sequence` thay đổi theo mỗi nhịp chuông, còn notification ID giữ theo
+  /// room để Android cập nhật cùng một thẻ thay vì tạo một loạt thông báo.
+  Future<void> showIncomingCallNotification({
+    required String roomId,
+    required String callerName,
+    required bool isVideo,
+    int sequence = 0,
+  }) async {
+    final normalizedRoomId = roomId.trim();
+    if (normalizedRoomId.isEmpty) return;
+    final safeCallerName = callerName.trim().isEmpty
+        ? L10nService().translate('home_ngigi_f1117f')
+        : callerName.trim();
+    await showLocalNotification(
+      title: L10nService().translate('home_cucgin_eff0b9'),
+      body: L10nService().format('home_incoming_call_from', {
+        'name': safeCallerName,
+      }),
+      data: <String, dynamic>{
+        'screen': 'soul_merge_call',
+        'type': 'soul_merge_call',
+        'roomId': normalizedRoomId,
+        'callerName': safeCallerName,
+        'isVideo': isVideo.toString(),
+      },
+      dedupeKey: _incomingCallDedupeKey(normalizedRoomId, sequence),
+    );
+  }
+
+  /// Xóa heads-up/notification cuộc gọi khi người dùng đã bắt máy, từ chối
+  /// hoặc cuộc gọi kết thúc. Dùng cùng ID với các nhịp chuông để không để lại
+  /// thông báo cũ trong khay hệ thống.
+  Future<void> dismissIncomingCallNotification(String roomId) async {
+    final normalizedRoomId = roomId.trim();
+    if (normalizedRoomId.isEmpty) return;
+    try {
+      await initialize();
+      if (!_localPluginReady) return;
+      await _localNotif.cancel(id: normalizedRoomId.hashCode);
+    } catch (error) {
+      debugPrint(
+        '[NotificationService] dismiss incoming call failed: '
+        '${AppErrorMapper.resolve(error).message}',
+      );
+    }
   }
 
   /// Gửi thông báo cho đối phương trong cùng house (qua Firebase trigger)
@@ -900,11 +1275,7 @@ class NotificationService {
     if (kIsWeb || _localPluginReady) return;
     if (_localPluginTask != null) return _localPluginTask;
     final task = () async {
-      await _localNotif
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(_channel);
+      await _androidPlugin?.createNotificationChannel(_channel);
 
       const AndroidInitializationSettings androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -935,6 +1306,7 @@ class NotificationService {
       );
 
       _localPluginReady = true;
+      await _createPriorityChannelIfAllowed();
     }();
     _localPluginTask = task;
     try {
@@ -1514,18 +1886,15 @@ class NotificationService {
 
     final dateKey =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final markerRef = FirebaseDatabase.instance.ref(
-      'houses/$houseId/system_auto_greetings/$kind/$dateKey/${user.uid}',
-    );
-
-    final transaction = await markerRef.runTransaction((current) {
-      if (current != null) {
-        return Transaction.abort();
-      }
-      return Transaction.success({'createdAt': ServerValue.timestamp});
-    });
-
-    if (!transaction.committed) {
+    // Mốc "hôm nay đã gửi" theo UID/nhà/loại lời chúc. Luật RTDB không có node
+    // `system_auto_greetings` nên lệnh ghi cũ luôn bị từ chối và lời chúc chưa
+    // từng được gửi; lưu mốc trên máy để mỗi máy gửi tối đa một lần mỗi ngày.
+    final markerKey = 'auto_greeting_last_${user.uid}_${houseId}_$kind';
+    if (prefs.getString(markerKey) == dateKey) {
+      return;
+    }
+    await prefs.setString(markerKey, dateKey);
+    if (FirebaseAuth.instance.currentUser?.uid != user.uid) {
       return;
     }
 
@@ -1627,24 +1996,19 @@ class NotificationService {
           await SharedPreferences.getInstance();
       if (!(prefs.getBool('il_smart_reminder_capsule') ?? true)) return;
 
-      final snap = await FirebaseDatabase.instance
-          .ref('houses/$houseId/time_capsules')
-          .get();
-      if (!snap.exists || snap.value is! Map) return;
-
-      final data = Map<dynamic, dynamic>.from(snap.value as Map);
+      // Luật RTDB khóa `houses/{id}/time_capsules` với app, chỉ máy chủ đọc được:
+      // hỏi qua listTimeCapsules. Hàm này còn ký link ảnh nên mỗi nhà chỉ hỏi
+      // một lần mỗi ngày; lỗi thì không đánh dấu để lần mở sau thử lại.
       final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month}-${now.day}';
+      final checkedKey = 'capsule_checked_day_$houseId';
+      if (prefs.getString(checkedKey) == todayKey) return;
 
-      for (final entry in data.entries) {
-        if (entry.value is! Map) {
-          continue;
-        }
-        final capsule = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(entry.value as Map),
-        );
-        if (capsule['is_opened'] == true) continue;
+      final capsules = await TimeCapsuleService().getUnopenedCapsules(houseId);
+      await prefs.setString(checkedKey, todayKey);
 
-        final unlockTimeMs = capsule['unlock_time_ms'] as int? ?? 0;
+      for (final capsule in capsules) {
+        final unlockTimeMs = (capsule['unlock_time_ms'] as num?)?.toInt() ?? 0;
         final unlockDate = DateTime.fromMillisecondsSinceEpoch(unlockTimeMs);
 
         // Cùng ngày, tháng, năm

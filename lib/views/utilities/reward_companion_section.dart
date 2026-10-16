@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../core/service_locator.dart';
-import '../../utils/services/companion_journey_service.dart';
+import '../../utils/services/companion_rewards_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../widgets/sl_feedback.dart';
 import '../home/widgets/companion/home_companion_outfit.dart';
@@ -19,7 +19,7 @@ class RewardCompanionSection extends StatefulWidget {
 
 class _RewardCompanionSectionState extends State<RewardCompanionSection>
     with WidgetsBindingObserver {
-  CompanionJourneyService? _service;
+  CompanionRewardsService? _service;
   HomeCompanionCharacter? _redeeming;
   int? _redeemGeneration;
 
@@ -27,8 +27,8 @@ class _RewardCompanionSectionState extends State<RewardCompanionSection>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    if (locator.isRegistered<CompanionJourneyService>()) {
-      _service = locator<CompanionJourneyService>();
+    if (locator.isRegistered<CompanionRewardsService>()) {
+      _service = locator<CompanionRewardsService>();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _service!.start();
@@ -63,14 +63,13 @@ class _RewardCompanionSectionState extends State<RewardCompanionSection>
 
   Future<void> _redeem(HomeCompanionCharacter character) async {
     final service = _service;
-    final offer = service?.state?.characterCatalog[character];
+    final price = service?.state?.prices[character];
     if (service == null || service.loading || service.state?.enabled != true ||
-        _redeeming != null || offer?.price == null ||
+        _redeeming != null || price == null ||
         service.state!.unlocked.contains(character)) {
       return;
     }
     final generation = service.accountGeneration;
-    final price = offer!.price!;
     setState(() {
       _redeeming = character;
       _redeemGeneration = generation;

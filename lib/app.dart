@@ -15,6 +15,7 @@ import 'package:soullocket_app/widgets/sound_effects_scope.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
+import 'package:soullocket_app/widgets/local_guide_companion.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
@@ -73,9 +74,11 @@ class MyApp extends StatelessWidget {
                     }
                     return false; // let the notification bubble up further if needed
                   },
-                  child: SoundEffectsScope(
-                    child: SLFeedbackTheme(
-                      child: child ?? const SizedBox.shrink(),
+                   child: LocalGuideCompanionOverlay(
+                     child: SoundEffectsScope(
+                       child: SLFeedbackTheme(
+                         child: child ?? const SizedBox.shrink(),
+                       ),
                     ),
                   ),
                 ),

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 class SLFeedbackStyle {
-  static const surface = Color(0xFF2D2930);
-  static const foreground = Color(0xFFFAF6F8);
-  static const secondary = Color(0xFFC9BEC5);
-  static const border = Color(0xFF514650);
-  static const success = Color(0xFF91D5B6);
-  static const warning = Color(0xFFEBC88B);
-  static const danger = Color(0xFFF1A5B3);
-  static const info = Color(0xFFA6CBF0);
-  static const primary = Color(0xFFE8B4CB);
+  static const surface = Color(0xFFFFFBF7);
+  static const foreground = Color(0xFF554450);
+  static const secondary = Color(0xFF8A7480);
+  static const border = Color(0xFFEAD8DE);
+  static const success = Color(0xFF4F9B78);
+  static const warning = Color(0xFFC58A35);
+  static const danger = Color(0xFFC85F70);
+  static const info = Color(0xFF5F8EAA);
+  static const primary = Color(0xFFC66F92);
   static const maxWidth = 480.0;
-  static const radius = BorderRadius.all(Radius.circular(16));
+  static const radius = BorderRadius.all(Radius.circular(18));
   static const textStyle = TextStyle(
     color: foreground,
     fontSize: 14,
@@ -51,7 +51,7 @@ class SLFeedbackStyle {
       backgroundColor: surface,
       contentTextStyle: textStyle,
       shape: shape,
-      elevation: 6,
+      elevation: 10,
       insetPadding: EdgeInsets.fromLTRB(horizontal, 8, horizontal, 16),
       actionTextColor: primary,
       closeIconColor: secondary,

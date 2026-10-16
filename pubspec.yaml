@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 4.0.0+126
+version: 4.0.0+129
 
 environment:
   sdk: ^3.12.0
@@ -48,7 +48,6 @@ dependencies:
   google_fonts: ^8.2.1
   flutter_svg: ^2.2.3
   google_sign_in: ^7.2.0
-  flutter_facebook_auth: ^7.1.2
   image_picker: ^1.2.2
   pointycastle: ^4.0.0
   geolocator: ^14.0.2
@@ -121,7 +120,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   flutter_map: ^8.3.2
-  mapbox_maps_flutter: ^3.0.0
+  # mapbox_maps_flutter: ^3.0.0  # Gỡ 14/10/2026 (đang tắt, nặng ~10 MB/máy). Bật lại: docs/MAPBOX_REMOVAL_2026-10-14.md
   live_activities: ^2.5.1
   flutter_background_service: ^5.1.0
   workmanager: ^0.10.10
@@ -262,11 +261,9 @@ flutter:
     - assets/images/widget_stickers/couple_avatar_female_v1.webp
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
-    - assets/images/female_avatar_sticker.json
-    - assets/images/male_avatar_sticker.json
+    # 14/10/2026: bỏ khỏi gói app vì code không còn dùng (file vẫn giữ trên đĩa):
+    # female_avatar_sticker.json, male_avatar_sticker.json, soul_merge_sticker.json, default_auth_bg.jpg.
     - assets/images/empty_diary_sticker.json
-    - assets/images/soul_merge_sticker.json
-    - assets/images/default_auth_bg.jpg
     - assets/images/default_home_bg.jpg
     - assets/images/home/home_default_canvas_couple.webp
     - assets/images/diary_scrapbook/memory_box.webp
@@ -275,6 +272,8 @@ flutter:
     - assets/images/diary_scrapbook/washi_rose.webp
     - assets/images/diary_scrapbook/washi_sage.webp
     - assets/images/diary_scrapbook/washi_cream.webp
+    # Bộ reaction mới cho Nhật ký/Tâm sự; tách riêng khỏi atlas sticker cũ.
+    - assets/images/diary_reactions_v1/
     # Giữ GIF cũ cho dữ liệu đã lưu, không đóng thêm WebP trùng tên.
     - assets/images/anhtomau_stickers/sticker_1.gif
     - assets/images/anhtomau_stickers/sticker_2.gif
@@ -311,7 +310,7 @@ flutter:
     - assets/images/soullocket_stickers/motion_couple_atlas_v1.webp
     - assets/images/soullocket_stickers/novelty_atlas_v1.webp
     - assets/images/soullocket_stickers/soul_merge_joy_atlas_v1.webp
-    - assets/images/soullocket_stickers/soul_merge_mascot_v2.webp
+    # soul_merge_mascot_v2.webp không đóng gói: mascot Soul Merge vẽ bằng SoulMergeMascotPainter.
     - assets/images/transparent_stickers/diary_mood_atlas_v2_transparent.webp
     - assets/images/transparent_stickers/soul_merge_comfort_atlas_v2_transparent.webp
     - assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp

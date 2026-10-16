@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/home_image_policy.dart';
+import '../../utils/services/cloudflare_r2_service.dart';
 import '../../utils/services/home_startup_media_cache.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/app_cache_manager.dart';
@@ -60,8 +61,14 @@ class AppEntryHomeAssetPreparer {
           try {
             // Lần mở trước đã nhớ file: giải mã ngay, không chờ cache manager
             // mở cơ sở dữ liệu, để Home có ảnh từ khung hình đầu tiên.
+            final remembered = HomeStartupMediaCache.getFile(url);
+            // Kho R2 công khai cũ đã đóng (401): chỉ dùng bản đã lưu trên máy.
+            if (remembered == null &&
+                CloudflareR2Service.instance.isR2Url(url)) {
+              return;
+            }
             final file =
-                HomeStartupMediaCache.getFile(url) ??
+                remembered ??
                 await _cacheManager
                     .getSingleFile(url)
                     .timeout(const Duration(seconds: 5));

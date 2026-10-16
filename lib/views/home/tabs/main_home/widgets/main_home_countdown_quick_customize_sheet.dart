@@ -807,7 +807,7 @@ class _CountdownQuickCustomizeSheetContentState
       final pickedFile = await homeState._storageService.pickImage(
         preserveOriginal: true,
       );
-      if (pickedFile == null || !isCurrent()) return;
+      if (pickedFile == null || !isCurrent() || !mounted) return;
       final file = await cropAndConfirmImage(
         context: context,
         image: pickedFile,
@@ -1529,7 +1529,7 @@ class _CountdownQuickCustomizeSheetContentState
                         isVip: widget.isVip,
                       );
                       HapticFeedback.mediumImpact();
-                      if (mounted) {
+                      if (mounted && context.mounted) {
                         setState(() => _tempCountdownSize = null);
                         widget.homeState._showLatestSnackBar(
                           context.tr('legacy_saved_success'),

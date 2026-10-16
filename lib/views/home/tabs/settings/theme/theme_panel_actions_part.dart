@@ -422,6 +422,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         );
         if (!isCurrent()) return;
         if (!adSuccess) {
+          if (!mounted) return;
           if (isCurrent()) {
             setState(() {
               _isUploadingThemeBackground = false;
@@ -438,7 +439,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
 
       final pickedFile =
           presetFile ?? await _storageService.pickImage(preserveOriginal: true);
-      if (pickedFile == null || !isCurrent()) return;
+      if (pickedFile == null || !isCurrent() || !mounted) return;
       XFile file = pickedFile;
 
       if (presetFile == null) {
@@ -493,6 +494,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       );
       if (!mounted || url == null || url.trim().isEmpty) {
         if (!isCurrent()) return;
+        if (!mounted) return;
         _showToast(context.tr('theme_err_upload_bg'), success: false);
         return;
       }
@@ -542,7 +544,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       }
       if (!isCurrent()) return;
       await discardConfirmedCropImage(file);
-      if (!isCurrent()) return;
+      if (!isCurrent() || !mounted) return;
       _showToast(context.tr('theme_success_bg_saved'), success: true);
     } catch (e) {
       if (uploadedUrl != null && !backgroundCommitStarted) {
@@ -558,7 +560,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
           '[Background] Giữ object mới để retry vì commit server chưa xác định kết quả.',
         );
       }
-      if (!isCurrent()) return;
+      if (!mounted || !isCurrent()) return;
       _showToast(context.tr('err_upload_background'), success: false);
     } finally {
       if (mounted) {

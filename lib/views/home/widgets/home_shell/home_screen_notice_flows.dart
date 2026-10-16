@@ -54,6 +54,27 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     }
   }
 
+  /// Chỉ bật bảng ghép nối khi Home nằm trên cùng: không có màn, hộp thoại
+  /// hay bảng nào đè lên và app đang mở. Dùng canPop để không làm Home rebuild.
+  bool _canPresentPairingReminder() {
+    if (!mounted || _isShowingInactivityDialog || _incomingCall != null) {
+      return false;
+    }
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) {
+      return false;
+    }
+    final nearest = Navigator.maybeOf(context);
+    final root = Navigator.maybeOf(context, rootNavigator: true);
+    if (nearest == null || root == null) return false;
+    return !nearest.canPop() && !root.canPop();
+  }
+
+  Future<void> _presentPairingReminder(String houseId) async {
+    if (!mounted) return;
+    await PairingQuickConnectSheet.show(context, houseId: houseId);
+  }
+
   // ignore: unused_element
   Future<void> _maybeShowCoupleConnectOnboarding() async {
     if (_didCheckCoupleOnboarding) return;
@@ -478,13 +499,16 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
   void _openSettings() {
     if (!mounted) return;
+    LocalGuideContextNotifier.instance.setSettings();
     unawaited(
-      slPush(
+      slPush<void>(
         context,
         SettingsTab(
           showGuideOnOpen: true,
           onReplayFirstSetupGuide: _replayFirstSetupGuideFromSettings,
         ),
+      ).whenComplete(
+        () => LocalGuideContextNotifier.instance.setHomeTab(_currentIndex),
       ),
     );
   }
@@ -658,30 +682,33 @@ class _InactivityCountdownDialogState
 extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
   Future<void> _checkExpiredProGracePeriod(String houseId) async {
     if (kIsWeb) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return;
+    bool isCurrentSession() =>
+        mounted && FirebaseAuth.instance.currentUser?.uid == uid;
+    // Mốc hạn chờ chỉ dùng để hẹn giờ nhắc trên máy này. Luật RTDB không có node
+    // `houses/{id}/expiredProGrace` (đọc/ghi luôn bị từ chối), nên lưu trên máy
+    // theo UID + nhà để đổi tài khoản không dùng nhầm mốc của người khác.
+    final graceKey = 'expired_pro_grace_v1_${uid}_$houseId';
     try {
+      final prefs = await SharedPreferences.getInstance();
       final ref = FirebaseDatabase.instance.ref();
       final proUntilSnap = await ref.child('houses/$houseId/proUntil').get();
+      if (!isCurrentSession()) return;
       final proUntil = (proUntilSnap.value as num?)?.toInt() ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
 
       // Nếu còn PRO thì không cần làm gì cả
       if (proUntil > now) {
-        final graceRef = ref.child('houses/$houseId/expiredProGrace');
-        final graceSnap = await graceRef.get();
-        if (graceSnap.exists) {
-          await graceRef.remove();
-        }
+        await prefs.remove(graceKey);
         return;
       }
 
       // Đếm số lượng active memory shares
       final sharesSnap = await ref.child('houses/$houseId/memoryShares').get();
+      if (!isCurrentSession()) return;
       if (!sharesSnap.exists || sharesSnap.value is! Map) {
-        final graceRef = ref.child('houses/$houseId/expiredProGrace');
-        final graceSnap = await graceRef.get();
-        if (graceSnap.exists) {
-          await graceRef.remove();
-        }
+        await prefs.remove(graceKey);
         return;
       }
 
@@ -698,35 +725,40 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
       });
 
       if (activeLinks.length <= 5) {
-        final graceRef = ref.child('houses/$houseId/expiredProGrace');
-        final graceSnap = await graceRef.get();
-        if (graceSnap.exists) {
-          await graceRef.remove();
-        }
+        await prefs.remove(graceKey);
         return;
       }
 
       // Nếu active link > 5 (dư thừa link sau khi hết PRO)
-      final graceRef = ref.child('houses/$houseId/expiredProGrace');
-      final graceSnap = await graceRef.get();
+      Map<String, dynamic>? graceData;
+      final storedGrace = prefs.getString(graceKey);
+      if (storedGrace != null) {
+        try {
+          final decoded = jsonDecode(storedGrace);
+          if (decoded is Map) graceData = Map<String, dynamic>.from(decoded);
+        } catch (_) {
+          graceData = null;
+        }
+      }
 
-      if (!graceSnap.exists) {
-        // Tạo mới node lưu vết grace period
-        final graceData = <String, dynamic>{
-          'startedAt': now,
-          'lastNotifiedAt': now,
-          'notifiedCount': 1,
-        };
-        await graceRef.set(graceData);
+      if (graceData == null) {
+        // Tạo mới mốc hạn chờ
+        await prefs.setString(
+          graceKey,
+          jsonEncode(<String, dynamic>{
+            'startedAt': now,
+            'lastNotifiedAt': now,
+            'notifiedCount': 1,
+          }),
+        );
 
-        if (!mounted) return;
+        if (!isCurrentSession()) return;
         _showExpiredProGraceDialog(
           houseId: houseId,
           activeCount: activeLinks.length,
           daysRemaining: 3,
         );
       } else {
-        final graceData = Map<String, dynamic>.from(graceSnap.value as Map);
         final startedAt = (graceData['startedAt'] as num?)?.toInt() ?? now;
         final lastNotifiedAt =
             (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
@@ -747,6 +779,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           final memoryShareService = MemoryShareService();
 
           for (final entry in linksToRevoke) {
+            if (!isCurrentSession()) return;
             final token = entry.key.toString();
             try {
               await memoryShareService.revokeShareLink(token);
@@ -760,25 +793,30 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             await ref.update(updates);
           }
 
-          // Xoá node grace period
-          await graceRef.remove();
+          // Xoá mốc hạn chờ
+          await prefs.remove(graceKey);
 
-          if (!mounted) return;
+          if (!isCurrentSession()) return;
           _showExpiredProAutoCleanedDialog();
         } else {
           // --- CHƯA QUÁ 1 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
           const daysRemaining = 1;
           if (now - lastNotifiedAt >= 24 * 60 * 60 * 1000) {
-            if (!mounted) return;
+            if (!isCurrentSession()) return;
             _showExpiredProGraceDialog(
               houseId: houseId,
               activeCount: activeLinks.length,
               daysRemaining: daysRemaining,
             );
-            await graceRef.update(<String, dynamic>{
-              'lastNotifiedAt': now,
-              'notifiedCount': ServerValue.increment(1),
-            });
+            await prefs.setString(
+              graceKey,
+              jsonEncode(<String, dynamic>{
+                ...graceData,
+                'lastNotifiedAt': now,
+                'notifiedCount':
+                    ((graceData['notifiedCount'] as num?)?.toInt() ?? 0) + 1,
+              }),
+            );
           }
         }
       }

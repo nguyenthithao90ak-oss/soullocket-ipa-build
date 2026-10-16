@@ -414,11 +414,18 @@ class SecurityFlowGuard {
   Future<SecurityFlowDecision?> _checkRapidTapProtection(
     SensitiveActionType action,
   ) async {
+    // Đăng nhập có thể cần sửa mật khẩu vài lần; Firebase Auth và guard server
+    // vẫn chống brute-force, nên không để tap-throttle cục bộ chặn quá sớm.
+    final isPasswordLogin = action == SensitiveActionType.loginWithPassword;
     final throttle = _localActionThrottleService.registerAttempt(
       'sensitive_action_${action.name}',
-      minInterval: const Duration(milliseconds: 900),
-      maxAttempts: 4,
-      burstWindow: const Duration(seconds: 4),
+      minInterval: isPasswordLogin
+          ? const Duration(milliseconds: 500)
+          : const Duration(milliseconds: 900),
+      maxAttempts: isPasswordLogin ? 6 : 4,
+      burstWindow: isPasswordLogin
+          ? const Duration(seconds: 6)
+          : const Duration(seconds: 4),
     );
     if (throttle.isAllowed) {
       return null;

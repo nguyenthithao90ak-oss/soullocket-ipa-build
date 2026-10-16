@@ -17,6 +17,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/widgets/utility_vip_badge.dart';
+import 'package:soullocket_app/widgets/pro_upsell_dialog.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
 import '../../../widgets/lossless_sticker_assets.dart';
 import 'package:flutter/foundation.dart';
@@ -408,6 +409,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _notifChat = true;
   bool _notifFriend = true;
   bool _notifHeart = true;
+  bool _priorityNotificationsEnabled = false;
+  bool _priorityNotificationAccessGranted = false;
+  bool _priorityNotificationBusy = false;
   bool _smartDiaryReminder = true;
   bool _smartCapsuleReminder = true;
   bool _smartLoveNoteReminder = true;
@@ -696,7 +700,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
         }),
       );
       unawaited(_loadAppLockSettings());
-      unawaited(_loadLocalSettings());
+      unawaited(
+        _loadLocalSettings().then((_) => _refreshPriorityNotificationAccess()),
+      );
       unawaited(_initVipServices());
       unawaited(_loadSecurityWarningDismissState());
       unawaited(UiPrefs.ensureLoaded());
@@ -837,6 +843,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       _startWidgetPreviewTicker();
     }
     if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshPriorityNotificationAccess());
       unawaited(
         _refreshMainEmailVerificationStatus(
           showSuccessToast: false,

@@ -9,7 +9,9 @@ import 'package:soullocket_app/utils/services/pairing_service.dart';
 import 'package:soullocket_app/utils/services/breakup_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_code_sheet.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_cute_kit.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_quick_connect_sheet.dart';
 import 'pairing_connection_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
@@ -334,25 +336,23 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
 
   void _showCreateCodeSheet() {
     if (_myHouseId == null || _isPaired || _isLoading || _loadError) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: PairingCreateCodeSheet(myHouseId: _myHouseId!),
-      ),
+    final houseId = _myHouseId!;
+    showPairingCuteDialog<void>(
+      context,
+      builder: (_) => PairingCreateCodeSheet(myHouseId: houseId),
     );
+  }
+
+  Future<void> _showQuickConnectSheet() async {
+    final houseId = _myHouseId;
+    if (houseId == null || _isPaired || _isLoading || _loadError) return;
+    await PairingQuickConnectSheet.show(context, houseId: houseId);
   }
 
   void _showEnterCodeSheet() async {
     if (_isPaired || _isLoading || _loadError) return;
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    await showPairingCuteDialog<bool>(
+      context,
       builder: (_) => const PairingEnterCodeSheet(),
     );
     // Reload if merged
@@ -578,7 +578,14 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           padding: const EdgeInsets.fromLTRB(24, 22, 24, 32),
           children: [
             _buildPairingIntro(),
-            const SizedBox(height: 26),
+            const SizedBox(height: 22),
+            SLSettingsButton(
+              key: const ValueKey<String>('pairing-dashboard-quick-connect'),
+              label: _t('pairing_ui_dashboard_start_title'),
+              icon: Icons.favorite_rounded,
+              onPressed: _showQuickConnectSheet,
+            ),
+            const SizedBox(height: 14),
             SLSettingsGroup(
               margin: EdgeInsets.zero,
               autoDividers: true,
@@ -601,17 +608,6 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             ),
             const SizedBox(height: 14),
             _buildSecurityNote(),
-            const SizedBox(height: 32),
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: Text(
-                _t('pairing_ui_dashboard_requests_title').toUpperCase(),
-                style: SLSettingsText.sectionLabel(
-                  SLSettingsColors.inkTertiary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
             _buildRequestsList(),
           ],
         ),
@@ -1070,43 +1066,48 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     );
   }
 
+  /// Mã đúng giờ được tự chấp nhận, nên mục này chỉ hiện khi còn yêu cầu cũ
+  /// đang chờ duyệt (tạo trước khi server cập nhật) hoặc khi không tải được.
   Widget _buildRequestsList() {
-    if (_incomingRequestsStream == null) return _buildEmptyRequestsView();
+    if (_incomingRequestsStream == null) return const SizedBox.shrink();
 
     return StreamBuilder<List<PairingRequest>>(
       stream: _incomingRequestsStream,
       builder: (context, snapshot) {
+        final Widget body;
         if (snapshot.hasError) {
-          return SLSettingsNotice(
+          body = SLSettingsNotice(
             tone: SLSettingsTone.danger,
             icon: Icons.cloud_off_outlined,
             message: _t('pairing_ui_requests_error'),
           );
+        } else {
+          final requests = (snapshot.data ?? const <PairingRequest>[])
+              .where((r) => r.status == 'pending')
+              .toList();
+          if (requests.isEmpty) return const SizedBox.shrink();
+          body = Column(
+            children: requests.map((r) => _buildRequestTile(r)).toList(),
+          );
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyRequestsView();
-        }
-
-        final requests = snapshot.data!
-            .where((r) => r.status == 'pending')
-            .toList();
-
-        if (requests.isEmpty) {
-          return _buildEmptyRequestsView();
-        }
-
         return Column(
-          children: requests.map((r) => _buildRequestTile(r)).toList(),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                _t('pairing_ui_dashboard_requests_title').toUpperCase(),
+                style: SLSettingsText.sectionLabel(
+                  SLSettingsColors.inkTertiary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            body,
+          ],
         );
       },
-    );
-  }
-
-  Widget _buildEmptyRequestsView() {
-    return SLSettingsNotice(
-      tone: SLSettingsTone.neutral,
-      icon: Icons.mark_email_read_outlined,
-      message: _t('pairing_ui_requests_empty_title'),
     );
   }
 

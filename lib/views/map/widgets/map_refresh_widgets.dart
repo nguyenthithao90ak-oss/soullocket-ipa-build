@@ -4,10 +4,333 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../map_location_access.dart';
 
-const mapRose = Color(0xFFB64F6C);
-const mapBlue = Color(0xFF477DAD);
-const mapSage = Color(0xFF397963);
-const mapLavender = Color(0xFF7866A1);
+const mapRose = Color(0xFFD96888);
+const mapBlue = Color(0xFF6FA8D8);
+const mapSage = Color(0xFF4F9D8A);
+const mapLavender = Color(0xFF8C78C5);
+const mapInk = Color(0xFF4D3046);
+const mapPeach = Color(0xFFFFC7B6);
+const mapButter = Color(0xFFFFE5A8);
+
+/// Nét vẽ canvas nhẹ để màn bản đồ có cảm giác như một trang scrapbook.
+/// Các hình chỉ là lớp trang trí, không che marker hoặc bắt tương tác.
+class MapCuteCanvasPainter extends CustomPainter {
+  const MapCuteCanvasPainter({
+    this.dark = false,
+    this.dense = false,
+    this.intensity = 1,
+  });
+
+  final bool dark;
+  final bool dense;
+  final double intensity;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final opacity = (dark ? .22 : .44) * intensity;
+    final softOpacity = (dark ? .14 : .24) * intensity;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    void bubble(Offset center, double radius, Color color) {
+      paint.color = color.withValues(alpha: softOpacity);
+      canvas.drawCircle(center, radius, paint);
+    }
+
+    void line(Offset start, Offset end, Color color, double width) {
+      final stroke = Paint()
+        ..color = color.withValues(alpha: opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = width;
+      canvas.drawLine(start, end, stroke);
+    }
+
+    void heart(Offset center, double scale, Color color) {
+      final path = Path()
+        ..moveTo(center.dx, center.dy + scale * .9)
+        ..cubicTo(
+          center.dx - scale * 1.35,
+          center.dy + scale * .05,
+          center.dx - scale * .78,
+          center.dy - scale * .92,
+          center.dx,
+          center.dy - scale * .2,
+        )
+        ..cubicTo(
+          center.dx + scale * .78,
+          center.dy - scale * .92,
+          center.dx + scale * 1.35,
+          center.dy + scale * .05,
+          center.dx,
+          center.dy + scale * .9,
+        )
+        ..close();
+      paint.color = color.withValues(alpha: opacity);
+      canvas.drawPath(path, paint);
+    }
+
+    void sparkle(Offset center, double radius, Color color) {
+      final stroke = Paint()
+        ..color = color.withValues(alpha: opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = dense ? 1.4 : 1.8;
+      canvas.drawLine(
+        Offset(center.dx - radius, center.dy),
+        Offset(center.dx + radius, center.dy),
+        stroke,
+      );
+      canvas.drawLine(
+        Offset(center.dx, center.dy - radius),
+        Offset(center.dx, center.dy + radius),
+        stroke,
+      );
+      canvas.drawCircle(center, radius * .22, Paint()..color = color.withValues(alpha: opacity));
+    }
+
+    void dashedPath(
+      Path path,
+      Color color, {
+      double width = 1.8,
+      double dash = 9,
+      double gap = 7,
+    }) {
+      final stroke = Paint()
+        ..color = color.withValues(alpha: opacity * .9)
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = width;
+      for (final metric in path.computeMetrics()) {
+        var distance = 0.0;
+        while (distance < metric.length) {
+          final end = (distance + dash).clamp(0.0, metric.length);
+          canvas.drawPath(metric.extractPath(distance, end), stroke);
+          distance += dash + gap;
+        }
+      }
+    }
+
+    bubble(Offset(size.width * .06, size.height * .12), size.width * .14, mapRose);
+    bubble(Offset(size.width * .94, size.height * .18), size.width * .17, mapLavender);
+    bubble(Offset(size.width * .88, size.height * .92), size.width * .13, mapBlue);
+    bubble(Offset(size.width * .12, size.height * .9), size.width * .11, mapPeach);
+
+    heart(Offset(size.width * .12, size.height * .18), dense ? 7 : 11, mapRose);
+    heart(Offset(size.width * .88, size.height * .12), dense ? 6 : 9, mapRose);
+    heart(Offset(size.width * .82, size.height * .86), dense ? 7 : 10, mapLavender);
+    sparkle(Offset(size.width * .22, size.height * .68), dense ? 6 : 9, mapButter);
+    sparkle(Offset(size.width * .78, size.height * .42), dense ? 5 : 8, mapBlue);
+
+    // Hai nét cong nhỏ gợi đường nối giữa hai người.
+    line(
+      Offset(size.width * .05, size.height * .76),
+      Offset(size.width * .18, size.height * .72),
+      mapSage,
+      dense ? 1.2 : 1.7,
+    );
+    line(
+      Offset(size.width * .82, size.height * .64),
+      Offset(size.width * .95, size.height * .60),
+      mapRose,
+      dense ? 1.2 : 1.7,
+    );
+
+    // Route đứt nét và các waypoint tạo cảm giác bản đồ được vẽ tay trên giấy.
+    // Chỉ dùng ở canvas lớn; trên card nhỏ, các nét này sẽ làm rối nội dung.
+    if (!dense) {
+      final route = Path()
+        ..moveTo(size.width * -.06, size.height * .74)
+        ..cubicTo(
+          size.width * .20,
+          size.height * .58,
+          size.width * .28,
+          size.height * .88,
+          size.width * .50,
+          size.height * .63,
+        )
+        ..cubicTo(
+          size.width * .68,
+          size.height * .42,
+          size.width * .76,
+          size.height * .58,
+          size.width * 1.06,
+          size.height * .31,
+        );
+      dashedPath(route, mapSage, width: 2.2, dash: 11, gap: 8);
+
+      final secondRoute = Path()
+        ..moveTo(size.width * .08, size.height * .12)
+        ..cubicTo(
+          size.width * .28,
+          size.height * .22,
+          size.width * .45,
+          size.height * .08,
+          size.width * .72,
+          size.height * .22,
+        );
+      dashedPath(secondRoute, mapLavender, width: 1.4, dash: 7, gap: 9);
+
+      for (final point in const <Offset>[
+        Offset(.22, .62),
+        Offset(.51, .63),
+        Offset(.78, .48),
+      ]) {
+        final center = Offset(size.width * point.dx, size.height * point.dy);
+        final ring = Paint()
+          ..color = paletteColor(mapRose).withValues(alpha: opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5;
+        canvas.drawCircle(center, 5.5, ring);
+        canvas.drawCircle(
+          center,
+          2.1,
+          Paint()..color = mapRose.withValues(alpha: opacity),
+        );
+      }
+    }
+  }
+
+  Color paletteColor(Color color) => dark
+      ? Color.lerp(color, Colors.white, .24)!
+      : color;
+
+  @override
+  bool shouldRepaint(covariant MapCuteCanvasPainter oldDelegate) =>
+      oldDelegate.dark != dark ||
+      oldDelegate.dense != dense ||
+      oldDelegate.intensity != intensity;
+}
+
+/// Minh hoạ giấy scrapbook dùng khi bản đồ chưa tải được tile hoặc ở preview.
+/// Đây là lớp trình bày độc lập, không thay thế dữ liệu vị trí thật.
+class MapIllustratedPreview extends StatelessWidget {
+  const MapIllustratedPreview({super.key, this.dark = false});
+
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: SizedBox(
+        height: 168,
+        width: double.infinity,
+        child: CustomPaint(
+          painter: _MapIllustratedPreviewPainter(dark: dark),
+          child: const SizedBox.expand(),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapIllustratedPreviewPainter extends CustomPainter {
+  const _MapIllustratedPreviewPainter({required this.dark});
+
+  final bool dark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final background = dark ? const Color(0xFF332B45) : const Color(0xFFFFFBFD);
+    final road = dark ? const Color(0xFF6D617D) : const Color(0xFFEBCDD9);
+    final route = dark ? const Color(0xFF9BD6C9) : mapSage;
+    final rose = dark ? const Color(0xFFFFA7BF) : mapRose;
+    final blue = dark ? const Color(0xFFB4D9FF) : mapBlue;
+    final ink = dark ? const Color(0xFFF6EAF4) : mapInk;
+    final rect = Offset.zero & size;
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [background, dark ? const Color(0xFF29243A) : const Color(0xFFF2F8FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(rect),
+    );
+
+    final paper = Paint()
+      ..color = (dark ? Colors.white : mapRose).withValues(alpha: dark ? .035 : .045)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (var y = 22.0; y < size.height; y += 27) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y + 4), paper);
+    }
+
+    final roadPaint = Paint()
+      ..color = road.withValues(alpha: .72)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2.4;
+    final roads = <Path>[
+      Path()
+        ..moveTo(-12, size.height * .24)
+        ..cubicTo(size.width * .24, size.height * .04, size.width * .35, size.height * .45, size.width + 12, size.height * .22),
+      Path()
+        ..moveTo(size.width * .14, size.height + 10)
+        ..cubicTo(size.width * .30, size.height * .57, size.width * .72, size.height * .78, size.width * .86, -10),
+      Path()
+        ..moveTo(-10, size.height * .73)
+        ..cubicTo(size.width * .34, size.height * .55, size.width * .55, size.height * .98, size.width + 10, size.height * .64),
+    ];
+    for (final path in roads) {
+      canvas.drawPath(path, roadPaint);
+    }
+
+    final routePath = Path()
+      ..moveTo(size.width * .20, size.height * .66)
+      ..cubicTo(size.width * .33, size.height * .39, size.width * .55, size.height * .83, size.width * .79, size.height * .36);
+    final routePaint = Paint()
+      ..color = route
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3.2;
+    for (final metric in routePath.computeMetrics()) {
+      for (var distance = 0.0; distance < metric.length; distance += 16) {
+        final end = (distance + 9).clamp(0.0, metric.length);
+        canvas.drawPath(metric.extractPath(distance, end), routePaint);
+      }
+    }
+
+    _drawPin(canvas, Offset(size.width * .20, size.height * .66), rose, ink);
+    _drawPin(canvas, Offset(size.width * .79, size.height * .36), blue, ink);
+    _drawHeart(canvas, Offset(size.width * .51, size.height * .47), rose);
+    for (final point in <Offset>[
+      Offset(size.width * .09, size.height * .24),
+      Offset(size.width * .70, size.height * .78),
+      Offset(size.width * .89, size.height * .18),
+    ]) {
+      canvas.drawCircle(point, 2.5, Paint()..color = rose.withValues(alpha: .72));
+    }
+  }
+
+  void _drawPin(Canvas canvas, Offset center, Color color, Color ink) {
+    final shadow = Paint()..color = Colors.black.withValues(alpha: dark ? .18 : .10);
+    canvas.drawCircle(center.translate(0, 5), 13, shadow);
+    final fill = Paint()..color = color;
+    canvas.drawCircle(center, 12, fill);
+    final outline = Paint()
+      ..color = ink.withValues(alpha: .92)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(center, 12, outline);
+    canvas.drawCircle(center, 4, Paint()..color = Colors.white.withValues(alpha: .92));
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, Color color) {
+    final path = Path()
+      ..moveTo(center.dx, center.dy + 11)
+      ..cubicTo(center.dx - 17, center.dy - 1, center.dx - 10, center.dy - 13, center.dx, center.dy - 4)
+      ..cubicTo(center.dx + 10, center.dy - 13, center.dx + 17, center.dy - 1, center.dx, center.dy + 11)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color.withValues(alpha: .78));
+  }
+
+  @override
+  bool shouldRepaint(covariant _MapIllustratedPreviewPainter oldDelegate) =>
+      oldDelegate.dark != dark;
+}
 
 /// Thanh điều hướng chung: không tạo một khối nền riêng cho từng nút.
 class MapNavigationBar extends StatelessWidget {
@@ -26,61 +349,78 @@ class MapNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
     return Material(
-      color: palette.surface,
-      elevation: 3,
-      shadowColor: palette.ink.withValues(alpha: .10),
-      shape: StadiumBorder(
-        side: BorderSide(color: palette.border.withValues(alpha: .75)),
-      ),
-      child: SizedBox(
-        height: 56,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: IconButtonTheme(
-            data: IconButtonThemeData(
-              style: IconButton.styleFrom(
-                foregroundColor: palette.muted,
-                backgroundColor: Colors.transparent,
-                minimumSize: const Size(48, 48),
-                padding: EdgeInsets.zero,
-                iconSize: 20,
-                shape: const CircleBorder(),
-              ),
-            ),
-            child: Row(
-              children: [
-                MapToolbarButton(
-                  key: const ValueKey('map_back_button'),
-                  icon: Icons.arrow_back_rounded,
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  onPressed: onBack,
-                  flat: true,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text(
-                      context.tr('map_refresh_nav_title'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: palette.ink,
-                      ),
-                    ),
+      color: Colors.transparent,
+      elevation: 7,
+      shadowColor: mapInk.withValues(alpha: palette.dark ? .24 : .14),
+      shape: const StadiumBorder(),
+      // `Ink` thêm phần đệm bằng độ dày border vào kích thước render của
+      // decoration. Dùng `DecoratedBox` giữ nguyên viền nhưng không làm
+      // thanh điều hướng cao hơn 56dp trên Android/iOS.
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [palette.surface, palette.tint(mapRose)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: palette.accent(mapRose).withValues(alpha: .30)),
+        ),
+        child: SizedBox(
+          height: 56,
+          child: CustomPaint(
+            painter: MapCuteCanvasPainter(dark: palette.dark, dense: true),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: IconButtonTheme(
+                data: IconButtonThemeData(
+                  style: IconButton.styleFrom(
+                    foregroundColor: palette.muted,
+                    backgroundColor: Colors.transparent,
+                    minimumSize: const Size(48, 48),
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                    shape: const CircleBorder(),
                   ),
                 ),
-                if (helpButton != null)
-                  SizedBox(width: 48, height: 48, child: helpButton!),
-                MapToolbarButton(
-                  key: const ValueKey('map_search_button'),
-                  icon: Icons.search_rounded,
-                  tooltip: context.tr('map_search_place_tooltip'),
-                  onPressed: onSearch,
-                  flat: true,
+                child: Row(
+                  children: [
+                    MapToolbarButton(
+                      key: const ValueKey('map_back_button'),
+                      icon: Icons.arrow_back_rounded,
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
+                      onPressed: onBack,
+                      flat: true,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          context.tr('map_refresh_nav_title'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: palette.ink,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (helpButton != null)
+                      SizedBox(width: 48, height: 48, child: helpButton!),
+                    MapToolbarButton(
+                      key: const ValueKey('map_search_button'),
+                      icon: Icons.search_rounded,
+                      tooltip: context.tr('map_search_place_tooltip'),
+                      onPressed: onSearch,
+                      flat: true,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -110,32 +450,44 @@ class MapToolbarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
-    return SizedBox(
-      width: 48,
-      height: 48,
-      child: IconButton(
-        tooltip: tooltip,
-        onPressed: onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: flat
-              ? Colors.transparent
-              : primary
-              ? accent
-              : palette.surface,
-          foregroundColor: primary && !flat
-              ? Colors.white
-              : palette.accent(accent),
-          disabledBackgroundColor: flat ? Colors.transparent : palette.surface,
-          minimumSize: const Size(48, 48),
-          padding: EdgeInsets.zero,
-          shape: flat
-              ? const CircleBorder()
-              : RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: primary ? accent : palette.border),
-                ),
+    final shape = flat
+        ? const CircleBorder()
+        : RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+            side: BorderSide(
+              color: primary ? palette.accent(accent) : palette.border,
+              width: primary ? 0 : 1,
+            ),
+          );
+    return Material(
+      color: Colors.transparent,
+      elevation: flat ? 0 : 5,
+      shadowColor: (primary ? accent : mapInk).withValues(alpha: .18),
+      shape: shape,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          style: IconButton.styleFrom(
+            backgroundColor: flat
+                ? Colors.transparent
+                : primary
+                ? palette.accent(accent)
+                : palette.surface,
+            foregroundColor: primary && !flat
+                ? Colors.white
+                : palette.accent(accent),
+            disabledBackgroundColor: flat
+                ? Colors.transparent
+                : palette.surface,
+            minimumSize: const Size(48, 48),
+            padding: EdgeInsets.zero,
+            shape: shape,
+          ),
+          icon: Icon(icon, size: 22),
         ),
-        icon: Icon(icon, size: 22),
       ),
     );
   }
@@ -158,16 +510,35 @@ class MapStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.fromLTRB(8, 7, 14, 7),
       decoration: BoxDecoration(
-        color: palette.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: palette.border),
+        gradient: LinearGradient(
+          colors: [palette.surface, palette.tint(accent)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: palette.border.withValues(alpha: .9)),
+        boxShadow: [
+          BoxShadow(
+            color: mapInk.withValues(alpha: palette.dark ? .18 : .08),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: palette.accent(accent)),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: palette.tint(accent),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: palette.accent(accent)),
+          ),
           const SizedBox(width: 7),
           Flexible(
             child: Text(
@@ -284,79 +655,130 @@ class MapDistanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: palette.tint(mapSage),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: palette.border),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: .96, end: 1),
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      builder: (context, scale, child) => Transform.scale(
+        scale: scale,
+        alignment: Alignment.topCenter,
+        child: child,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.favorite_border_rounded,
-                size: 18,
-                color: palette.accent(mapRose),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  context.tr('map_refresh_apart'),
-                  style: TextStyle(fontSize: 12, color: palette.muted),
-                ),
-              ),
-            ],
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 17, 18, 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [palette.surface, palette.tint(mapSage)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 6),
-          Text(
-            distance,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1,
-              color: palette.ink,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: palette.accent(mapSage).withValues(alpha: .25),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: mapSage.withValues(alpha: palette.dark ? .18 : .10),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.tr(
-              live
-                  ? 'map_refresh_straight_distance'
-                  : 'map_refresh_stale_distance',
-            ),
-            style: TextStyle(fontSize: 11.5, height: 1.4, color: palette.muted),
-          ),
-          if (eta != '--') ...[
-            const SizedBox(height: 12),
-            Divider(height: 1, color: palette.border),
-            const SizedBox(height: 12),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _metric(
-                    context,
-                    Icons.route_outlined,
-                    'map_refresh_route',
-                    routeDistance,
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: palette.tint(mapSage),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.near_me_rounded,
+                    size: 17,
+                    color: palette.accent(mapSage),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: _metric(
-                    context,
-                    Icons.schedule_rounded,
-                    'map_refresh_eta',
-                    eta,
+                  child: Text(
+                    context.tr('map_refresh_apart'),
+                    style: TextStyle(fontSize: 12, color: palette.muted),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 6),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, .12),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                distance,
+                key: ValueKey(distance),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.1,
+                  color: palette.ink,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.tr(
+                live
+                    ? 'map_refresh_straight_distance'
+                    : 'map_refresh_stale_distance',
+              ),
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.4,
+                color: palette.muted,
+              ),
+            ),
+            if (eta != '--') ...[
+              const SizedBox(height: 12),
+              Divider(height: 1, color: palette.border),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _metric(
+                      context,
+                      Icons.route_outlined,
+                      'map_refresh_route',
+                      routeDistance,
+                      mapBlue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _metric(
+                      context,
+                      Icons.schedule_rounded,
+                      'map_refresh_eta',
+                      eta,
+                      mapLavender,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -366,12 +788,13 @@ class MapDistanceCard extends StatelessWidget {
     IconData icon,
     String label,
     String value,
+    Color accent,
   ) {
     final palette = MapPalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 17, color: palette.accent(mapSage)),
+        Icon(icon, size: 17, color: palette.accent(accent)),
         const SizedBox(height: 5),
         Text(
           context.tr(label),
@@ -400,11 +823,11 @@ class MapPalette {
 
   final bool dark;
 
-  Color get canvas => dark ? const Color(0xFF15221E) : const Color(0xFFEDF4EF);
-  Color get surface => dark ? const Color(0xFF20312A) : const Color(0xFFFCFEFC);
-  Color get ink => dark ? const Color(0xFFF0F6F2) : const Color(0xFF253F35);
-  Color get muted => dark ? const Color(0xFFB0C5B9) : const Color(0xFF657C70);
-  Color get border => dark ? const Color(0xFF354A3F) : const Color(0xFFD9E6DD);
+  Color get canvas => dark ? const Color(0xFF211C2D) : const Color(0xFFFFF7FB);
+  Color get surface => dark ? const Color(0xFF2B253B) : const Color(0xFFFFFFFF);
+  Color get ink => dark ? const Color(0xFFFFF7FC) : mapInk;
+  Color get muted => dark ? const Color(0xFFCFC1D4) : const Color(0xFF806A7C);
+  Color get border => dark ? const Color(0xFF52415E) : const Color(0xFFF0DCE8);
 
   Color accent(Color color) =>
       dark ? Color.lerp(color, Colors.white, .35)! : color;
@@ -453,16 +876,20 @@ class MapSlidingPanel extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 720),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: palette.canvas,
+                gradient: LinearGradient(
+                  colors: [palette.surface, palette.canvas],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(30),
                 ),
                 border: Border.all(color: palette.border),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: .10),
-                    blurRadius: 18,
-                    offset: const Offset(0, -4),
+                    color: mapInk.withValues(alpha: palette.dark ? .24 : .14),
+                    blurRadius: 28,
+                    offset: const Offset(0, -8),
                   ),
                 ],
               ),
@@ -470,53 +897,80 @@ class MapSlidingPanel extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(30),
                 ),
-                child: CustomScrollView(
-                  controller: scrollController,
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 8),
-                        child: Center(
-                          child: Container(
-                            width: 36,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: palette.border,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: MapCuteCanvasPainter(
+                            dark: palette.dark,
                           ),
                         ),
                       ),
                     ),
-                    // Tiêu đề và nút thu bảng vẫn nhìn thấy khi cuộn nội dung.
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _MapPanelHeadingDelegate(
-                        height: headingHeight,
-                        child: ColoredBox(
-                          color: palette.canvas,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18),
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: extent,
-                              builder: (context, value, _) => MapPanelHeading(
-                                single: single,
-                                expanded: value > .55,
-                                onToggle: onToggle,
+                    Positioned.fill(
+                      child: CustomScrollView(
+                        controller: scrollController,
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 10, bottom: 8),
+                              child: Center(
+                                child: Container(
+                                  width: 36,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        palette.border,
+                                        palette.accent(mapRose),
+                                        palette.border,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          // Tiêu đề và nút thu bảng vẫn nhìn thấy khi cuộn nội dung.
+                          SliverPersistentHeader(
+                            pinned: true,
+                            delegate: _MapPanelHeadingDelegate(
+                              height: headingHeight,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [palette.surface, palette.canvas],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                                  child: ValueListenableBuilder<double>(
+                                    valueListenable: extent,
+                                    builder: (context, value, _) => MapPanelHeading(
+                                      single: single,
+                                      expanded: value > .55,
+                                      onToggle: onToggle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SliverPadding(
+                            padding: EdgeInsets.fromLTRB(
+                              16,
+                              8,
+                              16,
+                              MediaQuery.paddingOf(context).bottom + 24,
+                            ),
+                            sliver: SliverList.list(children: children),
+                          ),
+                        ],
                       ),
-                    ),
-                    SliverPadding(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        8,
-                        16,
-                        MediaQuery.paddingOf(context).bottom + 24,
-                      ),
-                      sliver: SliverList.list(children: children),
                     ),
                   ],
                 ),
@@ -573,13 +1027,18 @@ class MapPanelHeading extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: palette.tint(mapSage),
+            gradient: LinearGradient(
+              colors: [palette.tint(mapRose), palette.tint(mapBlue)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: palette.accent(mapRose).withValues(alpha: .18)),
           ),
           child: Icon(
             single ? Icons.explore_outlined : Icons.favorite_outline,
             size: 23,
-            color: palette.accent(mapSage),
+            color: palette.accent(mapRose),
           ),
         ),
         const SizedBox(width: 12),
@@ -722,9 +1181,20 @@ class MapAccessNotice extends StatelessWidget {
       key: const ValueKey('map_access_notice'),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: palette.tint(baseAccent),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: .16)),
+        gradient: LinearGradient(
+          colors: [palette.tint(baseAccent), palette.surface],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: accent.withValues(alpha: .20)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: palette.dark ? .12 : .08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -870,9 +1340,21 @@ class MapPersonTile extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: hasPosition ? onFocus : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: MapCuteCanvasPainter(
+                    dark: palette.dark,
+                    dense: true,
+                  ),
+                ),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             Padding(
               padding: const EdgeInsets.all(14),
               child: Row(
@@ -976,8 +1458,13 @@ class MapPersonTile extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: palette.tint(baseAccent),
-                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    colors: [palette.tint(baseAccent), palette.surface],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(color: accent.withValues(alpha: .10)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,6 +1520,8 @@ class MapPersonTile extends StatelessWidget {
                   ],
                 ),
               ),
+              ],
+            ),
           ],
         ),
       ),
@@ -1076,7 +1565,11 @@ class MapDetailsSection extends StatelessWidget {
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: palette.tint(accent),
+            gradient: LinearGradient(
+              colors: [palette.tint(accent), palette.tint(mapPeach)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(11),
           ),
           child: Icon(icon, color: palette.accent(accent), size: 19),

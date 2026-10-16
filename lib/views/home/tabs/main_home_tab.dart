@@ -28,7 +28,6 @@ import 'package:soullocket_app/views/home/widgets/main_home/home_partner_letter.
 import 'package:soullocket_app/views/home/widgets/main_home/home_couple_profile_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_couple_decor_model.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_couple_decor_editor_screen.dart';
-import 'package:soullocket_app/views/home/widgets/home_drawing_host.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
 import '../../../models/weather_background.dart';
@@ -56,7 +55,7 @@ import 'package:latlong2/latlong.dart' as ll;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
-import 'package:soullocket_app/views/relationship/couple_connect_screen.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_quick_connect_sheet.dart';
 import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
@@ -72,6 +71,7 @@ import 'package:soullocket_app/utils/services/core/rtdb_settled_read.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
+import 'package:soullocket_app/utils/services/cloudflare_r2_service.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -631,6 +631,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
     widget.isActiveListenable.addListener(_onActiveChanged);
+    MapScreen.isMapScreenActive.addListener(_onMapScreenActivityChanged);
     UtilityService.pinnedAppsRevision.addListener(_onPinnedAppsChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
     _smartInteractionPresetNotifier = ValueNotifier<_PartnerInteractionPreset>(
@@ -682,6 +683,33 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     }
   }
 
+  void _onMapScreenActivityChanged() {
+    if (!mounted) return;
+    if (MapScreen.isMapScreenActive.value) {
+      _pauseHomeMapPreview();
+      return;
+    }
+
+    if (!_isTabActive) {
+      // Nếu Home đã bị ẩn trong lúc Map còn mở, dừng foreground sau khi Map
+      // đóng; chế độ Always vẫn do người dùng quản lý riêng.
+      unawaited(_locationService.pauseForegroundTrackingIfIdle());
+      return;
+    }
+    final houseId = _houseId;
+    if (houseId == null || houseId.trim().isEmpty) return;
+    // Chờ route Map tháo khỏi cây widget rồi mới gắn lại listener Home.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          !_isTabActive ||
+          MapScreen.isMapScreenActive.value ||
+          _houseId != houseId) {
+        return;
+      }
+      _bindHomeMapPreview(houseId);
+    });
+  }
+
   @override
   void didUpdateWidget(covariant MainHomeTab oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -711,6 +739,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     L10nService().removeListener(_onRegionPreferencesChanged);
     WidgetsBinding.instance.removeObserver(this);
     widget.isActiveListenable.removeListener(_onActiveChanged);
+    MapScreen.isMapScreenActive.removeListener(_onMapScreenActivityChanged);
     UtilityService.pinnedAppsRevision.removeListener(_onPinnedAppsChanged);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
@@ -803,6 +832,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _fetchHouseDataDebounceTimer?.cancel();
     _pauseHomeCalendarEvents();
     _invalidateLiveWorkSession();
+    // Không giữ GPS foreground khi người dùng đã rời Home và không mở Map.
+    // Chế độ Always vẫn được LocationService giữ nguyên theo lựa chọn riêng.
+    unawaited(_locationService.pauseForegroundTrackingIfIdle());
   }
 
   /// Bọc setup listener trong try-catch để tránh crash dây chuyền nếu 1 listener fail

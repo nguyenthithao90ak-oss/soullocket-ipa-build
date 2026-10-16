@@ -169,14 +169,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.9"
-  benchmark:
-    dependency: transitive
-    description:
-      name: benchmark
-      sha256: cb3eeea01e3f054df76ee9775ca680f3afa5f19f39b2bb426ba78ba27654493b
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.0"
   bidi:
     dependency: transitive
     description:
@@ -521,14 +513,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  dart_sort_queue:
-    dependency: transitive
-    description:
-      name: dart_sort_queue
-      sha256: f3353ba8b4850e072d3368757f62edb79af34a9703c3e3df9c59342721f5f5b1
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2+3"
   dart_style:
     dependency: transitive
     description:
@@ -593,14 +577,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-  facebook_auth_desktop:
-    dependency: transitive
-    description:
-      name: facebook_auth_desktop
-      sha256: "9fcde1146914e9f46497d2b6053ea5865828b576a258be4e0193635f52176712"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.3"
   fake_async:
     dependency: transitive
     description:
@@ -773,10 +749,10 @@ packages:
     dependency: transitive
     description:
       name: firebase_auth_web
-      sha256: cfb98837959f3677696c997856cc8dedbb3e52367397ec80437b85b735ad6c17
+      sha256: "11861819c667e9f47269fa1e7fca8d0e5229f80d4d3008d44b2108b8c93bfd94"
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.7"
+    version: "6.3.0"
   firebase_core:
     dependency: "direct main"
     description:
@@ -942,30 +918,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.5"
-  flutter_facebook_auth:
-    dependency: "direct main"
-    description:
-      name: flutter_facebook_auth
-      sha256: "393c87b4ffa6cc75d2f39239b8d6ebc9095725805016133f80d1d89adb84682d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.2.0"
-  flutter_facebook_auth_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_facebook_auth_platform_interface
-      sha256: e04b8dbfa77702bea45a79993163ad5d20b2c0084109bec591fdc2b9ee505779
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.1.2"
-  flutter_facebook_auth_web:
-    dependency: transitive
-    description:
-      name: flutter_facebook_auth_web
-      sha256: f682400d61cf8d52dd8b6458b5ee106ed57e95309a117dc32875d3da129ce47c
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.1.2"
   flutter_image_compress:
     dependency: "direct main"
     description:
@@ -1261,14 +1213,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.5"
-  geotypes:
-    dependency: transitive
-    description:
-      name: geotypes
-      sha256: "5bedf57de92283133dd221e363812ef50eaaba414f0823b1974ef7d84b86991f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   get_it:
     dependency: "direct main"
     description:
@@ -1773,38 +1717,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.6.1"
-  mapbox_maps_flutter:
-    dependency: "direct main"
-    description:
-      name: mapbox_maps_flutter
-      sha256: d0ea428ccadb5bca1bcd14f80f3ba8495938a77777ea322437aaea7853f5b0a0
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
-  mapbox_maps_flutter_mobile:
-    dependency: transitive
-    description:
-      name: mapbox_maps_flutter_mobile
-      sha256: "9cc7755efd94fbf7a930bf13ef14eae9908b5c3f771749601385c0fcba53fd0c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
-  mapbox_maps_flutter_platform_interface:
-    dependency: transitive
-    description:
-      name: mapbox_maps_flutter_platform_interface
-      sha256: "4d4bdee57b452256ad463fbdef2a5a968a824c0af40c31d20925d5ae88b7b268"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
-  mapbox_maps_flutter_web:
-    dependency: transitive
-    description:
-      name: mapbox_maps_flutter_web
-      sha256: c74ff15810af52fe5c812649e40f088128e8b3c4c156a8cca4b4b7800ae0e786
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   matcher:
     dependency: transitive
     description:
@@ -2149,14 +2061,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
-  rbush:
-    dependency: transitive
-    description:
-      name: rbush
-      sha256: "48b683421b4afb43a642f82c6aa31911e54f3069143d31c7d33cbe329df13403"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.1"
   record:
     dependency: "direct main"
     description:
@@ -2482,14 +2386,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  sweepline_intersections:
-    dependency: transitive
-    description:
-      name: sweepline_intersections
-      sha256: a665c707200a4f07140a4029b41a7c4883beb3f04322cd8e08ebf650f69e1176
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.4"
   synchronized:
     dependency: transitive
     description:
@@ -2530,30 +2426,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.11.1"
-  turf:
-    dependency: transitive
-    description:
-      name: turf
-      sha256: "607db17ebb5ed83c00d822059e2542094abf6dc76fa1365dceddfee1d9492c5f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.14"
-  turf_equality:
-    dependency: transitive
-    description:
-      name: turf_equality
-      sha256: f0f44ffe389547941358e0d3d4a747db2bd56115b32ff1cede5e5bdf3126a3e2
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
-  turf_pip:
-    dependency: transitive
-    description:
-      name: turf_pip
-      sha256: ba4fd414baffd5d7b30880658ad6db82461c49ec023f8ffd0c23d398ad8b14be
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   typed_data:
     dependency: transitive
     description:

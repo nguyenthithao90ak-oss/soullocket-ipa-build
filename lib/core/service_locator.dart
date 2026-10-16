@@ -21,7 +21,7 @@ import '../utils/services/games/soul_block_memory_service.dart';
 import '../utils/services/market_service.dart';
 import '../utils/services/calendar_reminder_service.dart';
 import '../utils/services/habit_reminder_service.dart';
-import 'package:soullocket_app/utils/services/companion_journey_service.dart';
+import 'package:soullocket_app/utils/services/companion_rewards_service.dart';
 import 'package:soullocket_app/utils/services/privacy_collection_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
@@ -56,16 +56,10 @@ void setupLocator() {
   );
   locator.registerFactory(() => SoulBlockMemoryService());
   locator.registerLazySingleton(() => MarketService.instance);
-  // Bật cùng backend/rules đã kiểm thử; bản cũ giữ nguyên hành vi khi chưa rollout.
-  if (const bool.fromEnvironment(
-    'COMPANION_JOURNEY_ENABLED',
-    defaultValue: true,
-  )) {
-    locator.registerLazySingleton(
-      () => CompanionJourneyService(),
-      dispose: (s) => s.dispose(),
-    );
-  }
+  locator.registerLazySingleton(
+    () => CompanionRewardsService(),
+    dispose: (s) => s.dispose(),
+  );
   locator.registerLazySingleton(() => PrivacyCollectionService.instance);
   locator.registerLazySingleton(
     () => SoundService(),

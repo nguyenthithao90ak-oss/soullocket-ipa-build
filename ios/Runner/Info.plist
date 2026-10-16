@@ -271,30 +271,11 @@
 					<string>com.googleusercontent.apps.89966120534-ba1qjme6oct845598r351ovngdvplkfr</string>
 				</array>
 			</dict>
-			<dict>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>$(FACEBOOK_URL_SCHEME)</string>
-				</array>
-			</dict>
 		</array>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
-		<key>FacebookAppID</key>
-		<string>$(FACEBOOK_APP_ID)</string>
-		<key>FacebookClientToken</key>
-		<string>$(FACEBOOK_CLIENT_TOKEN)</string>
-		<key>FacebookDisplayName</key>
-		<string>$(FACEBOOK_DISPLAY_NAME)</string>
 		<key>GADApplicationIdentifier</key>
 		<string>ca-app-pub-6165771694697009~2449913444</string>
-		<key>LSApplicationQueriesSchemes</key>
-		<array>
-			<string>fbapi</string>
-			<string>fb-messenger-share-api</string>
-			<string>fbauth2</string>
-			<string>fbshareextension</string>
-		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>

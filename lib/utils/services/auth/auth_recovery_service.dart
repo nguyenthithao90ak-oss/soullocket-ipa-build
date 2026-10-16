@@ -15,11 +15,12 @@ class AuthRecoveryService {
   AuthRecoveryService({
     this._firebaseAuth,
     this._databaseRef,
-    FirebaseFunctions? firebaseFunctions,
+    this._firebaseFunctions,
   });
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
   final DatabaseReference? _databaseRef;
+  final FirebaseFunctions? _firebaseFunctions;
 
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
@@ -94,7 +95,9 @@ class AuthRecoveryService {
 
   Future<bool> _warmUpAppCheck({bool forceRefresh = false}) async {
     try {
-      final token = await FirebaseAppCheck.instance.getToken(forceRefresh);
+      final token = await FirebaseAppCheck.instance
+          .getToken(forceRefresh)
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
       return (token ?? '').trim().isNotEmpty;
     } catch (error) {
       if (kDebugMode) {
@@ -154,6 +157,29 @@ class AuthRecoveryService {
     }
   }
 
+  Future<HttpsCallableResult<T>> _callRecoveryFunction<T>(
+    String name, {
+    required dynamic payload,
+    Duration timeout = const Duration(seconds: 12),
+  }) {
+    final injectedFunctions = _firebaseFunctions;
+    if (injectedFunctions == null) {
+      return CloudFunctionsHelper.callSecure<T>(
+        name,
+        payload: payload,
+        timeout: timeout,
+        throwOriginalException: true,
+      );
+    }
+    return injectedFunctions
+        .httpsCallable(
+          name,
+          options: HttpsCallableOptions(timeout: timeout),
+        )
+        .call<T>(payload)
+        .timeout(timeout);
+  }
+
   String _messageFromFunctionsError(
     FirebaseFunctionsException error, {
     required String fallbackMessage,
@@ -180,51 +206,90 @@ class AuthRecoveryService {
     switch (error.code) {
       case 'permission-denied':
         return permissionDeniedMessage ??
-            error.message ??
-            UiCopy.text('copy_8d9f3b1f9ea4');
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: UiCopy.text('copy_8d9f3b1f9ea4'),
+            ).message;
       case 'deadline-exceeded':
         return deadlineExceededMessage ??
-            error.message ??
-            UiCopy.text('copy_ce8b53085ba9');
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: UiCopy.text('copy_ce8b53085ba9'),
+            ).message;
       case 'failed-precondition':
         return failedPreconditionMessage ??
-            error.message ??
-            UiCopy.text('copy_7e839d438d88');
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: UiCopy.text('copy_7e839d438d88'),
+            ).message;
       case 'resource-exhausted':
         return resourceExhaustedMessage ??
-            error.message ??
-            UiCopy.text('copy_3fc83e0151c2');
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: UiCopy.text('copy_3fc83e0151c2'),
+            ).message;
       case 'unauthenticated':
         return unauthenticatedMessage ??
-            UiCopy.text('copy_dce241e0d961');
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: UiCopy.text('copy_dce241e0d961'),
+            ).message;
       case 'invalid-argument':
         return invalidArgumentMessage ??
-            error.message ??
-            UiCopy.text('copy_011c0f11b574');
+            AppErrorMapper.resolve(
+              error,
+              fallbackMessage: UiCopy.text('copy_011c0f11b574'),
+            ).message;
       default:
-        return error.message ?? fallbackMessage;
+        return AppErrorMapper.resolve(
+          error,
+          fallbackMessage: fallbackMessage,
+        ).message;
     }
   }
 
   Map<String, dynamic>? _cachedSecurityData;
+  String? _cachedSecurityHouseId;
+  String? _cachedSecurityUid;
   DateTime? _lastSecurityCacheTime;
+  String? _lastObservedUid;
+  bool _hasObservedAuthState = false;
 
   Future<Map<String, dynamic>?> getHouseSecurityData(String houseId) async {
+    final normalizedHouseId = houseId.trim().toUpperCase();
+    if (normalizedHouseId.isEmpty) return null;
     final now = DateTime.now();
+    final currentUid = _auth.currentUser?.uid;
+    if (_hasObservedAuthState && _lastObservedUid != currentUid) {
+      _cachedSecurityData = null;
+      _cachedSecurityHouseId = null;
+      _cachedSecurityUid = null;
+      _lastSecurityCacheTime = null;
+    }
+    _lastObservedUid = currentUid;
+    _hasObservedAuthState = true;
     if (_cachedSecurityData != null &&
+        _cachedSecurityHouseId == normalizedHouseId &&
+        _cachedSecurityUid == currentUid &&
         _lastSecurityCacheTime != null &&
         now.difference(_lastSecurityCacheTime!).inSeconds < 5) {
       return _cachedSecurityData;
     }
 
+    // Người chưa đăng nhập không có quyền đọc houses/*/security theo RTDB
+    // Rules. Callable chỉ trả câu hỏi và email đã che cho trường hợp này.
+    if (currentUid == null && _databaseRef == null) {
+      return _fetchHouseRecoveryInfo(normalizedHouseId);
+    }
+
     try {
       final snaps = await Future.wait([
         _db
-            .child('houses/$houseId/security')
+            .child('houses/$normalizedHouseId/security')
             .get()
             .timeout(const Duration(seconds: 3)),
         _db
-            .child('houses/$houseId/email')
+            .child('houses/$normalizedHouseId/email')
             .get()
             .timeout(const Duration(seconds: 3)),
       ]);
@@ -277,7 +342,44 @@ class AuthRecoveryService {
       }
 
       _cachedSecurityData = security;
+      _cachedSecurityHouseId = normalizedHouseId;
+      _cachedSecurityUid = currentUid;
       _lastSecurityCacheTime = now;
+      return security;
+    } catch (_) {
+      return _fetchHouseRecoveryInfo(normalizedHouseId);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _fetchHouseRecoveryInfo(
+    String normalizedHouseId,
+  ) async {
+    try {
+      final result = await _callOtpFunction(
+        () => _callRecoveryFunction<dynamic>(
+          'getHouseRecoveryInfo',
+          payload: {'houseId': normalizedHouseId},
+        ),
+        allowUnauthenticatedWithoutMarkers: true,
+      );
+      final payload = _asStringDynamicMap(result.data);
+      if (payload == null || payload['found'] != true) return null;
+
+      final question = payload['question']?.toString().trim() ?? '';
+      final maskedEmail = payload['maskedEmail']?.toString().trim() ?? '';
+      final email = payload['email']?.toString().trim().toLowerCase() ?? '';
+      final security = <String, dynamic>{
+        if (question.isNotEmpty) 'question': question,
+        if (maskedEmail.isNotEmpty) 'maskedEmail': maskedEmail,
+        if (email.isNotEmpty) 'email': email,
+        'recoveryAvailable': payload['recoveryAvailable'] == true,
+        if (payload['recoveryAvailable'] == true)
+          'recovery': <String, dynamic>{'question': question},
+      };
+      _cachedSecurityData = security;
+      _cachedSecurityHouseId = normalizedHouseId;
+      _cachedSecurityUid = _auth.currentUser?.uid;
+      _lastSecurityCacheTime = DateTime.now();
       return security;
     } catch (_) {
       return null;
@@ -287,15 +389,21 @@ class AuthRecoveryService {
   String maskEmail(String email) => auth_support.maskEmail(email);
 
   Future<String?> findEmailByHouseId(String houseId) async {
+    final normalizedHouseId = houseId.trim().toUpperCase();
+    if (normalizedHouseId.isEmpty) return null;
     try {
       final securitySnap = await _db
-          .child('houses/$houseId/security/email')
-          .get();
+          .child('houses/$normalizedHouseId/security/email')
+          .get()
+          .timeout(const Duration(seconds: 3));
       final securityEmail = securitySnap.value?.toString().trim();
       if (securityEmail != null && securityEmail.isNotEmpty) {
         return securityEmail;
       }
-      final snapshot = await _db.child('houses/$houseId/email').get();
+      final snapshot = await _db
+          .child('houses/$normalizedHouseId/email')
+          .get()
+          .timeout(const Duration(seconds: 3));
       final email = snapshot.value?.toString().trim();
       return (email == null || email.isEmpty) ? null : email;
     } catch (_) {
@@ -305,10 +413,23 @@ class AuthRecoveryService {
 
   Future<bool> verifySecurityAnswer(String houseId, String answer) async {
     try {
-      final security = await getHouseSecurityData(houseId);
+      final normalizedHouseId = houseId.trim().toUpperCase();
+      final security = await getHouseSecurityData(normalizedHouseId);
       final storedAnswer = (security?['answerHash'] ?? security?['answer'])
           ?.toString();
-      return matchesRecoveryAnswer(storedAnswer, answer);
+      if (storedAnswer != null && storedAnswer.trim().isNotEmpty) {
+        return matchesRecoveryAnswer(storedAnswer, answer);
+      }
+
+      final result = await _callOtpFunction(
+        () => _callRecoveryFunction<dynamic>(
+          'verifyHouseRecoveryAnswer',
+          payload: {'houseId': normalizedHouseId, 'answer': answer.trim()},
+        ),
+        allowUnauthenticatedWithoutMarkers: true,
+      );
+      final payload = _asStringDynamicMap(result.data);
+      return payload?['verified'] == true;
     } catch (_) {
       return false;
     }
@@ -379,6 +500,7 @@ class AuthRecoveryService {
           'requestEmailOTP',
           payload: {
             'email': email.trim(),
+            'locale': L10nService().localeCode,
             if (deviceId.trim().isNotEmpty) 'deviceId': deviceId.trim(),
           },
           throwOriginalException: true,
@@ -625,7 +747,7 @@ class AuthRecoveryService {
 
       final credential = firebase_auth.EmailAuthProvider.credential(
         email: email,
-        password: newPassword.trim(),
+        password: newPassword,
       );
       await user.linkWithCredential(credential);
       return;

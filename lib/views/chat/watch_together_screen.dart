@@ -411,7 +411,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       },
       onError: (Object error) {
         debugPrint(
-          'Watch together listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('ui_chat_unable_to_synchronize_shared_viewing_room_471db9')).message}',
+          'Watch together listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('ui_chat_unable_to_synchronize_shared_viewing_room_471db9')).message}',
         );
       },
     );
@@ -443,6 +443,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       url: normalized,
     );
     await _loadUrl(normalized);
+    if (!mounted) return;
     _showSnack(
       L10nScope.of(context).format(
         'ui_chat_invited_value1_to_watch_together_0a1b58',
@@ -454,6 +455,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   Future<void> _toggleVoiceCall() async {
     if (_isCallingVN.value) {
       await _webrtc.hangUp();
+      if (!mounted) return;
       _isCallingVN.value = false;
       _micMutedVN.value = false;
       _showSnack(context.tr('ui_chat_voice_call_ended_2efe56'));
@@ -472,8 +474,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       }
 
       _isCallingVN.value = true;
+      if (!mounted) return;
       _showSnack(context.tr('ui_chat_voice_call_connected_3df07c'));
     } catch (e) {
+      if (!mounted) return;
       _showSnack(
         context.tr('ui_chat_voice_calls_cannot_be_connected_at_this_d2d44c'),
         isError: true,

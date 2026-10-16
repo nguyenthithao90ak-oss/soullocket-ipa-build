@@ -1,38 +1,45 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../models/weather_background.dart';
 
+/// Bảng màu và artwork dùng chung cho nền Thời tiết PRO.
+///
+/// Mỗi nửa của card vẫn được vẽ độc lập theo presence của từng người, nhưng
+/// các lớp ánh sáng, khí quyển và hạt trang trí dùng cùng một nhịp để hai
+/// widget native không bị lệch phong cách so với Home/preview Flutter.
 abstract final class WeatherBackgroundDesign {
   static const palettes = <WeatherBackgroundState, List<Color>>{
     WeatherBackgroundState.unknown: [
-      Color(0xFFE7EDF4),
-      Color(0xFFF4EFF8),
-      Color(0xFFE8F1F3),
+      Color(0xFFDCE7F1),
+      Color(0xFFF7F3FA),
+      Color(0xFFDCEDED),
     ],
     WeatherBackgroundState.sunny: [
-      Color(0xFFFFE6A8),
-      Color(0xFFFFF3D8),
-      Color(0xFFFFD7E8),
+      Color(0xFFFFC96B),
+      Color(0xFFFFF0C9),
+      Color(0xFFF5CBDD),
     ],
     WeatherBackgroundState.cloudy: [
-      Color(0xFFD9E6F4),
-      Color(0xFFECE7F8),
-      Color(0xFFD7EFF0),
+      Color(0xFFB5CBE0),
+      Color(0xFFE8E6F2),
+      Color(0xFFB9D9D7),
     ],
     WeatherBackgroundState.rain: [
-      Color(0xFFB8D0EC),
-      Color(0xFFD7D3ED),
-      Color(0xFFBBDCE0),
+      Color(0xFF7FA5CF),
+      Color(0xFFBEC8E4),
+      Color(0xFF9FCACD),
     ],
     WeatherBackgroundState.lightning: [
-      Color(0xFFB8A5D3),
-      Color(0xFFE1C5E8),
-      Color(0xFFFFE0A8),
+      Color(0xFF6D639F),
+      Color(0xFF9C8CC0),
+      Color(0xFFF0C47D),
     ],
     WeatherBackgroundState.cold: [
-      Color(0xFFC9E8F4),
-      Color(0xFFE4F2FA),
-      Color(0xFFD7DDF7),
+      Color(0xFFA8D8E9),
+      Color(0xFFE0F1FA),
+      Color(0xFFBBC7EC),
     ],
   };
 
@@ -50,7 +57,7 @@ abstract final class WeatherBackgroundDesign {
     if (!dark) return colors;
     return [
       for (var i = 0; i < colors.length; i++)
-        Color.lerp(const Color(0xFF292735), colors[i], i == 1 ? .22 : .28)!,
+        Color.lerp(const Color(0xFF252538), colors[i], i == 1 ? .34 : .42)!,
     ];
   }
 }
@@ -63,8 +70,11 @@ class WeatherPremiumArtwork extends StatelessWidget {
     this.dark = false,
     this.alternate = false,
   });
+
   final WeatherBackgroundSnapshot weather;
-  final bool dark, alternate;
+  final bool dark;
+  final bool alternate;
+
   @override
   Widget build(BuildContext context) {
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -89,8 +99,11 @@ class WeatherPremiumPainter extends CustomPainter {
     this.dark = false,
     this.alternate = false,
   });
-  final WeatherBackgroundState left, right;
-  final bool dark, alternate;
+
+  final WeatherBackgroundState left;
+  final WeatherBackgroundState right;
+  final bool dark;
+  final bool alternate;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -106,123 +119,343 @@ class WeatherPremiumPainter extends CustomPainter {
   }
 
   void _paintState(Canvas canvas, Size size, WeatherBackgroundState state) {
-    final w = size.width, h = size.height;
+    final w = size.width;
+    final h = size.height;
     final unit = math.min(w / 150, h / 180).clamp(.5, 1.5);
+    final rect = Offset.zero & size;
     final palette = WeatherBackgroundDesign.palettes[state]!;
-    if (!dark) {
-      canvas.drawRect(
-        Offset.zero & size,
-        Paint()
-          ..shader = LinearGradient(
-            colors: [
-              palette.first.withValues(alpha: .35),
-              palette.last.withValues(alpha: .2),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(Offset.zero & size),
-      );
-    }
-    final cloud = Paint()
-      ..isAntiAlias = true
-      ..color = (dark ? Colors.white : const Color(0xFFFFFFFF)).withValues(
-        alpha: dark ? .26 : .64,
-      );
-    final center = Offset(w * .22, h * .16 + (alternate ? 3 * unit : 0));
+
+    // Lớp màu khí quyển giúp nền có chiều sâu ngay cả khi card rất nhỏ.
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            palette[0].withValues(alpha: dark ? .58 : .72),
+            palette[1].withValues(alpha: dark ? .42 : .52),
+            palette[2].withValues(alpha: dark ? .64 : .68),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(rect),
+    );
+
+    final glowCenter = Offset(
+      state == WeatherBackgroundState.lightning ? w * .76 : w * .28,
+      state == WeatherBackgroundState.cold ? h * .72 : h * .18,
+    );
+    canvas.drawCircle(
+      glowCenter,
+      math.max(w, h) * .64,
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: [
+                _accent(state).withValues(alpha: dark ? .20 : .26),
+                _accent(state).withValues(alpha: .04),
+                Colors.transparent,
+              ],
+              stops: const [.0, .46, 1],
+            ).createShader(
+              Rect.fromCircle(center: glowCenter, radius: math.max(w, h) * .64),
+            ),
+    );
+
+    final center = Offset(w * .22, h * .17 + (alternate ? 3 * unit : 0));
     switch (state) {
       case WeatherBackgroundState.sunny:
-        final sun = Paint()
-          ..isAntiAlias = true
-          ..color = const Color(0xFFF4BA52).withValues(alpha: .68);
-        canvas.drawCircle(center, 16 * unit, sun);
-        final ray = Paint()
-          ..color = const Color(0xFFE3A239).withValues(alpha: .52)
-          ..strokeWidth = 2 * unit
-          ..strokeCap = StrokeCap.round;
-        for (var i = 0; i < 10; i++) {
-          final angle = i * math.pi / 5 + (alternate ? .12 : 0);
-          final direction = Offset(math.cos(angle), math.sin(angle));
-          canvas.drawLine(
-            center + direction * (22 * unit),
-            center + direction * (29 * unit),
-            ray,
-          );
-        }
+        _sun(canvas, center, unit);
       case WeatherBackgroundState.cloudy:
-        _cloud(canvas, center.translate(6 * unit, 0), unit, cloud);
-        _cloud(canvas, Offset(w * .83, h * .83), unit * .72, cloud);
+        _cloud(canvas, center.translate(8 * unit, 1 * unit), unit);
+        _cloud(canvas, Offset(w * .82, h * .78), unit * .62, muted: true);
+        _mist(canvas, h * .84, unit, const Color(0xFFFFFFFF), .16);
       case WeatherBackgroundState.rain:
+        _cloud(canvas, center.translate(8 * unit, 1 * unit), unit, storm: true);
+        _rain(canvas, w, h, unit, storm: false);
+        _mist(canvas, h * .88, unit, const Color(0xFFB9E4E5), .20);
       case WeatherBackgroundState.lightning:
-        _cloud(canvas, center.translate(6 * unit, 0), unit, cloud);
-        final rain = Paint()
-          ..color = const Color(0xFF4D8BB8).withValues(alpha: dark ? .48 : .46)
-          ..strokeWidth = 1.8 * unit
-          ..strokeCap = StrokeCap.round;
-        for (var i = 0; i < 12; i++) {
-          final x = w * (.1 + i % 4 * .25);
-          final y = h * (.34 + i ~/ 4 * .23) + (alternate ? 7 * unit : 0);
-          canvas.drawLine(
-            Offset(x, y),
-            Offset(x - 4 * unit, y + 11 * unit),
-            rain,
-          );
-        }
-        if (state == WeatherBackgroundState.lightning) {
-          final x = w * .82, y = h * .21;
-          final bolt = Path()
-            ..moveTo(x, y)
-            ..lineTo(x - 10 * unit, y + 20 * unit)
-            ..lineTo(x + 1 * unit, y + 17 * unit)
-            ..lineTo(x - 7 * unit, y + 38 * unit);
-          canvas.drawPath(
-            bolt,
-            Paint()
-              ..color = const Color(
-                0xFFDFA137,
-              ).withValues(alpha: alternate ? .9 : .75)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 3 * unit
-              ..strokeJoin = StrokeJoin.round,
-          );
-        }
+        _cloud(canvas, center.translate(8 * unit, 1 * unit), unit, storm: true);
+        _cloud(canvas, Offset(w * .80, h * .30), unit * .52, storm: true);
+        _rain(canvas, w, h, unit, storm: true);
+        _lightning(canvas, w * .80, h * .20, unit);
+        _mist(canvas, h * .91, unit, const Color(0xFFF5D89E), .14);
       case WeatherBackgroundState.cold:
-        final snow = Paint()
-          ..color = const Color(0xFF579BBF).withValues(alpha: dark ? .6 : .52)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5 * unit
-          ..strokeCap = StrokeCap.round;
-        for (final point in [
-          center,
-          Offset(w * .84, h * .28),
-          Offset(w * .15, h * .81),
-          Offset(w * .83, h * .84),
-        ]) {
-          for (var i = 0; i < 3; i++) {
-            final angle = i * math.pi / 3;
-            final arm = Offset(math.cos(angle), math.sin(angle)) * (7 * unit);
-            canvas.drawLine(point - arm, point + arm, snow);
-          }
-        }
+        _frost(canvas, w, h, center, unit);
+        _mist(canvas, h * .82, unit, const Color(0xFFF4FCFF), .24);
       case WeatherBackgroundState.unknown:
-        break;
+        _ambient(canvas, w, h, unit);
     }
+
+    // Vignette rất nhẹ để chữ/avatar ở giữa card luôn có vùng tương phản.
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: dark ? .015 : .10),
+            Colors.transparent,
+            Colors.black.withValues(alpha: dark ? .12 : .025),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(rect),
+    );
   }
 
-  void _cloud(Canvas canvas, Offset center, double u, Paint paint) {
-    canvas.drawCircle(center.translate(-14 * u, 4 * u), 12 * u, paint);
-    canvas.drawCircle(center.translate(0, -3 * u), 16 * u, paint);
-    canvas.drawCircle(center.translate(15 * u, 5 * u), 11 * u, paint);
+  Color _accent(WeatherBackgroundState state) => switch (state) {
+    WeatherBackgroundState.sunny => const Color(0xFFFFB946),
+    WeatherBackgroundState.cloudy => const Color(0xFFEDF5FF),
+    WeatherBackgroundState.rain => const Color(0xFF6B9FD2),
+    WeatherBackgroundState.lightning => const Color(0xFFFFD36D),
+    WeatherBackgroundState.cold => const Color(0xFFB9F1FF),
+    WeatherBackgroundState.unknown => const Color(0xFFEFFFFB),
+  };
+
+  void _sun(Canvas canvas, Offset center, double u) {
+    final glowRect = Rect.fromCircle(center: center, radius: 34 * u);
+    canvas.drawCircle(
+      center,
+      34 * u,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            const Color(0xFFFFF4BD).withValues(alpha: .72),
+            const Color(0xFFFFCF67).withValues(alpha: .24),
+            Colors.transparent,
+          ],
+        ).createShader(glowRect),
+    );
+    final rays = Paint()
+      ..color = const Color(0xFFFFC45C).withValues(alpha: .66)
+      ..strokeWidth = 2.2 * u
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 12; i++) {
+      final angle = i * math.pi / 6 + (alternate ? .10 : 0);
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      canvas.drawLine(
+        center + direction * (22 * u),
+        center + direction * (31 * u),
+        rays,
+      );
+    }
+    canvas.drawCircle(
+      center,
+      16 * u,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFFFFF1A8), Color(0xFFF5B948)],
+        ).createShader(glowRect),
+    );
+    canvas.drawCircle(
+      center.translate(-4 * u, -5 * u),
+      4 * u,
+      Paint()..color = Colors.white.withValues(alpha: .28),
+    );
+  }
+
+  void _cloud(
+    Canvas canvas,
+    Offset center,
+    double u, {
+    bool muted = false,
+    bool storm = false,
+  }) {
+    final shadow = Paint()
+      ..color = (storm ? const Color(0xFF465878) : const Color(0xFF657B99))
+          .withValues(alpha: storm ? .30 : .15);
+    final body = Paint()
+      ..color = (storm ? const Color(0xFFE7EDF9) : Colors.white).withValues(
+        alpha: muted ? .34 : (storm ? .66 : .72),
+      );
+    final highlight = Paint()
+      ..color = Colors.white.withValues(
+        alpha: muted ? .18 : (storm ? .24 : .38),
+      );
+    final shapes = [
+      (center.translate(-16 * u, 5 * u), 13 * u),
+      (center.translate(-2 * u, -5 * u), 18 * u),
+      (center.translate(16 * u, 4 * u), 12 * u),
+    ];
+    for (final shape in shapes) {
+      canvas.drawCircle(shape.$1.translate(1 * u, 2 * u), shape.$2, shadow);
+    }
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: center.translate(0, 8 * u),
-          width: 48 * u,
-          height: 16 * u,
+          center: center.translate(0, 9 * u),
+          width: 52 * u,
+          height: 18 * u,
         ),
-        Radius.circular(8 * u),
+        Radius.circular(9 * u),
       ),
-      paint,
+      shadow,
     );
+    for (final shape in shapes) {
+      canvas.drawCircle(shape.$1, shape.$2, body);
+    }
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center.translate(0, 7 * u),
+          width: 52 * u,
+          height: 18 * u,
+        ),
+        Radius.circular(9 * u),
+      ),
+      body,
+    );
+    canvas.drawCircle(center.translate(-7 * u, -10 * u), 5 * u, highlight);
+  }
+
+  void _rain(
+    Canvas canvas,
+    double w,
+    double h,
+    double u, {
+    required bool storm,
+  }) {
+    final far = Paint()
+      ..color = const Color(0xFFEAF7FF).withValues(alpha: storm ? .20 : .30)
+      ..strokeWidth = 1.2 * u
+      ..strokeCap = StrokeCap.round;
+    final near = Paint()
+      ..color = const Color(0xFF3978B4).withValues(alpha: storm ? .54 : .42)
+      ..strokeWidth = 1.9 * u
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 18; i++) {
+      final column = i % 6;
+      final row = i ~/ 6;
+      final x = w * (.06 + column * .18) + (row.isEven ? 3 * u : 0);
+      final y = h * (.34 + row * .22) + (alternate ? 6 * u : 0);
+      final length = (row == 0 ? 8 : 12) * u;
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x - 4 * u, y + length),
+        row == 0 ? far : near,
+      );
+    }
+    for (final point in [
+      Offset(w * .18, h * .50),
+      Offset(w * .56, h * .62),
+      Offset(w * .84, h * .47),
+    ]) {
+      canvas.drawCircle(
+        point,
+        2.1 * u,
+        Paint()..color = Colors.white.withValues(alpha: storm ? .28 : .38),
+      );
+    }
+  }
+
+  void _lightning(Canvas canvas, double x, double y, double u) {
+    final bolt = Path()
+      ..moveTo(x, y)
+      ..lineTo(x - 11 * u, y + 22 * u)
+      ..lineTo(x + 1 * u, y + 18 * u)
+      ..lineTo(x - 8 * u, y + 42 * u);
+    canvas.drawPath(
+      bolt,
+      Paint()
+        ..color = const Color(0xFFFFE29A).withValues(alpha: .34)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10 * u
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawPath(
+      bolt,
+      Paint()
+        ..color = const Color(
+          0xFFFFF4C5,
+        ).withValues(alpha: alternate ? .98 : .88)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 * u
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  void _frost(Canvas canvas, double w, double h, Offset center, double u) {
+    final snow = Paint()
+      ..color = const Color(0xFF4F9FC3).withValues(alpha: .48)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5 * u
+      ..strokeCap = StrokeCap.round;
+    final sparkle = Paint()
+      ..color = Colors.white.withValues(alpha: .68)
+      ..strokeWidth = 1.2 * u
+      ..strokeCap = StrokeCap.round;
+    final points = [
+      center,
+      Offset(w * .82, h * .26),
+      Offset(w * .14, h * .74),
+      Offset(w * .82, h * .78),
+      Offset(w * .42, h * .54),
+    ];
+    for (var pointIndex = 0; pointIndex < points.length; pointIndex++) {
+      final point = points[pointIndex];
+      final radius = (pointIndex.isEven ? 8 : 5.5) * u;
+      for (var i = 0; i < 3; i++) {
+        final angle = i * math.pi / 3;
+        final arm = Offset(math.cos(angle), math.sin(angle)) * radius;
+        canvas.drawLine(point - arm, point + arm, snow);
+        final branch = arm * .56;
+        canvas.drawLine(
+          point - branch,
+          point - branch + Offset(-arm.dy, arm.dx) * .22,
+          snow,
+        );
+        canvas.drawLine(
+          point + branch,
+          point + branch + Offset(arm.dy, -arm.dx) * .22,
+          snow,
+        );
+      }
+      if (pointIndex.isEven) {
+        canvas.drawLine(
+          point.translate(-2 * u, -2 * u),
+          point.translate(2 * u, 2 * u),
+          sparkle,
+        );
+      }
+    }
+    for (final point in [
+      Offset(w * .28, h * .36),
+      Offset(w * .66, h * .45),
+      Offset(w * .28, h * .88),
+    ]) {
+      canvas.drawCircle(point, 1.8 * u, sparkle);
+    }
+  }
+
+  void _mist(Canvas canvas, double y, double u, Color color, double alpha) {
+    final rect = Rect.fromCenter(
+      center: Offset(0, y),
+      width: 210 * u,
+      height: 30 * u,
+    );
+    canvas.drawOval(
+      rect,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            color.withValues(alpha: alpha),
+            Colors.transparent,
+          ],
+        ).createShader(rect),
+    );
+  }
+
+  void _ambient(Canvas canvas, double w, double h, double u) {
+    final dot = Paint()..color = Colors.white.withValues(alpha: .34);
+    for (final point in [
+      Offset(w * .18, h * .28),
+      Offset(w * .70, h * .22),
+      Offset(w * .84, h * .66),
+      Offset(w * .30, h * .78),
+    ]) {
+      canvas.drawCircle(point, (alternate ? 2.2 : 1.6) * u, dot);
+    }
   }
 
   @override

@@ -94,6 +94,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
         .child('notifications/$houseId')
         .orderByChild('type')
         .equalTo('new_device')
+        // Chỉ cần một cửa sổ nhỏ để bắt thiết bị mới; không replay toàn bộ
+        // lịch sử thông báo nếu node này chưa được dọn ở server.
+        .limitToLast(20)
         .onChildAdded
         .listen(
           (event) {
@@ -675,6 +678,13 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _alertSubscription?.cancel();
     _alertSubscription = _dbRef
         .child('houses/$houseId/alerts')
+        .orderByChild('sentAt')
+        .startAt(
+          DateTime.now()
+              .subtract(const Duration(hours: 24))
+              .millisecondsSinceEpoch,
+        )
+        .limitToLast(20)
         .onChildAdded
         .listen(
           (event) async {
@@ -717,6 +727,13 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _partnerInboxSubscription?.cancel();
     _partnerInboxSubscription = _dbRef
         .child('houses/$houseId/partner_inbox/$_currentRole')
+        .orderByChild('sentAt')
+        .startAt(
+          DateTime.now()
+              .subtract(const Duration(hours: 24))
+              .millisecondsSinceEpoch,
+        )
+        .limitToLast(20)
         .onChildAdded
         .listen(
           (event) async {

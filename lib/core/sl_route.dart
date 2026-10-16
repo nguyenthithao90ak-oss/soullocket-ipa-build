@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
+import 'package:soullocket_app/utils/local_guide_route_tracker.dart';
 
 /// Custom page route với slide từ phải + fade nhẹ.
 /// Thay thế MaterialPageRoute để transition mượt hơn trên cả Android & iOS.
@@ -42,6 +43,7 @@ Future<T?> slPush<T>(
     context,
     SLRoute<T>(builder: (_) => screen, fullscreenDialog: fullscreenDialog),
     identity: _SlRouteIdentity(screen.runtimeType, screen.key),
+    localGuideScreenType: screen.runtimeType.toString(),
   );
 }
 
@@ -52,6 +54,7 @@ Future<T?> slPushRoute<T>(
   PageRoute<T> route, {
   required Object identity,
   bool rootNavigator = false,
+  String? localGuideScreenType,
 }) {
   if (!context.mounted) return Future<T?>.value(null);
   final navigator = Navigator.of(context, rootNavigator: rootNavigator);
@@ -77,11 +80,16 @@ Future<T?> slPushRoute<T>(
   }
   final gate = gates.putIfAbsent(identity, SingleOpenGate.new);
   final entryGate = openingGate;
+  var didTrackLocalGuideRoute = false;
   return gate
       .runValue<T>(() async {
         late Future<T?> result;
         await entryGate.run(() async {
           result = navigator.push<T>(route);
+          if (localGuideScreenType != null) {
+            LocalGuideRouteTracker.instance.didPushScreen(localGuideScreenType);
+            didTrackLocalGuideRoute = true;
+          }
           await _waitForRouteEntry(route);
         });
         final value = await result;
@@ -91,6 +99,9 @@ Future<T?> slPushRoute<T>(
         return value;
       })
       .whenComplete(() {
+        if (didTrackLocalGuideRoute) {
+          LocalGuideRouteTracker.instance.didPopScreen(localGuideScreenType!);
+        }
         if (!gate.isBusy && identical(gates![identity], gate)) {
           gates.remove(identity);
         }

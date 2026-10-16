@@ -66,6 +66,42 @@ extension _SettingsTabShell on _SettingsTabState {
     return _sectionIdForPanel(id) == 'security';
   }
 
+  Future<bool> _ensureCountdownSpaceProAccess() async {
+    if (!mounted) return false;
+    final cachedPro = UtilityService.proAccess.value;
+    var isPro = _isVipActive || cachedPro == true;
+    if (!isPro) {
+      try {
+        final access = await PurchaseService()
+            .getVipAccessInfo()
+            .timeout(const Duration(seconds: 5));
+        isPro = access.isVip;
+        if (mounted && access.isVip && !_isVipActive) {
+          setState(() => _isVipActive = true);
+        }
+      } catch (_) {
+        isPro = UtilityService.proAccess.value == true;
+      }
+    }
+    if (!mounted) return false;
+    if (isPro) {
+      if (!_isVipActive || _vipBadgeHint != null) {
+        setState(() {
+          _isVipActive = true;
+          _vipBadgeHint = null;
+        });
+      }
+      return true;
+    }
+    await showProUpsell(
+      context,
+      message: context.tr('countdown_unlock_pro'),
+      houseId: _houseId ?? '',
+      myName: _resolveSettingsMyName(),
+    );
+    return false;
+  }
+
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     final uid = _settingsOwnerUid;
@@ -97,6 +133,7 @@ extension _SettingsTabShell on _SettingsTabState {
         }
         if (!mounted || !valid()) return;
         if (sectionId == 'countdownMode') {
+          if (!await _ensureCountdownSpaceProAccess()) return;
           await _openCountdownMode();
           return;
         }
@@ -593,6 +630,7 @@ extension _SettingsTabShell on _SettingsTabState {
                 color: SLSettingsColors.coral,
                 title: context.tr('settings_countdown_space_label'),
                 isDark: isDark,
+                badge: const UtilityVipBadge(compact: true),
                 onTap: () => _togglePanel('countdownMode'),
               ),
             ),
@@ -620,6 +658,7 @@ extension _SettingsTabShell on _SettingsTabState {
     required String title,
     required bool isDark,
     required VoidCallback onTap,
+    Widget? badge,
   }) {
     return KeyedSubtree(
       key: guideKey,
@@ -628,6 +667,7 @@ extension _SettingsTabShell on _SettingsTabState {
         color: color,
         title: title,
         isDark: isDark,
+        badge: badge,
         onTap: onTap,
       ),
     );

@@ -4,9 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/service_locator.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/home_drawing_model.dart';
 import 'package:soullocket_app/utils/services/home_drawing_service.dart';
+import 'package:soullocket_app/utils/services/sound_service.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 
 class HomeDrawingHost extends StatefulWidget {
   const HomeDrawingHost({
@@ -31,14 +34,20 @@ class HomeDrawingHost extends StatefulWidget {
 enum _HomeDrawingMode { draw, scroll }
 
 class _HomeDrawingHostState extends State<HomeDrawingHost> {
-  late final HomeDrawingService _service = widget.service ??
+  late final HomeDrawingService _service =
+      widget.service ??
       (locator.isRegistered<HomeDrawingService>()
           ? locator<HomeDrawingService>()
           : HomeDrawingService());
   final ValueNotifier<int> _paintRevision = ValueNotifier<int>(0);
+  final ValueNotifier<_HomeDrawingViewport> _viewport =
+      ValueNotifier<_HomeDrawingViewport>(
+        const _HomeDrawingViewport(offset: 0, contentHeight: 0),
+      );
   HomeDrawingLocalState _local = HomeDrawingLocalState.empty();
   HomeDrawingStatus _status = const HomeDrawingStatus.locked();
   StreamSubscription<HomeDrawingBoard>? _boardSubscription;
+  Timer? _statusRefreshTimer;
   HomeDrawingStroke? _activeStroke;
   _HomeDrawingMode _mode = _HomeDrawingMode.scroll;
   bool _isHomeActive = false;
@@ -51,7 +60,8 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
   int _selectedColor = 0xffff6f91;
   int _selectedWidth = 8;
 
-  String? get _uid => widget.uid?.trim().isEmpty == true ? null : widget.uid?.trim();
+  String? get _uid =>
+      widget.uid?.trim().isEmpty == true ? null : widget.uid?.trim();
   String? get _houseId =>
       widget.houseId?.trim().isEmpty == true ? null : widget.houseId?.trim();
   bool get _hasScope => _uid != null && _houseId != null;
@@ -91,7 +101,9 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
   void dispose() {
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _boardSubscription?.cancel();
+    _statusRefreshTimer?.cancel();
     _paintRevision.dispose();
+    _viewport.dispose();
     super.dispose();
   }
 
@@ -101,9 +113,12 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     _isHomeActive = next;
     if (next) {
       _startBoardWatch();
+      unawaited(_refreshStatus(force: true));
     } else {
       _boardSubscription?.cancel();
       _boardSubscription = null;
+      _statusRefreshTimer?.cancel();
+      _statusRefreshTimer = null;
       if (mounted) {
         setState(() {
           _isOpen = false;
@@ -118,6 +133,9 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     final generation = ++_scopeGeneration;
     await _boardSubscription?.cancel();
     _boardSubscription = null;
+    _statusRefreshTimer?.cancel();
+    _statusRefreshTimer = null;
+    _viewport.value = const _HomeDrawingViewport(offset: 0, contentHeight: 0);
     final uid = _uid;
     final houseId = _houseId;
     if (uid == null || houseId == null) {
@@ -138,6 +156,65 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
       _isOpen = false;
     });
     _startBoardWatch();
+    unawaited(_refreshStatus(force: true, generation: generation));
+  }
+
+  Future<void> _refreshStatus({
+    bool force = false,
+    int? generation,
+  }) async {
+    final uid = _uid;
+    final houseId = _houseId;
+    final expectedGeneration = generation ?? _scopeGeneration;
+    if (!_isHomeActive || uid == null || houseId == null) return;
+    try {
+      final status = await _service.status(
+        uid: uid,
+        houseId: houseId,
+        force: force,
+      );
+      if (!mounted || expectedGeneration != _scopeGeneration ||
+          !_isHomeActive || _uid != uid || _houseId != houseId) {
+        return;
+      }
+      _updateServerOffset(status.serverNow);
+      if (status.snapshot != null) _mergeRemoteBoard(status.snapshot!);
+      final expiredOpen = _isOpen &&
+          !status.available &&
+          status.expiresAt > 0 &&
+          status.expiresAt <= _serverNow;
+      setState(() {
+        _status = status;
+        if (expiredOpen) {
+          _isOpen = false;
+          _activeStroke = null;
+          _mode = _HomeDrawingMode.scroll;
+        }
+      });
+      _scheduleStatusRefresh(status);
+    } catch (_) {
+      if (!mounted || expectedGeneration != _scopeGeneration ||
+          !_isHomeActive) {
+        return;
+      }
+      _statusRefreshTimer?.cancel();
+      _statusRefreshTimer = Timer(
+        const Duration(seconds: 30),
+        () => unawaited(_refreshStatus(force: true)),
+      );
+    }
+  }
+
+  void _scheduleStatusRefresh(HomeDrawingStatus status) {
+    _statusRefreshTimer?.cancel();
+    _statusRefreshTimer = null;
+    final target = status.available ? status.expiresAt : status.nextCheckAt;
+    if (target <= 0 || !_isHomeActive) return;
+    final delayMs = math.max(1000, target - _serverNow);
+    _statusRefreshTimer = Timer(
+      Duration(milliseconds: delayMs),
+      () => unawaited(_refreshStatus(force: true)),
+    );
   }
 
   void _startBoardWatch() {
@@ -158,19 +235,20 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
               _houseId == houseId,
         )
         .listen((board) {
-      if (!mounted || generation != _scopeGeneration) return;
-      final next = _local.hasDraft
-          ? _local.copyWith(confirmed: board, baseRevision: board.revision)
-          : HomeDrawingLocalState(confirmed: board);
-      setState(() => _local = next);
-      unawaited(_service.persist(uid: uid, houseId: houseId, state: next));
-    });
+          if (!mounted || generation != _scopeGeneration) return;
+          final next = _local.hasDraft
+              ? _local.copyWith(confirmed: board, baseRevision: board.revision)
+              : HomeDrawingLocalState(confirmed: board);
+          setState(() => _local = next);
+          unawaited(_service.persist(uid: uid, houseId: houseId, state: next));
+        });
   }
 
   Future<void> _openDrawing() async {
     if (!_hasScope || _isLoading || !_isHomeActive) return;
     final uid = _uid!;
     final houseId = _houseId!;
+    unawaited(SoundService().playClick());
     setState(() => _isLoading = true);
     try {
       var status = await _service.status(uid: uid, houseId: houseId);
@@ -188,9 +266,36 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
             ? _HomeDrawingMode.draw
             : _HomeDrawingMode.scroll;
       });
-      if (!status.available) _showMessage(_lockedMessage(status.reason));
-    } catch (_) {
-      if (mounted) _showMessage(_tr('home_drawing_failed'));
+      if (status.available) {
+        unawaited(SoundService().playReward());
+        _showMessage(
+          L10nService().format('home_drawing_remaining', {
+            'minutes':
+                '${((_status.expiresAt - _serverNow) / 60000).ceil().clamp(1, 60)}',
+          }),
+          variant: SLToastVariant.success,
+          icon: Icons.auto_awesome_rounded,
+        );
+      } else {
+        _showMessage(
+          _lockedMessage(status.reason),
+          variant: SLToastVariant.warning,
+          icon: Icons.lock_outline_rounded,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        final info = AppErrorMapper.resolve(error);
+        _showMessage(
+          info.message,
+          variant: info.isNetworkError
+              ? SLToastVariant.warning
+              : SLToastVariant.danger,
+          icon: info.isNetworkError
+              ? Icons.cloud_off_rounded
+              : Icons.error_outline_rounded,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -223,25 +328,38 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
 
   String _tr(String key) => L10nService().translate(key);
 
-  void _showMessage(String message) {
+  void _showMessage(
+    String message, {
+    SLToastVariant variant = SLToastVariant.info,
+    IconData? icon,
+  }) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    SLToast.show(
+      context,
+      message,
+      title: _tr('home_drawing_title'),
+      variant: variant,
+      icon: icon,
+    );
   }
 
   bool get _expired =>
       _isOpen && _status.expiresAt > 0 && _status.expiresAt <= _serverNow;
 
-  void _startStroke(Offset localPosition, Size size) {
+  void _startStroke(
+    Offset localPosition,
+    Size viewportSize,
+    double scrollOffset,
+    double contentHeight,
+  ) {
     if (_isSaving || _expired || _mode != _HomeDrawingMode.draw) return;
     if (_isEraserSelected) {
-      _eraseAt(localPosition, size);
+      _eraseAt(
+        localPosition,
+        viewportSize,
+        scrollOffset,
+        contentHeight,
+      );
       return;
     }
     if (_local.visibleStrokes.length >= homeDrawingMaxStrokes) {
@@ -252,19 +370,42 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
       id: _newStrokeId(),
       color: _selectedColor,
       width: _selectedWidth,
-      points: [_point(localPosition, size)],
+      points: [
+        _point(
+          localPosition,
+          viewportSize,
+          scrollOffset,
+          contentHeight,
+        ),
+      ],
     );
+    unawaited(SoundService().playClick());
     _paintRevision.value++;
   }
 
-  void _updateStroke(Offset localPosition, Size size) {
+  void _updateStroke(
+    Offset localPosition,
+    Size viewportSize,
+    double scrollOffset,
+    double contentHeight,
+  ) {
     if (_isEraserSelected) {
-      _eraseAt(localPosition, size);
+      _eraseAt(
+        localPosition,
+        viewportSize,
+        scrollOffset,
+        contentHeight,
+      );
       return;
     }
     final active = _activeStroke;
     if (active == null || _expired || _mode != _HomeDrawingMode.draw) return;
-    final point = _point(localPosition, size);
+    final point = _point(
+      localPosition,
+      viewportSize,
+      scrollOffset,
+      contentHeight,
+    );
     final last = active.points.last;
     final distance = math.sqrt(
       math.pow(point.x - last.x, 2) + math.pow(point.y - last.y, 2),
@@ -273,7 +414,8 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     var points = [...active.points, point];
     if (points.length > homeDrawingMaxPoints) {
       points = [
-        for (var index = 0; index < points.length - 1; index += 2) points[index],
+        for (var index = 0; index < points.length - 1; index += 2)
+          points[index],
         points.last,
       ];
     }
@@ -291,16 +433,25 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     _setDraft([..._local.visibleStrokes, active]);
   }
 
-  HomeDrawingPoint _point(Offset position, Size size) {
-    final width = size.width <= 0 ? 1 : size.width;
-    final height = size.height <= 0 ? 1 : size.height;
+  HomeDrawingPoint _point(
+    Offset position,
+    Size viewportSize,
+    double scrollOffset,
+    double contentHeight,
+  ) {
+    final width = viewportSize.width <= 0 ? 1 : viewportSize.width;
+    final height = contentHeight <= 0 ? viewportSize.height : contentHeight;
     return HomeDrawingPoint(
-      (position.dx / width * homeDrawingCoordinateMax)
+      (position.dx / width * homeDrawingCoordinateMax).round().clamp(
+        0,
+        homeDrawingCoordinateMax,
+      ),
+      ((position.dy + scrollOffset) / height * homeDrawingCoordinateMax)
           .round()
-          .clamp(0, homeDrawingCoordinateMax),
-      (position.dy / height * homeDrawingCoordinateMax)
-          .round()
-          .clamp(0, homeDrawingCoordinateMax),
+          .clamp(
+        0,
+        homeDrawingCoordinateMax,
+      ),
     );
   }
 
@@ -314,7 +465,9 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     final houseId = _houseId;
     final next = _local.copyWith(
       draftStrokes: List.unmodifiable(strokes),
-      baseRevision: _local.hasDraft ? _local.baseRevision : _local.confirmed.revision,
+      baseRevision: _local.hasDraft
+          ? _local.baseRevision
+          : _local.confirmed.revision,
     );
     setState(() => _local = next);
     if (uid != null && houseId != null) {
@@ -333,9 +486,19 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     _setDraft(const []);
   }
 
-  void _eraseAt(Offset localPosition, Size size) {
+  void _eraseAt(
+    Offset localPosition,
+    Size viewportSize,
+    double scrollOffset,
+    double contentHeight,
+  ) {
     if (_local.visibleStrokes.isEmpty) return;
-    final target = _point(localPosition, size);
+    final target = _point(
+      localPosition,
+      viewportSize,
+      scrollOffset,
+      contentHeight,
+    );
     final reversed = _local.visibleStrokes.reversed.toList();
     final index = reversed.indexWhere((stroke) => _hitStroke(stroke, target));
     if (index < 0) return;
@@ -363,13 +526,12 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
       final t = lengthSquared == 0
           ? 0.0
           : ((target.x - start.x) * dx + (target.y - start.y) * dy) /
-              lengthSquared;
+                lengthSquared;
       final clamped = t.clamp(0.0, 1.0);
       final closestX = start.x + dx * clamped;
       final closestY = start.y + dy * clamped;
       if (math.sqrt(
-            math.pow(target.x - closestX, 2) +
-                math.pow(target.y - closestY, 2),
+            math.pow(target.x - closestX, 2) + math.pow(target.y - closestY, 2),
           ) <=
           threshold) {
         return true;
@@ -396,16 +558,37 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
       if (!mounted) return;
       setState(() => _local = result.state);
       if (result.succeeded) {
-        _showMessage(_tr('home_drawing_saved'));
-        setState(() => _isOpen = false);
+        unawaited(SoundService().playSaved());
+        _showMessage(
+          _tr('home_drawing_saved'),
+          variant: SLToastVariant.success,
+          icon: Icons.check_circle_outline_rounded,
+        );
+        setState(() {
+          _isOpen = false;
+          _mode = _HomeDrawingMode.scroll;
+          _activeStroke = null;
+        });
       } else if (result.status == HomeDrawingSaveStatus.conflict) {
         _showConflict(result.state);
       } else if (result.status == HomeDrawingSaveStatus.rateLimited) {
-        _showMessage(_tr('home_drawing_failed'));
+        _showMessage(
+          _tr('home_drawing_failed'),
+          variant: SLToastVariant.warning,
+          icon: Icons.schedule_rounded,
+        );
       } else if (result.status == HomeDrawingSaveStatus.expired) {
-        _showMessage(_tr('home_drawing_expired'));
+        _showMessage(
+          _tr('home_drawing_expired'),
+          variant: SLToastVariant.warning,
+          icon: Icons.timer_off_rounded,
+        );
       } else {
-        _showMessage(_tr('home_drawing_failed'));
+        _showMessage(
+          _tr('home_drawing_failed'),
+          variant: SLToastVariant.danger,
+          icon: Icons.cloud_off_rounded,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -447,38 +630,169 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        widget.child,
-        if (hasScope && _isOpen) _buildDrawingLayer(context),
-        if (hasScope) _buildPencilButton(context),
-        if (hasScope && _isOpen) _buildToolbar(context),
+        NotificationListener<ScrollNotification>(
+          onNotification: _onScrollNotification,
+          child: widget.child,
+        ),
+        if (hasScope &&
+            _isHomeActive &&
+            (_isOpen || _local.visibleStrokes.isNotEmpty))
+          _buildDrawingLayer(context),
+        if (hasScope &&
+            _isHomeActive &&
+            (_status.available || _isOpen))
+          _buildPencilButton(context),
+        if (hasScope && _isHomeActive && _isOpen) _buildToolbar(context),
+        if (hasScope && _isHomeActive && _isOpen)
+          _buildDrawingStatusBanner(context),
       ],
     );
   }
 
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    final metrics = notification.metrics;
+    final contentHeight = math.max(
+      metrics.viewportDimension,
+      metrics.viewportDimension + metrics.maxScrollExtent,
+    ).toDouble();
+    _viewport.value = _HomeDrawingViewport(
+      offset: metrics.pixels.clamp(0.0, metrics.maxScrollExtent).toDouble(),
+      contentHeight: contentHeight,
+    );
+    return false;
+  }
+
   Widget _buildPencilButton(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom + 100;
+    final active = _isOpen;
     return Positioned(
       right: 12,
       bottom: bottom,
       child: Semantics(
         button: true,
-        label: _tr('home_drawing_open'),
-        child: Material(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: _isLoading ? null : _openDrawing,
-            child: SizedBox(
-              width: 52,
-              height: 52,
-              child: _isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(15),
-                      child: CircularProgressIndicator(strokeWidth: 2),
+        label: active ? _tr('home_drawing_title') : _tr('home_drawing_open'),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          width: active ? 60 : 56,
+          height: active ? 60 : 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: active
+                  ? const [Color(0xffff8fab), Color(0xffc55b86)]
+                  : const [Color(0xffffc3d0), Color(0xffff8fab)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xffb54f78).withValues(alpha: 0.28),
+                blurRadius: active ? 22 : 14,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _isLoading ? null : _openDrawing,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (_isLoading)
+                    const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
                     )
-                  : const Icon(Icons.edit_rounded),
+                  else
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: Icon(
+                        active
+                            ? Icons.edit_note_rounded
+                            : Icons.auto_fix_high_rounded,
+                        key: ValueKey<bool>(active),
+                        color: Colors.white,
+                        size: active ? 29 : 25,
+                      ),
+                    ),
+                  if (active)
+                    const Positioned(
+                      right: 8,
+                      top: 9,
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                        size: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawingStatusBanner(BuildContext context) {
+    final remaining = ((_status.expiresAt - _serverNow) / 60000)
+        .ceil()
+        .clamp(1, 60);
+    return Positioned(
+      left: 24,
+      right: 24,
+      top: MediaQuery.paddingOf(context).top + 12,
+      child: IgnorePointer(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 260),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(scale: animation, child: child),
+          ),
+          child: Material(
+            key: ValueKey<int>(_status.expiresAt),
+            color: const Color(0xfdfcf7fb),
+            elevation: 8,
+            shadowColor: const Color(0xffb54f78).withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(22),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.graphic_eq_rounded,
+                    color: Color(0xffb54f78),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _tr('home_drawing_remaining').replaceAll(
+                        '{minutes}',
+                        '$remaining',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xff74415d),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -495,33 +809,72 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
       right: 0,
       top: top,
       bottom: bottom,
-      child: IgnorePointer(
-        ignoring: _mode == _HomeDrawingMode.scroll,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final size = constraints.biggest;
-            return GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onPanStart: (details) => _startStroke(details.localPosition, size),
-              onPanUpdate: (details) => _updateStroke(details.localPosition, size),
-              onPanEnd: (_) => _finishStroke(),
-              onTapUp: (details) {
-                if (_mode == _HomeDrawingMode.draw && _isEraserSelected) {
-                  _eraseAt(details.localPosition, size);
-                }
-              },
-              child: ValueListenableBuilder<int>(
-                valueListenable: _paintRevision,
-                builder: (context, _, __) => CustomPaint(
-                  painter: _HomeDrawingPainter(
-                    strokes: _local.visibleStrokes,
-                    activeStroke: _activeStroke,
+      child: ClipRect(
+        child: ValueListenableBuilder<_HomeDrawingViewport>(
+          valueListenable: _viewport,
+          builder: (context, viewport, _) => LayoutBuilder(
+            builder: (context, constraints) {
+              final viewportSize = constraints.biggest;
+              final contentHeight = math.max(
+                viewportSize.height,
+                viewport.contentHeight,
+              );
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: -viewport.offset,
+                    height: contentHeight,
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _paintRevision,
+                      child: const SizedBox.expand(),
+                      builder: (context, revision, child) => CustomPaint(
+                        painter: _HomeDrawingPainter(
+                          strokes: _local.visibleStrokes,
+                          activeStroke: _activeStroke,
+                        ),
+                        child: child,
+                      ),
+                    ),
                   ),
-                  child: const SizedBox.expand(),
-                ),
-              ),
-            );
-          },
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      ignoring: _mode == _HomeDrawingMode.scroll,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onPanStart: (details) => _startStroke(
+                          details.localPosition,
+                          viewportSize,
+                          viewport.offset,
+                          contentHeight,
+                        ),
+                        onPanUpdate: (details) => _updateStroke(
+                          details.localPosition,
+                          viewportSize,
+                          viewport.offset,
+                          contentHeight,
+                        ),
+                        onPanEnd: (_) => _finishStroke(),
+                        onTapUp: (details) {
+                          if (_mode == _HomeDrawingMode.draw &&
+                              _isEraserSelected) {
+                            _eraseAt(
+                              details.localPosition,
+                              viewportSize,
+                              viewport.offset,
+                              contentHeight,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -550,7 +903,8 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
                 _toolbarButton(
                   icon: Icons.edit_rounded,
                   label: _tr('home_drawing_pen'),
-                  selected: _mode == _HomeDrawingMode.draw && !_isEraserSelected,
+                  selected:
+                      _mode == _HomeDrawingMode.draw && !_isEraserSelected,
                   onPressed: () => setState(() {
                     _mode = _HomeDrawingMode.draw;
                     if (_isEraserSelected) _selectedColor = _colors.first;
@@ -569,7 +923,8 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
                   icon: Icons.pan_tool_alt_rounded,
                   label: _tr('home_drawing_scroll'),
                   selected: _mode == _HomeDrawingMode.scroll,
-                  onPressed: () => setState(() => _mode = _HomeDrawingMode.scroll),
+                  onPressed: () =>
+                      setState(() => _mode = _HomeDrawingMode.scroll),
                 ),
                 const SizedBox(width: 4),
                 for (final color in _colors) _colorButton(color),
@@ -583,7 +938,8 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
                     label: '$_selectedWidth',
                     onChanged: _isEraserSelected
                         ? null
-                        : (value) => setState(() => _selectedWidth = value.round()),
+                        : (value) =>
+                              setState(() => _selectedWidth = value.round()),
                   ),
                 ),
                 _toolbarButton(
@@ -631,14 +987,16 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
       child: IconButton(
         onPressed: onPressed,
         icon: Icon(icon),
-        color: selected || filled ? Theme.of(context).colorScheme.primary : null,
+        color: selected || filled
+            ? Theme.of(context).colorScheme.primary
+            : null,
         style: IconButton.styleFrom(
           minimumSize: const Size(48, 48),
           backgroundColor: selected
               ? Theme.of(context).colorScheme.primaryContainer
               : filled
-                  ? Theme.of(context).colorScheme.secondaryContainer
-                  : null,
+              ? Theme.of(context).colorScheme.secondaryContainer
+              : null,
         ),
       ),
     );
@@ -648,7 +1006,9 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
     final selected = _selectedColor == color;
     return Semantics(
       button: true,
-      label: L10nService().format('home_drawing_color', {'number': '${_colors.indexOf(color) + 1}'}),
+      label: L10nService().format('home_drawing_color', {
+        'number': '${_colors.indexOf(color) + 1}',
+      }),
       child: IconButton(
         onPressed: () => setState(() {
           _selectedColor = color;
@@ -659,7 +1019,9 @@ class _HomeDrawingHostState extends State<HomeDrawingHost> {
             shape: BoxShape.circle,
             color: Color(color),
             border: Border.all(
-              color: selected ? Theme.of(context).colorScheme.onSurface : Colors.transparent,
+              color: selected
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Colors.transparent,
               width: selected ? 3 : 1,
             ),
           ),
@@ -696,22 +1058,47 @@ class _HomeDrawingPainter extends CustomPainter {
     final points = stroke.points;
     if (points.length == 1) {
       canvas.drawCircle(
-        Offset(points.first.normalizedX * size.width, points.first.normalizedY * size.height),
+        Offset(
+          points.first.normalizedX * size.width,
+          points.first.normalizedY * size.height,
+        ),
         paint.strokeWidth / 2,
         paint..style = PaintingStyle.fill,
       );
       return;
     }
-    final path = Path()..moveTo(
+    final path = Path()
+      ..moveTo(
         points.first.normalizedX * size.width,
         points.first.normalizedY * size.height,
       );
     for (final point in points.skip(1)) {
-      path.lineTo(point.normalizedX * size.width, point.normalizedY * size.height);
+      path.lineTo(
+        point.normalizedX * size.width,
+        point.normalizedY * size.height,
+      );
     }
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(covariant _HomeDrawingPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _HomeDrawingPainter oldDelegate) =>
+      !identical(oldDelegate.strokes, strokes) ||
+      !identical(oldDelegate.activeStroke, activeStroke);
+}
+
+class _HomeDrawingViewport {
+  const _HomeDrawingViewport({required this.offset, required this.contentHeight});
+
+  final double offset;
+  final double contentHeight;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _HomeDrawingViewport &&
+      other.offset == offset &&
+      other.contentHeight == contentHeight;
+
+  @override
+  int get hashCode => Object.hash(offset, contentHeight);
 }

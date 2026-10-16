@@ -54,6 +54,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Cho người dùng sửa vài lần gõ nhầm trước khi yêu cầu CAPTCHA.
+  // Firebase Auth và authLoginGuardHttp vẫn chịu trách nhiệm chống thử mật khẩu tự động.
+  static const int _captchaAfterFailedAttempts = 4;
+  static const int _authRateLimitMaxCalls = 5;
+  static const int _authRateLimitWindowMs = 10000;
+
   static const String _pendingSignupRecoveryQuestionPrefsKey =
       'il_pending_signup_recovery_question';
   static const String _pendingSignupRecoveryAnswerPrefsKey =
@@ -216,10 +222,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<bool> _checkAuthRateLimit() async {
+    // Không dùng bộ đếm chống spam dùng chung của Chat cho đăng nhập.
+    // Login đã có tap-throttle riêng, authLoginGuardHttp và Firebase Auth.
+    if (_isLoginTab) return true;
+
     final allowed = await _authRateLimiter.checkRateLimit(
-      action: _isLoginTab ? 'auth_login' : 'auth_register',
-      maxCalls: 3,
-      timeWindowMs: 5000,
+      action: 'auth_register',
+      maxCalls: _authRateLimitMaxCalls,
+      timeWindowMs: _authRateLimitWindowMs,
     );
     if (allowed) return true;
 
@@ -487,7 +497,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      if (_failedAuthAttempts >= 2) {
+      if (_failedAuthAttempts >= _captchaAfterFailedAttempts) {
         final passed = await _showMathCaptcha();
         if (!passed) return;
         if (!mounted) return;
@@ -515,7 +525,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (isLoginAttempt) {
-      if (_failedAuthAttempts >= 2) {
+      if (_failedAuthAttempts >= _captchaAfterFailedAttempts) {
         final passed = await _showMathCaptcha();
         if (!passed) return;
         if (!mounted) return;
@@ -650,7 +660,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
     } catch (e) {
-      _failedAuthAttempts++;
       if (!isLoginAttempt && shouldClearPendingHouseSetupDraft) {
         await _clearPendingHouseSetupDraft();
       }
@@ -663,10 +672,27 @@ class _LoginScreenState extends State<LoginScreen> {
             : l10n.translate('auth_signup_unavailable'),
       );
 
+      final accountErrorText =
+          '${AppErrorMapper.cleanMessage(e)} ${errorInfo.message}'.toLowerCase();
       final isAccountNotFound =
           isLoginAttempt &&
-          (errorInfo.message.contains('Tài khoản không tồn tại') ||
-              errorInfo.message.contains('Account does not exist'));
+          (accountErrorText.contains('tài khoản không tồn tại') ||
+              accountErrorText.contains('không tìm thấy tài khoản') ||
+              accountErrorText.contains('account does not exist') ||
+              accountErrorText.contains('account not found') ||
+              accountErrorText.contains('user-not-found') ||
+              accountErrorText.contains('user not found'));
+
+      // Chỉ tính lỗi xác thực thật sự. Lỗi mạng, timeout, App Check hoặc
+      // server bận không nên làm CAPTCHA xuất hiện ở lần thử kế tiếp.
+      if (!isLoginAttempt ||
+          _isCredentialLoginFailure(
+            error: e,
+            errorInfo: errorInfo,
+            isAccountNotFound: isAccountNotFound,
+          )) {
+        _failedAuthAttempts++;
+      }
 
       var displayMessage = errorInfo.message;
       if (!mounted) return;
@@ -718,6 +744,28 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  bool _isCredentialLoginFailure({
+    required Object error,
+    required AppErrorInfo errorInfo,
+    required bool isAccountNotFound,
+  }) {
+    if (isAccountNotFound ||
+        AppErrorMapper.shouldOfferPasswordRecovery(error) ||
+        AppErrorMapper.shouldOfferPasswordRecovery(errorInfo.message)) {
+      return true;
+    }
+
+    if (error is FirebaseAuthException) {
+      return const {
+        'invalid-credential',
+        'user-not-found',
+        'wrong-password',
+      }.contains(error.code);
+    }
+
+    return false;
   }
 
   int _levenshtein(String a, String b) {

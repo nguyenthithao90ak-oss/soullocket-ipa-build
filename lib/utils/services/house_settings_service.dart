@@ -29,12 +29,6 @@ class HouseSettingsService {
   final DatabaseReference _dbRef;
   static const Duration startDateChangeCooldown = Duration(days: 3);
 
-  static int? _readEpochMs(dynamic raw) {
-    if (raw is int) return raw;
-    if (raw is num) return raw.toInt();
-    return int.tryParse(raw?.toString() ?? '');
-  }
-
   Future<Map<String, dynamic>> getStartDateChangePolicy(String houseId) async {
     const isLocked = false;
     const shouldWarn = false;
@@ -196,7 +190,9 @@ class HouseSettingsService {
             firstYear: 1900,
             lastYear: DateTime.now().year,
           );
-    final safeDayUnit = dayUnit.trim().isEmpty ? UiCopy.text('copy_2697e3b904c8') : dayUnit.trim();
+    final safeDayUnit = dayUnit.trim().isEmpty
+        ? UiCopy.text('copy_2697e3b904c8')
+        : dayUnit.trim();
     final safeGreetingQuote = (greetingQuote ?? '').trim();
 
     if (safeHouseName.isEmpty || safeHouseName.length > 30) {
@@ -252,10 +248,7 @@ class HouseSettingsService {
       ),
     });
     _invalidateCache(houseId);
-    await _recordSpaceActivity(
-      houseId,
-      UiCopy.text('copy_cf31b58f42e4'),
-    );
+    await _recordSpaceActivity(houseId, UiCopy.text('copy_cf31b58f42e4'));
   }
 
   Future<void> updateField(String houseId, String field, dynamic value) async {
@@ -423,25 +416,21 @@ class HouseSettingsService {
     if (parsed.isAfter(DateTime.now())) {
       throw UiCopy.text('copy_c5a64fec2ba5');
     }
-    final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
-    final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final changeCount =
-        (_readEpochMs(settings['startDateChangeCount']) ?? 0) + 1;
-    const nextCooldownUntil = null;
-
     try {
-      // Split into two updates to guarantee optimistic event propagation to deep listeners
-      await _dbRef.child('houses/$houseId/settings').update({
-        'startDate': safeDate,
-        'startDateChangedAt': nowMs,
-        'startDateChangeCount': changeCount,
-        'startDateCooldownUntil': nextCooldownUntil,
-        'updatedAt': ServerValue.timestamp,
-      });
-      await _dbRef.child('houses/$houseId').update({
-        'updatedAt': ServerValue.timestamp,
-      });
+      // Ghi đúng ô mà màn hình cần. Các trường audit là phần tùy chọn; nếu
+      // rules live của một phiên bản cũ chưa có chúng thì không được làm hỏng
+      // thao tác đổi ngày yêu.
+      await _dbRef.child('houses/$houseId/settings/startDate').set(safeDate);
+
+      // Timestamp chỉ để các listener sắp xếp lại dữ liệu; không được biến nó
+      // thành lý do báo lỗi sau khi startDate đã lưu thành công.
+      try {
+        await _dbRef
+            .child('houses/$houseId/updatedAt')
+            .set(ServerValue.timestamp);
+      } catch (error) {
+        debugPrint('[HouseSettings] Bỏ qua cập nhật updatedAt: $error');
+      }
 
       _invalidateCache(houseId);
     } on FirebaseException catch (fe) {

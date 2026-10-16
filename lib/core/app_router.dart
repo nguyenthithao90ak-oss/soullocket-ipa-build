@@ -9,6 +9,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:soullocket_app/utils/services/consent_service.dart';
 import 'package:soullocket_app/views/utilities/love_card_public_link_screen.dart';
 import 'package:soullocket_app/utils/services/love_card_link_service.dart';
+import 'package:soullocket_app/utils/local_guide_route_tracker.dart';
 
 import 'constants/app_config.dart';
 import 'routing/external_link_startup.dart';
@@ -35,6 +36,39 @@ class _ConsentAnalyticsObserver extends NavigatorObserver {
       _active?.didReplace(newRoute: newRoute, oldRoute: oldRoute);
 }
 
+class _LocalGuideModalObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute<dynamic>) {
+      LocalGuideRouteTracker.instance.didPushModal();
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute<dynamic>) {
+      LocalGuideRouteTracker.instance.didPopModal();
+    }
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute<dynamic>) {
+      LocalGuideRouteTracker.instance.didPopModal();
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (oldRoute is PopupRoute<dynamic>) {
+      LocalGuideRouteTracker.instance.didPopModal();
+    }
+    if (newRoute is PopupRoute<dynamic>) {
+      LocalGuideRouteTracker.instance.didPushModal();
+    }
+  }
+}
+
 class AppRouter {
   static final _startupUri = Uri.base;
 
@@ -44,7 +78,7 @@ class AppRouter {
     // Thiệp công khai mở trực tiếp, không phụ thuộc đăng nhập hoặc tải Home.
     overridePlatformDefaultLocation:
         kIsWeb && shouldStartAtAppEntry(_startupUri),
-    observers: [_ConsentAnalyticsObserver()],
+    observers: [_ConsentAnalyticsObserver(), _LocalGuideModalObserver()],
     routes: [
       GoRoute(path: '/', builder: (context, state) => const AppEntry()),
       // Giữ mã trong URL tới AppEntry, nơi service ghi nhận sau đăng nhập.

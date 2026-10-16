@@ -67,9 +67,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         ScreenActivityMixin,
         _SoulBlockStrategyLogic {
   int _boardSize = 8;
-  _SoulPieceOption? _holdPiece;
-  bool _draggingFromHold = false;
-  final GlobalKey _holdAreaKey = GlobalKey();
   final int _rotationsLeft = 3;
 
   static const double _boardGap = 1.8;
@@ -534,7 +531,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           replacementPool[index % replacementPool.length];
     }
 
-    var nextRecommended = _recommendMoveFor(_board, [...nextTray, ?_holdPiece]);
+    var nextRecommended = _recommendMoveFor(_board, nextTray);
     if (nextRecommended == null) {
       nextTray = _buildSmartBatch(
         _board,
@@ -542,7 +539,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       if (nextTray.length != trayLength) {
         return false;
       }
-      nextRecommended = _recommendMoveFor(_board, [...nextTray, ?_holdPiece]);
+      nextRecommended = _recommendMoveFor(_board, nextTray);
       if (nextRecommended == null) {
         return false;
       }
@@ -587,8 +584,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _resumeMenuPulse() {
-    if (!isScreenActive || !_appActive || _view == _SoulGameView.gameplay)
+    if (!isScreenActive || !_appActive || _view == _SoulGameView.gameplay) {
       return;
+    }
     if (!_playPulseController.isAnimating) {
       _playPulseController.repeat(reverse: true);
     }
@@ -601,7 +599,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         _previewCol != -1 ||
         _dragBoardMask != null;
     _draggingPiece = null;
-    _draggingFromHold = false;
     _previewRow = -1;
     _previewCol = -1;
     _dragBoardMask = null;
@@ -783,8 +780,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _gameOverSfxPlayed = false;
       _bestScoreSfxPlayed = false;
       _reviveAdsUsed = 0;
-      _holdPiece = null;
-      _draggingFromHold = false;
       _dragPreviewFootprintKeys = null;
       _photoNeedsNext = shouldRotatePhoto;
       _newGamesSincePhotoChange = photoCycle.games;
@@ -1219,11 +1214,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     );
   }
 
-  void _startDrag(
-    _SoulPieceOption piece,
-    Offset globalPosition, {
-    bool fromHold = false,
-  }) {
+  void _startDrag(_SoulPieceOption piece, Offset globalPosition) {
     if (_isGameOver ||
         _isBusy ||
         _isShowingFullscreenAd ||
@@ -1231,7 +1222,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       return;
     }
 
-    _draggingFromHold = fromHold;
     _updateBoardMetrics();
     _dragBoardMask = _boardMask(_board);
     _dragPreviewFootprintKeys = null;
@@ -1296,20 +1286,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _clearDragVisualState();
   }
 
-  bool _isInsideHoldArea(Offset globalPosition) {
-    final RenderBox? box =
-        _holdAreaKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return false;
-    final position = box.localToGlobal(Offset.zero);
-    final size = box.size;
-    return Rect.fromLTWH(
-      position.dx,
-      position.dy,
-      size.width,
-      size.height,
-    ).contains(globalPosition);
-  }
-
   Future<void> _endDrag() async {
     if (_draggingPiece != null) {
       final piece = _draggingPiece!;
@@ -1318,25 +1294,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         final col = _previewCol;
         _clearDragVisualState();
         await _placePieceAt(piece, row, col);
-        return;
-      }
-
-      if (!_draggingFromHold && _isInsideHoldArea(_dragPosition)) {
-        _clearDragVisualState();
-        _emitPlaceFeedback();
-        setState(() {
-          final temp = _holdPiece;
-          _holdPiece = piece;
-          _tray = List<_SoulPieceOption>.from(_tray)
-            ..removeWhere((item) => item.id == piece.id);
-          if (temp != null) {
-            _tray.add(temp);
-          }
-          if (_tray.isEmpty) _tray = _buildSmartBatch(_board);
-          _recommendedMove = _recommendMoveFor(_board, [..._tray, ?_holdPiece]);
-        });
-        _markTrayVisualDirty();
-        unawaited(_persistSavedRun());
         return;
       }
     }
@@ -1457,8 +1414,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     _isBusy = true;
     final sessionId = _currentSessionId;
-    final fromHold = _holdPiece?.id == piece.id;
-
     final placedBoard = List<List<_SoulTile?>>.generate(
       _boardSize,
       (boardRow) => List<_SoulTile?>.from(_board[boardRow]),
@@ -1550,13 +1505,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final bool streakBrokenThisMove = comboState.broken;
     final bool beatBestThisMove =
         _score <= _bestScore && nextScore > _bestScore;
-    final List<_SoulPieceOption> remainingTray;
-    if (fromHold) {
-      remainingTray = _tray;
-    } else {
-      remainingTray = List<_SoulPieceOption>.from(_tray)
-        ..removeWhere((item) => item.id == piece.id);
-    }
+    final remainingTray = List<_SoulPieceOption>.from(_tray)
+      ..removeWhere((item) => item.id == piece.id);
 
     if (piece.isBomb) {
       _emitBombFeedback();
@@ -1598,9 +1548,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     setState(() {
       _board = placedBoard;
       _tray = remainingTray;
-      if (fromHold) {
-        _holdPiece = null;
-      }
       _turn += 1;
       _score = nextScore;
       _combo = nextCombo;
@@ -1641,10 +1588,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     final replenishedTray = remainingTray.isEmpty
         ? _buildSmartBatch(resolvedBoard)
         : remainingTray;
-    final nextRecommended = _recommendMoveFor(resolvedBoard, [
-      ...replenishedTray,
-      ?_holdPiece,
-    ]);
+    final nextRecommended = _recommendMoveFor(resolvedBoard, replenishedTray);
     final noMovesLeft = nextRecommended == null;
 
     setState(() {
@@ -1722,7 +1666,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       return;
     }
     final index = _tray.indexWhere((p) => p.id == piece.id);
-    if (index < 0 && _holdPiece?.id != piece.id) return;
+    if (index < 0) return;
     _emitRotateFeedback();
     final rotated = _SoulPieceOption(
       id: piece.id,
@@ -1732,12 +1676,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       isBomb: piece.isBomb,
     );
     setState(() {
-      if (index >= 0) {
-        _tray[index] = rotated;
-      } else {
-        _holdPiece = rotated;
-      }
-      _recommendedMove = _recommendMoveFor(_board, [..._tray, ?_holdPiece]);
+      _tray[index] = rotated;
+      _recommendedMove = _recommendMoveFor(_board, _tray);
     });
     _markTrayVisualDirty();
     unawaited(_persistSavedRun());
@@ -1968,16 +1908,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     // Khay chỉ có ba ô. Mảnh cứu nguy phải nằm trong các ô đang hiển thị.
     var nextTray = _tray.take(3).toList();
-    var nextRecommended = _recommendMoveFor(nextBoard, [
-      ...nextTray,
-      ?_holdPiece,
-    ]);
+    var nextRecommended = _recommendMoveFor(nextBoard, nextTray);
     if (nextRecommended == null) {
       nextTray = _buildSmartBatch(nextBoard).take(3).toList();
-      nextRecommended = _recommendMoveFor(nextBoard, [
-        ...nextTray,
-        ?_holdPiece,
-      ]);
+      nextRecommended = _recommendMoveFor(nextBoard, nextTray);
     }
     if (nextRecommended == null) {
       final rescueTemplate = _kSoulBlockTemplates.firstWhere(
@@ -2212,7 +2146,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           )
           .toList(growable: false),
       'tray': _tray.map(_pieceToJson).toList(growable: false),
-      'holdPiece': _holdPiece == null ? null : _pieceToJson(_holdPiece!),
       'boardSize': _boardSize,
       if (_photoId != null) 'photoId': _photoId,
       'photoHouseId': _houseId,
@@ -2256,18 +2189,17 @@ class _SoulBlockGameState extends State<SoulBlockGame>
               .map(_pieceFromJson)
               .whereType<_SoulPieceOption>()
               .toList(growable: false);
-      final holdPiece = _pieceFromJson(json['holdPiece']);
       final previousSize = _boardSize;
       final _RecommendedMove? recommendedMove;
       try {
         _boardSize = savedBoardSize;
-        recommendedMove = _recommendMoveFor(board, [...tray, ?holdPiece]);
+        recommendedMove = _recommendMoveFor(board, tray);
       } finally {
         _boardSize = previousSize;
       }
       _pieceSequence = max(
         (json['pieceSequence'] as num?)?.toInt() ?? 0,
-        [...tray, ?holdPiece].fold<int>(
+        tray.fold<int>(
           0,
           (int maxId, _SoulPieceOption piece) => max(maxId, piece.id),
         ),
@@ -2324,7 +2256,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         sessionId:
             (json['sessionId'] as num?)?.toInt() ??
             DateTime.now().microsecondsSinceEpoch,
-        holdPiece: holdPiece,
         boardSize: savedBoardSize,
       );
     } catch (_) {

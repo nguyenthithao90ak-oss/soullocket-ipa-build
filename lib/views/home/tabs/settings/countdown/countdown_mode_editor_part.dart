@@ -536,6 +536,7 @@ class _CountdownModeEditorScreenState
     try {
       XFile? file =
           presetFile ?? await _storageService.pickImage(preserveOriginal: true);
+      if (!mounted) return;
       if (file == null) {
         return;
       }
@@ -572,6 +573,7 @@ class _CountdownModeEditorScreenState
         },
       );
       if (!isCurrent() || url == null || url.trim().isEmpty) {
+        if (!mounted) return;
         if (isCurrent()) {
           _showMessage(context.tr('home_khngticava_73ea14'));
         }
@@ -588,8 +590,9 @@ class _CountdownModeEditorScreenState
         await PendingUploadService.instance.clear(pendingKey);
       }
       await discardConfirmedCropImage(file);
+      if (!mounted) return;
     } catch (e) {
-      if (!isCurrent()) return;
+      if (!mounted || !isCurrent()) return;
       _showMessage(
         uploadFailedTemplate.replaceAll(
           '{error}',
@@ -637,6 +640,7 @@ class _CountdownModeEditorScreenState
 
       XFile? file =
           presetFile ?? await _storageService.pickImage(preserveOriginal: true);
+      if (!mounted) return;
       if (file == null) {
         return;
       }
@@ -672,6 +676,7 @@ class _CountdownModeEditorScreenState
         },
       );
       if (!isCurrent() || url == null || url.trim().isEmpty) {
+        if (!mounted) return;
         if (isCurrent()) {
           _showMessage(context.tr('home_khngticnnm_27a6df'));
         }
@@ -687,8 +692,9 @@ class _CountdownModeEditorScreenState
         await PendingUploadService.instance.clear(pendingKey);
       }
       await discardConfirmedCropImage(file);
+      if (!mounted) return;
     } catch (e) {
-      if (!isCurrent()) return;
+      if (!mounted || !isCurrent()) return;
       _showMessage(
         uploadFailedTemplate.replaceAll(
           '{error}',

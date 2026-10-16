@@ -59,6 +59,8 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       _notifChat = prefs.getBool('il_notif_chat') ?? true;
       _notifFriend = prefs.getBool('il_notif_friend') ?? true;
       _notifHeart = prefs.getBool('il_notif_heart') ?? true;
+      _priorityNotificationsEnabled =
+          prefs.getBool('il_priority_notifications_enabled') ?? false;
       _smartDiaryReminder = prefs.getBool('il_smart_reminder_diary') ?? true;
       _smartCapsuleReminder =
           prefs.getBool('il_smart_reminder_capsule') ?? true;

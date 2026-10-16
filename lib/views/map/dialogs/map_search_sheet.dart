@@ -5,6 +5,7 @@ extension _MapSearchSheetExt on _MapScreenState {
     if (!await _ensureMapProFeature()) return;
     if (!mounted) return;
     final center = await _mapSearchCenter();
+    if (!mounted) return;
     final place = await Navigator.of(context).push<MapPlace>(
       MaterialPageRoute(
         builder: (_) => MapProSearchScreen(

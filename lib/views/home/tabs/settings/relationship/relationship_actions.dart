@@ -24,6 +24,7 @@ class SettingsRelationshipPanelState {
     required this.houseId,
     required this.breakupRequest,
     required this.isBreakupBusy,
+    this.currentUid,
   });
 
   final bool isSingle;
@@ -31,6 +32,7 @@ class SettingsRelationshipPanelState {
   final String? houseId;
   final BreakupRequestData? breakupRequest;
   final bool isBreakupBusy;
+  final String? currentUid;
 
   bool get hasHouseId => (houseId ?? '').trim().isNotEmpty;
   bool get hasActiveBreakupRequest => breakupRequest?.isActive == true;
@@ -40,7 +42,10 @@ class SettingsRelationshipPanelState {
         houseId: houseId,
       );
   bool get canWithdrawBreakup =>
-      SettingsRelationshipActions.canWithdrawBreakup(breakupRequest);
+      SettingsRelationshipActions.canWithdrawBreakup(
+        breakupRequest,
+        currentUid: currentUid,
+      );
   String get breakupPrimaryLabel =>
       SettingsRelationshipActions.breakupActionLabel(
         isSingle: isSingle,
@@ -283,13 +288,10 @@ class SettingsRelationshipActions {
   static RelationshipActionDescriptor qrConnectAction({
     required bool isSingle,
   }) {
+    // Nút mở màn Ghép nối (mã mời 12 số), không còn quét "mã nhà" như trước.
     return RelationshipActionDescriptor(
-      label: isSingle
-          ? L10nService().translate('home_qutqrvochu_d848a8')
-          : L10nService().translate('home_honttktniq_937193'),
-      description: isSingle
-          ? L10nService().translate('home_mlungvochu_aabe86')
-          : L10nService().translate('home_honttbcghp_90b64c'),
+      label: L10nService().translate('pairing_ui_dashboard_start_title'),
+      description: L10nService().translate('pairing_ui_dashboard_subtitle'),
       requiresHouseId: true,
     );
   }
@@ -306,8 +308,16 @@ class SettingsRelationshipActions {
         : L10nService().translate('home_chiatayxad_3b2b07');
   }
 
-  static bool canWithdrawBreakup(BreakupRequestData? request) {
+  static bool canWithdrawBreakup(
+    BreakupRequestData? request, {
+    String? currentUid,
+  }) {
     if (request == null || !request.isActive || request.isProcessing) {
+      return false;
+    }
+
+    final uid = (currentUid ?? '').trim();
+    if (uid.isEmpty || request.requestedByUid.trim() != uid) {
       return false;
     }
 
@@ -349,6 +359,10 @@ class SettingsRelationshipActions {
       return L10nService().translate('home_hthngangdn_fae73f');
     }
     if (request.isScheduled) {
+      if (request.deleteAt > 0 &&
+          request.deleteAt <= DateTime.now().millisecondsSinceEpoch) {
+        return L10nService().translate('breakup_processing');
+      }
       return L10nService().format('ui_home_the_data_will_be_deleted_on_value1_29eed8', {'value1': _formatDateTime(request.deleteAt)});
     }
     if (isSingle) {

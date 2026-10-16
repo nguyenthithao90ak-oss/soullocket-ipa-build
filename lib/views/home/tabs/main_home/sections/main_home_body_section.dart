@@ -32,45 +32,40 @@ class _MainHomeBodySection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: HomeDrawingHost(
-        uid: state._auth.currentUser?.uid,
-        houseId: state._houseId,
-        isActiveListenable: state.widget.isActiveListenable,
-        child: _ModernHomeBody(
-          state: state,
-          isSingle: viewData.isSingle,
-          houseName: viewData.houseName,
-          smartGreeting: viewData.smartGreeting,
-          circleValue: viewData.circleValue,
-          circleTopLabel: viewData.circleTopLabel,
-          circleBottomLabel: viewData.circleBottomLabel,
-          startDate: viewData.startDate,
-          nameU1: viewData.nameU1,
-          nameU2: viewData.nameU2,
-          avtUser1: viewData.avtUser1,
-          avtUser2: viewData.avtUser2,
-          circleSize: viewData.circleSize,
-          homeShowHouseName: viewData.homeShowHouseName,
-          customBackgroundUrl: customBackgroundUrl,
-          showDayCounter: viewData.showDayCounter,
-          showLoveTimeDetail: viewData.showLoveTimeDetail,
-          countdownShapeKey: viewData.countdownShapeKey,
-          countdownStyleKey: viewData.countdownStyleKey,
-          onEditStartDate: state._showEditStartDateDialog,
-          onEditTopLabel: viewData.isSingle
-              ? null
-              : () => state._showEditCountdownLabelDialog(
-                    editTopLabel: true,
-                    currentLabel: viewData.circleTopLabel,
-                  ),
-          onEditBottomLabel: viewData.isSingle
-              ? null
-              : () => state._showEditCountdownLabelDialog(
-                    editTopLabel: false,
-                    currentLabel: viewData.circleBottomLabel,
-                  ),
-          onOpenSettings: onOpenSettings,
-        ),
+      body: _ModernHomeBody(
+        state: state,
+        isSingle: viewData.isSingle,
+        houseName: viewData.houseName,
+        smartGreeting: viewData.smartGreeting,
+        circleValue: viewData.circleValue,
+        circleTopLabel: viewData.circleTopLabel,
+        circleBottomLabel: viewData.circleBottomLabel,
+        startDate: viewData.startDate,
+        nameU1: viewData.nameU1,
+        nameU2: viewData.nameU2,
+        avtUser1: viewData.avtUser1,
+        avtUser2: viewData.avtUser2,
+        circleSize: viewData.circleSize,
+        homeShowHouseName: viewData.homeShowHouseName,
+        customBackgroundUrl: customBackgroundUrl,
+        showDayCounter: viewData.showDayCounter,
+        showLoveTimeDetail: viewData.showLoveTimeDetail,
+        countdownShapeKey: viewData.countdownShapeKey,
+        countdownStyleKey: viewData.countdownStyleKey,
+        onEditStartDate: state._showEditStartDateDialog,
+        onEditTopLabel: viewData.isSingle
+            ? null
+            : () => state._showEditCountdownLabelDialog(
+                  editTopLabel: true,
+                  currentLabel: viewData.circleTopLabel,
+                ),
+        onEditBottomLabel: viewData.isSingle
+            ? null
+            : () => state._showEditCountdownLabelDialog(
+                  editTopLabel: false,
+                  currentLabel: viewData.circleBottomLabel,
+                ),
+        onOpenSettings: onOpenSettings,
       ),
     );
   }

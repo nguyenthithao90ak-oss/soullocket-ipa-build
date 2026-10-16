@@ -481,6 +481,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     }
     try {
       await _saveChatMute(nextValue);
+      if (!mounted) return;
       _showNotice(
         nextValue
             ? context.tr(
@@ -606,6 +607,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         debugPrint(
           'Delete old chat background after commit failed: ${AppErrorMapper.cleanMessage(cleanupError)}',
         );
+        if (!mounted) return;
         _showNotice(
           context.tr('ui_chat_the_chat_background_has_been_updated_but_8095b4'),
           error: true,
@@ -614,7 +616,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
       await PendingUploadService.instance.clear(pendingKey);
       await discardConfirmedCropImage(file);
-      if (!isCurrent()) return;
+      if (!isCurrent() || !mounted) return;
       _showNotice(context.tr('ui_chat_updated_chat_background_b3d37a'));
     } catch (e) {
       if (!didPersistNewBackground && !commitAttempted) {
@@ -634,7 +636,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           }
         }
       }
-      if (!isCurrent()) return;
+      if (!isCurrent() || !mounted) return;
       _showNotice(
         context.tr('ui_chat_chat_background_cannot_be_updated_at_this_5ccf1c'),
         error: true,
@@ -676,8 +678,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         previousBackgroundUrl: currentBackgroundUrl,
         previousBackgroundStoragePath: currentBackgroundStoragePath,
       );
+      if (!mounted) return;
       _showNotice(context.tr('ui_chat_removed_chat_background_cc75d0'));
     } catch (e) {
+      if (!mounted) return;
       _showNotice(
         context.tr('ui_chat_it_is_not_possible_to_delete_the_672dcc'),
         error: true,

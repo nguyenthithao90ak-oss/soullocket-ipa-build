@@ -511,6 +511,11 @@ class DiaryFeedController extends ChangeNotifier {
   }
 
   List<DiaryPost> _sortDiaryPosts(List<DiaryPost> posts) {
+    // Cache, pinned stream và trang phân trang có thể giao nhau khi cùng một
+    // thay đổi được phát gần nhau. Giữ một bản theo ID trước khi sắp xếp để
+    // nhật ký luôn render mỗi mục đúng một lần.
+    final seenIds = <String>{};
+    posts.removeWhere((post) => !seenIds.add(post.id));
     posts.sort((a, b) {
       final pinnedCompare = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
       if (pinnedCompare != 0) {
@@ -538,27 +543,19 @@ class DiaryFeedController extends ChangeNotifier {
       return;
     }
 
-    final all = <DiaryPost>[];
-
-    all.addAll(pinnedList);
-
-    final pinnedIds = pinnedList.map((p) => p.id).toSet();
+    // Snapshot ghim chỉ là dữ liệu bổ sung. Nếu listener danh sách mới hoặc
+    // trang đã tải có cùng ID, bản mới hơn phải thay bản snapshot cũ để trạng
+    // thái ghim/bỏ ghim không bị giữ lại trên giao diện.
+    final byId = <String, DiaryPost>{
+      for (final post in pinnedList) post.id: post,
+    };
     for (final post in latestList) {
-      if (!pinnedIds.contains(post.id)) {
-        all.add(post);
-      }
+      byId[post.id] = post;
     }
-
-    final latestIds = latestList.map((p) => p.id).toSet();
-    final existingIds = pinnedIds.length < latestIds.length
-        ? {...pinnedIds, ...latestIds}
-        : {...latestIds, ...pinnedIds};
-
     for (final post in paginatedList) {
-      if (!existingIds.contains(post.id)) {
-        all.add(post);
-      }
+      byId[post.id] = post;
     }
+    final all = byId.values.toList();
 
     all.sort((a, b) {
       final pinnedCompare = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
@@ -582,7 +579,9 @@ class DiaryFeedController extends ChangeNotifier {
     try {
       user = await resolveCurrentUser().timeout(const Duration(seconds: 12));
     } catch (error) {
-      debugPrint('[DiaryFeed] resolve current user timed out or failed: $error');
+      debugPrint(
+        '[DiaryFeed] resolve current user timed out or failed: $error',
+      );
       _setLoading(false);
       return;
     }
@@ -602,12 +601,10 @@ class DiaryFeedController extends ChangeNotifier {
         const Duration(seconds: 15),
       );
       if (houseId != null) {
-        await _hydrateMemberRoles(houseId).timeout(
-          const Duration(seconds: 8),
-        );
-        await _fetchHouseSettingsData(houseId).timeout(
-          const Duration(seconds: 8),
-        );
+        await _hydrateMemberRoles(houseId).timeout(const Duration(seconds: 8));
+        await _fetchHouseSettingsData(
+          houseId,
+        ).timeout(const Duration(seconds: 8));
       }
       await resolveCurrentAuthorName(user).timeout(const Duration(seconds: 8));
 
@@ -671,18 +668,21 @@ class DiaryFeedController extends ChangeNotifier {
       // Auto migrate old RTDB diaries to Firestore in the background
       unawaited(DiaryService().migrateDiariesFromRTDB(houseId));
 
-      _pinnedSubscription = DiaryService()
-          .streamPinnedDiary(houseId)
-          .listen(
-            (loadedPinned) {
-              if (_disposed) return;
+      // Bài ghim chỉ cần một lần đọc khi mở Nhật ký. Giữ một listener duy
+      // nhất cho danh sách mới để tránh hai luồng realtime cùng phát một bài.
+      _pinnedSubscription = null;
+      unawaited(
+        DiaryService()
+            .fetchPinnedDiary(houseId)
+            .then((loadedPinned) {
+              if (_disposed || _houseId != houseId) return;
               _pinnedPosts = loadedPinned;
               _updatePostsVN();
-            },
-            onError: (Object error) {
-              debugPrint('Pinned diary stream failed: $error');
-            },
-          );
+            })
+            .catchError((Object error) {
+              debugPrint('Pinned diary read failed: $error');
+            }),
+      );
 
       _diarySubscription = DiaryService()
           .streamDiary(houseId, limit: 10)
@@ -764,11 +764,7 @@ class DiaryFeedController extends ChangeNotifier {
       }
 
       final result = await DiaryService()
-          .fetchDiaryPage(
-            houseId,
-            limit: 10,
-            startAfter: _lastDocument,
-          )
+          .fetchDiaryPage(houseId, limit: 10, startAfter: _lastDocument)
           .timeout(const Duration(seconds: 15));
 
       if (result.posts.isNotEmpty) {
@@ -840,6 +836,41 @@ class DiaryFeedController extends ChangeNotifier {
     }
 
     await batch.commit();
+
+    // Cập nhật snapshot local ngay sau thao tác rõ ràng của người dùng. Bài
+    // ghim được đọc một lần khi mở màn hình nên nếu chỉ chờ listener danh sách
+    // mới, một bài cũ có thể giữ trạng thái ghim cũ trong vài giây hoặc lâu hơn.
+    final shouldPin = !post.pinned;
+    final localPinnedAt = shouldPin
+        ? DateTime.now().millisecondsSinceEpoch
+        : null;
+
+    DiaryPost withPinState(DiaryPost value, bool pinned, int? pinnedAt) {
+      return DiaryPost.fromJson(value.id, <String, dynamic>{
+        ...value.toJson(),
+        'pinned': pinned,
+        'pinnedAt': pinnedAt,
+      });
+    }
+
+    List<DiaryPost> updateList(List<DiaryPost> values) {
+      return [
+        for (final value in values)
+          if (value.id == post.id)
+            withPinState(value, shouldPin, localPinnedAt)
+          else if (shouldPin && value.pinned)
+            withPinState(value, false, null)
+          else
+            value,
+      ];
+    }
+
+    _latestPosts = updateList(_latestPosts);
+    _paginatedPosts = updateList(_paginatedPosts);
+    _pinnedPosts = shouldPin
+        ? [withPinState(post, true, localPinnedAt)]
+        : _pinnedPosts.where((value) => value.id != post.id).toList();
+    _updatePostsVN();
   }
 
   String resolvedPostAuthorName(DiaryPost post) {

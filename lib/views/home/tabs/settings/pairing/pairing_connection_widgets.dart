@@ -292,6 +292,8 @@ class PairingConnectedView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
+              _breakupPanel(context, colors),
+              const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -316,6 +318,137 @@ class PairingConnectedView extends StatelessWidget {
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _breakupPanel(BuildContext context, PairingPalette colors) {
+    final request = breakupRequest;
+    final isActive = request?.isActive == true;
+    final uid = currentUid?.trim() ?? '';
+    final isRequester = isActive &&
+        uid.isNotEmpty &&
+        request!.requestedByUid.trim() == uid;
+    final isPartnerPending = isActive && request!.isPending && !isRequester;
+    final canWithdraw = isRequester &&
+        SettingsRelationshipActions.canWithdrawBreakup(
+          request,
+          currentUid: uid,
+        );
+
+    final title = !isActive
+        ? context.tr('breakup')
+        : isPartnerPending
+        ? context.tr('home_bnkiaangch_b287d3')
+        : SettingsRelationshipActions.breakupStatusTitle(
+            request: request,
+            isSingle: false,
+          );
+    final description = !isActive
+        ? context.tr('breakup_delete_house')
+        : isPartnerPending
+        ? '${context.tr('breakup_pending')}\n${SettingsRelationshipActions.breakupStatusDescription(request: request, isSingle: false)}'
+        : SettingsRelationshipActions.breakupStatusDescription(
+            request: request,
+            isSingle: false,
+          );
+
+    Widget? action;
+    if (!isActive) {
+      action = SLSettingsButton(
+        label: context.tr('home_chiatayxad_3b2b07'),
+        icon: Icons.heart_broken_outlined,
+        variant: SLSettingsButtonVariant.danger,
+        isDark: colors.dark,
+        loading: breakupBusy,
+        onPressed: breakupBusy ? null : onRequestBreakup,
+      );
+    } else if (isPartnerPending) {
+      action = SLSettingsButton(
+        label: context.tr('home_xcnhn_1e2eb2'),
+        icon: Icons.check_rounded,
+        variant: SLSettingsButtonVariant.tonal,
+        color: colors.sage,
+        isDark: colors.dark,
+        loading: breakupBusy,
+        onPressed: breakupBusy ? null : onApproveBreakup,
+      );
+    } else if (canWithdraw) {
+      action = SLSettingsButton(
+        label: context.tr('home_rtliyucu_29ae92'),
+        icon: Icons.undo_rounded,
+        variant: SLSettingsButtonVariant.secondary,
+        isDark: colors.dark,
+        loading: breakupBusy,
+        onPressed: breakupBusy ? null : onWithdrawBreakup,
+      );
+    }
+
+    return Semantics(
+      container: true,
+      label: '$title. $description',
+      child: Material(
+        color: colors.blush,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: colors.rose.withValues(alpha: 0.34)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.heart_broken_outlined,
+                      color: colors.rose,
+                      size: 21,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: SLTheme.quicksand(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.ink,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          description,
+                          style: SLTheme.quicksand(
+                            fontSize: 12,
+                            color: colors.muted,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (action != null) ...[
+                const SizedBox(height: 14),
+                action,
+              ],
             ],
           ),
         ),

@@ -6,6 +6,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'couple_call_signaling.dart';
 import 'call_setup_failure.dart';
 
@@ -259,6 +261,33 @@ class WebRTCService {
       if (session != _session) {
         await _clearCoupleInvite(resolvedCallerHouseId, roomId);
         throw StateError(UiCopy.text('copy_f68819406a61'));
+      }
+
+      // FCM hiển thị cuộc gọi khi thiết bị kia đang ở nền/đã khóa màn hình.
+      // Nếu hàng đợi thông báo lỗi, lời mời RTDB vẫn còn để listener foreground
+      // nhận được cuộc gọi và không làm hỏng việc tạo phòng WebRTC.
+      try {
+        await NotificationService().sendPartnerNotification(
+          houseId: resolvedCallerHouseId,
+          title: L10nService().translate('home_cucgin_eff0b9'),
+          body: L10nService().format('home_incoming_call_from', {
+            'name': callerName.trim().isEmpty
+                ? L10nService().translate('home_ngigi_f1117f')
+                : callerName.trim(),
+          }),
+          data: {
+            'screen': 'soul_merge_call',
+            'type': 'soul_merge_call',
+            'roomId': roomId,
+            'houseId': resolvedCallerHouseId,
+            'callerName': callerName.trim(),
+            'isVideo': isVideo.toString(),
+          },
+        );
+      } catch (error) {
+        debugPrint(
+          'WebRTC call notification skipped: ${AppErrorMapper.resolve(error).message}',
+        );
       }
     }
 
@@ -622,32 +651,18 @@ class WebRTCService {
     String myHouseId,
     Function(String roomId, String callerId, Map data) onIncomingCall,
   ) {
+    final normalizedHouseId = myHouseId.trim();
     final callsRef = _db
         .ref('calls')
         .orderByChild('calleeId')
-        .equalTo(myHouseId);
+        .equalTo(normalizedHouseId)
+        // Giới hạn cửa sổ để không phát lại các phòng gọi cũ.
+        .limitToLast(10);
 
+    // Chỉ giữ một subscription foreground; tránh listener childChanged bị rò
+    // và tạo cảm giác giật/lag khi Home khởi tạo lại.
     _incomingCallChangeSub?.cancel();
-    _incomingCallChangeSub = callsRef.onChildChanged.listen(
-      (event) {
-        final raw = event.snapshot.value;
-        if (raw is! Map) {
-          return;
-        }
-        final val = Map<String, dynamic>.from(raw);
-        if (val['status'] == 'ended') {
-          // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
-        }
-      },
-      onError: (error) {
-        final msg = AppErrorMapper.resolve(error).message;
-        if (!msg.contains('permission to access')) {
-          debugPrint('Error listening for incoming calls (childChanged): $msg');
-        }
-      },
-    );
-
-    return callsRef.onChildAdded.listen(
+    final incomingSub = callsRef.onChildAdded.listen(
       (event) {
         final raw = event.snapshot.value;
         if (raw is! Map) {
@@ -669,10 +684,14 @@ class WebRTCService {
       },
       onError: (error) {
         final msg = AppErrorMapper.resolve(error).message;
+        // Rules có thể chặn listener trong thời gian chuyển tiếp; không spam
+        // log và không làm UI dựng lại liên tục.
         if (!msg.contains('permission to access')) {
-          debugPrint('Error listening for incoming calls (childAdded): $msg');
+          debugPrint('Error listening for incoming calls: $msg');
         }
       },
     );
+    _incomingCallChangeSub = incomingSub;
+    return incomingSub;
   }
 }

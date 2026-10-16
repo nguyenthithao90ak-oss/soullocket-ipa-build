@@ -89,8 +89,7 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
       return;
     }
 
-    setState(() {
-      const double dt = 0.016; // approximate delta time per frame
+    const double dt = 0.016; // approximate delta time per frame
 
       for (int i = _flyingStickers.length - 1; i >= 0; i--) {
         final sticker = _flyingStickers[i];
@@ -189,7 +188,6 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
           _hearts.removeAt(i);
         }
       }
-    });
   }
 
   void spawnHeart(Offset globalPosition) {
@@ -468,32 +466,39 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
 
   @override
   Widget build(BuildContext context) {
-    if (_hearts.isEmpty && _flyingStickers.isEmpty) return const SizedBox.shrink();
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        if (_hearts.isNotEmpty)
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: HeartsPainter(hearts: _hearts),
-                size: Size.infinite,
+    return AnimatedBuilder(
+      animation: _tickerController,
+      builder: (context, child) {
+        if (_hearts.isEmpty && _flyingStickers.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            if (_hearts.isNotEmpty)
+              Positioned.fill(
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: HeartsPainter(hearts: _hearts),
+                    size: Size.infinite,
+                  ),
+                ),
               ),
-            ),
-          ),
-        for (final sticker in _flyingStickers)
-          Positioned(
-            left: sticker.x - sticker.size / 2,
-            top: sticker.y - sticker.size / 2,
-            child: Image.asset(
-              sticker.assetPath,
-              width: sticker.size,
-              height: sticker.size,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
-          ),
-      ],
+            for (final sticker in _flyingStickers)
+              Positioned(
+                left: sticker.x - sticker.size / 2,
+                top: sticker.y - sticker.size / 2,
+                child: Image.asset(
+                  sticker.assetPath,
+                  width: sticker.size,
+                  height: sticker.size,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

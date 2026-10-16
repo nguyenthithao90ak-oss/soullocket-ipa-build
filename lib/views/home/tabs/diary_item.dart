@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../core/sl_theme.dart';
@@ -9,10 +8,12 @@ import '../../../models/diary_post.dart';
 import '../../../utils/app_cache_manager.dart';
 import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/locale_date_format.dart';
 import '../../../widgets/r2_sticker_image.dart';
 import '../../../widgets/soullocket_animated_sticker.dart';
 import 'diary/widgets/diary_custom_mood_image.dart';
 import 'diary/widgets/diary_item_art.dart';
+import 'diary/widgets/diary_reaction_picker.dart';
 import '../../../utils/screen_activity_mixin.dart';
 import 'short_video_cached_video_controller.dart'
     if (dart.library.html) 'short_video_cached_video_controller_web.dart';
@@ -26,6 +27,9 @@ class DiaryItem extends StatelessWidget {
   final String resolvedAuthorName;
   final int? postImageCacheWidth;
   final Function(DiaryPost) onConfirmDelete;
+  final VoidCallback? onLongPressReaction;
+  final String? myReactionId;
+  final Map<String, int> reactionCounts;
 
   const DiaryItem({
     super.key,
@@ -37,6 +41,9 @@ class DiaryItem extends StatelessWidget {
     this.resolvedAuthorName = '',
     required this.postImageCacheWidth,
     required this.onConfirmDelete,
+    this.onLongPressReaction,
+    this.myReactionId,
+    this.reactionCounts = const <String, int>{},
   });
 
   @override
@@ -133,8 +140,11 @@ class DiaryItem extends StatelessWidget {
     final contentFontSize = isShortText ? 18.0 : 15.0;
     final contentLineHeight = isShortText ? 1.45 : 1.6;
 
-    return RepaintBoundary(
-      child: Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: onLongPressReaction,
+      child: RepaintBoundary(
+        child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -206,9 +216,7 @@ class DiaryItem extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                DateFormat(
-                                  'dd/MM/yyyy • HH:mm',
-                                ).format(post.timestamp),
+                                LocaleDateFormat.dateTime(post.timestamp),
                                 style: SLTheme.quicksand(
                                   color: dateColor,
                                   fontSize: 11.5,
@@ -430,11 +438,19 @@ class DiaryItem extends StatelessWidget {
                         ),
                       ),
                     ],
+                    if (reactionCounts.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      DiaryReactionSummary(
+                        counts: reactionCounts,
+                        selectedId: myReactionId,
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
+        ),
         ),
       ),
     );

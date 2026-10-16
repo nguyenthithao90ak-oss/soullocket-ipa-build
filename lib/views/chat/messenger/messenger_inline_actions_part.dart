@@ -503,6 +503,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       _groupDrafts[index] = _groupDrafts[index].copyWith(name: nextName.trim());
     });
     await _saveGroupDrafts();
+    if (!mounted) return;
     _showMessengerNotice(context.tr('ui_chat_updated_group_name_5759df'));
   }
 
@@ -541,6 +542,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       _groupDrafts.removeWhere((item) => item.id == group.id);
     });
     await _saveGroupDrafts();
+    if (!mounted) return;
     _showMessengerNotice(L10nScope.of(context).format('ui_chat_deleted_value1_dc1f67', {'value1': group.name}));
   }
 }

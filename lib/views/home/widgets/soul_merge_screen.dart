@@ -69,6 +69,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   final List<ExplodingPhoto> _activePhotos = [];
   final List<({Offset position, UniqueKey id})> _activeParticleExplosions = [];
   Timer? _explosionTimer;
+  int _explosionGeneration = 0;
+  bool _celebrationPlayed = false;
   final math.Random _random = math.Random();
 
   String? _houseId;
@@ -122,7 +124,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   final ScrollController _chatScrollController = ScrollController();
   final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
   SoulMessageWindow? _pinnedWindow;
-  String? _pinnedTargetId;
   bool _isViewingPinnedWindow = false;
   bool _isLoadingPinnedMessage = false;
   int _pinnedJumpGeneration = 0;
@@ -217,7 +218,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           }
         }
       });
-      FlutterOverlayWindow.isActive().then((active) {
+      FlutterOverlayWindow.isActive().then((active) async {
         if (mounted) {
           setState(() {
             _overlayEnabled = active;
@@ -352,7 +353,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         //   await prefs.setString('soul_merge_heart_style', 'basic');
         // }
 
-        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
+        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? true;
         if (!mounted || !_scopeIsCurrent) return;
 
         setState(() {
@@ -583,6 +584,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           .get();
 
       final List<Map<String, String>> items = [];
+      final seenPhotoUrls = <String>{};
+      final seenDiaryTexts = <String>{};
 
       for (var doc in memoriesSnap.docs) {
         final val = doc.data();
@@ -597,7 +600,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           dateStr =
               '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
         }
-        if (imageUrl.isNotEmpty) {
+        final imageKey = imageUrl.split('?').first.toLowerCase();
+        if (imageUrl.isNotEmpty && seenPhotoUrls.add(imageKey)) {
           items.add({
             'url': imageUrl,
             'text': '',
@@ -615,15 +619,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final dateStr =
             '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
 
-        if (post.imageUrl.isNotEmpty) {
+        final postImageUrl = post.imageUrl.trim();
+        final postImageKey = postImageUrl.split('?').first.toLowerCase();
+        if (postImageUrl.isNotEmpty && seenPhotoUrls.add(postImageKey)) {
           items.add({
-            'url': post.imageUrl,
+            'url': postImageUrl,
             'text': post.content,
             'type': 'photo',
             'mood': post.mood,
             'dateStr': dateStr,
           });
-        } else if (post.content.isNotEmpty) {
+        } else if (post.content.trim().isNotEmpty &&
+            seenDiaryTexts.add('${dateStr}|${post.content.trim()}')) {
           items.add({
             'url': '',
             'text': post.content,
@@ -689,21 +696,37 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _startPhotoExplosions() {
     _explosionTimer?.cancel();
     _explosionTimer = null;
-    if (!isScreenActive || _memoriesData.isEmpty) return;
-    _spawnPhotoExplosion();
-    _explosionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!isScreenActive) {
-        timer.cancel();
+    if (_celebrationPlayed || !isScreenActive || _memoriesData.isEmpty) return;
+    _celebrationPlayed = true;
+    final generation = ++_explosionGeneration;
+    var index = 0;
+
+    void emitNext() {
+      if (!mounted || !isScreenActive || generation != _explosionGeneration) {
         _explosionTimer = null;
         return;
       }
-      _spawnPhotoExplosion();
-    });
+      final total = math.min(3, _memoriesData.length);
+      if (index >= total) {
+        _explosionTimer = null;
+        return;
+      }
+      _spawnPhotoExplosion(specificItem: _memoriesData[index], slot: index);
+      index++;
+      if (index < total) {
+        _explosionTimer = Timer(const Duration(milliseconds: 520), emitNext);
+      } else {
+        _explosionTimer = null;
+      }
+    }
+
+    emitNext();
   }
 
   void _spawnPhotoExplosion({
     Map<String, String>? specificItem,
     Offset? specificPosition,
+    int? slot,
   }) {
     if (!isScreenActive) return;
     if (_memoriesData.isEmpty && specificItem == null) return;
@@ -711,13 +734,24 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
 
     final size = MediaQuery.of(context).size;
-    final double x = 20 + _random.nextDouble() * math.max(1, size.width - 120);
-    final double y = MediaQuery.paddingOf(context).top + 60;
+    final safeTop = MediaQuery.paddingOf(context).top;
+    final overlayTop = safeTop + SoulMergeHeader.contentHeight(context) + 8;
+    final overlayHeight = (size.height * .42).clamp(260.0, 360.0);
+    final slotX = <double>[size.width * .5 - 70, 18, size.width - 158];
+    final slotY = <double>[10, 42, 72];
+    final double x = slot != null && slot < slotX.length
+        ? slotX[slot]
+        : 20 + _random.nextDouble() * math.max(1, size.width - 160);
+    final double y = slot != null && slot < slotY.length
+        ? slotY[slot]
+        : 18 + _random.nextDouble() * math.max(1, overlayHeight - 190);
     final position = Offset(
       (specificPosition?.dx ?? x)
-          .clamp(12, math.max(12, size.width - 110))
+          .clamp(12, math.max(12, size.width - 150))
           .toDouble(),
-      y,
+      (specificPosition == null ? y : specificPosition.dy - overlayTop)
+          .clamp(8, math.max(8, overlayHeight - 188))
+          .toDouble(),
     );
 
     final photo = ExplodingPhoto(
@@ -728,7 +762,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       dateStr: randomItem['dateStr'] ?? '',
       position: position,
       angle: (_random.nextDouble() - 0.5) * 0.4, // Slight rotation
-      targetScale: 0.48 + _random.nextDouble() * 0.12,
+      targetScale: 0.42 + _random.nextDouble() * 0.06,
     );
 
     final particleId = UniqueKey();
@@ -763,12 +797,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       _bumpDetector.stop();
       _explosionTimer?.cancel();
       _explosionTimer = null;
+      _explosionGeneration++;
       _unbindRealtimeListeners();
       return;
     }
     _bindRealtimeListeners();
     if (!_isMerged) _bumpDetector.start();
-    if (_isMerged && _memoriesData.isNotEmpty) {
+    if (_isMerged && _memoriesData.isNotEmpty && !_celebrationPlayed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isScreenActive) _startPhotoExplosions();
       });
@@ -794,6 +829,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _unbindRealtimeListeners();
     _overlayListenerSub?.cancel();
     _explosionTimer?.cancel();
+    _explosionGeneration++;
     _tempBlockTimer?.cancel();
     unawaited(_mergeService.clearBumps());
     unawaited(_mergeService.clearChat());
@@ -938,10 +974,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           ),
 
           Positioned(
-            top: 0,
+            top:
+                MediaQuery.paddingOf(context).top +
+                SoulMergeHeader.contentHeight(context) +
+                8,
             left: 0,
             right: 0,
-            height: MediaQuery.paddingOf(context).top + 176,
+            height: (MediaQuery.sizeOf(context).height * .42).clamp(
+              260.0,
+              360.0,
+            ),
             child: IgnorePointer(
               child: ClipRect(
                 child: Stack(
@@ -969,6 +1011,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               onBack: () => Navigator.of(context).pop(),
               onVoiceCall: () => _startCoupleCall(isVideo: false),
               onVideoCall: () => _startCoupleCall(isVideo: true),
+              showCallActions: true,
               onOptions: _showSoulOptions,
               onSearch: () {
                 if (!mounted || !isScreenActive) return;
@@ -1387,7 +1430,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (mounted) {
       setState(() {
         _pinnedWindow = null;
-        _pinnedTargetId = null;
         _isViewingPinnedWindow = false;
         _isLoadingPinnedMessage = true;
         _historyLoadFailed = false;
@@ -1457,7 +1499,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       }
 
       _pinnedWindow = window;
-      _pinnedTargetId = id;
       _isViewingPinnedWindow = true;
       setState(() {
         _chatHistory = _decorateMessageDelivery(_visiblePinnedMessages);
@@ -1506,7 +1547,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _returnToLatestMessages() {
     ++_pinnedJumpGeneration;
     _pinnedWindow = null;
-    _pinnedTargetId = null;
     _isViewingPinnedWindow = false;
     _isLoadingPinnedMessage = false;
     _historyLoadFailed = false;
@@ -1977,8 +2017,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   List<Map<String, dynamic>> get _visiblePinnedMessages =>
       _pinnedWindow?.messages
           .where(
-            (message) =>
-                SoulMessageActions.visibleTo(message, _screenOwnerUid),
+            (message) => SoulMessageActions.visibleTo(message, _screenOwnerUid),
           )
           .toList(growable: false) ??
       const <Map<String, dynamic>>[];
@@ -2102,9 +2141,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       _messageHistory.applyMessage(id, message);
       _pinnedWindow?.applyMessage(id, message);
       _chatHistory = _decorateMessageDelivery(
-        _isViewingPinnedWindow
-            ? _visiblePinnedMessages
-            : _visibleSoulMessages,
+        _isViewingPinnedWindow ? _visiblePinnedMessages : _visibleSoulMessages,
       );
       if (_replyTarget?['id'] == id) {
         _replyTarget =
@@ -2457,9 +2494,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       },
       pinnedMessages: _pinnedDisplayMessages,
       onPinnedMessageTap: (message) => unawaited(_jumpToPinnedMessage(message)),
-      onReturnToLatest: _isViewingPinnedWindow
-          ? _returnToLatestMessages
-          : null,
+      onReturnToLatest: _isViewingPinnedWindow ? _returnToLatestMessages : null,
       onPinMessage: _pinSoulMessage,
       onUnpinMessage: _unpinSoulMessage,
       isMessagePinned: _isMessagePinned,

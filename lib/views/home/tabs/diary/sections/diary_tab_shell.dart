@@ -175,6 +175,13 @@ class _DiaryTabShell extends StatelessWidget {
                                 nameU2: state._nameU2,
                                 resolvedAuthorName: state
                                     ._resolvedPostAuthorName(post),
+                                myReactionId:
+                                    state._diaryMyReactions[post.id],
+                                reactionCounts:
+                                    state._diaryReactionCounts[post.id] ??
+                                    const <String, int>{},
+                                onLongPressReaction: () =>
+                                    state._showDiaryReactionPicker(post),
                                 postImageCacheWidth: state._postImageCacheWidth(
                                   context,
                                 ),

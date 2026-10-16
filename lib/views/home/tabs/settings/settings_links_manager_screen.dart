@@ -2,7 +2,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/sl_theme.dart';
@@ -10,6 +9,7 @@ import '../../../../widgets/sl_settings_kit.dart';
 
 import '../../../../utils/services/memory_share_service.dart';
 import '../../../../utils/sl_notice.dart';
+import '../../../../utils/locale_date_format.dart';
 
 class SettingsLinksManagerScreen extends StatefulWidget {
   final String houseId;
@@ -44,6 +44,9 @@ class _SettingsLinksManagerScreenState
     return _db
         .ref('houses/$houseId/memoryShares')
         .orderByChild('createdAt')
+        // Server giữ tối đa 20 link còn hạn cho một UID; trần rộng hơn để
+        // không replay lịch sử link lỗi/legacy nếu dữ liệu cũ chưa dọn.
+        .limitToLast(50)
         .onValue
         .map((event) {
           if (!event.snapshot.exists || event.snapshot.value is! Map) {
@@ -178,9 +181,9 @@ class _SettingsLinksManagerScreenState
   }
 
   Widget _buildMemoryItem(_MemoryShareLinkData link) {
-    final dateStr = DateFormat(
-      'dd/MM/yyyy HH:mm',
-    ).format(DateTime.fromMillisecondsSinceEpoch(link.ts));
+    final dateStr = LocaleDateFormat.dateTime(
+      DateTime.fromMillisecondsSinceEpoch(link.ts),
+    );
 
     return SLSettingsCard(
       child: Column(

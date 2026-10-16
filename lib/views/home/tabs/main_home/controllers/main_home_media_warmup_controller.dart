@@ -56,7 +56,13 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
 
     // Cùng provider với khối avatar (_homeAvatarProvider) để dùng lại bản giải mã.
     for (final url in {avatarUrl1.trim(), avatarUrl2.trim()}) {
-      if (url.isNotEmpty) providers.add(_homeAvatarProvider(url));
+      if (url.isEmpty) continue;
+      // Kho R2 công khai cũ đã đóng (401): chỉ làm nóng khi máy đã có bản lưu.
+      if (_homeAvatarFileProvider(url) == null &&
+          CloudflareR2Service.instance.isR2Url(url)) {
+        continue;
+      }
+      providers.add(_homeAvatarProvider(url));
     }
     final safeBackgroundUrl = backgroundUrl.trim();
     if (safeBackgroundUrl.isNotEmpty) {

@@ -10,8 +10,10 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_cute_kit.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_invite_qr_codec.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_qr_scanner_screen.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_quick_connect_sheet.dart';
 
 class PairingEnterCodeSheet extends StatefulWidget {
   const PairingEnterCodeSheet({super.key});
@@ -91,10 +93,15 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _errorMsg = null;
     });
     try {
-      await PairingService.instance
+      final status = await PairingService.instance
           .sendPairingRequest(code)
           .timeout(_requestTimeout);
       if (!mounted) {
+        return;
+      }
+      if (status == 'accepted') {
+        // Mã đúng thì server tự chấp nhận: vào nhà luôn, không cần chờ duyệt.
+        unawaited(_handleAcceptedState(code: code));
         return;
       }
       setState(() => _status = 'waiting');
@@ -256,78 +263,53 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.sizeOf(context).height * 0.90;
-    return Container(
-      decoration: const BoxDecoration(
-        color: SLSettingsColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.fromLTRB(
-              24,
-              10,
-              24,
-              MediaQuery.viewInsetsOf(context).bottom + 28,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 540),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 42,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: SLColors.ink.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_isRestoring) _buildRestoringState(),
-                    if (!_isRestoring && _status == 'input') _buildInputState(),
-                    if (!_isRestoring && _status == 'waiting')
-                      _buildWaitingState(),
-                    if (!_isRestoring && _status == 'accepted')
-                      _buildAcceptedState(),
-                    if (!_isRestoring && _status == 'rejected')
-                      _buildRejectedState(),
-                    if (!_isRestoring && _status == 'success')
-                      _buildSuccessState(),
-                    if (_errorMsg != null) ...[
-                      const SizedBox(height: 12),
-                      _EntryErrorNotice(message: _errorMsg!),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+    return PairingCuteDialogFrame(
+      cardKey: const ValueKey<String>('pairing-enter-card'),
+      canPop: !_isLoading,
+      showClose: _status != 'success',
+      closeTooltip: _t('pairing_ui_close'),
+      onClose: _isLoading ? null : () => Navigator.of(context).pop(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 240),
+            child: _buildStateBody(),
           ),
-        ),
+          if (_errorMsg != null) ...[
+            const SizedBox(height: 12),
+            SLSettingsNotice(tone: SLSettingsTone.danger, message: _errorMsg!),
+          ],
+        ],
       ),
     );
   }
 
+  Widget _buildStateBody() {
+    if (_isRestoring) return _buildRestoringState();
+    return switch (_status) {
+      'waiting' => _buildWaitingState(),
+      'accepted' => _buildAcceptedState(),
+      'rejected' => _buildRejectedState(),
+      'success' => _buildSuccessState(),
+      _ => _buildInputState(),
+    };
+  }
+
   Widget _buildRestoringState() {
     return SizedBox(
-      height: 280,
+      key: const ValueKey<String>('restoring'),
+      height: 240,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: SLColors.primary),
+            const CircularProgressIndicator(color: PairingCutePalette.rose),
             const SizedBox(height: 14),
             Text(
               _t('pairing_ui_loading'),
               style: SLTheme.quicksand(
-                color: SLColors.textSecond,
+                color: PairingCutePalette.plumSoft,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -342,271 +324,109 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       key: const ValueKey<String>('input'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildHeader(
-          icon: Icons.qr_code_scanner_rounded,
+        PairingCuteHeader(
+          badge: const PairingCoupleHeartBadge(
+            size: 58,
+            centerIcon: Icons.qr_code_scanner_rounded,
+          ),
           title: _t('pairing_ui_enter_title'),
           subtitle: _t('pairing_ui_enter_subtitle'),
         ),
-        const SizedBox(height: 16),
-        _buildRecipientNotice(),
-        const SizedBox(height: 20),
-        OutlinedButton.icon(
-          onPressed: _isLoading ? null : _scanCode,
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(48),
-            foregroundColor: SLSettingsColors.accentStrong,
-            side: const BorderSide(color: SLSettingsColors.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
-            ),
-          ),
-          icon: const Icon(Icons.qr_code_scanner_rounded, size: 21),
-          label: Text(
-            _t('pairing_ui_scan_action'),
-            style: SLTheme.quicksand(fontSize: 14, fontWeight: FontWeight.w700),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                _t('pairing_ui_code_label'),
-                style: SLTheme.quicksand(
-                  color: SLColors.ink,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton.icon(
-              onPressed: _isLoading ? null : _pasteCode,
-              icon: const Icon(Icons.content_paste_rounded, size: 15),
-              label: Text(
-                _t('pairing_ui_paste'),
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: SLSettingsColors.accentStrong,
-                minimumSize: const Size(48, 48),
-              ),
-            ),
-          ],
-        ),
-        Semantics(
-          label: _t('pairing_ui_code_label'),
-          child: TextField(
-            controller: _codeCtrl,
-            focusNode: _codeFocus,
-            readOnly: _isLoading,
-            autofocus: false,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _sendRequest(),
-            onChanged: (_) {
-              if (_errorMsg != null) {
-                setState(() => _errorMsg = null);
-              }
-            },
-            inputFormatters: const <TextInputFormatter>[
-              _PairingCodeInputFormatter(),
-            ],
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              color: SLColors.ink,
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.8,
-            ),
-            decoration: InputDecoration(
-              hintText: _t('pairing_ui_code_hint'),
-              hintStyle: SLTheme.quicksand(
-                color: SLColors.textTertiary,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.6,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 16,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(13),
-                borderSide: const BorderSide(color: SLSettingsColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(13),
-                borderSide: const BorderSide(
-                  color: SLSettingsColors.accentStrong,
-                  width: 1.5,
-                ),
-              ),
-            ),
-          ),
-        ),
         const SizedBox(height: 18),
-        FilledButton.icon(
-          onPressed: _isLoading ? null : _sendRequest,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
-            backgroundColor: SLSettingsColors.accentStrong,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
-            ),
-          ),
-          icon: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.2,
-                  ),
-                )
-              : const Icon(Icons.arrow_forward_rounded, size: 19),
-          label: Text(
-            _t('pairing_ui_request_action'),
-            style: SLTheme.quicksand(fontSize: 14, fontWeight: FontWeight.w700),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: SLSettingsColors.accentSoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: SLSettingsColors.accentStrong, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: SLTheme.quicksand(
-                  color: SLColors.ink,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
+        PairingCuteTicket(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: PairingCuteTag(
+                  icon: Icons.favorite_border_rounded,
+                  label: _t('pairing_ui_code_label'),
                 ),
               ),
-            ),
-            IconButton(
-              tooltip: _t('pairing_ui_close'),
-              onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-              icon: const Icon(
-                Icons.close_rounded,
-                color: SLColors.textSecond,
-                size: 21,
+              const SizedBox(height: 10),
+              Semantics(
+                label: _t('pairing_ui_code_label'),
+                child: PairingCuteCodeField(
+                  controller: _codeCtrl,
+                  focusNode: _codeFocus,
+                  readOnly: _isLoading,
+                  hintText: _t('pairing_ui_code_hint'),
+                  inputFormatters: const <TextInputFormatter>[
+                    PairingCodeInputFormatter(),
+                  ],
+                  onSubmitted: (_) => _sendRequest(),
+                  onChanged: (_) {
+                    if (_errorMsg != null) {
+                      setState(() => _errorMsg = null);
+                    }
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          subtitle,
-          style: SLTheme.quicksand(
-            color: SLColors.textSecond,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            height: 1.45,
+              const SizedBox(height: 10),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  PairingCuteChip(
+                    icon: Icons.content_paste_rounded,
+                    label: _t('pairing_ui_paste'),
+                    onPressed: _isLoading ? null : _pasteCode,
+                  ),
+                  PairingCuteChip(
+                    icon: Icons.qr_code_scanner_rounded,
+                    label: _t('pairing_ui_scan_action'),
+                    onPressed: _isLoading ? null : _scanCode,
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+        const SizedBox(height: 16),
+        PairingCutePillButton(
+          label: _t('pairing_quick_connect_action'),
+          icon: Icons.favorite_rounded,
+          height: 54,
+          loading: _isLoading,
+          onPressed: _isLoading ? null : _sendRequest,
+        ),
+        const SizedBox(height: 16),
+        PairingCuteNote(
+          icon: Icons.shield_outlined,
+          message: _t('pairing_ui_recipient_notice'),
         ),
       ],
-    );
-  }
-
-  Widget _buildRecipientNotice() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: SLSettingsColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.shield_outlined,
-            color: SLSettingsColors.inkSecondary,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _t('pairing_ui_recipient_notice'),
-              style: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                height: 1.42,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildWaitingState() {
-    return _StatusPanel(
+    return PairingCuteStatusPanel(
       key: const ValueKey<String>('waiting'),
       icon: Icons.mark_email_read_outlined,
-      iconColor: SLSettingsColors.inkSecondary,
+      iconColor: PairingCutePalette.violet,
       title: _t('pairing_ui_wait_title'),
       body: _t('pairing_ui_wait_body'),
       footer: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(
-            width: 30,
-            height: 30,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.8,
-              color: SLSettingsColors.inkSecondary,
+          const Center(
+            child: SizedBox.square(
+              dimension: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.8,
+                color: PairingCutePalette.rose,
+              ),
             ),
           ),
-          const SizedBox(height: 20),
-          OutlinedButton(
+          const SizedBox(height: 18),
+          PairingCutePillButton(
+            label: _t('pairing_ui_cancel_request'),
+            icon: Icons.close_rounded,
+            filled: false,
+            loading: _isLoading,
             onPressed: _isLoading ? null : _cancelRequest,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: SLColors.textSecond,
-              side: const BorderSide(color: SLColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
-            child: Text(
-              _t('pairing_ui_cancel_request'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
-          ),
-          TextButton(
-            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-            child: Text(
-              _t('pairing_ui_close'),
-              style: SLTheme.quicksand(
-                color: SLColors.textSecond,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
           ),
         ],
       ),
@@ -614,34 +434,31 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   }
 
   Widget _buildAcceptedState() {
-    return _StatusPanel(
+    return PairingCuteStatusPanel(
       key: const ValueKey<String>('accepted'),
       icon: Icons.sync_rounded,
-      iconColor: SLSettingsColors.success,
+      iconColor: PairingCutePalette.mintDeep,
       title: _t('pairing_ui_accepting_title'),
       body: _t('pairing_ui_accepting_body'),
-      footer: const Padding(
-        padding: EdgeInsets.only(top: 8),
-        child: SizedBox(
-          width: 32,
-          height: 32,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
-            color: SLSettingsColors.success,
-          ),
+      footer: const SizedBox.square(
+        dimension: 32,
+        child: CircularProgressIndicator(
+          strokeWidth: 3,
+          color: PairingCutePalette.mintDeep,
         ),
       ),
     );
   }
 
   Widget _buildRejectedState() {
-    return _StatusPanel(
+    return PairingCuteStatusPanel(
       key: const ValueKey<String>('rejected'),
       icon: Icons.person_off_outlined,
-      iconColor: SLSettingsColors.accent,
       title: _t('pairing_ui_rejected_title'),
       body: _t('pairing_ui_rejected_body'),
-      footer: FilledButton(
+      footer: PairingCutePillButton(
+        label: _t('pairing_ui_try_again'),
+        icon: Icons.refresh_rounded,
         onPressed: _isLoading
             ? null
             : () {
@@ -650,16 +467,6 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
                   _errorMsg = null;
                 });
               },
-        style: FilledButton.styleFrom(
-          backgroundColor: SLColors.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: Text(
-          _t('pairing_ui_try_again'),
-          style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-        ),
       ),
     );
   }
@@ -672,146 +479,13 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       curve: Curves.easeOutBack,
       builder: (context, scale, child) =>
           Transform.scale(scale: scale, child: child),
-      child: _StatusPanel(
+      child: PairingCuteStatusPanel(
         icon: Icons.favorite_rounded,
-        iconColor: SLColors.primary,
+        badge: const PairingCoupleHeartBadge(size: 80, together: true),
         title: _t('pairing_ui_success_title'),
         body: _t('pairing_ui_success_body'),
-        footer: const SizedBox.shrink(),
+        footer: const SizedBox(height: 8),
       ),
-    );
-  }
-}
-
-class _StatusPanel extends StatelessWidget {
-  const _StatusPanel({
-    super.key,
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.body,
-    required this.footer,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String body;
-  final Widget footer;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 30, 24, 22),
-      decoration: BoxDecoration(
-        color: SLColors.bgSubtle,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SLColors.borderLight),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Icon(icon, color: iconColor, size: 31),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              color: SLColors.ink,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              color: SLColors.textSecond,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 20),
-          footer,
-        ],
-      ),
-    );
-  }
-}
-
-class _EntryErrorNotice extends StatelessWidget {
-  const _EntryErrorNotice({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: SLColors.dangerLight,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: SLColors.danger.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: SLColors.danger,
-            size: 18,
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Text(
-              message,
-              style: SLTheme.quicksand(
-                color: SLSettingsColors.danger,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PairingCodeInputFormatter extends TextInputFormatter {
-  const _PairingCodeInputFormatter();
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
-    final limited = digits.length > PairingInviteQrCodec.codeLength
-        ? digits.substring(0, PairingInviteQrCodec.codeLength)
-        : digits;
-    final grouped = StringBuffer();
-    for (var index = 0; index < limited.length; index++) {
-      if (index > 0 && index % 4 == 0) {
-        grouped.write('-');
-      }
-      grouped.write(limited[index]);
-    }
-
-    final text = grouped.toString();
-    return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

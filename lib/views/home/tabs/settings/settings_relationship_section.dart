@@ -89,6 +89,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       houseId: _houseId,
       breakupRequest: _breakupRequest,
       isBreakupBusy: _isBreakupBusy,
+      currentUid: _auth.currentUser?.uid,
     );
   }
 
@@ -311,10 +312,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
               label: _relationshipQrActionLabel(isSingle),
               gradient: const [],
               icon: Icons.qr_code_2_rounded,
-              onTap: () => slPush<void>(
-                context,
-                CoupleConnectScreen(houseId: _houseId!),
-              ),
+              // Màn quét "mã nhà" cũ không còn ghép được; màn Ghép nối dùng mã mời.
+              onTap: () => slPush<void>(context, const PairingDashboardScreen()),
             ),
           ],
           if (panelState.hasHouseId && !panelState.hasActiveBreakupRequest) ...[

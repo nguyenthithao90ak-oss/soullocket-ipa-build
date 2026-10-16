@@ -1,6 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class SettingsNotificationsDraft {
   final String? houseId;
@@ -14,6 +16,7 @@ class SettingsNotificationsDraft {
   final bool smartCapsuleReminder;
   final bool smartLoveNoteReminder;
   final bool smartSleepReminder;
+  final bool priorityNotificationsEnabled;
   final String goodMorningTime;
   final String goodNightTime;
 
@@ -29,6 +32,7 @@ class SettingsNotificationsDraft {
     required this.smartCapsuleReminder,
     required this.smartLoveNoteReminder,
     required this.smartSleepReminder,
+    required this.priorityNotificationsEnabled,
     required this.goodMorningTime,
     required this.goodNightTime,
   });
@@ -50,10 +54,18 @@ class SettingsNotificationsController {
     await prefs.setBool('il_notif_heart', draft.notifHeart);
     await prefs.setBool('il_smart_reminder_diary', draft.smartDiaryReminder);
     await prefs.setBool(
-        'il_smart_reminder_capsule', draft.smartCapsuleReminder);
+      'il_smart_reminder_capsule',
+      draft.smartCapsuleReminder,
+    );
     await prefs.setBool(
-        'il_smart_reminder_love_note', draft.smartLoveNoteReminder);
+      'il_smart_reminder_love_note',
+      draft.smartLoveNoteReminder,
+    );
     await prefs.setBool('il_smart_reminder_sleep', draft.smartSleepReminder);
+    await prefs.setBool(
+      'il_priority_notifications_enabled',
+      draft.priorityNotificationsEnabled,
+    );
     await prefs.setString('il_good_morning_time', draft.goodMorningTime);
     await prefs.setString('il_good_night_time', draft.goodNightTime);
 
@@ -74,6 +86,25 @@ class SettingsNotificationsController {
         'goodNightTime': draft.goodNightTime,
         'updatedAt': ServerValue.timestamp,
       });
+    }
+
+    // Lưu bản sao theo UID để backend lọc push riêng cho từng người nhận.
+    // House settings vẫn được giữ cho các bản cũ chưa có preference cá nhân.
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      await dbRef.child('users/$uid/notificationPreferences').update({
+        'notificationsEnabled': draft.notificationsEnabled,
+        'notifAnniversary': draft.notifAnniversary,
+        'notifPost': draft.notifPost,
+        'notifChat': draft.notifChat,
+        'notifFriend': draft.notifFriend,
+        'notifHeart': draft.notifHeart,
+        'priorityNotificationsEnabled': draft.priorityNotificationsEnabled,
+        'updatedAt': ServerValue.timestamp,
+      });
+      await dbRef
+          .child('users/$uid/notificationLocale')
+          .set(L10nService().localeCode);
     }
   }
 

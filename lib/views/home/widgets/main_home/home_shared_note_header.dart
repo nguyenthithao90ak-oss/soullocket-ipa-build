@@ -129,51 +129,6 @@ class _HomeSharedNoteHeaderState extends State<HomeSharedNoteHeader> {
     final l10n = L10nScope.of(context);
     final partner = widget.partnerName.trim();
 
-    final Widget content;
-    if (!_loaded) {
-      content = const SizedBox(height: 48);
-    } else if (note == null) {
-      content = Row(
-        children: [
-          Flexible(
-            child: Text(
-              l10n.format('home_note_placeholder', {'name': partner}),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                fontSize: 19,
-                fontWeight: FontWeight.w600,
-                color: SLColors.textSecond,
-                height: 1.25,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            Icons.edit_rounded,
-            size: 18,
-            color: SLColors.textSecond.withValues(alpha: .8),
-          ),
-        ],
-      );
-    } else if (text.isEmpty) {
-      // Lời nhắn đã bị xóa: không hiện gì nhưng chạm đúng chỗ vẫn sửa được.
-      content = const SizedBox(height: 48);
-    } else {
-      content = Text(
-        text,
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
-        style: SLTheme.quicksand(
-          fontSize: 23,
-          fontWeight: FontWeight.w700,
-          color: SLColors.textPrimary,
-          height: 1.2,
-          letterSpacing: -0.3,
-        ),
-      );
-    }
-
     return Semantics(
       button: true,
       label: text.isEmpty ? l10n.translate('home_note_tap_to_write') : text,
@@ -186,7 +141,80 @@ class _HomeSharedNoteHeaderState extends State<HomeSharedNoteHeader> {
             minHeight: 48,
             minWidth: double.infinity,
           ),
-          child: Align(alignment: Alignment.centerLeft, child: content),
+          child: !_loaded
+              ? const SizedBox(height: 48)
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxWidth = constraints.maxWidth.isFinite
+                        ? constraints.maxWidth
+                        : MediaQuery.sizeOf(context).width;
+
+                    if (note == null) {
+                      // Câu ngắn giữ đúng bề rộng tự nhiên để cả cụm nằm giữa;
+                      // câu dài được phép co lại và tự xuống dòng trong vùng an toàn.
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxWidth),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: Text(
+                                  l10n.format('home_note_placeholder', {
+                                    'name': partner,
+                                  }),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w600,
+                                    color: SLColors.textSecond,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.edit_rounded,
+                                size: 18,
+                                color: SLColors.textSecond.withValues(
+                                  alpha: .8,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (text.isEmpty) {
+                      // Lời nhắn đã bị xóa: không hiện gì nhưng chạm đúng chỗ vẫn sửa được.
+                      return const SizedBox(height: 48);
+                    }
+
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          text,
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 23,
+                            fontWeight: FontWeight.w700,
+                            color: SLColors.textPrimary,
+                            height: 1.2,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ),
     );

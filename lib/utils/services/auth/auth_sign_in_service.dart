@@ -60,14 +60,22 @@ class AuthSignInService {
        _playIntegrityService = PlayIntegrityService();
 
   static const String dailyLoginLimitMessage =
-      'Thiết bị này chỉ được đăng nhập tối đa 3 tài khoản mới trong 1 ngày.';
+      'Thiết bị này chỉ được đăng nhập tối đa ${AppConfig.maxNewLoginsPerDay} tài khoản mới trong 1 ngày.';
   static const String accountNotFoundMessage =
       'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc tạo tài khoản mới.';
   static const String wrongPasswordMessage = 'Sai mật khẩu. Vui lòng thử lại.';
   static bool _isGoogleSignInInitialized = false;
   static final _pendingSignOuts = Expando<Future<void>>();
+  // Firebase Auth không hủy native request khi Future phía Dart hết hạn.
+  // Giữ request đang chạy để lần đăng nhập email kế tiếp không chạy song song
+  // và không để phiên cũ xuất hiện muộn sau khi người dùng đã đổi tài khoản.
+  static final _pendingEmailSignIns =
+      Expando<Future<firebase_auth.UserCredential>>();
   static final _pendingEmailSignups =
       Expando<Future<firebase_auth.UserCredential?>>();
+  static const Duration _emailSignInTimeout = Duration(seconds: 12);
+  static const Duration _sessionFinalizeTimeout = Duration(seconds: 30);
+  static const Duration _sessionFinalizePhaseTimeout = Duration(seconds: 12);
   static const String _dailyLoginTrackerPrefsKey = 'il_login_tracker';
   static const Set<String> _signOutPreservedPrefsKeys = {
     _dailyLoginTrackerPrefsKey,
@@ -317,15 +325,10 @@ class AuthSignInService {
         throw precheck.message;
       }
       await _pendingSignOuts[_auth];
-      final userCredential = await _auth
-          .signInWithEmailAndPassword(
-            email: normalizedEmail,
-            password: password,
-          )
-          .timeout(
-            const Duration(seconds: 12),
-            onTimeout: () => throw UiCopy.text('copy_b8239b73176f'),
-          );
+      final userCredential = await _signInWithEmailPasswordSerialized(
+        email: normalizedEmail,
+        password: password,
+      );
 
       if (accountExistsHint == false) {
         await _recordServerLoginFailure(
@@ -400,6 +403,51 @@ class AuthSignInService {
         error,
         fallbackMessage: L10nService().translate('auth_fallback_sign_in'),
       ).message;
+    }
+  }
+
+  Future<firebase_auth.UserCredential> _signInWithEmailPasswordSerialized({
+    required String email,
+    required String password,
+  }) async {
+    final auth = _auth;
+    await _waitForPendingEmailSignInBeforeSwitch();
+
+    final request = auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    _pendingEmailSignIns[auth] = request;
+    void clearPendingEmailSignIn() {
+      if (identical(_pendingEmailSignIns[auth], request)) {
+        _pendingEmailSignIns[auth] = null;
+      }
+    }
+    unawaited(
+      request.then<void>(
+        (_) => clearPendingEmailSignIn(),
+        onError: (Object _, StackTrace __) => clearPendingEmailSignIn(),
+      ),
+    );
+
+    return request.timeout(
+      _emailSignInTimeout,
+      onTimeout: () => throw UiCopy.text('copy_b8239b73176f'),
+    );
+  }
+
+  Future<void> _waitForPendingEmailSignInBeforeSwitch() async {
+    final pending = _pendingEmailSignIns[_auth];
+    if (pending == null) return;
+    try {
+      await pending;
+    } catch (_) {
+      // Request cũ thất bại vẫn phải được đợi tới khi native kết thúc.
+    }
+    // Một request cũ có thể đã tạo phiên sau khi caller của nó timeout.
+    // Dọn phiên đó trước khi bắt đầu provider/login request mới.
+    if (_auth.currentUser != null) {
+      await signOut();
     }
   }
 
@@ -651,6 +699,7 @@ class AuthSignInService {
   }
 
   Future<firebase_auth.UserCredential?> signInWithApple() async {
+    await _waitForPendingEmailSignInBeforeSwitch();
     await _pendingSignOuts[_auth];
     try {
       firebase_auth.UserCredential userCredential;
@@ -756,6 +805,7 @@ class AuthSignInService {
   }
 
   Future<firebase_auth.UserCredential?> signInWithGoogle() async {
+    await _waitForPendingEmailSignInBeforeSwitch();
     await _pendingSignOuts[_auth];
     try {
       firebase_auth.UserCredential userCredential;
@@ -1126,6 +1176,16 @@ class AuthSignInService {
   }
 
   Future<void> _performSignOut() async {
+    final pendingEmailSignIn = _pendingEmailSignIns[_auth];
+    if (pendingEmailSignIn != null) {
+      try {
+        // Đợi native request kết thúc trước khi signOut để request cũ không
+        // đăng nhập lại sau khi người dùng đã yêu cầu thoát.
+        await pendingEmailSignIn;
+      } catch (_) {
+        // Dù request lỗi vẫn tiếp tục dọn phiên local/Firebase.
+      }
+    }
     final prefs = await _prefs;
     // 1. Set presence offline with a very short timeout
     try {
@@ -1149,7 +1209,7 @@ class AuthSignInService {
     asyncCleanups.add(
       Future<void>.sync(
         () => NotificationService().clearTokenOnSignOut(),
-      ).catchError(
+      ).timeout(const Duration(seconds: 4)).catchError(
         (error) => debugPrint('[Auth] Không xóa được push token: $error'),
       ),
     );
@@ -1157,7 +1217,7 @@ class AuthSignInService {
     try {
       if (!kIsWeb && _googleSignIn != null) {
         asyncCleanups.add(
-          _googleSignIn!.signOut().catchError(
+          _googleSignIn!.signOut().timeout(const Duration(seconds: 4)).catchError(
             (error) => debugPrint('[Auth] Google sign-out lỗi: $error'),
           ),
         );
@@ -1650,6 +1710,26 @@ class AuthSignInService {
     firebase_auth.User user, {
     String? fallbackEmail,
   }) async {
+    try {
+      await _finalizeAuthenticatedSessionInternal(
+        user,
+        fallbackEmail: fallbackEmail,
+      ).timeout(_sessionFinalizeTimeout);
+    } catch (error) {
+      // Không để phiên đã đăng nhập nửa chừng tồn tại sau lỗi/timeout.
+      try {
+        await signOut().timeout(const Duration(seconds: 4));
+      } catch (cleanupError) {
+        debugPrint('[Auth] Finalize cleanup failed: $cleanupError');
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _finalizeAuthenticatedSessionInternal(
+    firebase_auth.User user, {
+    String? fallbackEmail,
+  }) async {
     _requireCurrentSession(user.uid);
     final resolvedEmail = (user.email ?? fallbackEmail ?? '').trim();
 
@@ -1672,7 +1752,7 @@ class AuthSignInService {
       _db.child('users/${user.uid}/houseId').get(),
       _prefs,
       SettingsSyncService().prepareForSignIn(user.uid),
-    ]);
+    ]).timeout(_sessionFinalizePhaseTimeout);
     _requireCurrentSession(user.uid);
 
     final postLoginBlockReason = phase1Results[0] as String?;
@@ -1811,7 +1891,7 @@ class AuthSignInService {
         })
       else
         Future<String>.value(''),
-    ]);
+    ]).timeout(_sessionFinalizePhaseTimeout);
     _requireCurrentSession(user.uid);
 
     final settingsSnap = phase2Results[2] as DataSnapshot?;

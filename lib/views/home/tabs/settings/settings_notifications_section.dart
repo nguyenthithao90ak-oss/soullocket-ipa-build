@@ -30,6 +30,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       smartCapsuleReminder: _smartCapsuleReminder,
       smartLoveNoteReminder: _smartLoveNoteReminder,
       smartSleepReminder: _smartSleepReminder,
+      priorityNotificationsEnabled: _priorityNotificationsEnabled,
       goodMorningTime: _goodMorningTime,
       goodNightTime: _goodNightTime,
     );
@@ -45,6 +46,63 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       houseId: _houseId,
       enabled: enabled,
     );
+  }
+
+  Future<void> _refreshPriorityNotificationAccess() async {
+    final granted = await NotificationService().hasPriorityNotificationAccess();
+    if (!mounted) return;
+    setState(() => _priorityNotificationAccessGranted = granted);
+  }
+
+  Future<void> _openPriorityNotificationSettings() async {
+    await NotificationService().openPriorityNotificationSettings();
+    if (!mounted) return;
+    await _refreshPriorityNotificationAccess();
+  }
+
+  Future<void> _handlePriorityNotificationsChanged(bool value) async {
+    if (_priorityNotificationBusy) return;
+    final previousValue = _priorityNotificationsEnabled;
+    setState(() {
+      _priorityNotificationBusy = true;
+      _priorityNotificationsEnabled = value;
+    });
+    try {
+      await NotificationService().setPriorityNotificationsEnabled(value);
+      if (value) {
+        final granted = await NotificationService()
+            .requestPriorityNotificationAccess();
+        if (mounted) {
+          setState(() => _priorityNotificationAccessGranted = granted);
+        }
+        if (!granted &&
+            mounted &&
+            defaultTargetPlatform == TargetPlatform.android) {
+          _showToast(
+            context.tr('priority_notifications_access_pending'),
+            success: false,
+          );
+        }
+      }
+      await _persistNotificationPrefs();
+    } catch (error) {
+      // Khôi phục local/Firebase preference nếu lần lưu tổng hợp thất bại
+      // sau khi setter đã ghi giá trị mới.
+      await NotificationService().setPriorityNotificationsEnabled(
+        previousValue,
+      );
+      if (!mounted) return;
+      setState(() => _priorityNotificationsEnabled = previousValue);
+      _showToast(
+        AppErrorMapper.resolve(
+          error,
+          fallbackMessage: context.tr('priority_notifications_save_failed'),
+        ).message,
+        success: false,
+      );
+    } finally {
+      if (mounted) setState(() => _priorityNotificationBusy = false);
+    }
   }
 
   Future<void> _handleNotificationsEnabledChanged(bool value) async {
@@ -187,6 +245,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       'il_notif_chat',
       'il_notif_friend',
       'il_notif_heart',
+      'il_priority_notifications_enabled',
       'il_smart_reminder_diary',
       'il_smart_reminder_capsule',
       'il_smart_reminder_love_note',
@@ -413,6 +472,46 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                       : null,
                   ignoreDirectSwitchTap: _notificationsEnabled,
                 ),
+              ],
+            ),
+          ),
+          SLSpacing.h12,
+          SLDetailCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SLDetailHeading(
+                  title: context.tr('priority_notifications_section_title'),
+                  icon: Icons.do_not_disturb_on_total_silence_outlined,
+                  color: SLSettingsColors.indigo,
+                  description: context.tr(
+                    'priority_notifications_section_description',
+                  ),
+                ),
+                SLSpacing.h8,
+                _buildNotificationToggle(
+                  context.tr('priority_notifications_title'),
+                  _priorityNotificationsEnabled,
+                  _handlePriorityNotificationsChanged,
+                  icon: Icons.notifications_active_outlined,
+                  helperText: _priorityNotificationAccessGranted
+                      ? context.tr('priority_notifications_enabled_description')
+                      : context.tr(
+                          'priority_notifications_requires_access_description',
+                        ),
+                ),
+                if (_priorityNotificationsEnabled &&
+                    !_priorityNotificationAccessGranted &&
+                    defaultTargetPlatform == TargetPlatform.android) ...[
+                  const SizedBox(height: 8),
+                  SLDetailButton(
+                    icon: Icons.settings_outlined,
+                    label: context.tr('priority_notifications_open_settings'),
+                    onPressed: _priorityNotificationBusy
+                        ? null
+                        : _openPriorityNotificationSettings,
+                  ),
+                ],
               ],
             ),
           ),

@@ -22,7 +22,8 @@ class PresenceService {
 
   static const Duration onlineFreshness = Duration(minutes: 3);
   // Heartbeat 90s vẫn nằm dưới ngưỡng fresh 3 phút, đồng thời giảm số lần ghi.
-  // Lightweight heartbeat chỉ ghi 1 field 'ts' → ít writes, ít băng thông.
+  // Lightweight heartbeat chỉ cập nhật session ts và aggregate tối thiểu để
+  // Home nhận được trạng thái online mà không phải tải toàn bộ sessions.
   static const Duration heartbeatInterval = Duration(seconds: 90);
   static const Duration staleSessionThreshold = Duration(minutes: 30);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
@@ -156,7 +157,19 @@ class PresenceService {
       return freshSessionCount > 0;
     }
 
-    // Nếu không có sessions (bị onDisconnect xoá) hoặc sessions rỗng -> offline
+    // Home có thể đọc bản tổng hợp mà không tải cả nhánh sessions để giảm tải
+    // RTDB. Trong trường hợp đó, dùng cặp activeSessionCount + lastSeen làm
+    // fallback có thời hạn; không tin status=online nếu không có lastSeen tươi
+    // vì cờ này có thể bị giữ lại sau khi onDisconnect dọn session.
+    final activeCount = data['activeSessionCount'];
+    final lastSeen = _readEpochMs(data['lastSeen']);
+    final status = data['status']?.toString().trim().toLowerCase();
+    final hasActiveAggregate = activeCount is num && activeCount.toInt() > 0;
+    if ((hasActiveAggregate || status == 'online') && lastSeen != null) {
+      return now - lastSeen <= onlineFreshness.inMilliseconds;
+    }
+
+    // Nếu không có sessions (bị onDisconnect xoá) hoặc aggregate đã hết hạn -> offline.
     return false;
   }
 
@@ -355,8 +368,11 @@ class PresenceService {
     }
     try {
       await _myPresenceRef!
-          .child('sessions/$_mySessionId')
-          .update({'ts': ServerValue.timestamp})
+          .update({
+            'sessions/$_mySessionId/ts': ServerValue.timestamp,
+            'status': 'online',
+            'lastSeen': ServerValue.timestamp,
+          })
           .timeout(const Duration(seconds: 3));
     } catch (e) {
       debugPrint('[Presence] Lightweight heartbeat failed: $e');

@@ -5,7 +5,6 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/utility_service.dart';
-import '../../widgets/companion/home_companion_journey_card.dart';
 import 'utilities_category_section.dart';
 import 'utilities_daily_pick_card.dart';
 import 'utilities_hub_header.dart';
@@ -22,7 +21,6 @@ class UtilitiesTabBody extends StatefulWidget {
     required this.dailyPickApp,
     required this.onAppTap,
     required this.onAppLongPress,
-    this.showCompanionJourney = true,
   });
 
   final Map<UtilityCategory, List<UtilityApp>> categories;
@@ -32,7 +30,6 @@ class UtilitiesTabBody extends StatefulWidget {
   final UtilityApp? dailyPickApp;
   final ValueChanged<String> onAppTap;
   final ValueChanged<UtilityApp>? onAppLongPress;
-  final bool showCompanionJourney;
 
   @override
   State<UtilitiesTabBody> createState() => _UtilitiesTabBodyState();
@@ -187,7 +184,6 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
         ..add(const SizedBox(height: 20));
     }
 
-    var companionAdded = false;
     for (final entry in widget.categories.entries) {
       children
         ..add(
@@ -203,15 +199,6 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
           ),
         )
         ..add(const SizedBox(height: 22));
-      if (entry.key == UtilityCategory.fun && widget.showCompanionJourney) {
-        children
-          ..add(const HomeCompanionJourneyCard())
-          ..add(const SizedBox(height: 14));
-        companionAdded = true;
-      }
-    }
-    if (!companionAdded && widget.showCompanionJourney) {
-      children.add(const HomeCompanionJourneyCard());
     }
 
     // Gợi ý nhấn giữ chỉ hiện khi màn có thao tác nhấn giữ.

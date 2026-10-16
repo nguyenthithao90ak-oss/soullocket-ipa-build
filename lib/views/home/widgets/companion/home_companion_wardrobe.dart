@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:soullocket_app/utils/services/companion_journey_service.dart';
 
 import 'home_companion_motion.dart';
 import 'home_companion_painter.dart';
@@ -12,12 +11,10 @@ class HomeCompanionWardrobe extends StatefulWidget {
     required this.character,
     required this.initial,
     required this.onSave,
-    this.journey,
   });
   final HomeCompanionCharacter character;
   final HomeCompanionOutfit initial;
   final Future<void> Function(HomeCompanionOutfit) onSave;
-  final CompanionJourneyService? journey;
 
   @override
   State<HomeCompanionWardrobe> createState() => _HomeCompanionWardrobeState();
@@ -30,62 +27,12 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
   var _saving = false;
   var _saved = false;
   var _failed = false;
-  int? _accountGeneration;
-  bool get _locked =>
-      _saving ||
-      _saved ||
-      (widget.journey != null &&
-          (_accountGeneration != widget.journey!.accountGeneration)) ||
-      (widget.journey != null &&
-          (widget.journey!.loading || widget.journey!.state == null));
+  bool get _locked => _saving || _saved;
   static const _categories = ['clothes', 'glasses', 'hat', 'prop'];
   @override
   void initState() {
     super.initState();
-    _accountGeneration = widget.journey?.accountGeneration;
-    widget.journey?.addListener(_refresh);
   }
-
-  void _refresh() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void didUpdateWidget(covariant HomeCompanionWardrobe oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.journey != widget.journey) {
-      oldWidget.journey?.removeListener(_refresh);
-      widget.journey?.addListener(_refresh);
-    }
-  }
-
-  List<String> get _missing => widget.journey?.state?.enabled != true
-      ? []
-      : _draft
-            .toJson()
-            .entries
-            .where((e) => !widget.journey!.state!.owns(e.key, e.value))
-            .map((e) => '${e.key}.${e.value}')
-            .toList();
-  int get _cost => _missing.fold(
-    0,
-    (sum, id) => sum + (widget.journey?.state?.catalog[id]?.price ?? 0),
-  );
-  bool get _canBuy =>
-      _missing.every((id) {
-        final state = widget.journey?.state;
-        final item = state?.catalog[id];
-        return item != null && state!.level >= item.level;
-      }) &&
-      (widget.journey?.state?.points ?? 0) >= _cost;
-
-  int _requiredLevel(Enum item) =>
-      widget
-          .journey
-          ?.state
-          ?.catalog['${_categories[_category]}.${item.name}']
-          ?.level ??
-      1;
 
   List<Enum> get _items => switch (_category) {
     0 => CompanionClothes.values,
@@ -140,11 +87,6 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
       _failed = false;
     });
     try {
-      if (_missing.isNotEmpty) {
-        await widget.journey!.purchase(_missing);
-        if (mounted) setState(() => _saving = false);
-        return;
-      }
       await widget.onSave(_draft);
       if (mounted) {
         // Chỉ đóng route của tủ đồ, không pop nhầm hộp thoại vừa mở phía trên.
@@ -179,7 +121,6 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
 
   @override
   void dispose() {
-    widget.journey?.removeListener(_refresh);
     _preview.dispose();
     super.dispose();
   }
@@ -341,37 +282,6 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
                                             color: Color(0xFF51434E),
                                           ),
                                         ),
-                                        if (widget.journey?.state?.enabled ==
-                                                true &&
-                                            !widget.journey!.state!.owns(
-                                              _categories[_category],
-                                              item.name,
-                                            ))
-                                          Text(
-                                            context
-                                                .tr('companion_shop_price')
-                                                .replaceAll(
-                                                  '{points}',
-                                                  '${widget.journey!.state!.catalog['${_categories[_category]}.${item.name}']?.price ?? 0}',
-                                                ),
-                                          ),
-                                        if (widget.journey?.state?.enabled ==
-                                                true &&
-                                            _requiredLevel(item) >
-                                                widget.journey!.state!.level &&
-                                            !widget.journey!.state!.owns(
-                                              _categories[_category],
-                                              item.name,
-                                            ))
-                                          Text(
-                                            context
-                                                .tr('companion_journey_unlock')
-                                                .replaceAll(
-                                                  '{level}',
-                                                  '${_requiredLevel(item)}',
-                                                ),
-                                            textAlign: TextAlign.center,
-                                          ),
                                       ],
                                     ),
                                   ),
@@ -414,9 +324,7 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
                       horizontal: 20,
                     ),
                   ),
-                  onPressed: _locked || (_missing.isNotEmpty && !_canBuy)
-                      ? null
-                      : _save,
+                  onPressed: _locked ? null : _save,
                   icon: _saving
                       ? const SizedBox(
                           width: 18,
@@ -425,11 +333,7 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
                         )
                       : const Icon(Icons.favorite_rounded),
                   label: Text(
-                    _missing.isEmpty
-                        ? context.tr('companion_wardrobe_save')
-                        : context
-                              .tr('companion_shop_buy')
-                              .replaceAll('{points}', '$_cost'),
+                    context.tr('companion_wardrobe_save'),
                   ),
                 ),
               ),

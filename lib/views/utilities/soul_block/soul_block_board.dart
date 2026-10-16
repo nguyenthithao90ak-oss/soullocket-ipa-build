@@ -194,45 +194,11 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     return _buildSocketCell(cellExtent, cellExtent);
   }
 
-  Widget _buildHoldEmptyCard({bool compact = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: _kSoulChrome.withValues(alpha: .06),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kSoulChrome.withValues(alpha: .18)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.move_to_inbox_outlined,
-            color: _kSoulChrome,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              context.tr('soul_block_hold'),
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _kSoulChrome,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTrayPanel({bool compact = false}) {
     final slots = List<_SoulPieceOption?>.generate(
       3,
       (index) => index < _tray.length ? _tray[index] : null,
     );
-    final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -260,27 +226,6 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Tooltip(
-                message: context.tr('soul_block_hold_hint'),
-                child: Semantics(
-                  label: context.tr('soul_block_hold_hint'),
-                  child: SizedBox(
-                    key: _holdAreaKey,
-                    width: 144,
-                    height: 52 + max(0.0, textScale - 1) * 18,
-                    child: _holdPiece == null
-                        ? _buildHoldEmptyCard(compact: compact)
-                        : _buildPieceCard(
-                            _holdPiece!,
-                            compact: compact,
-                            isHold: true,
-                          ),
-                  ),
-                ),
               ),
             ),
           ],
@@ -323,11 +268,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     );
   }
 
-  Widget _buildPieceCard(
-    _SoulPieceOption piece, {
-    bool compact = false,
-    bool isHold = false,
-  }) {
+  Widget _buildPieceCard(_SoulPieceOption piece, {bool compact = false}) {
     final isDragging = _draggingPiece?.id == piece.id;
     final isSnapBack = _snapBackPieceId == piece.id;
     final accent = piece.isGold
@@ -338,14 +279,13 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final pieceCardChild = Container(
       decoration: BoxDecoration(
         color: _kSoulPanelTop.withValues(alpha: .42),
-        borderRadius: BorderRadius.circular(isHold ? 16 : 18),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withValues(alpha: .08)),
       ),
 
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final sideControls =
-              isHold || piece.template.height > piece.template.width;
+          final sideControls = piece.template.height > piece.template.width;
           final previewPadding = sideControls
               ? const EdgeInsetsDirectional.fromSTEB(8, 8, 44, 8)
               : const EdgeInsetsDirectional.fromSTEB(8, 8, 8, 44);
@@ -361,8 +301,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               ),
               PositionedDirectional(
                 end: 0,
-                bottom: isHold ? null : 0,
-                top: isHold ? 0 : null,
+                bottom: 0,
                 child: IconButton(
                   tooltip: context.tr('soul_block_rotate'),
                   onPressed: () => _rotatePiece(piece),
@@ -375,7 +314,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                   icon: const Icon(Icons.rotate_right_rounded, size: 20),
                 ),
               ),
-              if (!isHold && (piece.isGold || piece.isBomb))
+              if (piece.isGold || piece.isBomb)
                 PositionedDirectional(
                   start: sideControls ? null : 12,
                   end: sideControls ? 16 : null,
@@ -398,8 +337,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onPanStart: (details) =>
-          _startDrag(piece, details.globalPosition, fromHold: isHold),
+      onPanStart: (details) => _startDrag(piece, details.globalPosition),
       onPanUpdate: (details) => _updateDrag(details.globalPosition),
       onPanEnd: (_) => unawaited(_endDrag()),
       onPanCancel: _cancelDrag,

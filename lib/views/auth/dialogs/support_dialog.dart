@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/sl_notice.dart';
@@ -33,6 +35,8 @@ class _AuroraSupportDialogContentState
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  static const _supportEmail = 'support@soullocket.pro.vn';
 
   bool _isSubmitting = false;
   // Giá trị lưu ticket giữ nguyên để tương thích dữ liệu hỗ trợ cũ.
@@ -83,13 +87,18 @@ class _AuroraSupportDialogContentState
     setState(() => _isSubmitting = true);
 
     final user = FirebaseAuth.instance.currentUser;
-    final effectiveUid =
-        user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
+    // Chưa đăng nhập: rules phiếu hỗ trợ RTDB và đơn Firestore đều cần tài khoản,
+    // nên gửi qua ứng dụng email thay vì mở cổng ghi cho khách (dễ bị spam).
+    if (user == null) {
+      await _sendByEmail(name: name, email: email, description: description);
+      return;
+    }
+    final effectiveUid = user.uid;
     final effectiveName = name.isEmpty
         ? UiCopy.text('copy_8c19417f7b96')
         : name;
     final effectiveEmail = email.isEmpty
-        ? (user?.email?.trim() ?? UiCopy.text('copy_8d5f260f89b5'))
+        ? (user.email?.trim() ?? UiCopy.text('copy_8d5f260f89b5'))
         : email;
 
     try {
@@ -145,12 +154,52 @@ class _AuroraSupportDialogContentState
       SLNotice.showSuccess(context, context.tr('support_request_sent_message'));
     } catch (_) {
       if (!mounted) return;
-      setState(() => _isSubmitting = false);
-      AuthFeedbackDialogs.showError(
-        context,
-        context.tr('ui_auth_sending_request_failed_please_try_again_or_4def20'),
-      );
+      // Ghi phiếu lỗi (mất mạng, phiếu cũ chỉ cho ghi một lần…): chuyển sang email
+      // để người dùng vẫn liên hệ được.
+      await _sendByEmail(name: name, email: email, description: description);
     }
+  }
+
+  Future<void> _sendByEmail({
+    required String name,
+    required String email,
+    required String description,
+  }) async {
+    final category = context.tr(
+      _categories[_selectedCategory] ?? 'copy_77e3032ac091',
+    );
+    final body = [
+      description,
+      '',
+      if (name.isNotEmpty) name,
+      if (email.isNotEmpty) email,
+    ].join('\n');
+    // Mã hóa bằng %20 thay vì dấu "+" mà queryParameters tạo ra (ứng dụng email hiện nguyên dấu +).
+    final query = {'subject': 'SoulLocket · $category', 'body': body}.entries
+        .map((entry) => '${entry.key}=${Uri.encodeComponent(entry.value)}')
+        .join('&');
+    final uri = Uri(scheme: 'mailto', path: _supportEmail, query: query);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    } catch (_) {}
+    if (!mounted) return;
+    if (opened) {
+      Navigator.pop(context);
+      SLNotice.showSuccess(context, context.tr('auth_support_email_opened'));
+      return;
+    }
+    try {
+      await Clipboard.setData(const ClipboardData(text: _supportEmail));
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+    AuthFeedbackDialogs.showError(
+      context,
+      L10nService().format('auth_support_email_unavailable', {
+        'email': _supportEmail,
+      }),
+    );
   }
 
   @override

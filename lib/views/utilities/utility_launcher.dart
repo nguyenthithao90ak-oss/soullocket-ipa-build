@@ -11,6 +11,7 @@ import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
+import 'package:soullocket_app/widgets/local_guide_companion.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'calendar_screen.dart';
@@ -96,7 +97,7 @@ abstract final class UtilityLauncher {
     }
     if (id == 'understand_me') {
       final opened = await launchUrl(
-        AppConfig.webUri('/understand-me'),
+        AppConfig.webUri('/hieutuihong'),
         mode: LaunchMode.externalApplication,
       );
       if (!opened && context.mounted) {
@@ -231,6 +232,27 @@ abstract final class UtilityLauncher {
       );
       return;
     }
-    await slPush(context, screen);
+    final previousSurface = LocalGuideContextNotifier.instance.surface;
+    LocalGuideContextNotifier.instance.setUtility(id);
+    try {
+      await slPush(context, screen);
+    } finally {
+      switch (previousSurface.type) {
+        case LocalGuideSurfaceType.settings:
+          LocalGuideContextNotifier.instance.setSettings();
+        case LocalGuideSurfaceType.utility:
+          LocalGuideContextNotifier.instance.setUtility(previousSurface.id);
+        case LocalGuideSurfaceType.home:
+          LocalGuideContextNotifier.instance.setHomeTab(0);
+        case LocalGuideSurfaceType.diary:
+          LocalGuideContextNotifier.instance.setHomeTab(1);
+        case LocalGuideSurfaceType.utilities:
+          LocalGuideContextNotifier.instance.setHomeTab(2);
+        case LocalGuideSurfaceType.fun:
+          LocalGuideContextNotifier.instance.setHomeTab(3);
+        case LocalGuideSurfaceType.update:
+          LocalGuideContextNotifier.instance.setHomeTab(4);
+      }
+    }
   }
 }

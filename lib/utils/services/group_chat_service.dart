@@ -314,7 +314,10 @@ class GroupChatService {
     StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? firestoreSub;
     StreamSubscription<DatabaseEvent>? membershipSub;
 
-    final tsFilter = afterTs ?? 0;
+    // Listener chỉ dùng để bắt tin mới sau trang đầu. Khi trang đầu chưa có
+    // mốc (ví dụ phòng mới hoặc lần đọc đầu bị lỗi), không được mở query từ
+    // epoch vì Firestore sẽ replay toàn bộ lịch sử nhóm.
+    const liveMessageLimit = 40;
 
     controller = StreamController<ChatMessage>(
       onListen: () async {
@@ -327,14 +330,19 @@ class GroupChatService {
           controller.addError(error);
           return;
         }
-        firestoreSub = FirebaseFirestore.instance
+        var query = FirebaseFirestore.instance
             .collection('group_chats')
             .doc(groupId)
             .collection('messages')
-            .where('ts', isGreaterThan: tsFilter)
-            .orderBy('ts')
-            .snapshots()
-            .listen(
+            .orderBy('ts');
+        if (afterTs == null) {
+          query = query.limitToLast(liveMessageLimit);
+        } else {
+          query = query
+              .where('ts', isGreaterThan: afterTs)
+              .limit(liveMessageLimit);
+        }
+        firestoreSub = query.snapshots().listen(
               (snapshot) {
                 for (final change in snapshot.docChanges) {
                   if (change.type == DocumentChangeType.added ||

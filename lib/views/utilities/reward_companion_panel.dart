@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/companion_journey.dart';
+import '../../models/companion_rewards.dart';
 import '../../utils/services/l10n_service.dart';
 import '../home/widgets/companion/home_companion_motion.dart';
 import '../home/widgets/companion/home_companion_painter.dart';
@@ -18,7 +18,7 @@ class RewardCompanionPanel extends StatefulWidget {
     this.onRefresh,
   });
 
-  final CompanionJourney? state;
+  final CompanionRewards? state;
   final int? balance;
   final bool loading, hasError, available;
   final HomeCompanionCharacter? redeeming;
@@ -66,25 +66,7 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
           Text(context.tr('reward_companion_hint'),
               style: KeepsakeStyle.text(context, size: 12, color: KeepsakeStyle.muted(context))),
           const SizedBox(height: 14),
-          if (enabled) ...[
-            Wrap(spacing: 12, runSpacing: 6, children: [
-              Text(context.tr('companion_journey_level').replaceAll('{level}', '${state!.level}'),
-                  style: KeepsakeStyle.text(context, size: 16, weight: FontWeight.w800)),
-              Text(context.tr('companion_journey_xp_total').replaceAll('{xp}', '${state.xp}'),
-                  style: KeepsakeStyle.text(context, size: 13)),
-            ]),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: state.progress,
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(8),
-              color: KeepsakeStyle.accent(context),
-              backgroundColor: KeepsakeStyle.line(context),
-            ),
-            const SizedBox(height: 8),
-            Text(context.tr('companion_journey_daily').replaceAll('{xp}', '${state.dailyXp}'),
-                style: KeepsakeStyle.text(context, size: 12, color: KeepsakeStyle.muted(context))),
-          ] else
+          if (!enabled)
             Text(context.tr(widget.loading
                 ? 'reward_store_loading'
                 : widget.hasError
@@ -111,15 +93,13 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
     );
   }
 
-  Widget _characterCard(BuildContext context, HomeCompanionCharacter character, CompanionJourney? state) {
-    final offer = state?.characterCatalog[character];
+  Widget _characterCard(BuildContext context, HomeCompanionCharacter character, CompanionRewards? state) {
     final owned = state?.unlocked.contains(character) == true;
     final balance = widget.balance ?? state?.points ?? 0;
-    final price = offer?.price;
+    final price = state?.prices[character];
     final affordable = price != null && balance >= price;
     final tint = character == HomeCompanionCharacter.melody
         ? const Color(0xFFE887AE) : const Color(0xFF9D7BCD);
-    final validMilestone = offer != null && offer.level > 0 && offer.xp > 0;
     final label = owned
         ? context.tr('reward_companion_owned')
         : price == null
@@ -141,7 +121,7 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
             child: CustomPaint(painter: HomeCompanionPainter(
               motion: _pose,
               character: character,
-              outfit: state?.outfits[character],
+              outfit: HomeCompanionOutfit.defaults(character),
               showEffects: false,
               darkMode: Theme.of(context).brightness == Brightness.dark,
             )),
@@ -153,23 +133,6 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
             const SizedBox(height: 6),
             Text(context.tr(owned ? 'reward_companion_owned' : 'reward_companion_locked'),
                 style: KeepsakeStyle.text(context, size: 12, weight: FontWeight.w600)),
-            if (!owned && validMilestone) ...[
-              const SizedBox(height: 6),
-              Text(context.tr('reward_companion_free_level').replaceAll('{level}', '${offer.level}'),
-                  style: KeepsakeStyle.text(context, size: 12)),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: (state!.xp / offer.xp).clamp(0.0, 1.0),
-                borderRadius: BorderRadius.circular(8),
-                color: tint,
-                backgroundColor: tint.withValues(alpha: 0.15),
-              ),
-              const SizedBox(height: 4),
-              Text(context.tr('reward_companion_progress')
-                  .replaceAll('{xp}', '${state.xp}')
-                  .replaceAll('{target}', '${offer.xp}'),
-                  style: KeepsakeStyle.text(context, size: 11, color: KeepsakeStyle.muted(context))),
-            ],
           ])),
         ]),
         const SizedBox(height: 10),

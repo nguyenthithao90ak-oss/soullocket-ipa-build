@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:soullocket_app/core/service_locator.dart';
-import 'package:soullocket_app/utils/services/companion_journey_service.dart';
+import 'package:soullocket_app/utils/services/companion_rewards_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'package:flutter/foundation.dart';
@@ -139,7 +139,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   HomeCompanionCharacter? _pendingGuestPlay;
   double _guestPlayDeadline = 0;
   late HomeCompanionTraffic _traffic;
-  CompanionJourneyService? _journey;
+  CompanionRewardsService? _rewards;
   Set<HomeCompanionCharacter> _characters = <HomeCompanionCharacter>{};
 
   int get _visibleCharacterLimit {
@@ -156,20 +156,21 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   HomeCompanionOutfit _outfitFor(
     HomeCompanionCharacter character,
     Map<HomeCompanionCharacter, HomeCompanionOutfit> local,
-  ) => _journey?.state?.enabled == true
-      ? _journey!.state!.outfits[character] ??
-            HomeCompanionOutfit.defaults(character)
-      : local[character] ?? HomeCompanionOutfit.defaults(character);
+  ) => local[character] ?? HomeCompanionOutfit.defaults(character);
 
-  void _journeyChanged() {
+  void _rewardsChanged() {
     if (!mounted) return;
     _cancelPetHold();
     _dropGuest();
-    final next = _limitCharacters(
-      _journey == null
-          ? HomeCompanionCharacter.values
-          : _journey!.state?.unlocked ?? const <HomeCompanionCharacter>{},
-    );
+    final available = _rewards == null
+        ? HomeCompanionCharacter.values
+        : _rewards!.state?.enabled == true
+        ? _rewards!.state!.unlocked
+        : const {
+            HomeCompanionCharacter.bunny,
+            HomeCompanionCharacter.bear,
+          };
+    final next = _limitCharacters(available);
     if (!setEquals(next, _characters)) {
       _characters = Set.of(next);
       _traffic.dispose();
@@ -299,11 +300,11 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
     _listen(widget, true);
-    if (locator.isRegistered<CompanionJourneyService>()) {
-      _journey = locator<CompanionJourneyService>();
-      _journey!.addListener(_journeyChanged);
-      _journey!.start();
-      _journeyChanged();
+    if (locator.isRegistered<CompanionRewardsService>()) {
+      _rewards = locator<CompanionRewardsService>();
+      _rewards!.addListener(_rewardsChanged);
+      _rewards!.start();
+      _rewardsChanged();
     }
   }
 
@@ -561,9 +562,14 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   /// Bé khách có thể ghé: đã mở khóa và không phải hai bé chính.
   List<HomeCompanionCharacter> get _guestPool {
-    final unlocked = _journey == null
+    final unlocked = _rewards == null
         ? HomeCompanionCharacter.values.toSet()
-        : _journey!.state?.unlocked ?? const <HomeCompanionCharacter>{};
+        : _rewards!.state?.enabled == true
+        ? _rewards!.state!.unlocked
+        : const {
+            HomeCompanionCharacter.bunny,
+            HomeCompanionCharacter.bear,
+          };
     return [
       for (final character in const [
         HomeCompanionCharacter.kuromi,
@@ -704,7 +710,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _audio = widget.audio ?? HomeCompanionAudio();
     }
     if (oldWidget.maxVisibleCharacters != widget.maxVisibleCharacters) {
-      _journeyChanged();
+      _rewardsChanged();
     }
     if (oldWidget.calm != widget.calm) _applyCalm();
     if (oldWidget.guestVisits && !widget.guestVisits && _guest != null) {
@@ -1302,17 +1308,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         backgroundColor: Colors.transparent,
         builder: (_) => HomeCompanionWardrobe(
           character: character,
-          journey: _journey,
           initial: _outfitFor(character, UiPrefs.companionOutfits.value),
           onSave: (outfit) async {
-            if (_journey != null && _journey!.state == null) {
-              throw StateError('journey_not_ready');
-            }
-            if (_journey?.state?.enabled == true) {
-              await _journey!.equip(character, outfit);
-            } else {
-              await UiPrefs.setCompanionOutfit(character, outfit);
-            }
+            await UiPrefs.setCompanionOutfit(character, outfit);
           },
         ),
       );
@@ -1701,7 +1699,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   @override
   void dispose() {
     _cancelPetHold();
-    _journey?.removeListener(_journeyChanged);
+    _rewards?.removeListener(_rewardsChanged);
     _holdTimer?.cancel();
     _listen(widget, false);
     WidgetsBinding.instance.removeObserver(this);

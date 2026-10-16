@@ -24,6 +24,16 @@ class HomeCoupleProfileCard extends StatelessWidget {
   final VoidCallback? onCustomize;
   final int? selectedStickerIndex;
   final ValueChanged<int>? onSelectSticker;
+
+  /// Gesture trực tiếp trên sticker. `ScaleGestureRecognizer` hỗ trợ cả
+  /// kéo một ngón tay và pinch/rotate bằng hai ngón tay.
+  final void Function(int index, ScaleStartDetails details)?
+  onStickerScaleStart;
+  final void Function(int index, ScaleUpdateDetails details, Size canvas)?
+  onStickerScaleUpdate;
+  final void Function(int index)? onStickerScaleEnd;
+
+  /// Callback cũ, giữ lại để các caller ngoài editor không bị breaking change.
   final void Function(int index, Offset delta, Size canvas)? onMoveSticker;
   final bool drawingEnabled;
   final ValueListenable<HomeCoupleDrawingStroke?>? activeDrawingListenable;
@@ -47,6 +57,9 @@ class HomeCoupleProfileCard extends StatelessWidget {
     this.onCustomize,
     this.selectedStickerIndex,
     this.onSelectSticker,
+    this.onStickerScaleStart,
+    this.onStickerScaleUpdate,
+    this.onStickerScaleEnd,
     this.onMoveSticker,
     this.drawingEnabled = false,
     this.activeDrawingListenable,
@@ -311,47 +324,57 @@ class HomeCoupleProfileCard extends StatelessWidget {
                                   onLongPress: interactive
                                       ? () => onSelectSticker!(i)
                                       : null,
-                                  onPanStart: interactive
-                                      ? (_) => onSelectSticker!(i)
+                                  onScaleStart: interactive
+                                      ? (details) {
+                                          onSelectSticker!(i);
+                                          onStickerScaleStart?.call(i, details);
+                                        }
                                       : null,
-                                  child: Listener(
-                                    behavior: HitTestBehavior.opaque,
-                                    onPointerMove: interactive
-                                        ? (event) {
+                                  onScaleUpdate: interactive
+                                      ? (details) {
+                                          final update = onStickerScaleUpdate;
+                                          if (update != null) {
+                                            update(
+                                              i,
+                                              details,
+                                              constraints.biggest,
+                                            );
+                                          } else {
                                             onMoveSticker?.call(
                                               i,
-                                              event.delta,
+                                              details.focalPointDelta,
                                               constraints.biggest,
                                             );
                                           }
-                                        : null,
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: selected
-                                            ? Colors.white.withValues(
-                                                alpha: .35,
-                                              )
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(14),
-                                        border: selected
-                                            ? Border.all(
-                                                color: const Color(0xFFD57C9D),
-                                                width: 1.8,
-                                              )
-                                            : null,
-                                      ),
-                                      child: Center(
-                                        child: Transform.rotate(
-                                          angle: sticker.rotation,
-                                          child: HomeCoupleDecorArt(
-                                            id: sticker.id,
-                                            size: rect.width,
-                                            animate:
-                                                HomeCoupleDecorCatalog.sticker(
-                                                  sticker.id,
-                                                )?.isAnimated ??
-                                                false,
-                                          ),
+                                        }
+                                      : null,
+                                  onScaleEnd: interactive
+                                      ? (_) => onStickerScaleEnd?.call(i)
+                                      : null,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: selected
+                                          ? Colors.white.withValues(alpha: .35)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: selected
+                                          ? Border.all(
+                                              color: const Color(0xFFD57C9D),
+                                              width: 1.8,
+                                            )
+                                          : null,
+                                    ),
+                                    child: Center(
+                                      child: Transform.rotate(
+                                        angle: sticker.rotation,
+                                        child: HomeCoupleDecorArt(
+                                          id: sticker.id,
+                                          size: rect.width,
+                                          animate:
+                                              HomeCoupleDecorCatalog.sticker(
+                                                sticker.id,
+                                              )?.isAnimated ??
+                                              false,
                                         ),
                                       ),
                                     ),

@@ -35,6 +35,7 @@ class SoulMergeHeader extends StatelessWidget {
     required this.onVoiceCall,
     required this.onVideoCall,
     required this.onOptions,
+    this.showCallActions = true,
     this.onSearch,
     this.avatarUrl,
     this.onAvatarTap,
@@ -44,6 +45,7 @@ class SoulMergeHeader extends StatelessWidget {
   final VoidCallback onVoiceCall;
   final VoidCallback onVideoCall;
   final VoidCallback onOptions;
+  final bool showCallActions;
   final VoidCallback? onSearch;
   final String? avatarUrl;
   final VoidCallback? onAvatarTap;
@@ -102,19 +104,21 @@ class SoulMergeHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                tooltip: context.tr('p4_soul_voice_call'),
-                onPressed: onVoiceCall,
-                icon: const Icon(Icons.call_rounded, size: 21),
-                style: IconButton.styleFrom(backgroundColor: colors.blush),
-                color: colors.rose,
-              ),
-              IconButton(
-                tooltip: context.tr('p4_soul_video_call'),
-                onPressed: onVideoCall,
-                icon: const Icon(Icons.videocam_rounded, size: 23),
-                color: colors.rose,
-              ),
+              if (showCallActions) ...[
+                IconButton(
+                  tooltip: context.tr('p4_soul_voice_call'),
+                  onPressed: onVoiceCall,
+                  icon: const Icon(Icons.call_rounded, size: 21),
+                  style: IconButton.styleFrom(backgroundColor: colors.blush),
+                  color: colors.rose,
+                ),
+                IconButton(
+                  tooltip: context.tr('p4_soul_video_call'),
+                  onPressed: onVideoCall,
+                  icon: const Icon(Icons.videocam_rounded, size: 23),
+                  color: colors.rose,
+                ),
+              ],
               if (onSearch != null && MediaQuery.sizeOf(context).width >= 380)
                 IconButton(
                   tooltip: context.tr('p4_soul_search_hint'),

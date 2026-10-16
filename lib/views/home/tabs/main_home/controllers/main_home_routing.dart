@@ -218,13 +218,9 @@ extension _MainHomeRouting on _MainHomeTabState {
     unawaited(
       _homeRouteGate.run(() async {
         if (_houseId == null || !mounted) return;
-        final connected = await slPush<bool>(
-          context,
-          CoupleConnectScreen(houseId: _houseId!),
-        );
-        if (connected == true && mounted) {
-          _fetchHouseData(preserveVisibleState: true);
-        }
+        // Màn quét "mã nhà" cũ không còn ghép được (máy chủ chỉ nhận mã mời);
+        // bảng ghép nhanh tự nạp lại app khi ghép xong.
+        await PairingQuickConnectSheet.show(context, houseId: _houseId!);
       }),
     );
   }

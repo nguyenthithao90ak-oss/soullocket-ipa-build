@@ -600,10 +600,12 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final current = body['current'];
       if (current is! Map<String, dynamic>) return null;
-      final temp = _readDouble(current['temperature_2m']) ?? 30;
+      final temp = _readDouble(current['temperature_2m']);
+      if (temp == null || !temp.isFinite) return null;
       final weatherCode = (current['weather_code'] is num)
           ? (current['weather_code'] as num).toInt()
-          : int.tryParse(current['weather_code']?.toString() ?? '') ?? 0;
+          : int.tryParse(current['weather_code']?.toString() ?? '');
+      if (weatherCode == null || weatherCode < 0) return null;
       final cond = _weatherConditionFromCode(weatherCode);
       final city = _compactLocationLabel(locLabel);
       return {
@@ -624,6 +626,19 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       debugPrint('[PresenceMap] geocode fetch error: $e');
       return null;
     }
+  }
+
+  bool _isUsableWeatherPosition(Position position) {
+    final lat = position.latitude;
+    final lng = position.longitude;
+    if (!lat.isFinite || !lng.isFinite || lat.abs() > 90 || lng.abs() > 180) {
+      return false;
+    }
+
+    // Không dùng vị trí cache quá cũ làm dữ liệu thời tiết mới. Khi GPS mất,
+    // caller sẽ giữ nguyên snapshot đã ghi trước đó thay vì ghi tọa độ giả.
+    final age = DateTime.now().difference(position.timestamp);
+    return !age.isNegative && age <= const Duration(minutes: 5);
   }
 
   bool get _needsWeatherData => WeatherBackgroundAccess.needsWeather(
@@ -665,100 +680,55 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         return;
       }
 
-      double lat = 10.8231;
-      double lng = 106.6297;
-      String locLabel = 'TP.HCM';
-      bool isUsingDefaultHCM = false;
-
       try {
-        final hasLocationPermission = await _locationService.requestPermission(
-          context: context,
+        // Weather refresh chạy nền theo chu kỳ nên chỉ đọc trạng thái quyền;
+        // không tự bật dialog xin quyền và tuyệt đối không dùng tọa độ mặc định.
+        final permission = await Geolocator.checkPermission();
+        if (permission != LocationPermission.whileInUse &&
+            permission != LocationPermission.always) {
+          return;
+        }
+        if (!await Geolocator.isLocationServiceEnabled()) {
+          return;
+        }
+
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: kIsWeb
+                ? LocationAccuracy.medium
+                : LocationAccuracy.high,
+          ),
         );
-        final isLocationServiceEnabled =
-            await Geolocator.isLocationServiceEnabled();
-
-        if (hasLocationPermission && isLocationServiceEnabled) {
-          final position = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: kIsWeb
-                  ? LocationAccuracy.medium
-                  : LocationAccuracy.high,
-            ),
-          );
-          lat = position.latitude;
-          lng = position.longitude;
-          final resolved = await _reverseGeocodeForWeather(lat, lng);
-          if (resolved != null && resolved.trim().isNotEmpty) {
-            locLabel = resolved.trim();
-          }
-        } else {
-          isUsingDefaultHCM = true;
+        if (!_isUsableWeatherPosition(position)) {
+          return;
         }
+
+        final lat = position.latitude;
+        final lng = position.longitude;
+        if (!mounted) return;
+        var locLabel = context.tr('home_vtrhinti_f5956d');
+        final resolved = await _reverseGeocodeForWeather(lat, lng);
+        if (resolved != null && resolved.trim().isNotEmpty) {
+          locLabel = resolved.trim();
+        }
+
+        final weather = await _fetchCurrentWeatherSnapshot(
+          lat: lat,
+          lng: lng,
+          locLabel: locLabel,
+        );
+        if (weather == null || _houseId == null || !_isTabActive) return;
+        if (_shouldSkipWeatherPresenceWrite(weather)) {
+          return;
+        }
+
+        await _dbRef.child('houses/${_houseId!}/presence/$_currentRole').update({
+          'weather': weather,
+          'city': weather['city'],
+        });
       } catch (e) {
-        debugPrint('[PresenceMap] default HCM fallback error: $e');
-        isUsingDefaultHCM = true;
+        debugPrint('[PresenceMap] weather GPS refresh skipped: $e');
       }
-
-      if (isUsingDefaultHCM) {
-        lat = 10.8231;
-        lng = 106.6297;
-        locLabel = 'TP.HCM';
-
-        try {
-          final prefs =
-              OfflineCacheService.getPrefsSync() ??
-              await SharedPreferences.getInstance();
-          final lastShownStr = prefs.getString('il_weather_perm_notice_ts');
-          final now = DateTime.now();
-          bool shouldShow = true;
-          if (lastShownStr != null) {
-            final lastShown = DateTime.tryParse(lastShownStr);
-            if (lastShown != null && now.difference(lastShown).inDays < 3) {
-              shouldShow = false;
-            }
-          }
-          if (shouldShow && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SLSnackBar(
-                content: Text(context.tr('home_vtrttnhitm_906e2c')),
-                behavior: SnackBarBehavior.floating,
-                action: SnackBarAction(
-                  label: context.tr('home_btngay_5ebb69'),
-                  onPressed: () async {
-                    final granted = await _locationService.requestPermission(
-                      context: context,
-                    );
-                    if (!granted || !mounted) return;
-                    await _refreshCurrentRoleWeather();
-                  },
-                ),
-                duration: const Duration(seconds: 4),
-              ),
-            );
-            await prefs.setString(
-              'il_weather_perm_notice_ts',
-              now.toIso8601String(),
-            );
-          }
-        } catch (e) {
-          debugPrint('[PresenceMap] weather permission notice error: $e');
-        }
-      }
-
-      final weather = await _fetchCurrentWeatherSnapshot(
-        lat: lat,
-        lng: lng,
-        locLabel: locLabel,
-      );
-      if (weather == null || _houseId == null || !_isTabActive) return;
-      if (_shouldSkipWeatherPresenceWrite(weather)) {
-        return;
-      }
-
-      await _dbRef.child('houses/${_houseId!}/presence/$_currentRole').update({
-        'weather': weather,
-        'city': weather['city'],
-      });
     } catch (e) {
       debugPrint('[PresenceMap] weather presence write error: $e');
     } finally {
@@ -839,7 +809,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   Future<void> _ensureAppWideLocationTracking(String houseId) async {
     final normalizedHouseId = houseId.trim();
     final normalizedRole = _currentRole.trim();
-    if (!_isTabActive ||
+    if (MapScreen.isMapScreenActive.value ||
+        !_isTabActive ||
         normalizedHouseId.isEmpty ||
         normalizedRole.isEmpty ||
         !mounted) {
@@ -871,8 +842,17 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     // Keep this for explicit user-triggered actions only.
   }
 
+  void _pauseHomeMapPreview() {
+    _homeMapPreviewBindingSerial++;
+    final subscription = _gpsSubscription;
+    _gpsSubscription = null;
+    if (subscription != null) {
+      unawaited(subscription.cancel());
+    }
+  }
+
   void _bindHomeMapPreview(String houseId) {
-    if (!mounted) return;
+    if (!mounted || MapScreen.isMapScreenActive.value) return;
     final uid = _auth.currentUser?.uid;
     if (uid == null || _houseId != houseId) return;
     final role = _currentRole;

@@ -10,16 +10,19 @@ List<dynamic> homeDrawingListItems(Object? value) {
   if (value is List) return value;
   if (value is! Map) return const <dynamic>[];
   final entries = value.entries.toList()
-    ..sort((a, b) => int.tryParse('${a.key}')?.compareTo(
-              int.tryParse('${b.key}') ?? 0,
-            ) ??
-            0);
+    ..sort(
+      (a, b) =>
+          int.tryParse('${a.key}')?.compareTo(int.tryParse('${b.key}') ?? 0) ??
+          0,
+    );
   return [for (final entry in entries) entry.value];
 }
 
 int? _safeInt(Object? value, {int? min, int? max}) {
   final parsed = value is int ? value : int.tryParse('$value');
-  if (parsed == null || (min != null && parsed < min) || (max != null && parsed > max)) {
+  if (parsed == null ||
+      (min != null && parsed < min) ||
+      (max != null && parsed > max)) {
     return null;
   }
   return parsed;
@@ -91,11 +94,11 @@ class HomeDrawingStroke {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'color': color,
-        'width': width,
-        'points': [for (final point in points) point.toJson()],
-      };
+    'id': id,
+    'color': color,
+    'width': width,
+    'points': [for (final point in points) point.toJson()],
+  };
 
   HomeDrawingStroke copyWith({
     int? color,
@@ -155,16 +158,16 @@ class HomeDrawingBoard {
   }
 
   Map<String, dynamic> toJson() => {
-        'version': 1,
-        'drawing': {
-          'version': 1,
-          'strokes': [for (final stroke in strokes) stroke.toJson()],
-        },
-        'revision': revision,
-        'updatedAt': updatedAt,
-        'updatedBy': updatedBy,
-        'requestId': requestId,
-      };
+    'version': 1,
+    'drawing': {
+      'version': 1,
+      'strokes': [for (final stroke in strokes) stroke.toJson()],
+    },
+    'revision': revision,
+    'updatedAt': updatedAt,
+    'updatedBy': updatedBy,
+    'requestId': requestId,
+  };
 
   String get json => jsonEncode(toJson());
 }
@@ -233,7 +236,8 @@ class HomeDrawingLocalState {
   final String pendingRequestId;
 
   bool get hasDraft => draftStrokes != null;
-  List<HomeDrawingStroke> get visibleStrokes => draftStrokes ?? confirmed.strokes;
+  List<HomeDrawingStroke> get visibleStrokes =>
+      draftStrokes ?? confirmed.strokes;
 
   HomeDrawingLocalState copyWith({
     HomeDrawingBoard? confirmed,
@@ -251,14 +255,14 @@ class HomeDrawingLocalState {
   }
 
   Map<String, dynamic> toJson() => {
-        'version': 1,
-        'confirmed': confirmed.toJson(),
-        'draftStrokes': draftStrokes == null
-            ? null
-            : [for (final stroke in draftStrokes!) stroke.toJson()],
-        'baseRevision': baseRevision,
-        'pendingRequestId': pendingRequestId,
-      };
+    'version': 1,
+    'confirmed': confirmed.toJson(),
+    'draftStrokes': draftStrokes == null
+        ? null
+        : [for (final stroke in draftStrokes!) stroke.toJson()],
+    'baseRevision': baseRevision,
+    'pendingRequestId': pendingRequestId,
+  };
 
   factory HomeDrawingLocalState.fromRaw(Object? raw) {
     if (raw is! Map || raw['version'] != 1) {
@@ -280,8 +284,9 @@ class HomeDrawingLocalState {
       confirmed: confirmed,
       draftStrokes: draft,
       baseRevision: _safeInt(raw['baseRevision'], min: 0) ?? confirmed.revision,
-      pendingRequestId:
-          raw['pendingRequestId'] is String ? raw['pendingRequestId'] as String : '',
+      pendingRequestId: raw['pendingRequestId'] is String
+          ? raw['pendingRequestId'] as String
+          : '',
     );
   }
 }

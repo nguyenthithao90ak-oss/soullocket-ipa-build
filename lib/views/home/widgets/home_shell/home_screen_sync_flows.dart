@@ -180,6 +180,8 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     _settingsSub = _houseSettingsService.streamSettings(houseId).listen((
       settings,
     ) {
+      // Bộ nhắc ghép nối dùng lại cài đặt đang nghe, không đọc thêm server.
+      if (mounted) _pairingReminder.updateHouse(houseId, settings);
       if (settings != null && mounted) {
         final currentUi = UiPrefs.notifier.value;
         final source = settings.source;

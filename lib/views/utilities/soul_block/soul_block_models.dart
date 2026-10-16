@@ -216,7 +216,6 @@ class _PreparedSoulRun {
     required this.tray,
     required this.recommendedMove,
     required this.sessionId,
-    this.holdPiece,
     required this.boardSize,
   });
 
@@ -224,7 +223,6 @@ class _PreparedSoulRun {
   final List<_SoulPieceOption> tray;
   final _RecommendedMove? recommendedMove;
   final int sessionId;
-  final _SoulPieceOption? holdPiece;
   final int boardSize;
 }
 

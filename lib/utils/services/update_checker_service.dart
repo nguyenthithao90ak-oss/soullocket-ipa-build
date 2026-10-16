@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -24,23 +23,43 @@ class AppUpdateInfo {
 class UpdateCheckerService {
   static Future<AppUpdateInfo?> checkUpdate() async {
     try {
+      if (kIsWeb ||
+          (defaultTargetPlatform != TargetPlatform.android &&
+              defaultTargetPlatform != TargetPlatform.iOS)) {
+        return null;
+      }
+
       // 1. Lấy thông tin phiên bản ứng dụng trên thiết bị
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
 
       // 2. Lấy cấu hình phiên bản (Ưu tiên R2 CDN HTTP GET -> Fallback RTDB)
-      final data = await _fetchAppConfigData();
+      final data = await _fetchAppConfigData().timeout(
+        const Duration(seconds: 8),
+      );
 
       if (data != null) {
-        final latestVersion = data['latest_version']?.toString() ?? '1.0.0';
-        final forceUpdate = data['force_update'] == true;
+        final latestVersion = data['latest_version']?.toString().trim() ?? '';
+        if (latestVersion.isEmpty) return null;
+
+        final configuredForceUpdate =
+            data['force_update'] == true ||
+            data['force_update']?.toString().toLowerCase() == 'true';
         final androidUrl =
             data['android_url']?.toString() ??
-            'https://play.google.com/store/apps/details?id=com.soullocket.app';
-        final iosUrl = data['ios_url']?.toString() ?? '';
+            AppConfig.androidStoreUrl;
+        final iosUrl = data['ios_url']?.toString() ?? AppConfig.iOSStoreUrl;
 
-        if (_shouldUpdate(currentVersion, latestVersion)) {
-          final storeUrl = Platform.isAndroid ? androidUrl : iosUrl;
+        final needsUpdate = _shouldUpdate(currentVersion, latestVersion);
+        if (needsUpdate) {
+          // Bất kỳ phiên bản nào thấp hơn bản phát hành đều phải cập nhật.
+          // Cờ force_update chỉ còn là cấu hình tương thích với server cũ.
+          final forceUpdate = configuredForceUpdate || needsUpdate;
+          final storeUrl = switch (defaultTargetPlatform) {
+            TargetPlatform.android => androidUrl.trim(),
+            TargetPlatform.iOS => iosUrl.trim(),
+            _ => '',
+          };
           if (storeUrl.isNotEmpty) {
             return AppUpdateInfo(
               needsUpdate: true,
@@ -62,8 +81,9 @@ class UpdateCheckerService {
     final r2Domain = AppConfig.r2PublicDomain.trim();
     if (r2Domain.isNotEmpty) {
       try {
+        final cacheBuster = DateTime.now().millisecondsSinceEpoch.toString();
         final cdnUrl = Uri.parse(
-          '${r2Domain.replaceAll(RegExp(r'/+$'), '')}/app_config.json',
+          '${r2Domain.replaceAll(RegExp(r'/+$'), '')}/app_config.json?v=$cacheBuster',
         );
         final response = await ResilientHttp.get(cdnUrl);
         if (response.statusCode == 200) {

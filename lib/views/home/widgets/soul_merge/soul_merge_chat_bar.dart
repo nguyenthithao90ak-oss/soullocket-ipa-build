@@ -158,7 +158,7 @@ class SoulMergeChatBar extends StatelessWidget {
               _MergeWarning(message: spamWarning!),
               const SizedBox(height: 8),
             ],
-            if (pinnedMessages.isNotEmpty) ...[
+            if (pinnedMessages.isNotEmpty || onReturnToLatest != null) ...[
               _PinnedMessageStrip(
                 messages: pinnedMessages,
                 onMessageTap: onPinnedMessageTap,

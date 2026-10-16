@@ -1467,8 +1467,11 @@ extension _MapLocationLogicExt on _MapScreenState {
       return;
     }
 
-    final myPoint = _effectiveGpsForRole(widget.myRole);
-    final partnerPoint = _effectiveGpsForRole(widget.partnerRole);
+    // Chỉ gọi dịch vụ route khi cả hai điểm đều là vị trí live mới.
+    // Với điểm lịch sử, bản đồ vẫn hiển thị khoảng cách đường thẳng nhưng
+    // không gửi thêm request OSRM cho dữ liệu đã cũ.
+    final myPoint = _effectiveLiveGpsForRole(widget.myRole);
+    final partnerPoint = _effectiveLiveGpsForRole(widget.partnerRole);
     if (myPoint == null || partnerPoint == null) {
       _routeDebounce?.cancel();
       _routeRequestToken++;
