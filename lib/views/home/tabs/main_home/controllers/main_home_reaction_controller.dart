@@ -95,6 +95,18 @@ extension MainHomeReactionController on _MainHomeTabState {
 
   Future<void> _handleSendInteraction(String type, String emoji) async {
     if (_isSendingInteraction) return;
+    final user = _auth.currentUser;
+    final houseId = _houseId;
+    if (user == null || houseId == null || houseId.isEmpty) return;
+    final role = _currentRole;
+    final sessionId = _liveWorkSessionId;
+    bool isCurrent() => _isInteractionSessionCurrent(
+      uid: user.uid,
+      houseId: houseId,
+      role: role,
+      sessionId: sessionId,
+    );
+    if (!isCurrent()) return;
 
     final cleanEmoji = emoji.trim().isEmpty
         ? _emojiForInteractionType(type)
@@ -114,16 +126,14 @@ extension MainHomeReactionController on _MainHomeTabState {
     _vibrateHeartbeat();
 
     final preset = _maybePresetForInteractionType(type);
-    final randomTitle = preset == null
-        ? null
-        : preset.titles[_random.nextInt(preset.titles.length)];
-    final randomMessage = preset == null
-        ? null
-        : preset.messages[_random.nextInt(preset.messages.length)];
+    final stickerTitle = preset?.notificationTitle;
+    final stickerMessage = preset?.notificationMessage;
 
     unawaited(
       Future(() async {
+        if (!isCurrent()) return;
         final waitSeconds = await _consumeReactionThrowWaitSeconds();
+        if (!isCurrent()) return;
         if (waitSeconds > 0) {
           _showReactionThrowLimitSnack();
           return;
@@ -132,14 +142,15 @@ extension MainHomeReactionController on _MainHomeTabState {
           type,
           showSentNotice: false,
           emoji: cleanEmoji,
-          customTitle: randomTitle,
-          customMessage: randomMessage,
+          customTitle: stickerTitle,
+          customMessage: stickerMessage,
+          customNotificationBody: stickerMessage,
         );
       }),
     );
 
     Future.delayed(const Duration(milliseconds: 3000), () {
-      if (mounted) {
+      if (isCurrent()) {
         _isSendingInteraction = false;
       }
     });

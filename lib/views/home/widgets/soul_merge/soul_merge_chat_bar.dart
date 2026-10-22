@@ -299,7 +299,7 @@ class _MergeSearchBarState extends State<_MergeSearchBar> {
   }
 }
 
-class _PinnedMessageStrip extends StatelessWidget {
+class _PinnedMessageStrip extends StatefulWidget {
   const _PinnedMessageStrip({
     required this.messages,
     this.onMessageTap,
@@ -311,49 +311,116 @@ class _PinnedMessageStrip extends StatelessWidget {
   final VoidCallback? onReturnToLatest;
 
   @override
+  State<_PinnedMessageStrip> createState() => _PinnedMessageStripState();
+}
+
+class _PinnedMessageStripState extends State<_PinnedMessageStrip> {
+  late final ScrollController _scrollController;
+  bool _canScrollBefore = false;
+  bool _canScrollAfter = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_syncScrollAffordance);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncScrollAffordance();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _PinnedMessageStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncScrollAffordance();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_syncScrollAffordance)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _syncScrollAffordance() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final canScrollBefore = position.pixels > position.minScrollExtent + 1;
+    final canScrollAfter =
+        position.pixels < position.maxScrollExtent - 1;
+    if (canScrollBefore == _canScrollBefore &&
+        canScrollAfter == _canScrollAfter) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _canScrollBefore = canScrollBefore;
+        _canScrollAfter = canScrollAfter;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = SoulMergeColors(context);
-    return SizedBox(
-      height: 48,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: messages.length + (onReturnToLatest == null ? 0 : 1),
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          if (onReturnToLatest != null && index == messages.length) {
-            return ActionChip(
-              avatar: Icon(
-                Icons.vertical_align_bottom_rounded,
-                size: 16,
-                color: colors.rose,
-              ),
-              label: Text(context.tr('comm_minhtlnu_e9f8eb')),
-              onPressed: onReturnToLatest,
-              backgroundColor: colors.surface,
-              side: BorderSide(color: colors.line),
-              materialTapTargetSize: MaterialTapTargetSize.padded,
-            );
-          }
-          final message = messages[index];
+    final list = ListView.separated(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      itemCount:
+          widget.messages.length + (widget.onReturnToLatest == null ? 0 : 1),
+      separatorBuilder: (_, _) => const SizedBox(width: 6),
+      itemBuilder: (context, index) {
+        if (widget.onReturnToLatest != null &&
+            index == widget.messages.length) {
           return ActionChip(
-            avatar: Icon(Icons.push_pin_rounded, size: 15, color: colors.rose),
-            label: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 190),
-              child: Text(
-                '${context.tr('p5_notif_pinned')} · ${soulMessagePreview(context, message)}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            avatar: Icon(
+              Icons.vertical_align_bottom_rounded,
+              size: 16,
+              color: colors.rose,
             ),
-            onPressed: onMessageTap == null
-                ? null
-                : () => onMessageTap!(message),
-            backgroundColor: colors.blush,
+            label: Text(context.tr('comm_minhtlnu_e9f8eb')),
+            onPressed: widget.onReturnToLatest,
+            backgroundColor: colors.surface,
             side: BorderSide(color: colors.line),
             materialTapTargetSize: MaterialTapTargetSize.padded,
           );
-        },
-      ),
+        }
+        final message = widget.messages[index];
+        return ActionChip(
+          avatar: Icon(Icons.push_pin_rounded, size: 15, color: colors.rose),
+          label: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 190),
+            child: Text(
+              '${context.tr('p5_notif_pinned')} · ${soulMessagePreview(context, message)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          onPressed: widget.onMessageTap == null
+              ? null
+              : () => widget.onMessageTap!(message),
+          backgroundColor: colors.blush,
+          side: BorderSide(color: colors.line),
+          materialTapTargetSize: MaterialTapTargetSize.padded,
+        );
+      },
+    );
+    final content = SizedBox(height: 48, child: list);
+    if (!_canScrollBefore && !_canScrollAfter) return content;
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) => LinearGradient(
+        colors: [
+          _canScrollBefore ? Colors.transparent : Colors.white,
+          Colors.white,
+          Colors.white,
+          _canScrollAfter ? Colors.transparent : Colors.white,
+        ],
+        stops: const [0, .07, .93, 1],
+      ).createShader(bounds),
+      child: content,
     );
   }
 }

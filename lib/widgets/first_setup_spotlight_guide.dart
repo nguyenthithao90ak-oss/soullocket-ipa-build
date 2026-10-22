@@ -451,9 +451,13 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
               final available = targetRect == null
                   ? usableHeight * .68
                   : (showCardAbove ? above : below);
+              // Khi vùng khoanh rất cao (vd. vòng đếm Home gần nửa màn hình),
+              // khoảng trống bên cạnh chỉ còn ~200dp. Ép thẻ thấp như vậy làm
+              // mô tả bị cắt; cho thẻ đè nhẹ lên mép vùng khoanh thay vì thu
+              // nhỏ dưới mức đọc được.
               final cardHeight = math.min(
                 usableHeight * .68,
-                math.max(80.0, available),
+                math.max(_minCardHeight, available),
               );
               final cardWidth = math.min(size.width - 32, 420.0);
               final targetCenter =
@@ -577,6 +581,7 @@ class _SpotlightPainter extends CustomPainter {
   }
 }
 
+const _minCardHeight = 300.0;
 const _guideAccent = Color(0xFF965C6C);
 const _guideInk = Color(0xFF3D343A);
 const _guideMuted = Color(0xFF756770);
@@ -682,105 +687,125 @@ class _SpotlightCard extends StatelessWidget {
       child: ClipRRect(
         key: const ValueKey('setup-guide-card-clip'),
         borderRadius: BorderRadius.circular(19),
-        child: SingleChildScrollView(
-          key: ValueKey(index),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                spacing: 12,
-                runSpacing: 4,
-                children: [
-                  Text(
-                    context.tr('guide_tour_label'),
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _guideMuted,
-                    ),
-                  ),
-                  Text(
-                    L10nService().format('guide_step_counter', {
-                      'current': index + 1,
-                      'total': total,
-                    }),
-                    textDirection: Directionality.of(context),
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _guideAccent,
-                    ),
-                  ),
-                ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                key: ValueKey(index),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: _buildContent(context),
               ),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: step.color.withValues(alpha: .1),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: Icon(step.icon, color: step.color, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      step.title,
-                      style: SLTheme.quicksand(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: _guideInk,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                step.description,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: _guideMuted,
-                  height: 1.5,
-                ),
-              ),
-              if (!targetReady) ...[
-                const SizedBox(height: 12),
-                Text(
-                  context.tr('guide_target_unavailable'),
-                  style: SLTheme.quicksand(fontSize: 12, color: _guideMuted),
-                ),
-              ],
-              const SizedBox(height: 18),
-              LinearProgressIndicator(
-                value: (index + 1) / total,
-                minHeight: 3,
-                borderRadius: BorderRadius.circular(2),
-                color: _guideAccent,
-                backgroundColor: const Color(0xFFEEE4E7),
-              ),
-              const SizedBox(height: 16),
-              nextButton,
-              const SizedBox(height: 4),
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
+            ),
+            // Hàng nút nằm ngoài vùng cuộn: thẻ thấp đến đâu thì Tiếp/Bỏ qua
+            // vẫn luôn hiện. Trước đây nút nằm cuối vùng cuộn nên khi thẻ bị
+            // ép thấp, người dùng không thấy nút và tưởng không bấm được gì.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: OverflowBar(
+                alignment: MainAxisAlignment.spaceBetween,
                 spacing: 8,
-                runSpacing: 4,
-                children: [skip, ?back],
+                overflowSpacing: 4,
+                overflowAlignment: OverflowBarAlignment.end,
+                overflowDirection: VerticalDirection.up,
+                children: [
+                  Wrap(spacing: 4, runSpacing: 4, children: [skip, ?back]),
+                  nextButton,
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            Text(
+              context.tr('guide_tour_label'),
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _guideMuted,
+              ),
+            ),
+            Text(
+              L10nService().format('guide_step_counter', {
+                'current': index + 1,
+                'total': total,
+              }),
+              textDirection: Directionality.of(context),
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _guideAccent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: step.color.withValues(alpha: .1),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(step.icon, color: step.color, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                step.title,
+                style: SLTheme.quicksand(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: _guideInk,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          step.description,
+          style: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: _guideMuted,
+            height: 1.5,
+          ),
+        ),
+        if (!targetReady) ...[
+          const SizedBox(height: 12),
+          Text(
+            context.tr('guide_target_unavailable'),
+            style: SLTheme.quicksand(fontSize: 12, color: _guideMuted),
+          ),
+        ],
+        const SizedBox(height: 18),
+        LinearProgressIndicator(
+          value: (index + 1) / total,
+          minHeight: 3,
+          borderRadius: BorderRadius.circular(2),
+          color: _guideAccent,
+          backgroundColor: const Color(0xFFEEE4E7),
+        ),
+      ],
     );
   }
 }

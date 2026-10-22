@@ -8,7 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/core/app_appearance.dart';
+import 'package:soullocket_app/widgets/sl_app_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/core/app_router.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/widgets/sound_effects_scope.dart';
@@ -44,7 +47,9 @@ class MyApp extends StatelessWidget {
           languageCode: L10nService().locale.languageCode,
           countryCode: MarketService.instance.marketCode,
         );
-        return MaterialApp.router(
+        return AppAppearanceScope(
+          themeKey: UiPrefs.notifier.value.themeKey,
+          builder: (context, isDark) => MaterialApp.router(
           title: 'SoulLocket',
           routerConfig: AppRouter.router,
           locale: displayLocale,
@@ -75,6 +80,7 @@ class MyApp extends StatelessWidget {
                     return false; // let the notification bubble up further if needed
                   },
                    child: LocalGuideCompanionOverlay(
+                     navigatorKey: NotificationService.navigatorKey,
                      child: SoundEffectsScope(
                        child: SLFeedbackTheme(
                          child: child ?? const SizedBox.shrink(),
@@ -93,9 +99,15 @@ class MyApp extends StatelessWidget {
                 screenWidth,
               );
               return SLTheme.softCanvasBackdrop(
-                baseColor: SLColors.paperCanvas,
-                accentColor: SLColors.thread,
-                secondaryAccent: SLColors.secondary,
+                baseColor: isDark
+                    ? Theme.of(context).scaffoldBackgroundColor
+                    : SLColors.paperCanvas,
+                accentColor: isDark
+                    ? Theme.of(context).colorScheme.primary
+                    : SLColors.thread,
+                secondaryAccent: isDark
+                    ? Theme.of(context).colorScheme.secondary
+                    : SLColors.secondary,
                 motif: SLCanvasBackdropMotif.journal,
                 child: Center(
                   child: Padding(
@@ -104,10 +116,14 @@ class MyApp extends StatelessWidget {
                       constraints: BoxConstraints(maxWidth: maxWidth),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: SLColors.surfaceWarm,
-                          border: const Border.symmetric(
+                          color: isDark
+                              ? Theme.of(context).colorScheme.surface
+                              : SLColors.surfaceWarm,
+                          border: Border.symmetric(
                             vertical: BorderSide(
-                              color: SLColors.border,
+                              color: isDark
+                                  ? Theme.of(context).dividerColor
+                                  : SLColors.border,
                               width: 1,
                             ),
                           ),
@@ -127,14 +143,20 @@ class MyApp extends StatelessWidget {
               );
             }
             return SLTheme.softCanvasBackdrop(
-              baseColor: SLColors.bgMain,
-              accentColor: SLColors.thread,
-              secondaryAccent: SLColors.secondary,
+              baseColor: isDark
+                  ? Theme.of(context).scaffoldBackgroundColor
+                  : SLColors.bgMain,
+              accentColor: isDark
+                  ? Theme.of(context).colorScheme.primary
+                  : SLColors.thread,
+              secondaryAccent: isDark
+                  ? Theme.of(context).colorScheme.secondary
+                  : SLColors.secondary,
               motif: SLCanvasBackdropMotif.journal,
               child: content,
             );
           },
-          theme: ThemeData(
+          theme: SLAppTheme.apply(ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: SLColors.primary,
               primary: SLColors.primary,
@@ -356,8 +378,9 @@ class MyApp extends StatelessWidget {
               }),
             ),
             snackBarTheme: SLFeedbackStyle.snackBarTheme(),
-          ),
+          ), isDark: isDark),
           debugShowCheckedModeBanner: false,
+        ),
         );
       },
     );

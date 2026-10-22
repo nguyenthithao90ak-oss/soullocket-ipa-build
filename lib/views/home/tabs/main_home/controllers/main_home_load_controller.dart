@@ -516,6 +516,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                     _isCoupleConnected = nextConnected;
                   });
                 }
+                _maybePromptPairingName();
               }
             } else if (mounted) {
               if (_isCoupleConnected) {
@@ -945,6 +946,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 _lastWidgetSettingsSyncKey = widgetSettingsKey;
                 _scheduleLoveWidgetSync(settings, includeDiaryMedia: true);
               }
+              _maybePromptPairingName();
             } else if (mounted) {
               _safeSetState(() => _isLoading = false);
             }

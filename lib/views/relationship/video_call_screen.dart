@@ -10,11 +10,12 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/call_setup_failure.dart';
-import '../../core/sl_theme.dart';
+import '../../utils/services/call_media_session.dart';
+import 'call_surface.dart';
+import 'call_beauty_sheet.dart';
 import '../../utils/services/ad_suppression_guard.dart';
 import '../../utils/services/purchase_service.dart';
 import '../../core/constants/app_config.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 
 class VideoCallScreen extends StatefulWidget {
@@ -50,6 +51,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   bool _inCall = false;
   bool _ending = false;
+  bool _endCallRequested = false;
+  bool _ownsCall = false;
+  Future<void>? _rendererInitialization;
+  Future<void>? _cleanupFuture;
   String? _permissionError;
   bool _isPreparing = true;
   String? _roomId;
@@ -58,6 +63,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isMicMuted = false;
   bool _isCameraOff = false;
   bool _isSpeakerOn = false;
+  bool _cameraBusy = false;
+  bool _switchBusy = false;
+  bool _usingFrontCamera = true;
+  CallMediaSession? _media;
   Timer? _timeoutTimer;
   // ignore: unused_field
   StreamSubscription<DatabaseEvent>? _roomStatusSub;
@@ -74,8 +83,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     _releaseSoundQuiet = SoundService().holdQuiet();
     AdSuppressionGuard.instance.suppressAds();
     _isSpeakerOn = widget.isVideo;
+    _isCameraOff = !widget.isVideo;
     _webrtcService.connectionState.addListener(_onConnectionState);
-    _initRenderers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_ending) unawaited(_initRenderers());
+    });
     _checkVip();
   }
 
@@ -157,21 +169,21 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void dispose() {
-    _ending = true;
-    _releaseSoundQuiet();
-    _elapsedTimer?.cancel();
-    _timeoutTimer?.cancel();
-    _webrtcService.connectionState.removeListener(_onConnectionState);
-    AdSuppressionGuard.instance.resumeAds();
-    _roomStatusSub?.cancel();
-    unawaited(_webrtcService.hangUp());
-    _localRenderer.dispose();
-    _remoteRenderer.dispose();
+    unawaited(_cleanupCall());
     super.dispose();
+  }
+
+  Future<void> _initializeRenderers() async {
+    // Chuẩn bị renderer cả khi gọi thoại để nhận video mà không mở lại phòng.
+    await runCallSetupStep('renderer', _localRenderer.initialize);
+    _localRenderer.muted = true;
+    await runCallSetupStep('renderer', _remoteRenderer.initialize);
   }
 
   Future<void> _initRenderers() async {
     try {
+      _webrtcService.reserveCall();
+      _ownsCall = true;
       if (!kIsWeb &&
           (defaultTargetPlatform == TargetPlatform.android ||
               defaultTargetPlatform == TargetPlatform.iOS)) {
@@ -189,12 +201,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         }
       }
       if (!mounted || _ending) return;
-      await runCallSetupStep('renderer', _localRenderer.initialize);
-      await runCallSetupStep('renderer', _remoteRenderer.initialize);
+      final rendererInitialization = _rendererInitialization ??=
+          _initializeRenderers();
+      await rendererInitialization;
       if (!mounted || _ending) return;
       if (widget.targetHouseId == 'random_stranger_id') {
         await Future.delayed(const Duration(seconds: 2));
-        if (!mounted) return;
+        if (!mounted || _ending) return;
         setState(() {
           _inCall = true;
           _isPreparing = false;
@@ -207,10 +220,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         includeVideo: widget.isVideo,
       );
       if (!mounted || _ending) {
-        await _webrtcService.hangUp();
+        await _cleanupCall();
         return;
       }
-      _localRenderer.srcObject = stream;
+      if (widget.isVideo || kIsWeb) {
+        await _localRenderer.setSrcObject(stream: stream);
+      }
+      if (!mounted || _ending) return;
       _webrtcService.toggleSpeaker(_isSpeakerOn);
 
       if (widget.roomId == null) {
@@ -221,6 +237,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           isVideo: widget.isVideo,
           callerName: widget.callerName,
         );
+        if (!mounted || _ending) return;
         if (widget.onRoomCreated != null && _roomId != null) {
           await widget.onRoomCreated!(_roomId!);
         }
@@ -229,7 +246,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         await _webrtcService.joinRoom(widget.roomId!, _remoteRenderer);
       }
 
-      if (!mounted) return;
+      if (!mounted || _ending) return;
+      _media = _webrtcService.mediaSession;
+      _media?.cameraEnabled.addListener(_onMediaState);
+      _media?.remoteCameraEnabled.addListener(_onMediaState);
       setState(() {
         _isPreparing = false;
       });
@@ -267,7 +287,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             );
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || _ending) return;
       setState(() => _isPreparing = false);
       final failure = CallSetupFailure.from(e, 'setup');
       debugPrint('Call setup: $failure');
@@ -304,508 +324,265 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     );
     final mediaPadding = MediaQuery.paddingOf(context);
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: _permissionError != null
-          ? SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.mic_off_rounded,
-                        size: 48,
-                        color: Colors.white70,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        _permissionError!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) unawaited(_endCall());
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: _permissionError != null
+            ? SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.mic_off_rounded,
+                          size: 48,
+                          color: Colors.white70,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      FilledButton(
-                        onPressed: () async {
-                          await openAppSettings();
-                        },
-                        child: Text(
-                          context.tr('ui_map_permission_settings_fffa2a'),
+                        const SizedBox(height: 20),
+                        Text(
+                          _permissionError!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: _endCall,
-                        child: Text(context.tr('p4_call_end_and_back')),
-                      ),
-                    ],
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          onPressed: () async {
+                            await openAppSettings();
+                          },
+                          child: Text(
+                            context.tr('ui_map_permission_settings_fffa2a'),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _endCall,
+                          child: Text(context.tr('p4_call_end_and_back')),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            )
-          : _buildCallBody(callLabel, mediaPadding),
+              )
+            : _buildCallBody(callLabel, mediaPadding),
+      ),
     );
   }
 
-  Widget _buildCallBody(
-    String callLabel,
-    EdgeInsets mediaPadding,
-  ) => LayoutBuilder(
-    builder: (context, constraints) {
-      final sidePadding = constraints.maxWidth < 360 ? 14.0 : 20.0;
-      final previewWidth = (constraints.maxWidth * 0.30)
-          .clamp(96.0, 128.0)
-          .toDouble();
-      final previewHeight = (previewWidth * 4 / 3)
-          .clamp(128.0, 172.0)
-          .toDouble();
-      final previewTop = mediaPadding.top + 76;
+  Widget _buildCallBody(String callLabel, EdgeInsets mediaPadding) {
+    final media = _media;
+    final remoteVideo = media?.remoteCameraEnabled.value ?? widget.isVideo;
+    final controlsReady = !_isPreparing && !_ending;
+    return SoulCallSurface(
+      name: widget.targetName,
+      avatarUrl: widget.targetAvatarUrl,
+      connected: _inCall,
+      status: _inCall
+          ? (_maxCallSeconds > 0
+                ? '${_formatElapsed()} · ${_formatDuration(_remainingSeconds)}'
+                : _formatElapsed())
+          : context.tr(
+              _isPreparing ? 'relationship_angktni_e4af2e' : 'p4_call_waiting',
+            ),
+      warning: _isWarning,
+      cameraOn: !_isCameraOff,
+      remoteCameraOn: _inCall && remoteVideo,
+      micMuted: _isMicMuted,
+      speakerOn: _isSpeakerOn,
+      cameraBusy: _cameraBusy,
+      beautyAmount: media?.skinBrightening ?? 0,
+      onCamera: controlsReady && media != null ? _toggleCamera : null,
+      onMic: controlsReady ? _toggleMic : null,
+      onSpeaker: controlsReady ? _toggleSpeaker : null,
+      onSwitchCamera: controlsReady && !_cameraBusy && !_switchBusy
+          ? _switchCamera
+          : null,
+      onBeauty: controlsReady && !_cameraBusy ? _showBeauty : null,
+      onEnd: _endCall,
+      remoteVideo: RTCVideoView(
+        _remoteRenderer,
+        objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+      ),
+      localVideo: _isCameraOff
+          ? null
+          : RTCVideoView(
+              _localRenderer,
+              mirror: _usingFrontCamera,
+              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+            ),
+    );
+  }
 
-      return Stack(
-        children: [
-          Positioned.fill(
-            child: widget.isVideo
-                ? (_inCall
-                      ? RTCVideoView(
-                          _remoteRenderer,
-                          objectFit:
-                              RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                        )
-                      : _buildWaitingState(callLabel))
-                : _buildAudioBackdrop(callLabel),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(sidePadding, 12, sidePadding, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: context.tr('p4_call_end_and_back'),
-                      onPressed: _endCall,
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: widget.isVideo ? previewWidth + 12 : 0,
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              widget.targetName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.quicksand(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_inCall) ...[
-                                  Icon(
-                                    _isWarning
-                                        ? Icons.timer_off_rounded
-                                        : Icons.timer_outlined,
-                                    color: _isWarning
-                                        ? const Color(0xFFFF5252)
-                                        : Colors.white70,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${_formatElapsed()} / ${_formatDuration(_remainingSeconds)}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: SLTheme.quicksand(
-                                      color: _isWarning
-                                          ? const Color(0xFFFF5252)
-                                          : Colors.white70,
-                                      fontSize: 13,
-                                      fontWeight: _isWarning
-                                          ? FontWeight.w900
-                                          : FontWeight.w600,
-                                    ),
-                                  ),
-                                ] else
-                                  Text(
-                                    _isPreparing
-                                        ? context.tr(
-                                            'relationship_angktni_e4af2e',
-                                          )
-                                        : callLabel,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: SLTheme.quicksand(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 40),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          if (widget.isVideo && !_isCameraOff)
-            Positioned(
-              right: sidePadding,
-              top: previewTop,
-              width: previewWidth,
-              height: previewHeight,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: RTCVideoView(
-                  _localRenderer,
-                  mirror: true,
-                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                ),
-              ),
-            ),
-          Positioned(
-            left: sidePadding,
-            right: sidePadding,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              minimum: const EdgeInsets.only(bottom: 12),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 14,
-                runSpacing: 14,
-                children: [
-                  _buildCallBtn(
-                    icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
-                    label: context.tr(
-                      _isSpeakerOn
-                          ? 'p4_call_speaker_off'
-                          : 'p4_call_speaker_on',
-                    ),
-                    color: _isSpeakerOn ? Colors.white24 : Colors.grey[800]!,
-                    iconColor: Colors.white,
-                    onTap: _toggleSpeaker,
-                    size: 56,
-                  ),
-                  if (widget.isVideo)
-                    _buildCallBtn(
-                      icon: Icons.cameraswitch,
-                      label: context.tr('p4_call_switch_camera'),
-                      color: Colors.white24,
-                      iconColor: Colors.white,
-                      onTap: _switchCamera,
-                      size: 56,
-                    ),
-                  if (widget.isVideo)
-                    _buildCallBtn(
-                      icon: _isCameraOff ? Icons.videocam_off : Icons.videocam,
-                      label: context.tr(
-                        _isCameraOff
-                            ? 'p4_call_camera_on'
-                            : 'p4_call_camera_off',
-                      ),
-                      color: _isCameraOff ? Colors.white : Colors.white24,
-                      iconColor: _isCameraOff ? Colors.black : Colors.white,
-                      onTap: _toggleCamera,
-                      size: 56,
-                    ),
-                  _buildCallBtn(
-                    icon: _isMicMuted ? Icons.mic_off : Icons.mic,
-                    label: context.tr(
-                      _isMicMuted ? 'p4_call_mic_on' : 'p4_call_mic_off',
-                    ),
-                    color: _isMicMuted ? Colors.white : Colors.white24,
-                    iconColor: _isMicMuted ? Colors.black : Colors.white,
-                    onTap: _toggleMic,
-                    size: 56,
-                  ),
-                  _buildCallBtn(
-                    icon: Icons.call_end,
-                    label: context.tr('p4_call_end'),
-                    color: Colors.red,
-                    iconColor: Colors.white,
-                    onTap: _endCall,
-                    size: 64,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    },
-  );
+  void _onMediaState() {
+    if (!mounted || _ending) return;
+    setState(() => _isCameraOff = !(_media?.cameraEnabled.value ?? false));
+  }
 
   void _toggleMic() {
-    setState(() {
-      _isMicMuted = !_isMicMuted;
-    });
+    if (_ending) return;
+    setState(() => _isMicMuted = !_isMicMuted);
     _webrtcService.toggleMic(_isMicMuted);
   }
 
-  void _toggleCamera() {
-    setState(() {
-      _isCameraOff = !_isCameraOff;
-    });
-    _webrtcService.toggleCamera(_isCameraOff);
+  Future<void> _toggleCamera() async {
+    final media = _media;
+    if (_ending || _cameraBusy || _switchBusy || media == null) return;
+    final enable = _isCameraOff;
+    setState(() => _cameraBusy = true);
+    try {
+      if (enable &&
+          !kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS)) {
+        final permission = await Permission.camera.request();
+        if (!mounted || _ending) return;
+        if (!permission.isGranted) {
+          SLNotice.showError(context, context.tr('call_camera_permission'));
+          return;
+        }
+      }
+      await media.setCameraEnabled(enable);
+      if (!mounted || _ending) return;
+      await _localRenderer.setSrcObject(
+        stream: enable ? _webrtcService.localStream : null,
+      );
+      if (!mounted || _ending) return;
+      setState(() {
+        _isCameraOff = !enable;
+        _usingFrontCamera = true;
+      });
+    } catch (error) {
+      if (mounted && !_ending) {
+        SLNotice.showError(
+          context,
+          context.tr(
+            error is UnsupportedError
+                ? 'call_video_upgrade_unavailable'
+                : 'p4_call_media_unavailable',
+          ),
+        );
+      }
+    } finally {
+      if (mounted && !_ending) setState(() => _cameraBusy = false);
+    }
   }
 
-  void _switchCamera() {
-    _webrtcService.switchCamera();
+  Future<void> _switchCamera() async {
+    if (_ending || _switchBusy || _cameraBusy || _isCameraOff) return;
+    setState(() => _switchBusy = true);
+    try {
+      await _webrtcService.switchCamera();
+      if (mounted && !_ending) {
+        setState(() => _usingFrontCamera = !_usingFrontCamera);
+      }
+    } catch (_) {
+      if (mounted && !_ending) {
+        SLNotice.showError(context, context.tr('p4_call_media_unavailable'));
+      }
+    } finally {
+      if (mounted && !_ending) setState(() => _switchBusy = false);
+    }
   }
 
   void _toggleSpeaker() {
-    setState(() {
-      _isSpeakerOn = !_isSpeakerOn;
-    });
+    if (_ending) return;
+    setState(() => _isSpeakerOn = !_isSpeakerOn);
     _webrtcService.toggleSpeaker(_isSpeakerOn);
   }
 
-  Widget _buildWaitingState(String callLabel) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+  Future<void> _showBeauty() async {
+    final media = _media;
+    if (media == null || _isCameraOff || _ending) return;
+    if (!media.supportsBeauty) {
+      SLNotice.showError(context, context.tr('call_beauty_unavailable'));
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF26283B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Avatar với animated ring
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 1500),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: Transform.scale(
-                    scale: 0.5 + value * 0.5,
-                    child: child,
-                  ),
-                );
-              },
-              child: Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.5),
-                    width: 3,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF6B9D).withValues(alpha: 0.3),
-                      blurRadius: 30,
-                      spreadRadius: 10,
-                    ),
-                    BoxShadow(
-                      color: const Color(0xFF667EEA).withValues(alpha: 0.2),
-                      blurRadius: 40,
-                      spreadRadius: 15,
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 67,
-                  backgroundColor: const Color(0xFF1A1A2E),
-                  backgroundImage: widget.targetAvatarUrl != null
-                      ? CachedNetworkImageProvider(widget.targetAvatarUrl!)
-                      : null,
-                  child: widget.targetAvatarUrl == null
-                      ? Text(
-                          widget.targetName.isEmpty
-                              ? '💕'
-                              : widget.targetName[0].toUpperCase(),
-                          style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              widget.targetName,
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.8),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  _isPreparing
-                      ? L10nService().format('p4_call_initializing', {
-                          'type': callLabel,
-                        })
-                      : context.tr('p4_call_waiting'),
-                  style: SLTheme.quicksand(
-                    color: Colors.white60,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAudioBackdrop(String callLabel) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1E1E1E), Color(0xFF3A0D24)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(
-              radius: 56,
-              backgroundColor: Colors.white12,
-              backgroundImage: widget.targetAvatarUrl != null
-                  ? CachedNetworkImageProvider(widget.targetAvatarUrl!)
-                  : null,
-              child: widget.targetAvatarUrl == null
-                  ? Text(
-                      widget.targetName.isEmpty
-                          ? '?'
-                          : widget.targetName[0].toUpperCase(),
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    )
-                  : null,
-            ),
-            SLSpacing.h16,
-            Text(
-              widget.targetName,
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            SLSpacing.h8,
-            Text(
-              _isPreparing
-                  ? L10nService().format('p4_call_connecting', {
-                      'type': callLabel,
-                    })
-                  : context.tr('relationship_micangbt_8c0d7f'),
-              style: SLTheme.quicksand(
-                color: Colors.white70,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+      builder: (_) => CallBeautySheet(
+        amount: media.skinBrightening,
+        onApply: (amount) async {
+          if (_ending || !mounted) return;
+          await media.setSkinBrightening(amount);
+          if (mounted && !_ending) setState(() {});
+        },
       ),
     );
   }
 
   Future<void> _endCall() async {
-    if (_ending) return;
+    if (_endCallRequested) return;
+    _endCallRequested = true;
+    final route = ModalRoute.of(context);
+    final navigator = Navigator.of(context);
+    await _cleanupCall();
+    if (!mounted || route == null || !route.isActive) return;
+    if (route.isCurrent) {
+      navigator.pop();
+    } else {
+      navigator.removeRoute(route);
+    }
+  }
+
+  Future<void> _cleanupCall() {
+    final existing = _cleanupFuture;
+    if (existing != null) return existing;
+
+    final cleanup = _cleanupCallInternal();
+    _cleanupFuture = cleanup;
+    return cleanup;
+  }
+
+  Future<void> _cleanupCallInternal() async {
     _ending = true;
     _timeoutTimer?.cancel();
     _elapsedTimer?.cancel();
-    await _webrtcService.hangUp();
-    if (!mounted) return;
-    Navigator.pop(context);
-  }
+    _webrtcService.connectionState.removeListener(_onConnectionState);
+    _media?.cameraEnabled.removeListener(_onMediaState);
+    _media?.remoteCameraEnabled.removeListener(_onMediaState);
+    final roomStatusSub = _roomStatusSub;
+    _roomStatusSub = null;
+    Future<void> releaseRenderers() async {
+      try {
+        await roomStatusSub?.cancel();
+      } catch (error) {
+        debugPrint('Video call room listener cleanup failed: $error');
+      }
+      final rendererInitialization = _rendererInitialization;
+      if (rendererInitialization != null) {
+        try {
+          await rendererInitialization;
+        } catch (_) {
+          // Vẫn giải phóng renderer khởi tạo dở.
+        }
+      }
+      await disposeVideoRendererSafely(_localRenderer);
+      await disposeVideoRendererSafely(_remoteRenderer);
+    }
 
-  Widget _buildCallBtn({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required Color iconColor,
-    required VoidCallback onTap,
-    double size = 56,
-  }) {
-    return Tooltip(
-      message: label,
-      child: Semantics(
-        button: true,
-        label: label,
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            height: size,
-            width: size,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: iconColor, size: size * 0.5),
-          ),
-        ),
-      ),
-    );
+    try {
+      if (_ownsCall) {
+        // hangUp vô hiệu hóa setup trước await đầu tiên trong releaseRenderers.
+        await _webrtcService.hangUp(beforeMediaRelease: releaseRenderers);
+      } else {
+        await releaseRenderers();
+      }
+    } finally {
+      AdSuppressionGuard.instance.resumeAds();
+      _releaseSoundQuiet();
+    }
   }
 
   String _formatDuration(int seconds) {

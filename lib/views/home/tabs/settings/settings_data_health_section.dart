@@ -556,9 +556,18 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final state = service.trackingState.value;
     final now = DateTime.now();
     final ready = configured && state.isReadyAt(now);
+    final waitingForFirstFix =
+        configured &&
+        state.isTracking &&
+        state.issue == GpsTrackingIssue.none &&
+        state.lastSyncedAt == null;
     _showToast(
-      context.tr(ready ? 'settings_gps_mode_saved' : state.statusKeyAt(now)),
-      success: ready,
+      context.tr(
+        ready || waitingForFirstFix
+            ? 'settings_gps_mode_saved'
+            : state.statusKeyAt(now),
+      ),
+      success: ready || waitingForFirstFix,
     );
   }
 

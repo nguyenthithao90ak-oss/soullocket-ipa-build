@@ -211,8 +211,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         return CalendarScreen(houseId: houseId, myName: myName);
       case 'capsule':
         return CapsuleScreen(houseId: houseId, myName: myName);
-      case 'cinema':
-        return CinemaScreen(houseId: houseId, myName: myName);
       case 'wheel':
         return WheelScreen(houseId: houseId);
       case 'vault':

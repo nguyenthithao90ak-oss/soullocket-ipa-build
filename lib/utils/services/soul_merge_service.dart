@@ -9,6 +9,7 @@ import 'notification_service.dart';
 import 'widget_service.dart';
 import 'soul_message_history.dart';
 import 'soul_message_actions.dart';
+import 'soul_message_content.dart';
 import 'soul_merge_role_stream.dart';
 import 'package:soullocket_app/utils/services/core/presence_service.dart';
 
@@ -161,12 +162,11 @@ class SoulMergeService {
         rethrow;
       }
 
-      // Body của thông báo push
-      final body = trimmed.isNotEmpty
-          ? trimmed
-          : (imageUrl != null
-                ? UiCopy.text('copy_95645c3098ee')
-                : UiCopy.text('copy_e3cebc8bff52'));
+      final body = SoulMessageContent.notificationBody(
+        text: trimmed,
+        imageUrl: imageUrl,
+      );
+      final stickerId = SoulMessageContent.stickerId(imageUrl);
 
       // Lấy tên đúng từ house settings theo role của người gửi
       String myName = UiCopy.text('copy_145933221191');
@@ -180,7 +180,7 @@ class SoulMergeService {
             myName = nameFromSettings;
           } else {
             // fallback: displayName của Firebase Auth
-            final dn = _auth.currentUser?.displayName?.trim();
+            final dn = user.displayName?.trim();
             if (dn != null && dn.isNotEmpty) myName = dn;
           }
         }
@@ -188,13 +188,26 @@ class SoulMergeService {
         debugPrint('[SoulMergeService] Cannot resolve sender name: $error');
       }
 
+      // Không xếp thông báo của tin vừa gửi bằng phiên khác sau khi đọc tên.
+      if (_auth.currentUser?.uid != user.uid ||
+          await getCurrentHouseId() != houseId ||
+          _auth.currentUser?.uid != user.uid) {
+        return;
+      }
       unawaited(
         NotificationService()
             .sendPartnerNotification(
               houseId: houseId,
-              title: 'Soul Merge',
+              title: SoulMessageContent.notificationTitle(
+                senderName: myName,
+                imageUrl: imageUrl,
+              ),
               body: body,
-              data: {'type': 'soul_merge', 'senderName': myName},
+              data: {
+                'type': 'soul_merge',
+                'senderName': myName,
+                'stickerId': ?stickerId,
+              },
             )
             .catchError((Object error) {
               debugPrint(
@@ -796,10 +809,12 @@ class SoulMergeService {
             _auth.currentUser?.uid,
           )) {
             message = UiCopy.text('copy_10b2526771ce');
-          } else if (text != null && text.trim().isNotEmpty) {
-            message = text.trim();
-          } else if (imageUrl != null && imageUrl.isNotEmpty) {
-            message = UiCopy.text('copy_95645c3098ee');
+          } else if ((text?.trim().isNotEmpty ?? false) ||
+              (imageUrl?.isNotEmpty ?? false)) {
+            message = SoulMessageContent.preview(
+              text: text ?? '',
+              imageUrl: imageUrl,
+            );
           }
         }
       }

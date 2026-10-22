@@ -51,14 +51,13 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     String? hint,
     bool dark = false,
   }) {
-    final fillColor = dark
-        ? const Color(0xFF162136)
-        : Colors.white.withValues(alpha: 0.88);
-    final labelColor = dark ? Colors.white70 : SLSettingsColors.inkSecondary;
-    final hintColor = dark ? Colors.white38 : SLSettingsColors.inkTertiary;
-    final borderColor = dark
-        ? Colors.white.withValues(alpha: 0.12)
-        : SLSettingsColors.border;
+    final palette = SLSettingsPalette.resolve(
+      dark || Theme.of(context).brightness == Brightness.dark,
+    );
+    final fillColor = palette.surfaceMuted;
+    final labelColor = palette.inkSecondary;
+    final hintColor = palette.inkTertiary;
+    final borderColor = palette.border;
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -80,12 +79,9 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: borderColor),
       ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        borderSide: BorderSide(
-          color: SLSettingsColors.accentStrong,
-          width: 1.4,
-        ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderSide: BorderSide(color: palette.accent, width: 1.4),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
@@ -98,20 +94,12 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     List<Color>? iconGradient,
     required Widget child,
   }) {
-    // Các ô chỉnh sửa dùng bề mặt giấy sáng, độc lập với màu bản xem trước.
-    return Theme(
-      data: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: SLSettingsColors.accentStrong,
-          brightness: Brightness.light,
-        ),
-      ),
-      child: AppearanceSectionCard(
-        icon: icon,
-        title: title,
-        description: subtitle,
-        child: child,
-      ),
+    return AppearanceSectionCard(
+      icon: icon,
+      title: title,
+      description: subtitle,
+      isDark: Theme.of(context).brightness == Brightness.dark,
+      child: child,
     );
   }
 
@@ -267,7 +255,9 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                       decoration: InputDecoration(
                         labelText: context.tr('home_nhpngy_91932a'),
                         hintText: DateInputUtils.formatHint(),
-                        helperText: L10nService().format('date_input_helper', {'format': DateInputUtils.formatHint()}),
+                        helperText: L10nService().format('date_input_helper', {
+                          'format': DateInputUtils.formatHint(),
+                        }),
                         errorText: errorText,
                         prefixIcon: const Icon(
                           Icons.calendar_month_rounded,
@@ -381,6 +371,9 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
   }
 
   Widget _buildCountdownThemeSwatchGrid() {
+    final palette = SLSettingsPalette.resolve(
+      Theme.of(context).brightness == Brightness.dark,
+    );
     final swatches = <(String, List<Color>, String)>[
       (
         'theme-auto',
@@ -514,8 +507,8 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? colors.last.withValues(alpha: 0.90)
-                      : const Color(0xFFE0E7EF),
+                      ? palette.tint(colors.last).withValues(alpha: 0.90)
+                      : palette.border,
                   width: isSelected ? 2.2 : 1.2,
                 ),
                 boxShadow: isSelected
@@ -657,7 +650,9 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: isSelected
+                          colors: palette.isDark
+                              ? [palette.surfaceMuted, palette.surface]
+                              : isSelected
                               ? [
                                   colors.first.withValues(alpha: 0.08),
                                   Colors.white,
@@ -694,8 +689,8 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                                     ? FontWeight.w900
                                     : FontWeight.w700,
                                 color: isSelected
-                                    ? colors.last
-                                    : const Color(0xFF64748B),
+                                    ? palette.tint(colors.last)
+                                    : palette.inkSecondary,
                               ),
                             ),
                           ),

@@ -20,6 +20,7 @@ import '../../utils/services/purchase_service.dart';
 import '../../utils/services/utility_service.dart';
 import '../premium/premium_store_screen.dart';
 import '../../utils/services/storage/ai_pending_request_store.dart';
+import '../../widgets/ai_data_consent_dialog.dart';
 import '../ui_prefs.dart';
 import '../home/widgets/soul_merge_screen.dart';
 import 'soul_block_game.dart';
@@ -610,9 +611,16 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     }
 
     setState(() => _isSending = true);
+    if (_sessionUid == null || !await requestAiDataConsent(
+      context, uid: _sessionUid, isCurrent: () => mounted && _isCurrentSession,
+    )) {
+      if (mounted && _isCurrentSession) setState(() => _isSending = false);
+      return;
+    }
+    if (!mounted || !_isCurrentSession) return;
     final requestId = AiCounselorService.createRequestId();
     try {
-      if (_sessionUid == null || _pendingStore == null) {
+      if (_pendingStore == null) {
         throw StateError('Chat session unavailable');
       }
       // Phải ghi marker thành công trước request có thể tính phí.
@@ -1185,6 +1193,14 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         ),
         actions: [
           if (_isPro == true) ...[
+          IconButton(
+            tooltip: context.tr('ai_data_consent_title'),
+            icon: const Icon(Icons.privacy_tip_outlined),
+            onPressed: _sessionUid == null ? null : () => requestAiDataConsent(
+              context, uid: _sessionUid, manage: true,
+              isCurrent: () => mounted && _isCurrentSession,
+            ),
+          ),
           PopupMenuButton<String>(
             icon: Icon(Icons.tune_rounded, color: SLDetailStyle.muted(context)),
             color: SLDetailStyle.card(context),

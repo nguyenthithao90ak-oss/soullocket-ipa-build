@@ -6,6 +6,9 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
     BuildContext context,
     _CountdownModeThemeData themeData,
   ) {
+    final palette = SLSettingsPalette.resolve(
+      Theme.of(context).brightness == Brightness.dark,
+    );
     return [
       _sectionCard(
         icon: Icons.edit_note_rounded,
@@ -43,8 +46,8 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                         : null,
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(48, 48),
-                      foregroundColor: const Color(0xFF2563EB),
-                      side: const BorderSide(color: Color(0xFFCFE0FF)),
+                      foregroundColor: palette.tint(const Color(0xFF2563EB)),
+                      side: BorderSide(color: palette.border),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -84,8 +87,8 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                         : null,
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(48, 48),
-                      foregroundColor: SLSettingsColors.accentStrong,
-                      side: const BorderSide(color: Color(0xFFF2C3D7)),
+                      foregroundColor: palette.accent,
+                      side: BorderSide(color: palette.border),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -123,7 +126,7 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF8A5B76),
+                  color: palette.inkSecondary,
                 ),
               ),
             ),
@@ -153,8 +156,8 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                         width: width,
                         child: Material(
                           color: selected
-                              ? SLSettingsColors.accentSoft
-                              : const Color(0xFFFAF8F5),
+                              ? palette.accentSoft
+                              : palette.surfaceMuted,
                           borderRadius: BorderRadius.circular(18),
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
@@ -173,8 +176,8 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: selected
-                                      ? SLSettingsColors.accentStrong
-                                      : SLSettingsColors.border,
+                                      ? palette.accent
+                                      : palette.border,
                                   width: selected ? 1.5 : 1,
                                 ),
                               ),
@@ -192,9 +195,9 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                                             ),
                                       ),
                                       if (selected)
-                                        const Icon(
+                                        Icon(
                                           Icons.check_circle_rounded,
-                                          color: SLSettingsColors.accentStrong,
+                                          color: palette.accent,
                                           size: 18,
                                         ),
                                     ],
@@ -206,7 +209,7 @@ extension DateEditorExt on _CountdownModeEditorScreenState {
                                     style: SLTheme.quicksand(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
-                                      color: SLSettingsColors.ink,
+                                      color: palette.ink,
                                     ),
                                   ),
                                 ],

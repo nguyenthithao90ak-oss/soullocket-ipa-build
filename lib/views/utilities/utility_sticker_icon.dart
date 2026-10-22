@@ -8,7 +8,6 @@ const Set<String> _kUtilityStickerIds = <String>{
   'calculator',
   'calendar',
   'capsule',
-  'cinema',
   'collage',
   'creative_diary',
   'diary_export',

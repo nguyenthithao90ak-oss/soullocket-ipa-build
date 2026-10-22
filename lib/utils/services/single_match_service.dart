@@ -8,6 +8,7 @@ import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/single_match_age_policy.dart';
 import 'house_service.dart';
 
 class SingleMatchService {
@@ -263,24 +264,7 @@ class SingleMatchService {
 
   // ===== Age helpers =====
 
-  int? ageFromDob(String rawDob) {
-    final parsed = DateTime.tryParse(rawDob.trim());
-    if (parsed == null) {
-      return null;
-    }
-    final now = DateTime.now();
-    var age = now.year - parsed.year;
-    final hadBirthday =
-        now.month > parsed.month ||
-        (now.month == parsed.month && now.day >= parsed.day);
-    if (!hadBirthday) {
-      age -= 1;
-    }
-    if (age < 0 || age > 120) {
-      return null;
-    }
-    return age;
-  }
+  int? ageFromDob(String rawDob) => SingleMatchAgePolicy.ageFromDob(rawDob);
 
   // ===== Internal helpers =====
 
@@ -413,7 +397,11 @@ class SingleMatchService {
           settings['updatedAt'] ??
           singleMatch['updatedAt'],
     );
-    final age = (profile['age'] as num?)?.toInt();
+    final rawAge = profile['age'];
+    if (rawAge is! num || !rawAge.isFinite || rawAge < 18 || rawAge > 120) {
+      return null;
+    }
+    final age = rawAge.toInt();
 
     return SingleMatchCandidate(
       houseId: houseId,

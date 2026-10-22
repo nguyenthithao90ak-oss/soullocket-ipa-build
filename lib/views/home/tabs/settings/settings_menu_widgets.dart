@@ -21,8 +21,6 @@ class SettingsHomeHeader extends StatelessWidget {
   final String? backLabel;
   final List<Widget> actions;
 
-  static const double contentHeight = 60;
-
   @override
   Widget build(BuildContext context) {
     final palette = SLSettingsPalette.resolve(isDark);
@@ -39,8 +37,8 @@ class SettingsHomeHeader extends StatelessWidget {
           color: palette.canvasTop.withValues(alpha: 0.97),
           border: Border(bottom: BorderSide(color: palette.border)),
         ),
-        child: SizedBox(
-          height: 44,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
           child: Row(
             children: [
               if (onBack != null) ...[
@@ -57,8 +55,6 @@ class SettingsHomeHeader extends StatelessWidget {
                   header: true,
                   child: Text(
                     title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontSize: 21,
                       fontWeight: FontWeight.w800,
@@ -288,7 +284,71 @@ class SettingsProfileCard extends StatelessWidget {
   }
 }
 
-/// Ô truy cập nhanh (ghép nối, đếm không gian, giao diện).
+/// Các ô nhanh cùng chiều cao. Đủ chỗ thì xếp một hàng; có ô thứ ba mà màn
+/// hẹp thì chia lưới hai cột; chữ lớn hoặc màn rất hẹp thì xếp dọc để đọc đủ.
+class SettingsQuickActionsLayout extends StatelessWidget {
+  const SettingsQuickActionsLayout({
+    super.key,
+    required this.primary,
+    required this.secondary,
+    this.tertiary,
+  });
+
+  final Widget primary;
+  final Widget secondary;
+  final Widget? tertiary;
+
+  static const double _gap = 10;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+      final growth = scale < 1 ? 1.0 : scale;
+      final width = constraints.maxWidth;
+      final third = tertiary;
+      // Ba ô một hàng: từ 100dp/ô vẫn vừa icon 40dp cạnh nhãn PRO gọn.
+      if (third != null && width >= 100 * growth * 3 + _gap * 2) {
+        return _row([primary, secondary, third]);
+      }
+      if (width < 132 * growth * 2 + _gap) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            primary,
+            const SizedBox(height: _gap),
+            secondary,
+            if (third != null) ...[const SizedBox(height: _gap), third],
+          ],
+        );
+      }
+      if (third == null) return _row([primary, secondary]);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _row([primary, secondary]),
+          const SizedBox(height: _gap),
+          // Giữ ô thứ ba rộng bằng một cột để lưới không lệch.
+          _row([third, const SizedBox.shrink()]),
+        ],
+      );
+    },
+  );
+
+  static Widget _row(List<Widget> tiles) => IntrinsicHeight(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < tiles.length; i++) ...[
+          if (i > 0) const SizedBox(width: _gap),
+          Expanded(child: tiles[i]),
+        ],
+      ],
+    ),
+  );
+}
+
+/// Ô truy cập nhanh (ghép nối, không gian đếm ngày).
 class SettingsQuickTile extends StatelessWidget {
   const SettingsQuickTile({
     super.key,
@@ -369,10 +429,12 @@ class SettingsQuickTile extends StatelessWidget {
                                 isDark: isDark,
                               ),
                         ),
+                        // Lấn vào lề phải của thẻ để ô hẹp (ba ô một hàng
+                        // trên màn 360dp) không đè nhãn lên icon.
                         if (badge != null)
                           PositionedDirectional(
                             top: 0,
-                            end: 0,
+                            end: -4,
                             child: badge!,
                           ),
                       ],
@@ -381,12 +443,10 @@ class SettingsQuickTile extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      height: 1.25,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
                       color: palette.ink,
                     ),
                   ),
@@ -394,12 +454,10 @@ class SettingsQuickTile extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       caption!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
                         color: captionColor,
                       ),
                     ),
@@ -459,7 +517,8 @@ class _SettingsMenuFooterState extends State<SettingsMenuFooter> {
   Widget build(BuildContext context) {
     final palette = SLSettingsPalette.resolve(widget.isDark);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+      // Giữ chân trang gọn khi người dùng tăng cỡ chữ hệ thống.
+      padding: const EdgeInsets.fromLTRB(24, 6, 24, 10),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -500,7 +559,7 @@ class _SettingsMenuFooterState extends State<SettingsMenuFooter> {
                 '${widget.versionLabel} $_version',
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: palette.inkTertiary,
                 ),

@@ -6,7 +6,6 @@ abstract final class LosslessStickerAssets {
     'assets/images/utility_stickers/calculator.png',
     'assets/images/utility_stickers/calendar.png',
     'assets/images/utility_stickers/capsule.png',
-    'assets/images/utility_stickers/cinema.png',
     'assets/images/utility_stickers/collage.png',
     'assets/images/utility_stickers/creative_diary.png',
     'assets/images/utility_stickers/diary_export.png',

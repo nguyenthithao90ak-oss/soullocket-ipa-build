@@ -5,8 +5,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
   static final L10nService _l10nService = L10nService();
 
   Widget _buildBottomNav() {
-    // Thanh điều hướng luôn trắng kem, độc lập với theme/ảnh nền Home.
-    const isDark = false;
+    final isDark = SLSettingsPalette.isNightTheme;
     return ValueListenableBuilder<bool>(
       valueListenable: _isBottomNavVisibleNotifier,
       builder: (context, isVisible, child) {

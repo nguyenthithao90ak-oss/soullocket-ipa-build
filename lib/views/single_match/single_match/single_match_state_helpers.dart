@@ -21,21 +21,7 @@ List<String> _singleMatchParseTags(String raw) {
 }
 
 int? _singleMatchAgeFromDob(String rawDob) {
-  final parsed = DateTime.tryParse(rawDob.trim());
-  if (parsed == null) {
-    return null;
-  }
-  final now = DateTime.now();
-  var age = now.year - parsed.year;
-  final hadBirthday = now.month > parsed.month ||
-      (now.month == parsed.month && now.day >= parsed.day);
-  if (!hadBirthday) {
-    age -= 1;
-  }
-  if (age < 0 || age > 120) {
-    return null;
-  }
-  return age;
+  return SingleMatchAgePolicy.ageFromDob(rawDob);
 }
 
 void _singleMatchShowSnack(

@@ -128,6 +128,7 @@ class SupportChatView extends StatelessWidget {
     this.onEntryAction,
     this.onRetry,
     this.onReopen,
+    this.onAiPrivacy,
     this.loadingHistory = false,
   });
 
@@ -155,6 +156,7 @@ class SupportChatView extends StatelessWidget {
   final VoidCallback? onEntryAction;
   final VoidCallback? onRetry;
   final VoidCallback? onReopen;
+  final VoidCallback? onAiPrivacy;
   final bool loadingHistory;
 
   @override
@@ -208,6 +210,11 @@ class SupportChatView extends StatelessWidget {
                             ),
                           ],
                         ),
+                      ),
+                      if (onAiPrivacy != null) IconButton(
+                        onPressed: onAiPrivacy,
+                        tooltip: context.tr('ai_data_consent_title'),
+                        icon: const Icon(Icons.privacy_tip_outlined),
                       ),
                       IconButton(
                         onPressed: hasTicket ? onContactTeam : null,

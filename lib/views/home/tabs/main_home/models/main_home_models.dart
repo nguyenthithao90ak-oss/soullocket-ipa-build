@@ -25,6 +25,14 @@ class _PartnerInteractionPreset {
     required this.titles,
     required this.messages,
   });
+
+  /// Bản copy ổn định gắn với sticker đang chọn.
+  ///
+  /// Không lấy ngẫu nhiên trong lúc gửi để tên hiển thị trên ô luôn khớp với
+  /// nội dung notification mà người ấy nhận được.
+  String get notificationTitle => titles.isEmpty ? label : titles.first;
+
+  String get notificationMessage => messages.isEmpty ? label : messages.first;
 }
 
 class _CountdownQuickOption {

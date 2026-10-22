@@ -100,7 +100,7 @@ int _compareVaultPhotos(Map<String, dynamic> a, Map<String, dynamic> b) {
       : (b['id']?.toString() ?? '').compareTo(a['id']?.toString() ?? '');
 }
 
-/// Chỉ thử lại thao tác đọc; hết hạn hoặc đổi phiên thì bỏ kết quả đang chờ.
+/// Thử lại thao tác kho khi token gặp lỗi tạm thời; đổi phiên thì bỏ kết quả.
 Future<T> readSecretVaultWithAuthRetry<T>({
   required Future<void> Function(bool forceRefresh) prepareToken,
   required Future<T> Function() read,
@@ -138,6 +138,9 @@ Future<T> readSecretVaultWithAuthRetry<T>({
           'unknown',
           'unauthenticated',
           'unavailable',
+          'internal',
+          'internal-error',
+          'network-request-failed',
         }.contains(code)) {
       rethrow;
     }
@@ -514,9 +517,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           _encryptionReady = false;
           _encStatusMsg = context.tr('util_angxcthcmk_ba443e');
         });
-        await _enc
-            .unlockHouseKeyWithRecoveryCode(widget.houseId, recoveryCode)
-            .timeout(_vaultPrepareTimeout);
+        await _readVaultWithAuthRetry(
+          'unlock-recovery-code',
+          () => _enc.unlockHouseKeyWithRecoveryCode(
+            widget.houseId,
+            recoveryCode,
+          ),
+        );
         if (!isCurrentPreparation()) return;
         _safeSetState(() {
           _encryptionReady = true;
@@ -533,13 +540,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         _encStatusMsg = context.tr('util_angxlkha_922e10');
       });
 
-      await _enc
-          .unlockHouseKey(widget.houseId, passphrase)
-          .timeout(_vaultPrepareTimeout);
+      await _readVaultWithAuthRetry(
+        'unlock-passphrase',
+        () => _enc.unlockHouseKey(widget.houseId, passphrase),
+      );
       if (isCurrentPreparation()) {
-        final recoveryCode = await _enc
-            .createRecoveryCodeIfMissing(widget.houseId)
-            .timeout(_vaultPrepareTimeout);
+        final recoveryCode = await _readVaultWithAuthRetry(
+          'create-recovery-code',
+          () => _enc.createRecoveryCodeIfMissing(widget.houseId),
+        );
         if (!isCurrentPreparation()) return;
         _safeSetState(() {
           _encryptionReady = true;

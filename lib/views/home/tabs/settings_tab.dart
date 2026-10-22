@@ -42,6 +42,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import '../../ui_prefs.dart';
 import '../../../core/sl_theme.dart';
+import '../../../core/app_appearance.dart';
 import 'settings/theme/theme_preview_builder.dart';
 import 'settings/widget/widget_studio_components.dart';
 import '../../../models/widget_appearance.dart';
@@ -60,6 +61,7 @@ import '../../../widgets/sl_detail_widgets.dart';
 import '../../../widgets/sl_settings_kit.dart';
 import '../../../widgets/stable_future_builder.dart';
 import '../../../utils/services/offline_cache_service.dart';
+import '../../../utils/cache/advanced_cache_key_policy.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
@@ -95,7 +97,6 @@ import '../../premium/premium_store_screen.dart';
 
 import '../../utilities/calendar_screen.dart';
 import '../../utilities/capsule_screen.dart';
-import '../../utilities/cinema_screen.dart';
 import '../../utilities/collage_maker_screen.dart';
 import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/drawing_studio_screen.dart';
@@ -105,6 +106,7 @@ import '../../utilities/habit_screen.dart';
 import '../../utilities/giftcode_screen.dart';
 import '../../utilities/history_screen.dart';
 import '../../utilities/love_card_screen.dart';
+import '../../utilities/couple_showcase_screen.dart';
 import '../../utilities/reward_store_screen.dart';
 import '../../utilities/secret_vault_screen.dart';
 import '../../utilities/shared_notes_screen.dart';
@@ -298,7 +300,14 @@ class _SettingsBackgroundLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const RepaintBoundary(child: SLSettingsBackdrop());
+    return ValueListenableBuilder<UiPrefsState>(
+      valueListenable: UiPrefs.notifier,
+      builder: (context, prefs, _) => RepaintBoundary(
+        child: SLSettingsBackdrop(
+          isDark: SLSettingsPalette.isNightThemeFor(prefs.themeKey),
+        ),
+      ),
+    );
   }
 }
 
@@ -436,7 +445,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _didShowGuideOnOpen = false;
   final GlobalKey _accountGuideKey = GlobalKey();
   final GlobalKey _securityGuideKey = GlobalKey();
-  final GlobalKey _themeGuideKey = GlobalKey();
   final GlobalKey _widgetGuideKey = GlobalKey();
   final GlobalKey _countdownGuideKey = GlobalKey();
   final GlobalKey _dataGuideKey = GlobalKey();
@@ -517,6 +525,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   int _lockTimeout = 0; // minutes, 0 means immediately
   bool _isMilitaryMode = false;
   bool _notificationsEnabled = true;
+  bool _notificationToggleBusy = false;
   String _goodMorningTime = '05:55';
   String _goodNightTime = '22:15';
   String _storedLockSecret = '';
@@ -771,13 +780,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
           color: const Color(0xFFB85A2B),
         ),
         FirstSetupSpotlightStep(
-          targetKey: _themeGuideKey,
-          title: L10nService().translate('home_giaodintra_f6bf4a'),
-          description: L10nService().translate('home_tychnhchnh_99bdd7'),
-          icon: Icons.palette_rounded,
-          color: const Color(0xFF2A73D9),
-        ),
-        FirstSetupSpotlightStep(
           targetKey: _widgetGuideKey,
           title: L10nService().translate('home_widgetmnhn_e51604'),
           description: L10nService().translate('home_thitlpwidg_da3a5c'),
@@ -908,6 +910,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    AppAppearanceScope.watch(context);
     if (_isCheckingSecurityLock) {
       return const Stack(
         fit: StackFit.expand,

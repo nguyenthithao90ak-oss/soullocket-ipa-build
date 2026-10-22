@@ -10,6 +10,28 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'couple_call_signaling.dart';
 import 'call_setup_failure.dart';
+import 'call_media_session.dart';
+
+/// Tách stream trước khi giải phóng renderer, kể cả khi chưa khởi tạo xong.
+/// Lỗi Surface chưa từng nhận frame được vá riêng trong Android build.
+Future<void> disposeVideoRendererSafely(RTCVideoRenderer renderer) async {
+  try {
+    if (kIsWeb || renderer.textureId != null) {
+      await renderer.setSrcObject(stream: null);
+    }
+  } catch (error) {
+    debugPrint(
+      'WebRTC renderer detach skipped: ${AppErrorMapper.resolve(error).message}',
+    );
+  }
+  try {
+    await renderer.dispose();
+  } catch (error) {
+    debugPrint(
+      'WebRTC renderer dispose failed: ${AppErrorMapper.resolve(error).message}',
+    );
+  }
+}
 
 /// ============================================================
 ///  WebRTCService — Gra (Logic/Data)
@@ -34,6 +56,9 @@ class WebRTCService {
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
   MediaStream? _remoteStream;
+  CallMediaSession? _mediaSession;
+  CallMediaSession? get mediaSession => _mediaSession;
+  MediaStream? get localStream => _localStream;
 
   final FirebaseDatabase _db;
   final FirebaseAuth _auth;
@@ -43,8 +68,28 @@ class WebRTCService {
   RtcCandidateQueue<RTCIceCandidate>? _remoteCandidates;
   RtcCandidateQueue<RTCIceCandidate>? _localCandidates;
   int _session = 0;
+  bool _callReserved = false;
+  bool _openingMedia = false;
+  Future<void>? _hangUpOperation;
   final connectionState = ValueNotifier<RTCPeerConnectionState?>(null);
-  bool get isBusy => _localStream != null || _peerConnection != null;
+  bool get isBusy =>
+      _localStream != null ||
+      _peerConnection != null ||
+      _callReserved ||
+      _openingMedia ||
+      _hangUpOperation != null;
+
+  /// Giữ chỗ ngay khi mở màn gọi, trước hộp thoại quyền micro/camera.
+  void reserveCall() {
+    if (isBusy) throw const CallSetupFailure('setup', 'busy');
+    _callReserved = true;
+  }
+
+  void _checkSession(int session) {
+    if (session != _session) {
+      throw const CallSetupFailure('setup', 'cancelled');
+    }
+  }
 
   // ⚡ Lưu StreamSubscription để cancel khi hangUp, tránh listener leak
   StreamSubscription<DatabaseEvent>? _answerSub;
@@ -55,22 +100,20 @@ class WebRTCService {
   final Map<String, dynamic> _fallbackConfiguration = {
     'iceServers': [
       {
-        'urls': [
-          'stun:stun.l.google.com:19302',
-          'stun:stun1.l.google.com:19302',
-          'stun:stun2.l.google.com:19302',
-          'stun:stun3.l.google.com:19302',
-          'stun:stun4.l.google.com:19302',
-        ],
+        // Chỉ giữ một endpoint dự phòng. Năm alias tạo các lỗi UDP trùng nhau
+        // trên emulator hoặc mạng chặn STUN; production có thể cấp TURN/STUN
+        // qua appConfig/webrtc/iceServers hoặc dart-define.
+        'urls': 'stun:stun.l.google.com:19302',
       },
     ],
   };
 
   Future<Map<String, dynamic>> _loadRtcConfiguration() async {
-    final iceServers = <Map<String, dynamic>>[
+    final fallbackServers = <Map<String, dynamic>>[
       ...(_fallbackConfiguration['iceServers'] as List)
           .cast<Map<String, dynamic>>(),
     ];
+    final configuredServers = <Map<String, dynamic>>[];
     final turnUrl = const String.fromEnvironment('WEBRTC_TURN_URL').trim();
     final turnUsername = const String.fromEnvironment(
       'WEBRTC_TURN_USERNAME',
@@ -86,7 +129,7 @@ class WebRTCService {
       if (turnCredential.isNotEmpty) {
         turnServer['credential'] = turnCredential;
       }
-      iceServers.add(turnServer);
+      configuredServers.add(turnServer);
     }
     try {
       final snap = await _db
@@ -97,20 +140,29 @@ class WebRTCService {
       final servers = RtcIceServers.parse(raw);
       if (servers.isNotEmpty) {
         return {
-          'iceServers': [...servers, ...iceServers],
+          // Danh sách phía server thay thế các alias dự phòng. TURN được cấp
+          // rõ bằng dart-define vẫn được giữ như relay bổ sung.
+          'iceServers': [...servers, ...configuredServers],
         };
       }
     } catch (e) {
+      // Không che lỗi quyền/config; chỉ log mã, tuyệt đối không log TURN secret.
       debugPrint(
-        'Failed to load WebRTC ICE servers: ${AppErrorMapper.resolve(e).message}',
+        'WebRTC ICE config fallback: ${CallSetupFailure.from(e, 'ice_config')}; '
+        'turnConfigured=${configuredServers.isNotEmpty}',
       );
     }
-    return {'iceServers': iceServers};
+    return {
+      'iceServers': [...fallbackServers, ...configuredServers],
+    };
   }
 
   /// Bật Camera và Mic
   Future<MediaStream> openUserMedia({bool includeVideo = true}) async {
+    final pendingHangUp = _hangUpOperation;
+    if (pendingHangUp != null) await pendingHangUp;
     final session = _session;
+    _openingMedia = true;
     final Map<String, dynamic> mediaConstraints = {
       'audio': true,
       'video': includeVideo
@@ -126,10 +178,15 @@ class WebRTCService {
           : false,
     };
 
-    final stream = await runCallSetupStep(
-      'media',
-      () => navigator.mediaDevices.getUserMedia(mediaConstraints),
-    );
+    late final MediaStream stream;
+    try {
+      stream = await runCallSetupStep(
+        'media',
+        () => navigator.mediaDevices.getUserMedia(mediaConstraints),
+      );
+    } finally {
+      if (session == _session) _openingMedia = false;
+    }
     if (session != _session) {
       for (final track in stream.getTracks()) {
         await track.stop();
@@ -157,6 +214,8 @@ class WebRTCService {
     bool isVideo = true,
     String callerName = '',
   }) async {
+    final pendingHangUp = _hangUpOperation;
+    if (pendingHangUp != null) await pendingHangUp;
     final session = _session;
     final user = _auth.currentUser;
     if (user == null) throw const UiCopyException('copy_3bbf8095e7db');
@@ -168,14 +227,24 @@ class WebRTCService {
           preferredHouseId: callerHouseId,
         ) ??
         resolvedTargetHouseId;
-
-    final peer = await createPeerConnection(await _loadRtcConfiguration());
+    _checkSession(session);
+    final configuration = await _loadRtcConfiguration();
+    _checkSession(session);
+    final peer = await createPeerConnection(configuration);
     if (session != _session) {
       await peer.dispose();
       throw StateError(UiCopy.text('copy_f68819406a61'));
     }
     _peerConnection = peer;
     _onPeerCreated?.call(peer);
+    final media = CallMediaSession();
+    _mediaSession = media;
+    media.bind(
+      peer,
+      _localStream!,
+      isCurrent: () => session == _session && _peerConnection == peer,
+      initialRemoteVideo: isVideo,
+    );
     peer.onConnectionState = (state) {
       if (_peerConnection == peer) connectionState.value = state;
     };
@@ -183,8 +252,10 @@ class WebRTCService {
     _remoteCandidates = remoteCandidates;
 
     // Gắn local stream vào peer connection
-    for (final track in _localStream?.getTracks() ?? <MediaStreamTrack>[]) {
-      await peer.addTrack(track, _localStream!);
+    final local = _localStream;
+    for (final track in local?.getTracks() ?? <MediaStreamTrack>[]) {
+      await peer.addTrack(track, local!);
+      _checkSession(session);
     }
 
     _peerConnection?.onTrack = (RTCTrackEvent event) {
@@ -192,7 +263,13 @@ class WebRTCService {
       final stream = event.streams.isNotEmpty ? event.streams.first : null;
       if (stream == null) return;
       _remoteStream = stream;
-      remoteRenderer.srcObject = stream;
+      if (kIsWeb || remoteRenderer.textureId != null) {
+        unawaited(
+          remoteRenderer
+              .setSrcObject(stream: stream)
+              .catchError(_logSignalingError),
+        );
+      }
     };
 
     // Firebase refs
@@ -214,7 +291,10 @@ class WebRTCService {
     );
 
     // Tạo Offer cho B
+    await media.prepareOffer();
+    _checkSession(session);
     final offer = await peer.createOffer().timeout(const Duration(seconds: 12));
+    _checkSession(session);
     await peer.setLocalDescription(offer).timeout(const Duration(seconds: 12));
     if (session != _session || _auth.currentUser?.uid != user.uid) {
       throw StateError(UiCopy.text('copy_54e3d751d003'));
@@ -283,14 +363,21 @@ class WebRTCService {
             'callerName': callerName.trim(),
             'isVideo': isVideo.toString(),
           },
+          // Giữ mã lỗi gốc để phân biệt quota, payload cũ và App Check trong
+          // log debug; lỗi thông báo không được làm hỏng lời mời RTDB.
+          throwOriginalException: true,
         );
       } catch (error) {
+        final mapped = AppErrorMapper.resolve(error);
         debugPrint(
-          'WebRTC call notification skipped: ${AppErrorMapper.resolve(error).message}',
+          'WebRTC call notification skipped: ${mapped.message}; '
+          'type=${error.runtimeType}; raw=${error.toString()}',
         );
       }
     }
 
+    // Không để setup cũ gỡ listener của cuộc gọi mới sau khi chờ thông báo.
+    _checkSession(session);
     // Lắng nghe Answer từ B
     _cancelRoomSubscriptions();
     _answerSub = roomRef
@@ -379,6 +466,8 @@ class WebRTCService {
 
   /// Người B: Tham gia phòng (Bắt máy người A)
   Future<void> joinRoom(String roomId, RTCVideoRenderer remoteRenderer) async {
+    final pendingHangUp = _hangUpOperation;
+    if (pendingHangUp != null) await pendingHangUp;
     final session = _session;
     final roomRef = _db.ref('calls/$roomId');
     final roomSnap = await roomRef.get().timeout(const Duration(seconds: 8));
@@ -394,21 +483,33 @@ class WebRTCService {
       _coupleHouseId = data['houseId']?.toString();
     }
 
-    final peer = await createPeerConnection(await _loadRtcConfiguration());
+    final configuration = await _loadRtcConfiguration();
+    _checkSession(session);
+    final peer = await createPeerConnection(configuration);
     if (session != _session) {
       await peer.dispose();
       throw StateError(UiCopy.text('copy_f68819406a61'));
     }
     _peerConnection = peer;
     _onPeerCreated?.call(peer);
+    final media = CallMediaSession();
+    _mediaSession = media;
+    media.bind(
+      peer,
+      _localStream!,
+      isCurrent: () => session == _session && _peerConnection == peer,
+      initialRemoteVideo: data['isVideo'] == true,
+    );
     peer.onConnectionState = (state) {
       if (_peerConnection == peer) connectionState.value = state;
     };
     final remoteCandidates = RtcCandidateQueue(peer.addCandidate);
     _remoteCandidates = remoteCandidates;
 
-    for (final track in _localStream?.getTracks() ?? <MediaStreamTrack>[]) {
-      await peer.addTrack(track, _localStream!);
+    final local = _localStream;
+    for (final track in local?.getTracks() ?? <MediaStreamTrack>[]) {
+      await peer.addTrack(track, local!);
+      _checkSession(session);
     }
 
     _peerConnection?.onTrack = (RTCTrackEvent event) {
@@ -416,11 +517,18 @@ class WebRTCService {
       final stream = event.streams.isNotEmpty ? event.streams.first : null;
       if (stream == null) return;
       _remoteStream = stream;
-      remoteRenderer.srcObject = stream;
+      if (kIsWeb || remoteRenderer.textureId != null) {
+        unawaited(
+          remoteRenderer
+              .setSrcObject(stream: stream)
+              .catchError(_logSignalingError),
+        );
+      }
     };
 
     final calleeCandidatesRef = roomRef.child('calleeCandidates');
     _peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
+      if (_peerConnection != peer || session != _session) return;
       unawaited(
         calleeCandidatesRef
             .push()
@@ -434,11 +542,16 @@ class WebRTCService {
 
     final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
     await peer.setRemoteDescription(offer).timeout(const Duration(seconds: 12));
+    _checkSession(session);
+    await media.prepareAnswer();
+    _checkSession(session);
     await remoteCandidates.markReady();
+    _checkSession(session);
 
     final answer = await peer.createAnswer().timeout(
       const Duration(seconds: 12),
     );
+    _checkSession(session);
     await peer.setLocalDescription(answer).timeout(const Duration(seconds: 12));
 
     if (session != _session) throw StateError(UiCopy.text('copy_f68819406a61'));
@@ -503,13 +616,36 @@ class WebRTCService {
   }
 
   /// Cúp máy và dọn dẹp
-  Future<void> hangUp() async {
+  Future<void> hangUp({Future<void> Function()? beforeMediaRelease}) async {
+    final pending = _hangUpOperation;
+    if (pending != null) {
+      await pending;
+      return;
+    }
+    final operation = _hangUpInternal(beforeMediaRelease);
+    _hangUpOperation = operation;
+    try {
+      await operation;
+    } finally {
+      if (identical(_hangUpOperation, operation)) {
+        _hangUpOperation = null;
+      }
+    }
+  }
+
+  Future<void> _hangUpInternal(
+    Future<void> Function()? beforeMediaRelease,
+  ) async {
     _session++;
+    _callReserved = false;
+    _openingMedia = false;
     final endedRoomId = _roomId;
     final coupleHouseId = _coupleHouseId;
     final local = _localStream;
     final remote = _remoteStream;
     final peer = _peerConnection;
+    final media = _mediaSession;
+    _mediaSession = null;
     _roomId = null;
     _coupleHouseId = null;
     _localStream = null;
@@ -521,9 +657,25 @@ class WebRTCService {
     _localCandidates = null;
     connectionState.value = null;
     _cancelRoomSubscriptions();
+    // Phiên đã bị vô hiệu hóa đồng bộ; mọi setup/onTrack tới muộn bị bỏ qua.
+    // Tách renderer trước khi đóng media, tránh track đã dispose còn gắn vào UI.
+    if (beforeMediaRelease != null) {
+      try {
+        await beforeMediaRelease();
+      } catch (error) {
+        _logSignalingError(error);
+      }
+    }
     // Luôn nhả micro/camera dù ghi trạng thái lên mạng thất bại.
-    local?.getTracks().forEach((track) => track.stop());
+    for (final track in local?.getTracks() ?? <MediaStreamTrack>[]) {
+      try {
+        await track.stop().timeout(const Duration(seconds: 5));
+      } catch (error) {
+        _logSignalingError(error);
+      }
+    }
     for (final release in <Future<void> Function()>[
+      if (media != null) media.close,
       if (peer != null) peer.close,
       if (peer != null) peer.dispose,
       if (local != null) local.dispose,

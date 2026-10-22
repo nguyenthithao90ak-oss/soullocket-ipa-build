@@ -1,5 +1,8 @@
 import Flutter
 import UIKit
+import Photos
+import PhotosUI
+import UniformTypeIdentifiers
 import workmanager_apple
 #if canImport(ActivityKit)
 import ActivityKit
@@ -12,6 +15,8 @@ import ActivityKit
   private let appIconChannelName = "soullocket/app_icon"
   private let deviceInfoChannelName = "soul_locket/device_info"
   private let attPrePromptChannelName = "soullocket/att_pre_prompt"
+  private var callCameraEffectsBridge: CallCameraEffectsBridge?
+  private var memoryMediaPicker: NSObject?
 
   override func application(
     _ application: UIApplication,
@@ -28,6 +33,43 @@ import ActivityKit
     }
 
     if let controller = window?.rootViewController as? FlutterViewController {
+      callCameraEffectsBridge = CallCameraEffectsBridge(messenger: controller.binaryMessenger)
+      let memoryChannel = FlutterMethodChannel(
+        name: "soullocket/memory_media_picker",
+        binaryMessenger: controller.binaryMessenger
+      )
+      memoryChannel.setMethodCallHandler { [weak self] call, result in
+        guard call.method == "pickMemoryMedia" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        guard let self = self, let root = self.window?.rootViewController else {
+          result(FlutterError(code: "picker_unavailable", message: nil, details: nil))
+          return
+        }
+        guard self.memoryMediaPicker == nil else {
+          result(FlutterError(code: "picker_busy", message: nil, details: nil))
+          return
+        }
+        if #available(iOS 14.0, *) {
+          let args = call.arguments as? [String: Any] ?? [:]
+          var presenter = root
+          while let presented = presenter.presentedViewController {
+            presenter = presented
+          }
+          let picker = MemoryMediaPickerCoordinator(
+            limit: min(999, max(1, args["limit"] as? Int ?? 99)),
+            preserveOriginal: args["preserveOriginal"] as? Bool ?? true
+          ) { [weak self] value in
+            self?.memoryMediaPicker = nil
+            result(value)
+          }
+          self.memoryMediaPicker = picker
+          picker.present(from: presenter)
+        } else {
+          result(FlutterError(code: "unsupported", message: nil, details: nil))
+        }
+      }
       let channel = FlutterMethodChannel(
         name: widgetBridgeChannelName,
         binaryMessenger: controller.binaryMessenger
@@ -503,6 +545,131 @@ import ActivityKit
       )
     )
     #endif
+  }
+}
+
+// PHPicker chỉ cung cấp các mục người dùng chọn; không cần đọc toàn thư viện ảnh.
+@available(iOS 14.0, *)
+private final class MemoryMediaPickerCoordinator: NSObject, PHPickerViewControllerDelegate {
+  private let limit: Int
+  private let preserveOriginal: Bool
+  private let completion: FlutterResult
+  private var finished = false
+  private var temporaryURLs: [URL] = []
+
+  init(limit: Int, preserveOriginal: Bool, completion: @escaping FlutterResult) {
+    self.limit = limit
+    self.preserveOriginal = preserveOriginal
+    self.completion = completion
+    super.init()
+  }
+
+  func present(from presenter: UIViewController) {
+    var configuration = PHPickerConfiguration()
+    configuration.selectionLimit = limit
+    configuration.filter = .any(of: [.images, .videos, .livePhotos])
+    configuration.preferredAssetRepresentationMode = preserveOriginal ? .current : .compatible
+    let picker = PHPickerViewController(configuration: configuration)
+    picker.delegate = self
+    // Giữ callback hủy ở nút Cancel, tránh sheet bị vuốt tắt mà không trả result.
+    picker.isModalInPresentation = true
+    presenter.present(picker, animated: true)
+  }
+
+  func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+    picker.dismiss(animated: true) {
+      self.load(results: Array(results.prefix(self.limit)), index: 0, entries: [])
+    }
+  }
+
+  private func load(results: [PHPickerResult], index: Int, entries: [[String: String]]) {
+    guard !finished else { return }
+    guard index < results.count else {
+      finish(entries)
+      return
+    }
+    // Xuất tuần tự để không giữ hàng chục Live Photo/video trong RAM cùng lúc.
+    export(provider: results[index].itemProvider) { entry in
+      DispatchQueue.main.async {
+        guard !self.finished else { return }
+        guard let entry = entry else {
+          for url in self.temporaryURLs { try? FileManager.default.removeItem(at: url) }
+          self.finish(FlutterError(code: "media_export_failed", message: nil, details: nil))
+          return
+        }
+        self.load(results: results, index: index + 1, entries: entries + [entry])
+      }
+    }
+  }
+
+  private func export(provider: NSItemProvider, completion: @escaping ([String: String]?) -> Void) {
+    if provider.canLoadObject(ofClass: PHLivePhoto.self) {
+      provider.loadObject(ofClass: PHLivePhoto.self) { object, error in
+        guard error == nil, let livePhoto = object as? PHLivePhoto else {
+          completion(nil)
+          return
+        }
+        let resources = PHAssetResource.assetResources(for: livePhoto)
+        guard let motion = resources.first(where: { $0.type == .fullSizePairedVideo })
+          ?? resources.first(where: { $0.type == .pairedVideo }) else {
+          completion(nil)
+          return
+        }
+        let name = "live_photo_\(UUID().uuidString).mov"
+        let target = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = true
+        PHAssetResourceManager.default().writeData(for: motion, toFile: target, options: options) { [livePhoto] error in
+          // Giữ Live Photo sống tới khi xuất xong các resource của nó.
+          _ = livePhoto
+          DispatchQueue.main.async {
+            self.temporaryURLs.append(target)
+            completion(error == nil ? ["path": target.path, "name": name,
+              "mimeType": "video/quicktime", "kind": "live_photo"] : nil)
+          }
+        }
+      }
+      return
+    }
+    let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
+    let category = isVideo ? UTType.movie : UTType.image
+    guard let identifier = provider.registeredTypeIdentifiers.first(where: {
+      UTType($0)?.conforms(to: category) == true
+    }) else {
+      completion(nil)
+      return
+    }
+    provider.loadFileRepresentation(forTypeIdentifier: identifier) { source, error in
+      guard error == nil, let source = source else {
+        completion(nil)
+        return
+      }
+      let type = UTType(identifier)
+      let ext = source.pathExtension.isEmpty
+        ? (type?.preferredFilenameExtension ?? (isVideo ? "mov" : "jpg"))
+        : source.pathExtension
+      let name = "memory_\(UUID().uuidString).\(ext)"
+      let target = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+      // URL nguồn hết hiệu lực khi callback kết thúc: phải copy ngay trong callback.
+      do {
+        try FileManager.default.copyItem(at: source, to: target)
+        DispatchQueue.main.async {
+          self.temporaryURLs.append(target)
+          completion(["path": target.path, "name": name,
+            "mimeType": UTType(filenameExtension: ext)?.preferredMIMEType
+              ?? type?.preferredMIMEType ?? (isVideo ? "video/quicktime" : "image/jpeg"),
+            "kind": isVideo ? "video" : "image"])
+        }
+      } catch {
+        completion(nil)
+      }
+    }
+  }
+
+  private func finish(_ value: Any) {
+    guard !finished else { return }
+    finished = true
+    completion(value)
   }
 }
 

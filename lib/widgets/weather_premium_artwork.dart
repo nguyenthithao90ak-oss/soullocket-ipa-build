@@ -17,9 +17,11 @@ abstract final class WeatherBackgroundDesign {
       Color(0xFFDCEDED),
     ],
     WeatherBackgroundState.sunny: [
-      Color(0xFFFFC96B),
-      Color(0xFFFFF0C9),
-      Color(0xFFF5CBDD),
+      // Nắng theo kiểu pastel đào/kem để không phủ một mảng vàng gắt lên
+      // ảnh đại diện và chữ trong khối đôi.
+      Color(0xFFF7DED5),
+      Color(0xFFFFF3E5),
+      Color(0xFFF4E0ED),
     ],
     WeatherBackgroundState.cloudy: [
       Color(0xFFB5CBE0),
@@ -126,14 +128,26 @@ class WeatherPremiumPainter extends CustomPainter {
     final palette = WeatherBackgroundDesign.palettes[state]!;
 
     // Lớp màu khí quyển giúp nền có chiều sâu ngay cả khi card rất nhỏ.
+    // Nền nắng nhẹ hơn các trạng thái khác để artwork không lấn át nội dung.
+    final atmosphere = state == WeatherBackgroundState.sunny
+        ? (dark ? .34 : .52)
+        : (dark ? .58 : .72);
     canvas.drawRect(
       rect,
       Paint()
         ..shader = LinearGradient(
           colors: [
-            palette[0].withValues(alpha: dark ? .58 : .72),
-            palette[1].withValues(alpha: dark ? .42 : .52),
-            palette[2].withValues(alpha: dark ? .64 : .68),
+            palette[0].withValues(alpha: atmosphere),
+            palette[1].withValues(
+              alpha: state == WeatherBackgroundState.sunny
+                  ? (dark ? .26 : .40)
+                  : (dark ? .42 : .52),
+            ),
+            palette[2].withValues(
+              alpha: state == WeatherBackgroundState.sunny
+                  ? (dark ? .38 : .50)
+                  : (dark ? .64 : .68),
+            ),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -203,7 +217,7 @@ class WeatherPremiumPainter extends CustomPainter {
   }
 
   Color _accent(WeatherBackgroundState state) => switch (state) {
-    WeatherBackgroundState.sunny => const Color(0xFFFFB946),
+    WeatherBackgroundState.sunny => const Color(0xFFE9A28F),
     WeatherBackgroundState.cloudy => const Color(0xFFEDF5FF),
     WeatherBackgroundState.rain => const Color(0xFF6B9FD2),
     WeatherBackgroundState.lightning => const Color(0xFFFFD36D),
@@ -212,45 +226,58 @@ class WeatherPremiumPainter extends CustomPainter {
   };
 
   void _sun(Canvas canvas, Offset center, double u) {
-    final glowRect = Rect.fromCircle(center: center, radius: 34 * u);
+    // Mặt trời nhỏ, nét mảnh và màu đào để giữ cảm giác nắng mà không biến
+    // toàn bộ nửa thẻ thành một khối vàng chói.
+    final glowRadius = 27 * u;
+    final glowRect = Rect.fromCircle(center: center, radius: glowRadius);
     canvas.drawCircle(
       center,
-      34 * u,
+      glowRadius,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFFFF4BD).withValues(alpha: .72),
-            const Color(0xFFFFCF67).withValues(alpha: .24),
+            const Color(0xFFFFE8C9).withValues(alpha: .62),
+            const Color(0xFFFFC4A9).withValues(alpha: .18),
             Colors.transparent,
           ],
         ).createShader(glowRect),
     );
     final rays = Paint()
-      ..color = const Color(0xFFFFC45C).withValues(alpha: .66)
-      ..strokeWidth = 2.2 * u
+      ..color = const Color(0xFFE8A09C).withValues(alpha: .50)
+      ..strokeWidth = 1.45 * u
       ..strokeCap = StrokeCap.round;
-    for (var i = 0; i < 12; i++) {
-      final angle = i * math.pi / 6 + (alternate ? .10 : 0);
+    for (var i = 0; i < 10; i++) {
+      final angle = i * math.pi / 5 + (alternate ? .10 : 0);
       final direction = Offset(math.cos(angle), math.sin(angle));
       canvas.drawLine(
-        center + direction * (22 * u),
-        center + direction * (31 * u),
+        center + direction * (17 * u),
+        center + direction * (24 * u),
         rays,
       );
     }
     canvas.drawCircle(
       center,
-      16 * u,
+      11 * u,
       Paint()
         ..shader = const RadialGradient(
-          colors: [Color(0xFFFFF1A8), Color(0xFFF5B948)],
-        ).createShader(glowRect),
+          colors: [Color(0xFFFFF0D0), Color(0xFFF4B28E)],
+        ).createShader(Rect.fromCircle(center: center, radius: 11 * u)),
     );
     canvas.drawCircle(
-      center.translate(-4 * u, -5 * u),
-      4 * u,
+      center.translate(-3 * u, -3 * u),
+      2.8 * u,
       Paint()..color = Colors.white.withValues(alpha: .28),
     );
+    for (final point in [
+      center.translate(31 * u, -8 * u),
+      center.translate(-28 * u, 20 * u),
+    ]) {
+      canvas.drawCircle(
+        point,
+        1.8 * u,
+        Paint()..color = const Color(0xFFE8A09C).withValues(alpha: .42),
+      );
+    }
   }
 
   void _cloud(

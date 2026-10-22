@@ -6,6 +6,9 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
     BuildContext context,
     _CountdownModeThemeData themeData,
   ) {
+    final palette = SLSettingsPalette.resolve(
+      Theme.of(context).brightness == Brightness.dark,
+    );
     return [
       _sectionCard(
         icon: Icons.palette_rounded,
@@ -20,7 +23,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF8A5B76),
+                color: palette.inkSecondary,
               ),
             ),
             const SizedBox(height: 10),
@@ -61,14 +64,14 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
             DropdownButtonFormField<String>(
               initialValue: _fontKey,
               isExpanded: true,
-              dropdownColor: AppearancePanelStyle.paper,
-              iconEnabledColor: AppearancePanelStyle.rose,
+              dropdownColor: palette.surface,
+              iconEnabledColor: palette.accent,
               decoration: _fieldDecoration(
                 label: context.tr('home_phngch_9b3aa7'),
                 dark: false,
               ),
               style: SLTheme.quicksand(
-                color: AppearancePanelStyle.ink,
+                color: palette.ink,
                 fontWeight: FontWeight.w800,
               ),
               items: SLTheme.cleanFontOptions
@@ -79,7 +82,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                         font.label,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          color: AppearancePanelStyle.ink,
+                          color: palette.ink,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -96,13 +99,13 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
             SwitchListTile.adaptive(
               value: _transparentMode,
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: SLSettingsColors.accentStrong,
+              activeThumbColor: palette.accent,
               title: Text(
                 context.tr('home_knhm_33b8ab'),
                 style: SLTheme.quicksand(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF243041),
+                  color: palette.ink,
                 ),
               ),
               subtitle: Text(
@@ -110,7 +113,7 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                 style: SLTheme.quicksand(
                   fontSize: 11.8,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF7C6D76),
+                  color: palette.inkSecondary,
                 ),
               ),
               onChanged: (value) =>
@@ -129,14 +132,14 @@ extension BackgroundEditorExt on _CountdownModeEditorScreenState {
                       style: SLTheme.quicksand(
                         fontSize: 12.8,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF8A5B76),
+                        color: palette.inkSecondary,
                       ),
                     ),
                     Slider(
                       min: 200,
                       max: UiPrefs.maxCountdownSizePx,
-                      activeColor: SLSettingsColors.accentStrong,
-                      inactiveColor: const Color(0xFFF2C3D7),
+                      activeColor: palette.accent,
+                      inactiveColor: palette.border,
                       value: _sizePx.clamp(200.0, UiPrefs.maxCountdownSizePx),
                       onChanged: (value) {
                         _safeSetState(() {

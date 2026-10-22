@@ -1988,10 +1988,12 @@ class DiaryMemoryController extends ChangeNotifier {
       final selected =
           presetImages ??
           (canUploadVideo
-              ? await _storageService.pickMedia(
+              ? await (AppConfig.privateMemoryUploadEnabled
+                  ? _storageService.pickMemoryMedia(
                   limit: limitToPick,
                   preserveOriginal: true,
                 )
+                  : _storageService.pickMedia(limit: limitToPick, preserveOriginal: true))
               : await _storageService.pickImages(
                   limit: limitToPick,
                   preserveOriginal: true,
@@ -2130,6 +2132,8 @@ class DiaryMemoryController extends ChangeNotifier {
         for (final image in images) {
           if (!scopeIsCurrent()) break;
           final path = image.path.trim();
+          final isLivePhoto = _stagedUploads[path]?['isLivePhoto'] == true ||
+              StorageService.isLivePhotoFile(image);
           try {
             var staged = _stagedUploads[path];
             if (AppConfig.privateMemoryUploadEnabled) {
@@ -2145,7 +2149,7 @@ class DiaryMemoryController extends ChangeNotifier {
                   16,
                   (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
                 ).join();
-                staged = {'privateRequestId': requestId};
+                staged = {'privateRequestId': requestId, if (isLivePhoto) 'isLivePhoto': true};
                 _stagedUploads[path] = staged;
                 requestIsFresh = true;
               }
@@ -2165,6 +2169,7 @@ class DiaryMemoryController extends ChangeNotifier {
                 minWidth: AppConfig.diaryImageTargetDimension,
                 minHeight: AppConfig.diaryImageTargetDimension,
                 requestIsFresh: requestIsFresh,
+                isLivePhoto: isLivePhoto,
                 scopeIsCurrent: scopeIsCurrent,
                 latitude: position?.latitude,
                 longitude: position?.longitude,
@@ -2186,6 +2191,7 @@ class DiaryMemoryController extends ChangeNotifier {
             if (staged?['privateRequestId'] != null) {
               throw StateError('Private upload cannot use legacy commit');
             }
+            if (isLivePhoto) throw StateError('Live Photo requires private upload');
             if (staged == null) {
               final result = await _uploadSingleMemoryPhoto(
                 houseId: houseId,

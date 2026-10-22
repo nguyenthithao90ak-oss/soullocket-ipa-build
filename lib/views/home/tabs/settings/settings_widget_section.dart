@@ -330,62 +330,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   const SizedBox(height: 14),
                   const Divider(height: 1, color: SLSettingsColors.divider),
                   const SizedBox(height: 14),
-                  if (_widgetPanelTabKey != 'countdown')
-                    WidgetContentToggle(
-                      icon: Icons.photo_library_outlined,
-                      title: context.tr('widget_show_diary_photos'),
-                      subtitle: context.tr('widget_diary_content_hint'),
-                      value: _showDiaryOnWidget,
-                      accent: SLSettingsColors.violet,
-                      onChanged: _handleWidgetDiaryVisibilityChanged,
-                    ),
-                  if (_showDiaryOnWidget &&
-                      _widgetPanelTabKey != 'countdown') ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      context.tr('widget_photo_layout'),
-                      style: SLSettingsText.title(SLSettingsColors.ink),
-                    ),
-                    const SizedBox(height: 6),
-                    WidgetPhotoLayoutPicker(
-                      selectedKey: _widgetDiaryLayoutKey,
-                      labels: {
-                        for (final item in config.diaryLayoutOptions)
-                          item.$2: item.$1,
-                      },
-                      onChanged: (key) => unawaited(
-                        _updateWidgetAppearanceDraft(
-                          () => _widgetDiaryLayoutKey = key,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.tr('widget_photo_frame'),
-                      style: SLSettingsText.title(SLSettingsColors.ink),
-                    ),
-                    const SizedBox(height: 6),
-                    WidgetPhotoFramePicker(
-                      selectedKey: _widgetPhotoFrameKey,
-                      labels: {
-                        for (final key in WidgetAppearance.photoFrameKeys)
-                          key: context.tr('widget_frame_$key'),
-                      },
-                      onChanged: (key) => unawaited(
-                        _updateWidgetAppearanceDraft(
-                          () => _widgetPhotoFrameKey = key,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.tr('widget_photo_sync_hint'),
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        color: SLSettingsColors.inkSecondary,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -398,6 +342,77 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               subtitle: context.tr('widget_sticker_choice_hint'),
               iconGradient: const [SLSettingsColors.violet],
               child: _buildWidgetStickerPicker(),
+            ),
+          ],
+          if (selectedTemplate.usesCoupleStyle) ...[
+            const SizedBox(height: 14),
+            _buildWidgetSectionCard(
+              icon: Icons.photo_library_outlined,
+              title: context.tr('widget_show_diary_photos'),
+              subtitle: context.tr('widget_photo_sync_hint'),
+              iconGradient: const [SLSettingsColors.sky],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WidgetContentToggle(
+                    icon: Icons.photo_outlined,
+                    title: context.tr('widget_show_diary_photos'),
+                    subtitle: context.tr('widget_diary_content_hint'),
+                    value: _showDiaryOnWidget,
+                    accent: SLSettingsColors.sky,
+                    onChanged: (value) => unawaited(
+                      _handleWidgetDiaryVisibilityChanged(value),
+                    ),
+                  ),
+                  if (_showDiaryOnWidget) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      context.tr('widget_photo_layout'),
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: SLSettingsColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    WidgetPhotoLayoutPicker(
+                      selectedKey: _widgetDiaryLayoutKey,
+                      labels: {
+                        for (final option in config.diaryLayoutOptions)
+                          option.$2: option.$1,
+                      },
+                      onChanged: (value) => unawaited(
+                        _updateWidgetAppearanceDraft(
+                          () => _widgetDiaryLayoutKey = value,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      context.tr('widget_photo_frame'),
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: SLSettingsColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    WidgetPhotoFramePicker(
+                      selectedKey: _widgetPhotoFrameKey,
+                      labels: {
+                        'rounded': context.tr('widget_frame_rounded'),
+                        'heart': context.tr('widget_frame_heart'),
+                        'polaroid': context.tr('widget_frame_polaroid'),
+                      },
+                      onChanged: (value) => unawaited(
+                        _updateWidgetAppearanceDraft(
+                          () => _widgetPhotoFrameKey = value,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
           if (_widgetPanelTabKey == 'countdown') ...[

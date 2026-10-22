@@ -160,7 +160,7 @@ class RegisterForm extends StatelessWidget {
             label: l10n.translate('auth_social_register_divider'),
           ),
           const SizedBox(height: 14),
-          SocialAuthButtons(onProviderTap: onSocialLogin),
+          SocialAuthButtons(onProviderTap: onSocialLogin, enabled: !isLoading),
           const SizedBox(height: 12),
           AuthPrivacyNote(text: l10n.translate('auth_social_register_notice')),
         ],

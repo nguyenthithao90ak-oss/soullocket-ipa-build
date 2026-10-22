@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/sl_theme.dart';
+import 'sl_settings_kit.dart';
 
 enum SLDialogTone { neutral, success, warning, danger, info }
 
@@ -38,32 +39,35 @@ class SLDialogStyle {
     SLDialogTone.neutral => Icons.help_outline_rounded,
   };
 
-  static DialogThemeData theme(TextTheme textTheme) => DialogThemeData(
-    backgroundColor: surface,
-    surfaceTintColor: Colors.transparent,
-    barrierColor: barrier,
-    elevation: 8,
-    shadowColor: const Color(0x2643322D),
-    constraints: const BoxConstraints(maxWidth: maxWidth),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24),
-      side: const BorderSide(color: border),
-    ),
-    titleTextStyle: textTheme.titleLarge?.copyWith(
-      color: SLColors.ink,
-      fontSize: 21,
-      fontWeight: FontWeight.w800,
-      height: 1.3,
-      letterSpacing: -0.3,
-    ),
-    contentTextStyle: textTheme.bodyMedium?.copyWith(
-      color: secondary,
-      fontSize: 15,
-      fontWeight: FontWeight.w500,
-      height: 1.55,
-    ),
-    actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-  );
+  static DialogThemeData theme(TextTheme textTheme, {bool isDark = false}) {
+    final palette = SLSettingsPalette.resolve(isDark);
+    return DialogThemeData(
+      backgroundColor: isDark ? palette.surface : surface,
+      surfaceTintColor: Colors.transparent,
+      barrierColor: isDark ? Colors.black54 : barrier,
+      elevation: 8,
+      shadowColor: const Color(0x2643322D),
+      constraints: const BoxConstraints(maxWidth: maxWidth),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: isDark ? palette.border : border),
+      ),
+      titleTextStyle: textTheme.titleLarge?.copyWith(
+        color: isDark ? palette.ink : SLColors.ink,
+        fontSize: 21,
+        fontWeight: FontWeight.w800,
+        height: 1.3,
+        letterSpacing: -0.3,
+      ),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(
+        color: isDark ? palette.inkSecondary : secondary,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        height: 1.55,
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+    );
+  }
 }
 
 class SLAlertDialog extends AlertDialog {
@@ -97,6 +101,17 @@ class SLAlertDialog extends AlertDialog {
   @override
   Widget build(BuildContext context) {
     final currentTheme = Theme.of(context);
+    if (currentTheme.brightness == Brightness.dark) {
+      return Theme(
+        data: currentTheme.copyWith(
+          dialogTheme: SLDialogStyle.theme(
+            currentTheme.textTheme,
+            isDark: true,
+          ),
+        ),
+        child: Builder(builder: (context) => super.build(context)),
+      );
+    }
     return Theme(
       data: currentTheme.copyWith(
         colorScheme: currentTheme.colorScheme.copyWith(
@@ -170,16 +185,28 @@ class SLDialogAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = destructive ? SLDialogStyle.danger : SLDialogStyle.primary;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final scheme = theme.colorScheme;
+    final accent = isDark
+        ? (destructive ? scheme.error : scheme.primary)
+        : (destructive ? SLDialogStyle.danger : SLDialogStyle.primary);
+    final onAccent = isDark
+        ? (destructive ? scheme.onError : scheme.onPrimary)
+        : SLDialogStyle.surface;
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        foregroundColor: primary ? SLDialogStyle.surface : accent,
-        backgroundColor: primary ? accent : SLDialogStyle.field,
-        disabledForegroundColor: SLDialogStyle.secondary.withValues(
-          alpha: 0.55,
-        ),
-        disabledBackgroundColor: const Color(0xFFEDE5DA),
+        foregroundColor: primary ? onAccent : accent,
+        backgroundColor: primary
+            ? accent
+            : (isDark ? scheme.surfaceContainerHighest : SLDialogStyle.field),
+        disabledForegroundColor:
+            (isDark ? scheme.onSurfaceVariant : SLDialogStyle.secondary)
+                .withValues(alpha: 0.55),
+        disabledBackgroundColor: isDark
+            ? scheme.surfaceContainerHighest
+            : const Color(0xFFEDE5DA),
         minimumSize: const Size(96, 48),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
         textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -191,7 +218,9 @@ class SLDialogAction extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         side: primary
             ? BorderSide.none
-            : const BorderSide(color: SLDialogStyle.border),
+            : BorderSide(
+                color: isDark ? scheme.outlineVariant : SLDialogStyle.border,
+              ),
       ),
       child: icon == null
           ? child
@@ -220,31 +249,44 @@ class SLDialogHeading extends StatelessWidget {
   final IconData? icon;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: SLDialogStyle.iconSurface(tone),
-          borderRadius: BorderRadius.circular(14),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = isDark
+        ? Color.lerp(
+            SLDialogStyle.accent(tone),
+            theme.colorScheme.onSurface,
+            0.5,
+          )!
+        : SLDialogStyle.accent(tone);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: isDark
+                ? accent.withValues(alpha: 0.16)
+                : SLDialogStyle.iconSurface(tone),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            icon ?? SLDialogStyle.icon(tone),
+            size: 25,
+            color: accent,
+          ),
         ),
-        child: Icon(
-          icon ?? SLDialogStyle.icon(tone),
-          size: 25,
-          color: SLDialogStyle.accent(tone),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 7),
+            child: Text(title),
+          ),
         ),
-      ),
-      const SizedBox(width: 14),
-      Expanded(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 7),
-          child: Text(title),
-        ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class SLMessageDialog extends StatefulWidget {

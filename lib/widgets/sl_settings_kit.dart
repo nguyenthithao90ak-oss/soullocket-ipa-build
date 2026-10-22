@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/sl_theme.dart';
+import '../core/app_appearance.dart';
 import '../views/ui_prefs.dart';
 
 /// Bộ token và thành phần dùng chung cho khu Cài đặt.
@@ -144,12 +145,11 @@ class SLSettingsPalette {
   static SLSettingsPalette resolve(bool isDark) => isDark ? dark : light;
 
   /// Theme đêm của SoulLocket được chọn qua UiPrefs, không qua Brightness.
-  static bool get isNightTheme {
-    final key = UiPrefs.notifier.value.themeKey;
-    return key == 'theme-night' ||
-        key == 'theme-dark' ||
-        key == 'theme-true-black';
-  }
+  static bool get isNightTheme =>
+      isNightThemeFor(UiPrefs.notifier.value.themeKey);
+
+  static bool isNightThemeFor(String themeKey, {DateTime? at}) =>
+      AppThemeSelection.isDark(themeKey, at: at);
 
   /// Màu nhấn đã làm dịu cho nền tối để giữ độ tương phản.
   Color tint(Color color) =>
@@ -182,8 +182,8 @@ abstract final class SLSettingsText {
   );
 
   static TextStyle body(Color color) => SLTheme.quicksand(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
     height: 1.45,
     color: color,
   );
@@ -470,63 +470,71 @@ class SLSettingsRow extends StatelessWidget {
       constraints: BoxConstraints(minHeight: hasSubtitle ? 66 : 56),
       child: Padding(
         padding: padding,
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              SLSettingsIconTile(
-                icon: icon!,
-                color: effectiveIconColor,
-                filled: filledIcon,
-                isDark: isDark,
-              ),
-              const SizedBox(width: 14),
-            ],
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: SLSettingsText.title(
-                      destructive ? danger : palette.ink,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final inlineValue =
+                constraints.maxWidth >= 360 &&
+                MediaQuery.textScalerOf(context).scale(14) <= 18;
+            final valueText = hasValue
+                ? Text(value!, style: SLSettingsText.body(palette.inkSecondary))
+                : null;
+            return Row(
+              children: [
+                if (icon != null) ...[
+                  SLSettingsIconTile(
+                    icon: icon!,
+                    color: effectiveIconColor,
+                    filled: filledIcon,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(width: 14),
+                ],
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: SLSettingsText.title(
+                          destructive ? danger : palette.ink,
+                        ),
+                      ),
+                      if (hasSubtitle) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle!,
+                          style: SLSettingsText.caption(palette.inkSecondary),
+                        ),
+                      ],
+                      if (hasValue && !inlineValue) ...[
+                        const SizedBox(height: 4),
+                        valueText!,
+                      ],
+                    ],
+                  ),
+                ),
+                if (hasValue && inlineValue) ...[
+                  const SizedBox(width: 10),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 132),
+                    child: valueText,
+                  ),
+                ],
+                if (trailing != null) ...[const SizedBox(width: 10), trailing!],
+                if (chevron) ...[
+                  const SizedBox(width: 4),
+                  ExcludeSemantics(
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 22,
+                      color: palette.inkTertiary,
                     ),
                   ),
-                  if (hasSubtitle) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle!,
-                      style: SLSettingsText.caption(palette.inkSecondary),
-                    ),
-                  ],
                 ],
-              ),
-            ),
-            if (hasValue) ...[
-              const SizedBox(width: 10),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 132),
-                child: Text(
-                  value!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: SLSettingsText.body(palette.inkTertiary),
-                ),
-              ),
-            ],
-            if (trailing != null) ...[const SizedBox(width: 10), trailing!],
-            if (chevron) ...[
-              const SizedBox(width: 4),
-              ExcludeSemantics(
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  size: 22,
-                  color: palette.inkTertiary,
-                ),
-              ),
-            ],
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -622,11 +630,9 @@ class SLSettingsPill extends StatelessWidget {
           Flexible(
             child: Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: SLTheme.quicksand(
-                fontSize: dense ? 10 : 11.5,
-                fontWeight: FontWeight.w800,
+                fontSize: dense ? 11 : 12,
+                fontWeight: FontWeight.w700,
                 height: 1.25,
                 color: colors.fg,
                 letterSpacing: dense ? 0.3 : 0,
@@ -796,8 +802,6 @@ class SLSettingsButton extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
               fontSize: compact ? 13 : 14,
               fontWeight: FontWeight.w800,

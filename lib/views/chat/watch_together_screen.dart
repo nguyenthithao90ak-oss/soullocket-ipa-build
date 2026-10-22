@@ -70,6 +70,11 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   final ValueNotifier<bool> _isCallingVN = ValueNotifier<bool>(false);
   final ValueNotifier<bool> _micMutedVN = ValueNotifier<bool>(false);
+  Future<void>? _rendererInitialization;
+  Future<void>? _cleanupFuture;
+  bool _voiceCallBusy = false;
+  bool _voiceCallOwned = false;
+  int _voiceCallGeneration = 0;
 
   @override
   void initState() {
@@ -79,7 +84,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     _syncClientId =
         '${widget.myHouseId}_${DateTime.now().millisecondsSinceEpoch}';
 
-    _remoteRenderer.initialize();
+    final rendererInitialization = _initializeRemoteRenderer();
+    _rendererInitialization = rendererInitialization;
+    unawaited(rendererInitialization);
     if (!kIsWeb) {
       _webViewController = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -142,9 +149,48 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     _videoPlayerController?.removeListener(_handleVideoPlayerSyncTick);
     _videoPlayerController?.dispose();
     _loadingVideoController?.dispose();
-    _remoteRenderer.dispose();
-    if (_isCallingVN.value) _webrtc.hangUp();
+    unawaited(_cleanupWebRtc());
     super.dispose();
+  }
+
+  Future<void> _initializeRemoteRenderer() async {
+    try {
+      await _remoteRenderer.initialize();
+    } catch (error) {
+      debugPrint(
+        'WatchTogether renderer init failed: ${AppErrorMapper.resolve(error).message}',
+      );
+    }
+  }
+
+  Future<void> _cleanupWebRtc() {
+    final existing = _cleanupFuture;
+    if (existing != null) return existing;
+
+    final cleanup = _cleanupWebRtcInternal();
+    _cleanupFuture = cleanup;
+    return cleanup;
+  }
+
+  Future<void> _cleanupWebRtcInternal() async {
+    Future<void> releaseRenderer() async {
+      final rendererInitialization = _rendererInitialization;
+      if (rendererInitialization != null) {
+        try {
+          await rendererInitialization;
+        } catch (_) {
+          // Hàm dispose an toàn bên dưới vẫn xử lý được renderer khởi tạo dở.
+        }
+      }
+      await disposeVideoRendererSafely(_remoteRenderer);
+    }
+
+    if (_voiceCallOwned || _isCallingVN.value) {
+      await _webrtc.hangUp(beforeMediaRelease: releaseRenderer);
+      _voiceCallOwned = false;
+    } else {
+      await releaseRenderer();
+    }
   }
 
   String get _sharedRoomId {
@@ -453,17 +499,32 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   }
 
   Future<void> _toggleVoiceCall() async {
-    if (_isCallingVN.value) {
-      await _webrtc.hangUp();
-      if (!mounted) return;
-      _isCallingVN.value = false;
-      _micMutedVN.value = false;
-      _showSnack(context.tr('ui_chat_voice_call_ended_2efe56'));
-      return;
-    }
-
+    if (!mounted || _voiceCallBusy) return;
+    _voiceCallBusy = true;
+    final generation = ++_voiceCallGeneration;
     try {
+      if (_isCallingVN.value) {
+        await _cleanupWebRtc();
+        if (!mounted || generation != _voiceCallGeneration) return;
+        _isCallingVN.value = false;
+        _micMutedVN.value = false;
+        _showSnack(context.tr('ui_chat_voice_call_ended_2efe56'));
+        return;
+      }
+      final rendererInitialization = _rendererInitialization;
+      if (rendererInitialization != null) await rendererInitialization;
+      if (!mounted || generation != _voiceCallGeneration) return;
+      if (_webrtc.isBusy) {
+        _showSnack(context.tr('p4_call_busy'), isError: true);
+        return;
+      }
+      _webrtc.reserveCall();
+      _voiceCallOwned = true;
       await _webrtc.openUserMedia(includeVideo: false);
+      if (!mounted || generation != _voiceCallGeneration) {
+        await _cleanupWebRtc();
+        return;
+      }
 
       final roomRef = _dbRef.child('calls/$_sharedRoomId');
       final snap = await roomRef.get();
@@ -473,15 +534,22 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
         await _webrtc.createRoom(_remoteRenderer, targetHouseId: _sharedRoomId);
       }
 
+      if (!mounted || generation != _voiceCallGeneration) {
+        await _cleanupWebRtc();
+        return;
+      }
       _isCallingVN.value = true;
-      if (!mounted) return;
       _showSnack(context.tr('ui_chat_voice_call_connected_3df07c'));
     } catch (e) {
-      if (!mounted) return;
-      _showSnack(
-        context.tr('ui_chat_voice_calls_cannot_be_connected_at_this_d2d44c'),
-        isError: true,
-      );
+      await _cleanupWebRtc();
+      if (mounted) {
+        _showSnack(
+          context.tr('ui_chat_voice_calls_cannot_be_connected_at_this_d2d44c'),
+          isError: true,
+        );
+      }
+    } finally {
+      _voiceCallBusy = false;
     }
   }
 

@@ -1,6 +1,8 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../calendar/calendar_civil_date.dart';
+import '../health_data_privacy.dart';
 
 /// ============================================================
 ///  HealthCycleService — GRA (Phase 35)
@@ -37,12 +39,19 @@ class HealthCycleService {
     required DateTime lastPeriodDate,
     int cycleLength = 28,
     int periodDays = 5,
+    bool shareWithPartner = false,
   }) async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) {
+      throw StateError('Cần đăng nhập để lưu dữ liệu sức khỏe.');
+    }
     await _db.ref('houses/$houseId/health_cycle').set({
       'lastDate':
           '${lastPeriodDate.year}-${_pad(lastPeriodDate.month)}-${_pad(lastPeriodDate.day)}',
       'length': cycleLength,
       'periodDays': periodDays,
+      'ownerUid': ownerUid,
+      'shareWithPartner': shareWithPartner,
       'updatedAt': ServerValue.timestamp,
     });
   }
@@ -50,6 +59,7 @@ class HealthCycleService {
   Stream<CycleSettings?> streamCycleSettings(String houseId) {
     return _db.ref('houses/$houseId/health_cycle').onValue.map((event) {
       if (!event.snapshot.exists) return null;
+      if (!canDisplayHealthData(event.snapshot.value, FirebaseAuth.instance.currentUser?.uid)) return null;
       final data = Map<String, dynamic>.from(event.snapshot.value as Map);
       return CycleSettings.fromMap(data);
     });
@@ -58,6 +68,7 @@ class HealthCycleService {
   Future<CycleSettings?> getCycleSettings(String houseId) async {
     final snap = await _db.ref('houses/$houseId/health_cycle').get();
     if (!snap.exists) return null;
+    if (!canDisplayHealthData(snap.value, FirebaseAuth.instance.currentUser?.uid)) return null;
     return CycleSettings.fromMap(Map<String, dynamic>.from(snap.value as Map));
   }
 
@@ -162,11 +173,15 @@ class CycleSettings {
   final DateTime lastPeriodDate;
   final int cycleLength;
   final int periodDays;
+  final String ownerUid;
+  final bool shareWithPartner;
 
   CycleSettings({
     required this.lastPeriodDate,
     required this.cycleLength,
     required this.periodDays,
+    this.ownerUid = '',
+    this.shareWithPartner = false,
   });
 
   factory CycleSettings.fromMap(Map<String, dynamic> map) {
@@ -186,6 +201,8 @@ class CycleSettings {
       lastPeriodDate: lastDate,
       cycleLength: (map['length'] as num?)?.toInt() ?? 28,
       periodDays: (map['periodDays'] as num?)?.toInt() ?? 5,
+      ownerUid: map['ownerUid']?.toString() ?? '',
+      shareWithPartner: map['shareWithPartner'] == true,
     );
   }
 }

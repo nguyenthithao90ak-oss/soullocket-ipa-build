@@ -189,6 +189,8 @@ class MemoryShareService {
     required List<Map<String, dynamic>> photos,
     int expiryDays = 7,
     String? password,
+    MemoryLimits? limitsOverride,
+    bool? proOverride,
   }) async {
     if (_creating) {
       throw FirebaseFunctionsException(code: 'aborted', message: '');
@@ -215,11 +217,11 @@ class MemoryShareService {
           )) {
         throw FirebaseFunctionsException(code: 'invalid-argument', message: '');
       }
-      // Hai kiểm tra độc lập nên chạy song song để hộp tạo link không phải
-      // chờ lần lượt limits rồi mới tới trạng thái Pro.
+      // Hai kiểm tra độc lập nên chạy song song. Khi màn hình đã preflight,
+      // dùng lại kết quả đó để không gọi lại limits/PRO ngay trước khi tạo link.
       final accessChecks = await Future.wait<Object>(<Future<Object>>[
-        fetchLimits(),
-        _isPro(),
+        limitsOverride == null ? fetchLimits() : Future.value(limitsOverride),
+        proOverride == null ? _isPro() : Future.value(proOverride),
       ]);
       final limits = accessChecks[0] as MemoryLimits;
       final pro = accessChecks[1] as bool;
@@ -251,7 +253,16 @@ class MemoryShareService {
         ).join();
       }
       payload['requestId'] = _retryRequestId;
-      final data = await _invoke('createMemoryShareLink', payload);
+      // Một liên kết vài ảnh không được giữ spinner quá lâu khi mạng/App
+      // Check bị treo. RequestId giữ cho lần bấm lại idempotent nếu Function
+      // đã kịp ghi ở phía server sau khi client hết thời gian chờ.
+      final requestTimeout = ids.length <= 6
+          ? const Duration(seconds: 30)
+          : const Duration(seconds: 55);
+      final data = await _invoke(
+        'createMemoryShareLink',
+        payload,
+      ).timeout(requestTimeout);
       _checkSession(uid);
       final token = data['token']?.toString() ?? '';
       final expiresAt = _readLimitInt(data['expiresAt'], 0);

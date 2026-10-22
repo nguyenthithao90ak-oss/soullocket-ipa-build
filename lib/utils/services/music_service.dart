@@ -24,11 +24,15 @@ class MusicTrack {
 
   factory MusicTrack.fromJson(Map<String, dynamic> json) {
     final url = json['url'] ?? '';
+    // Chuyển lựa chọn nhạc mặc định cũ, không xóa file nhạc riêng của người dùng.
+    if (MusicService.isRetiredBundledMusic(url.toString())) {
+      return MusicService.defaultTrack;
+    }
     return MusicTrack(
       url: url,
       title: json['title'] ?? '',
       type: json['type'] ?? 'audio',
-      isDefault: json['isDefault'] ?? (url.toString().startsWith('assets/')),
+      isDefault: json['isDefault'] ?? MusicService.isAssetMusicPath(url.toString()),
     );
   }
 
@@ -52,8 +56,10 @@ class MusicService {
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isVisibleNotifier = ValueNotifier<bool>(false);
 
-  static const String defaultMusicAsset = 'assets/music/cat_ca_chung_ta.mp3';
-  static const String defaultMusicTitle = 'Cất Cả Chúng Ta';
+  // Nhạc tổng hợp từ tools/generate_soul_block_audio.py, không dùng bản thu ngoài.
+  static const String defaultMusicAsset =
+      'assets/audio/soul_block/original_v1/neon_memory.mp3';
+  static const String defaultMusicTitle = 'Neon Memory';
   static final MusicTrack defaultTrack = MusicTrack(
     url: defaultMusicAsset,
     title: defaultMusicTitle,
@@ -82,17 +88,28 @@ class MusicService {
 
   static bool isAssetMusicPath(String path) {
     final trimmed = path.trim().replaceAll('\\', '/');
-    return (trimmed.startsWith('assets/') || trimmed.startsWith('music/')) &&
-        _hasSupportedAudioExtension(trimmed.toLowerCase());
+    return trimmed == defaultMusicAsset ||
+        trimmed == defaultMusicAsset.substring(7);
   }
+
+  static bool isRetiredBundledMusic(String path) => const {
+    'assets/music/cat_ca_chung_ta.mp3',
+    'music/cat_ca_chung_ta.mp3',
+  }.contains(_normalizedMediaPath(path));
 
   static bool isLocalAudioPath(String path) {
     if (kIsWeb) return false;
     final trimmed = path.trim();
     if (trimmed.isEmpty) return false;
+    final normalizedPath = _normalizedMediaPath(trimmed);
+    // Không để asset chưa được phép lọt qua nhánh DeviceFileSource.
+    if (normalizedPath.startsWith('assets/') ||
+        normalizedPath.startsWith('music/') ||
+        normalizedPath.startsWith('audio/')) {
+      return false;
+    }
     final uri = Uri.tryParse(trimmed);
     if (uri != null && uri.hasScheme) return false;
-    final normalizedPath = _normalizedMediaPath(trimmed);
     if (normalizedPath.isEmpty) return false;
     return _hasSupportedAudioExtension(normalizedPath);
   }
@@ -259,10 +276,7 @@ class MusicService {
     try {
       Source source;
       if (isAssetMusicPath(normalizedUrl)) {
-        final cleanPath = normalizedUrl.startsWith('assets/')
-            ? normalizedUrl.substring(7)
-            : normalizedUrl;
-        source = AssetSource(cleanPath);
+        source = AssetSource(defaultMusicAsset.substring(7));
       } else {
         source = DeviceFileSource(normalizedUrl);
       }

@@ -244,9 +244,8 @@ class SLResponsive {
   }
 
   static TextScaler textScalerFor(BuildContext context) {
-    final scaler = MediaQuery.textScalerOf(context);
-    final scaled = scaler.scale(1);
-    return TextScaler.linear(scaled.clamp(0.9, 1.18).toDouble());
+    // Giữ cả mức chữ lớn và cách phóng chữ phi tuyến của hệ điều hành.
+    return MediaQuery.textScalerOf(context);
   }
 
   static double horizontalPaddingForWidth(
@@ -376,23 +375,23 @@ class SLTypography {
   );
 
   static TextStyle get bodyLarge => SLTheme.quicksand(
-    fontSize: 15,
+    fontSize: 16,
     height: 1.55,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w500,
     color: SLColors.textPrimary,
   );
 
   static TextStyle get bodyMedium => SLTheme.quicksand(
-    fontSize: 13,
+    fontSize: 14,
     height: 1.55,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w500,
     color: SLColors.textSecond,
   );
 
   static TextStyle get bodySmall => SLTheme.quicksand(
     fontSize: 12,
     height: 1.5,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w500,
     color: SLColors.textSecond,
   );
 
@@ -411,9 +410,9 @@ class SLTypography {
   );
 
   static TextStyle get labelSmall => SLTheme.quicksand(
-    fontSize: 11,
+    fontSize: 12,
     height: 1.35,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w700,
     color: SLColors.textSecond,
   );
 }

@@ -180,10 +180,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         SetupGuideProgress.scopedKey(uid, houseId, 'home'),
       ),
       replay: replay,
+      // Mã nhà có thể chỉ nằm trong SecureStorage (getCurrentHouseId tự đọc
+      // dự phòng ở đó). Thiếu khóa prefs thì không coi là đổi nhà; chỉ đóng
+      // khi prefs ghi rõ một nhà khác.
       isStillValid: () =>
           mounted &&
           FirebaseAuth.instance.currentUser?.uid == uid &&
-          prefs.getString('il_house_id') == houseId,
+          (prefs.getString('il_house_id') ?? houseId) == houseId,
       steps: [
         FirstSetupSpotlightStep(
           targetKey: _firstGuideHomeHeroKey,
@@ -557,7 +560,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     SLNotice.showInfo(context, message);
   }
 
-  // ─── Inactivity auto-logout ───────────────────────────────────────────────
+  // ─── Nhắc nghỉ nhẹ nhàng, không tự đóng app ───────────────────────────────
 
   void _resetInactivityTimer() {
     if (!mounted) return;
@@ -570,6 +573,12 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
   void _onInactivityTimeout() {
     if (!mounted || _isShowingInactivityDialog) return;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if ((lifecycle != null && lifecycle != AppLifecycleState.resumed) ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      _resetInactivityTimer();
+      return;
+    }
     unawaited(_showInactivityWarningDialog());
   }
 
@@ -577,12 +586,10 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (!mounted || _isShowingInactivityDialog) return;
     _isShowingInactivityDialog = true;
 
-    final stayPressed = await showDialog<bool>(
+    await showDialog<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => const _InactivityCountdownDialog(
-        seconds: _HomeScreenState._inactivityCountdownSeconds,
-      ),
+      barrierDismissible: true,
+      builder: (_) => const HomeInactivityReminderDialog(),
     );
 
     if (!mounted) {
@@ -591,91 +598,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     }
     _isShowingInactivityDialog = false;
 
-    if (stayPressed == true) {
-      _resetInactivityTimer();
-    } else {
-      await _moveAppToBackground();
-    }
-  }
-}
-
-// ─── Inactivity countdown dialog ─────────────────────────────────────────────
-
-class _InactivityCountdownDialog extends StatefulWidget {
-  final int seconds;
-  const _InactivityCountdownDialog({required this.seconds});
-
-  @override
-  State<_InactivityCountdownDialog> createState() =>
-      _InactivityCountdownDialogState();
-}
-
-class _InactivityCountdownDialogState
-    extends State<_InactivityCountdownDialog> {
-  late int _remaining;
-  Timer? _tick;
-
-  @override
-  void initState() {
-    super.initState();
-    _remaining = widget.seconds;
-    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() => _remaining--);
-      if (_remaining <= 0) {
-        t.cancel();
-        Navigator.of(context).pop(false); // hết giờ → thoát
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SLAlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.timer_outlined, color: SLColors.brandPink),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
-                  ? context.tr('home_khonghd_inactivity')
-                  : context.tr('ui_home_no_activity_3061c3'),
-            ),
-          ),
-        ],
-      ),
-      content: Text(
-        L10nService().format('home_autoclose_countdown', {
-          'seconds': _remaining,
-        }),
-      ),
-      actions: [
-        SLDialogAction(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(L10nService().translate('home_thoat_inactivity')),
-        ),
-        SLDialogAction(
-          primary: true,
-
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(
-            L10nService().format('home_tieptuc_inactivity', {
-              'seconds': _remaining,
-            }),
-          ),
-        ),
-      ],
-    );
+    _resetInactivityTimer();
   }
 }
 
@@ -756,18 +679,20 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
         _showExpiredProGraceDialog(
           houseId: houseId,
           activeCount: activeLinks.length,
-          daysRemaining: 3,
+          daysRemaining: ProFeatureLimits.expiredShareGracePeriod.inDays,
         );
       } else {
         final startedAt = (graceData['startedAt'] as num?)?.toInt() ?? now;
         final lastNotifiedAt =
             (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
 
-        final diffMs = now - startedAt;
-        final daysElapsed = diffMs / (24 * 60 * 60 * 1000);
+        final daysRemaining = ProFeatureLimits.expiredShareGraceDaysRemaining(
+          startedAtMs: startedAt,
+          nowMs: now,
+        );
 
-        if (daysElapsed >= 1.0) {
-          // --- QUÁ 1 NGÀY: TỰ ĐỘNG KHÓA CÁC LINK CŨ, GIỮ LẠI 5 MỚI NHẤT ---
+        if (daysRemaining == 0) {
+          // Hết đủ 3 ngày mới khóa link cũ, giữ lại 5 link mới nhất.
           activeLinks.sort((a, b) {
             final tsA = (a.value['createdAt'] as num?)?.toInt() ?? 0;
             final tsB = (b.value['createdAt'] as num?)?.toInt() ?? 0;
@@ -799,8 +724,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           if (!isCurrentSession()) return;
           _showExpiredProAutoCleanedDialog();
         } else {
-          // --- CHƯA QUÁ 1 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
-          const daysRemaining = 1;
+          // Trong hạn chờ, nhắc tối đa một lần mỗi 24 giờ.
           if (now - lastNotifiedAt >= 24 * 60 * 60 * 1000) {
             if (!isCurrentSession()) return;
             _showExpiredProGraceDialog(
@@ -913,7 +837,12 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             ),
           ],
         ),
-        content: Text(context.tr('ui_home_it_s_been_more_than_1_day_0944c5')),
+        content: Text(
+          L10nScope.of(context).format(
+            'ui_home_it_s_been_more_than_1_day_0944c5',
+            {'days': ProFeatureLimits.expiredShareGracePeriod.inDays},
+          ),
+        ),
         actions: [
           SLDialogAction(
             primary: true,

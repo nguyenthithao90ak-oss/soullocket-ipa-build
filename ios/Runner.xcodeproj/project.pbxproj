@@ -93,6 +93,7 @@
 		718347698B142E3B3FD3E77F /* icon_ocean@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A88848A5AC71369A6C88F906 /* icon_ocean@2x.png */; };
 		71CC494BB4856BD1C24DF4F6 /* icon_mint_ipadPro@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 42594D6BB67889DC842561AB /* icon_mint_ipadPro@2x.png */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		C20000000000000000000002 /* CallCameraEffectsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000001 /* CallCameraEffectsBridge.swift */; };
 		74D546D689ED69D643939AA2 /* icon_sunset_ipad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8A7147E5868A236F9EBE821A /* icon_sunset_ipad@2x.png */; };
 		7523435DAF38016CE4C5AEB0 /* icon_mint@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 84FF4DCCA8136EAA4D6E7C4F /* icon_mint@3x.png */; };
 		763747BC84686522FDFE1D46 /* icon_gold_ipad@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AABE43DC9D38118371AFCBDC /* icon_gold_ipad@2x.png */; };
@@ -266,6 +267,7 @@
 		71F64A639A004DD1819C8FFC /* icon_midnight_ipadPro@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_midnight_ipadPro@2x.png"; path = "Runner/icon_midnight_ipadPro@2x.png"; sourceTree = SOURCE_ROOT; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C20000000000000000000001 /* CallCameraEffectsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallCameraEffectsBridge.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		81EC4BA98BB35C6ED3836CD0 /* icon_gold_ipadPro@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_gold_ipadPro@2x.png"; path = "Runner/icon_gold_ipadPro@2x.png"; sourceTree = SOURCE_ROOT; };
 		84FF4DCCA8136EAA4D6E7C4F /* icon_mint@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon_mint@3x.png"; path = "Runner/icon_mint@3x.png"; sourceTree = SOURCE_ROOT; };
@@ -463,6 +465,7 @@
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+				C20000000000000000000001 /* CallCameraEffectsBridge.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				D3664C478D789815F114DA1E /* icon_aurora@2x.png */,
 				26394D598E85CDE1B575864B /* icon_aurora@2x.png */,
@@ -866,6 +869,7 @@
 			files = (
 				A10000000000000000000054 /* SoulLocketWidgetIntent.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				C20000000000000000000002 /* CallCameraEffectsBridge.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

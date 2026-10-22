@@ -6,6 +6,10 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
     BuildContext context,
     _CountdownModeThemeData themeData,
   ) {
+    final palette = SLSettingsPalette.resolve(
+      Theme.of(context).brightness == Brightness.dark,
+    );
+    final onAccent = palette.isDark ? palette.canvas : Colors.white;
     return [
       _sectionCard(
         icon: Icons.event_available_rounded,
@@ -24,9 +28,10 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                   label: Text(context.tr('home_cnhn_9d6cf4')),
                   labelStyle: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
-                    color: _singleMode ? Colors.white : const Color(0xFF7C6D76),
+                    color: _singleMode ? onAccent : palette.inkSecondary,
                   ),
-                  selectedColor: SLSettingsColors.accentStrong,
+                  selectedColor: palette.accent,
+                  checkmarkColor: onAccent,
                   onSelected: (_) => _safeSetState(() => _singleMode = true),
                 ),
                 ChoiceChip(
@@ -34,11 +39,10 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                   label: Text(context.tr('home_cpi_d525b0')),
                   labelStyle: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
-                    color: !_singleMode
-                        ? Colors.white
-                        : const Color(0xFF7C6D76),
+                    color: !_singleMode ? onAccent : palette.inkSecondary,
                   ),
-                  selectedColor: SLSettingsColors.accentStrong,
+                  selectedColor: palette.accent,
+                  checkmarkColor: onAccent,
                   onSelected: (_) => _safeSetState(() => _singleMode = false),
                 ),
               ],
@@ -82,9 +86,9 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF6FA),
+                color: palette.surfaceMuted,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFF4D2E1)),
+                border: Border.all(color: palette.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +101,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                         style: SLTheme.quicksand(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF8A5B76),
+                          color: palette.inkSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -108,7 +112,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                         style: SLTheme.quicksand(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
+                          color: palette.ink,
                         ),
                       ),
                     ],
@@ -117,7 +121,7 @@ extension StylesEditorExt on _CountdownModeEditorScreenState {
                   ElevatedButton.icon(
                     onPressed: _pickAnchorDate,
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 12,

@@ -18,7 +18,6 @@ const List<String> utilitiesHubDefaultOrder = <String>[
   'drawing',
   'creative_diary',
   'vault',
-  'cinema',
   'wheel',
   'tarot',
   'diary_export',
@@ -81,11 +80,6 @@ Map<String, Map<String, dynamic>> get appConfig => {
     'icon': Icons.lock_person_rounded,
     'colors': [const Color(0xFFFF7A86), const Color(0xFFF6A0C6)],
     'title': L10nService().translate('util_khonhmt_2e47ef'),
-  },
-  'cinema': {
-    'icon': Icons.local_movies_rounded,
-    'colors': [const Color(0xFFF2655A), const Color(0xFFE74C3C)],
-    'title': L10nService().translate('util_rpphim_7652be'),
   },
   'calendar': {
     'icon': Icons.event_note_rounded,

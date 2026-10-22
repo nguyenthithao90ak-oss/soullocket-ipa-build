@@ -63,7 +63,6 @@ class GlobalSearchService {
     'gift': ['quà tặng'],
     'diary_export': ['xuất nhật ký', 'export'],
     'vault': ['bí mật', 'két', 'ẩn', 'kho'],
-    'cinema': ['xem phim', 'phim', 'movie'],
     'calendar': ['lịch', 'ngày'],
     'calculator': ['máy tính', 'calc'],
     'tarot': ['bói bài'],

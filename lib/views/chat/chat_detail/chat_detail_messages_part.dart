@@ -410,36 +410,15 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                         ),
                       ),
                     SLSpacing.h4,
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          DateFormat('HH:mm').format(msg.timestamp),
-                          style: TextStyle(
-                            color: isMe ? Colors.white60 : Colors.black38,
-                            fontSize: 10,
-                          ),
-                        ),
-                        if (isMe && isLatestMe) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            msg.isRead
-                                ? Icons.done_all_rounded
-                                : Icons.check_circle_outline_rounded,
-                            size: 12,
-                            color: isMe ? Colors.white70 : Colors.black38,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            msg.isRead ? context.tr('ui_chat_viewed_f98099') : context.tr('ui_chat_sent_5fab02'),
-                            style: TextStyle(
-                              color: isMe ? Colors.white70 : Colors.black38,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ],
+                    ChatMessageReceipt(
+                      timeLabel: DateFormat('HH:mm').format(msg.timestamp),
+                      isMe: isMe,
+                      isRead: msg.isRead,
+                      statusLabel: isMe && isLatestMe
+                          ? context.tr(
+                              msg.isRead ? 'ui_chat_viewed_f98099' : 'ui_chat_sent_5fab02',
+                            )
+                          : null,
                     ),
                   ],
                 ),

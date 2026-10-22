@@ -100,7 +100,6 @@ import 'package:soullocket_app/views/utilities/block_blast_game.dart';
 import 'package:soullocket_app/views/together/together_hub_screen.dart';
 import 'package:soullocket_app/views/utilities/calendar_screen.dart';
 import 'package:soullocket_app/views/utilities/capsule_screen.dart';
-import 'package:soullocket_app/views/utilities/cinema_screen.dart';
 import 'package:soullocket_app/views/utilities/collage_maker_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/drawing_studio_screen.dart';
@@ -147,6 +146,7 @@ import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
+import 'package:soullocket_app/utils/home_interaction_cooldown.dart';
 import 'package:soullocket_app/utils/screen_activity_mixin.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/relationship_duration_card.dart';
@@ -156,7 +156,12 @@ import 'package:soullocket_app/widgets/home_interaction_stickers.dart';
 import 'package:soullocket_app/views/home/widgets/home_sticker_motion.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
 import 'package:soullocket_app/views/home/widgets/companion/home_companion_painter.dart';
+import 'package:soullocket_app/views/home/tabs/pet_care_game_screen.dart';
+import 'package:soullocket_app/views/home/tabs/pet_care/pet_care_progress.dart';
+import 'package:soullocket_app/views/home/tabs/pet_care/pet_care_home_binding.dart';
+import 'package:soullocket_app/views/home/tabs/pet_care/pet_care_identity.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_compact_sections.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/pairing_name_prompt.dart';
 import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
@@ -276,26 +281,53 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _MissYouAlertPayload payload, {
     String? removalPath,
   }) async {
-    final prefs = await OfflineCacheService.getPrefs();
-    final lastLocalMs = prefs.getInt('il_last_local_push_time_v2') ?? 0;
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-    if (nowMs - lastLocalMs >= 3600000) {
-      await prefs.setInt('il_last_local_push_time_v2', nowMs);
-      await _notificationService.showLocalNotification(
-        title: payload.title,
-        body: payload.body.isNotEmpty ? payload.body : payload.message,
-        data: {
-          'screen': 'home',
-          'type': 'partner_care',
-          'careType': payload.type,
-          if (_houseId != null) 'houseId': _houseId,
-        },
-        dedupeKey:
-            '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
+    final user = _auth.currentUser;
+    final houseId = _houseId;
+    if (user == null || houseId == null || houseId.isEmpty) return;
+    final role = _currentRole;
+    final sessionId = _liveWorkSessionId;
+    bool isCurrent() => _isInteractionSessionCurrent(
+      uid: user.uid,
+      houseId: houseId,
+      role: role,
+      sessionId: sessionId,
+    );
+    if (!isCurrent()) return;
+    try {
+      await HomeInteractionCooldown.run(
+        key: HomeInteractionCooldown.key(
+          uid: user.uid,
+          houseId: houseId,
+          role: role,
+          type: payload.type,
+          channel: 'local',
+        ),
+        loadPreferences: OfflineCacheService.getPrefs,
+        isCurrent: isCurrent,
+        action: () => _notificationService.showLocalNotification(
+          title: payload.title,
+          body: payload.body.isNotEmpty ? payload.body : payload.message,
+          data: {
+            'screen': 'home',
+            'type': 'partner_care',
+            'careType': payload.type,
+            'houseId': houseId,
+          },
+          dedupeKey: [
+            houseId,
+            role,
+            payload.fromUid,
+            payload.fromRole,
+            payload.sentAtMs,
+            payload.type,
+            payload.title,
+          ].join('|'),
+        ),
       );
+    } catch (error) {
+      debugPrint('[MainHome] Local interaction notification failed: $error');
     }
-    if (!mounted) return;
+    if (!isCurrent()) return;
     _showMissYouScreen(payload);
     if (removalPath != null) {
       unawaited(_dbRef.child(removalPath).remove().catchError((_) {}));
@@ -495,6 +527,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final Set<String> _seenReactionFlightIds = <String>{};
   final List<int> _localReactionThrowMs = <int>[];
   bool _isCoupleConnected = false;
+  // Lời nhắc đặt tên sau ghép đôi: đã quyết xong trong phiên / đang chờ hiện.
+  bool _pairingNamePromptChecked = false;
+  bool _pairingNamePromptScheduled = false;
 
   String? _lastMissEventFingerprint;
   int _lastMissEventShownAt = 0;
@@ -534,6 +569,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final List<_MissYouAlertPayload> _incomingInteractionQueue =
       <_MissYouAlertPayload>[];
   OverlayEntry? _interactionDragOverlayEntry;
+  final GlobalKey _interactionDragViewportKey = GlobalKey();
   final Map<String, GlobalKey> _interactionDragOptionKeys =
       <String, GlobalKey>{};
   final Map<String, Rect> _interactionDragOptionRects = <String, Rect>{};

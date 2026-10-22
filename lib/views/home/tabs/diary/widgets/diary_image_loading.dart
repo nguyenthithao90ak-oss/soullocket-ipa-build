@@ -6,7 +6,11 @@ import 'package:flutter/material.dart';
 import '../../../../../utils/services/l10n_service.dart';
 
 class DiaryImageLoading extends StatefulWidget {
-  const DiaryImageLoading({super.key});
+  const DiaryImageLoading({super.key, this.backgroundColor});
+
+  /// Nền mặc định theo surface của album; viewer toàn màn hình truyền nền đen
+  /// để lúc ảnh đang giải mã không lóe màu của theme bên dưới.
+  final Color? backgroundColor;
 
   @override
   State<DiaryImageLoading> createState() => _DiaryImageLoadingState();
@@ -58,7 +62,7 @@ class _DiaryImageLoadingState extends State<DiaryImageLoading>
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return ColoredBox(
-      color: colors.surfaceContainerLow,
+      color: widget.backgroundColor ?? colors.surfaceContainerLow,
       child: !_show
           ? const SizedBox.expand()
           : ListenableBuilder(

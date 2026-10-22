@@ -18,6 +18,7 @@ class CallSetupFailure implements Exception {
 
   String get messageKey {
     final normalized = code.toLowerCase().replaceAll('_', '-');
+    if (normalized == 'busy') return 'p4_call_busy';
     if (normalized.contains('permission-denied')) {
       return 'p4_call_service_blocked';
     }

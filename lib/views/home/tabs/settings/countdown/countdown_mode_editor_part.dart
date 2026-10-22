@@ -743,8 +743,11 @@ class _CountdownModeEditorScreenState
     final themeData = _CountdownModeThemeData.resolve(
       _resolveThemeKey(_themeKey),
     );
+    final chromeTheme = Theme.of(context).brightness == Brightness.dark
+        ? _CountdownModeThemeData.resolve('theme-dark')
+        : themeData;
     return Scaffold(
-      backgroundColor: themeData.background.first,
+      backgroundColor: chromeTheme.background.first,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -752,7 +755,7 @@ class _CountdownModeEditorScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: _buildEditorAvatars(context, themeData),
+            children: _buildEditorAvatars(context, chromeTheme),
           ),
         ),
       ),
@@ -761,7 +764,7 @@ class _CountdownModeEditorScreenState
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: themeData.background,
+            colors: chromeTheme.background,
           ),
         ),
         child: SafeArea(
@@ -774,8 +777,8 @@ class _CountdownModeEditorScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ..._buildEditorHeader(context, themeData),
-                    ..._buildEditorPreview(context, themeData),
+                    ..._buildEditorHeader(context, chromeTheme),
+                    ..._buildEditorPreview(context, chromeTheme),
                     ..._buildEditorLabels(context, themeData),
                     ..._buildEditorDate(context, themeData),
                     ..._buildEditorStyles(context, themeData),

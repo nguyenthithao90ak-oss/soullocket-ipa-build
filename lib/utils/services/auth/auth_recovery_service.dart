@@ -725,18 +725,25 @@ class AuthRecoveryService {
     }
   }
 
-  Future<void> signInWithCustomTokenAndSetPassword(
-    String token,
+  Future<void> completePasswordRecovery(
+    firebase_auth.UserCredential userCredential,
     String newPassword,
   ) async {
-    final userCredential = await _auth.signInWithCustomToken(token);
     final user = userCredential.user;
     if (user != null) {
+      void requireRecoverySession() {
+        if (_auth.currentUser?.uid != user.uid) {
+          throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
+        }
+      }
+
+      requireRecoverySession();
       final hasPasswordProvider = user.providerData.any(
         (provider) => provider.providerId == 'password',
       );
       if (hasPasswordProvider) {
         await user.updatePassword(newPassword);
+        requireRecoverySession();
         return;
       }
 
@@ -750,6 +757,7 @@ class AuthRecoveryService {
         password: newPassword,
       );
       await user.linkWithCredential(credential);
+      requireRecoverySession();
       return;
     }
     throw UiCopy.text('copy_42987feddb6e');

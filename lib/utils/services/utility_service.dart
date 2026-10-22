@@ -110,7 +110,6 @@ class UtilityService {
     'finance',
     'capsule',
     'calendar',
-    'cinema',
     'surprise_maker',
   };
 
@@ -188,7 +187,6 @@ class UtilityService {
     UtilityCategory.memories: [
       'local_album',
       'collage',
-      'cinema',
       'creative_diary',
       'surprise_maker',
       'capsule',
@@ -332,12 +330,6 @@ class UtilityService {
       title: 'utility_title_vault',
       icon: Icons.enhanced_encryption_rounded,
       colors: [const Color(0xFF1F1C2C), const Color(0xFF928DAB)],
-    ),
-    UtilityApp(
-      id: 'cinema',
-      title: 'utility_title_cinema',
-      icon: Icons.movie_filter_rounded,
-      colors: [const Color(0xFFE53935), const Color(0xFFE35D5B)],
     ),
     UtilityApp(
       id: 'calendar',

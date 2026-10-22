@@ -127,13 +127,13 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   _ThemePanelConfig _buildThemePanelConfig() {
     return _ThemePanelConfig(
       themes: [
+        (context.tr('theme_light'), 'theme-default'),
+        (context.tr('theme_dark_mode'), 'theme-dark'),
         (context.tr('theme_auto_season'), 'theme-auto'),
         (context.tr('home_snghngmcnh_17c1e3'), 'theme-pink-glow'),
-        (context.tr('home_ngin_bcef46'), 'theme-default'),
         (context.tr('theme_sunset'), 'theme-sunset'),
         (context.tr('theme_ocean'), 'theme-ocean'),
         (context.tr('theme_night'), 'theme-night'),
-        (context.tr('theme_dark'), 'theme-dark'),
         (context.tr('theme_mystic_dark'), 'theme-mystic-dark'),
         (context.tr('home_ttch_324e9a'), 'off'),
       ],
@@ -320,6 +320,32 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SLSettingsCard(
+                isDark: SLSettingsPalette.isNightTheme,
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('theme'),
+                      style: SLSettingsText.title(
+                        SLSettingsPalette.resolve(
+                          SLSettingsPalette.isNightTheme,
+                        ).ink,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    AppearanceThemeGrid(
+                      value: selection.themeKey,
+                      options: themes,
+                      onChanged: (value) => _updateThemeDraft(
+                        () => _draftThemeKey = value,
+                        syncPreview: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               // Preview sống động: phản ánh ngay theme, hiệu ứng, khung và font
               // hiện tại trước khi người dùng mở từng nhóm điều chỉnh.
               _buildThemeHomeLikePreviewCard(

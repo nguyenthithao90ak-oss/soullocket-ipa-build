@@ -240,45 +240,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       spacing: 6,
       runSpacing: 6,
       children: mates.take(2).map((mate) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(6, 4, 8, 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF4F7),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0xFFF8BBD0)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 9,
-                backgroundColor: Colors.pink[50],
-                backgroundImage: mate.avatar.isNotEmpty
-                    ? CachedNetworkImageProvider(mate.avatar)
-                    : null,
-                child: mate.avatar.isEmpty
-                    ? Text(
-                        mate.name.isNotEmpty ? mate.name[0].toUpperCase() : '?',
-                        style: SLTheme.quicksand(
-                          color: const Color(0xFFD81B60),
-                          fontWeight: FontWeight.w900,
-                          fontSize: 9,
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                mate.name,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11,
-                  color: const Color(0xFF7A284B),
-                ),
-              ),
-            ],
-          ),
-        );
+        return ChatMateChip(name: mate.name, avatarUrl: mate.avatar);
       }).toList(),
     );
   }

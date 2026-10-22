@@ -63,6 +63,7 @@ class LocationService {
   static const Duration _kLiveSourceMaxAge = Duration(minutes: 2);
   static const int _kStreamDistanceFilterMeters = 25;
   static const double _kMaxAcceptedAccuracyMeters = 100;
+  static const double _kIosReducedAccuracyMeters = 5000;
   static const double _kGoodAccuracyMeters = 30;
   static const double _kFairAccuracyMeters = 75;
   static const double _kForceWriteDistanceMeters = 50;
@@ -807,6 +808,11 @@ class LocationService {
     return LocationSettings(accuracy: accuracy, distanceFilter: distanceFilter);
   }
 
+  double get _maxAcceptedAccuracyMeters =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+      ? _kIosReducedAccuracyMeters
+      : _kMaxAcceptedAccuracyMeters;
+
   LocationSettings get _backgroundCapableLocationSettings {
     final isRealtime =
         _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
@@ -932,7 +938,7 @@ class LocationService {
     }
     if (!position.accuracy.isFinite ||
         position.accuracy < 0 ||
-        position.accuracy > _kMaxAcceptedAccuracyMeters) {
+        position.accuracy > _maxAcceptedAccuracyMeters) {
       return false;
     }
 
@@ -1022,7 +1028,7 @@ class LocationService {
         ageMs <= _kLastKnownMaxAge.inMilliseconds &&
         position.accuracy.isFinite &&
         position.accuracy >= 0 &&
-        position.accuracy <= _kMaxAcceptedAccuracyMeters;
+        position.accuracy <= _maxAcceptedAccuracyMeters;
   }
 
   Future<Map<String, dynamic>> _fetchBatteryInfo() async {

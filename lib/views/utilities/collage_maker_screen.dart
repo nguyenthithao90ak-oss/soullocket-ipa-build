@@ -45,17 +45,18 @@ part 'collage_maker/widgets/collage_preview_widgets.dart';
 part 'collage_maker/collage_maker_helpers.dart';
 part 'collage_maker/models/collage_models.dart';
 
-const Color _paperCream = Color(0xFFF6F2FF);
-const Color _paperShell = Color(0xFFFFFBFF);
-const Color _paperRose = Color(0xFFF1B8CD);
-const Color _paperRoseDeep = Color(0xFFB75A83);
-const Color _paperMist = Color(0xFFB9DCE0);
-const Color _paperMistDeep = Color(0xFF4F8794);
-const Color _paperSand = Color(0xFFF5D6A8);
-const Color _paperCocoa = Color(0xFF493A5A);
-const Color _paperInk = Color(0xFF2F2940);
-const Color _paperMuted = Color(0xFF786A85);
-const Color _paperLine = Color(0xFFE4D9EC);
+// Bảng màu trung tính để ảnh và nội dung người dùng là điểm nhìn chính.
+const Color _paperCream = Color(0xFFF3F5F5);
+const Color _paperShell = Color(0xFFFFFFFF);
+const Color _paperRose = Color(0xFFD4DFDC);
+const Color _paperRoseDeep = Color(0xFF45645D);
+const Color _paperMist = Color(0xFFDCE8E7);
+const Color _paperMistDeep = Color(0xFF486B76);
+const Color _paperSand = Color(0xFFE9E0D6);
+const Color _paperCocoa = Color(0xFF25343A);
+const Color _paperInk = Color(0xFF1E2A30);
+const Color _paperMuted = Color(0xFF69777D);
+const Color _paperLine = Color(0xFFD9E1E0);
 
 class CollageMakerScreen extends StatefulWidget {
   final String houseId;
@@ -71,7 +72,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       tooltip: context.tr('auth_guide_short'),
       icon: const Icon(
         Icons.info_outline_rounded,
-        color: Color(0xFFE274A0),
+        color: _paperMuted,
         size: 22,
       ),
       onPressed: () => _showInfoDialog(context),
@@ -115,7 +116,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
             primary: true,
 
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('Đã hiểu')),
+            child: Text(context.tr('p3_understood')),
           ),
         ],
       ),
@@ -287,11 +288,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   int? _hoveredSwapTargetIndex;
   double _previewTileSize = 0;
   _FramePinchSession? _framePinchSession;
-  final Set<String> _selectedStickers = {
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_2.gif',
-    'assets/images/anhtomau_stickers/sticker_3.gif',
-  };
+  final Set<String> _selectedStickers = {};
   static final List<String> _stickerOptions = [
     for (int i = 1; i <= 35; i++)
       if (![4, 5, 10, 11, 19, 26, 29].contains(i))
@@ -311,6 +308,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   final _privateMediaUrlService = PrivateMediaUrlService(batchRequests: true);
   late final CollageMemoryLibrary _memoryLibrary;
   final Set<String> _selectedMemoryPhotoKeys = <String>{};
+  int _activeStudioTab = 0;
   bool _hasSuggestedMemorySelection = false;
   String? _memoryOwnerUid;
   String _memoryOwnerHouse = '';
@@ -895,25 +893,15 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   }
 
   BorderRadius _paperRadius({bool flipped = false}) {
-    return BorderRadius.only(
-      topLeft: Radius.circular(flipped ? 20 : 24),
-      topRight: Radius.circular(flipped ? 24 : 20),
-      bottomLeft: Radius.circular(flipped ? 24 : 18),
-      bottomRight: Radius.circular(flipped ? 18 : 26),
-    );
+    return BorderRadius.circular(flipped ? 14 : 18);
   }
 
   List<BoxShadow> _paperShadow([Color color = _paperCocoa]) {
     return [
       BoxShadow(
-        color: color.withValues(alpha: 0.08),
-        blurRadius: 20,
-        offset: const Offset(0, 10),
-      ),
-      BoxShadow(
-        color: Colors.white.withValues(alpha: 0.55),
-        blurRadius: 6,
-        offset: const Offset(-2, -2),
+        color: color.withValues(alpha: 0.09),
+        blurRadius: 18,
+        offset: const Offset(0, 6),
       ),
     ];
   }
@@ -941,7 +929,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     double? height,
     double? letterSpacing,
   }) {
-    return GoogleFonts.playfairDisplay(
+    return SLTheme.quicksand(
       fontSize: size,
       fontWeight: fontWeight,
       color: color,
@@ -1620,8 +1608,612 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     );
   }
 
+  Widget _buildStudioPanelHeader({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _paperCream,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(color: _paperLine),
+          ),
+          child: Icon(icon, color: _paperCocoa, size: 19),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: SLTheme.quicksand(
+                  color: _paperInk,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: SLTheme.quicksand(
+                    color: _paperMuted,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudioPanel({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _paperPanelDecoration(
+        color: _paperShell,
+        borderColor: _paperLine,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStudioPanelHeader(
+            icon: icon,
+            title: title,
+            subtitle: subtitle,
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudioTabs() {
+    final tabs = <(String, IconData)>[
+      (context.tr('util_chnnh_719c35'), Icons.photo_library_outlined),
+      (context.tr('util_kiukhung_e45689'), Icons.dashboard_outlined),
+      (context.tr('util_nntl_8608da'), Icons.tune_outlined),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _paperShell,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _paperLine),
+      ),
+      child: Row(
+        children: [
+          for (var index = 0; index < tabs.length; index++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: _activeStudioTab == index,
+                label: tabs[index].$1,
+                child: SizedBox(
+                  height: 52,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => setState(() => _activeStudioTab = index),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: _activeStudioTab == index
+                              ? _paperCocoa
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              tabs[index].$2,
+                              size: 18,
+                              color: _activeStudioTab == index
+                                  ? Colors.white
+                                  : _paperMuted,
+                            ),
+                            const SizedBox(height: 2),
+                            Flexible(
+                              child: Text(
+                                tabs[index].$1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  color: _activeStudioTab == index
+                                      ? Colors.white
+                                      : _paperInk,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollagePreviewHero() {
+    final bytes = _generatedCollageBytes;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+      decoration: _paperPanelDecoration(
+        color: _paperShell,
+        borderColor: _paperLine,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('util_bnxemtrcco_345e4f'),
+                      style: SLTheme.quicksand(
+                        color: _paperInk,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      context.tr('collage_subtitle'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        color: _paperMuted,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (bytes != null)
+                IconButton(
+                  tooltip: context.tr('util_toli_58cd48'),
+                  onPressed: _isGenerating
+                      ? null
+                      : () => _generateCollage(
+                            bypassDebounce: true,
+                            usePreviewQuality: false,
+                            randomizeLayout: true,
+                          ),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    foregroundColor: _paperCocoa,
+                    backgroundColor: _paperCream,
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final ratio = _activeAspectPreset.ratio;
+              final previewHeight = min(
+                420.0,
+                max(220.0, constraints.maxWidth / max(ratio, 0.55)),
+              );
+              return SizedBox(
+                width: double.infinity,
+                height: previewHeight,
+                child: RepaintBoundary(
+                  child: GestureDetector(
+                    onTap: bytes == null ? null : _showGeneratedCollagePreview,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: ColoredBox(
+                        color: _paperCream,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            if (bytes != null)
+                              Image.memory(
+                                bytes,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.medium,
+                              )
+                            else
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.photo_size_select_actual_outlined,
+                                    size: 36,
+                                    color: _paperMuted,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    context.tr('util_chacnhnocc_2c3a48'),
+                                    style: SLTheme.quicksand(
+                                      color: _paperInk,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (_isGenerating)
+                              Positioned.fill(
+                                child: ColoredBox(
+                                  color: _paperCocoa.withValues(alpha: 0.24),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      backgroundColor:
+                                          _paperCocoa.withValues(alpha: 0.30),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          if (bytes != null)
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _saveImage,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: _paperCocoa,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.download_rounded, size: 19),
+                    label: Text(
+                      context.tr('util_lunh_9088ba'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _shareImage,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      foregroundColor: _paperCocoa,
+                      side: const BorderSide(color: _paperCocoa),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.ios_share_rounded, size: 19),
+                    label: Text(
+                      context.tr('util_chias_569031'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _isGenerating
+                    ? null
+                    : () => _generateCollage(
+                          bypassDebounce: true,
+                          usePreviewQuality: false,
+                          randomizeLayout: true,
+                        ),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: _paperCocoa,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: _isGenerating
+                    ? const SizedBox(
+                        width: 19,
+                        height: 19,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.auto_awesome_rounded, size: 19),
+                label: Text(
+                  _isGenerating
+                      ? context.tr('util_angto_f2315c')
+                      : context.tr('util_tomi_e69e49'),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudioPhotoTab({required bool compact}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSimplePhotoSource(compact: compact),
+        const SizedBox(height: 16),
+        _buildSelectedImagesPreview(),
+      ],
+    );
+  }
+
+  Widget _buildStudioStyleLibrary() {
+    final styles = <(String, IconData, String)>[
+      (
+        'grid',
+        Icons.grid_view_rounded,
+        L10nService().translate('util_lisch_e9d89a'),
+      ),
+      (
+        'masonry',
+        Icons.view_quilt_rounded,
+        L10nService().translate('util_nhplch_267cb3'),
+      ),
+      (
+        'polaroid',
+        Icons.photo_library_outlined,
+        L10nService().translate('util_albumgiy_50e58e'),
+      ),
+      (
+        'scatter',
+        Icons.auto_awesome_mosaic_outlined,
+        L10nService().translate('util_tdo_ffbe9b'),
+      ),
+      (
+        'heart',
+        Icons.favorite_border_rounded,
+        L10nService().translate('util_tritim_94c542'),
+      ),
+      (
+        'story',
+        Icons.view_agenda_outlined,
+        L10nService().translate('util_dcnibt_063192'),
+      ),
+      (
+        'poster',
+        Icons.web_asset_outlined,
+        L10nService().translate('util_ngangtpch_1d78c7'),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = max(118.0, (constraints.maxWidth - 10) / 2);
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final style in styles)
+              _buildStyleOption(
+                style.$1,
+                style.$2,
+                style.$3,
+                width: min(tileWidth, constraints.maxWidth),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildStudioLayoutTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildStudioPanel(
+          icon: Icons.dashboard_customize_outlined,
+          title: context.tr('util_kiukhung_e45689'),
+          subtitle: context.tr('util_xutnhanhch_311e76'),
+          child: _buildStudioStyleLibrary(),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: _paperPanelDecoration(
+            color: _paperShell,
+            borderColor: _paperLine,
+          ),
+          child: _buildAspectRatioSelector(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudioTitleField() {
+    return TextField(
+      controller: _titleCtrl,
+      textInputAction: TextInputAction.done,
+      maxLength: 80,
+      decoration: InputDecoration(
+        hintText: context.tr('util_vdnhngngyt_523bb0'),
+        prefixIcon: const Icon(Icons.title_rounded),
+        filled: true,
+        fillColor: _paperCream,
+        counterText: '',
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _paperLine),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _paperLine),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _paperCocoa, width: 1.5),
+        ),
+      ),
+      style: SLTheme.quicksand(
+        color: _paperInk,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  Widget _buildStudioCustomizeTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildStudioPanel(
+          icon: Icons.palette_outlined,
+          title: context.tr('util_nnnhghp_2dfd7a'),
+          subtitle: context.tr('util_mcnhdngnnh_8f83dd'),
+          child: _buildBackgroundThemePicker(showTitle: false),
+        ),
+        const SizedBox(height: 16),
+        _buildPhotoSizeControl(),
+        const SizedBox(height: 16),
+        _buildStudioPanel(
+          icon: Icons.title_rounded,
+          title: context.tr('util_tiutuchn_d2a891'),
+          subtitle: context.tr('collage_subtitle'),
+          child: _buildStudioTitleField(),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final compact = screenWidth < 380;
+    final horizontalPadding = screenWidth < 360 ? 14.0 : 18.0;
+    final contentWidth = min(
+      680.0,
+      max(0.0, screenWidth - horizontalPadding * 2),
+    );
+
+    Widget activeTab;
+    switch (_activeStudioTab) {
+      case 1:
+        activeTab = _buildStudioLayoutTab();
+        break;
+      case 2:
+        activeTab = _buildStudioCustomizeTab();
+        break;
+      default:
+        activeTab = _buildStudioPhotoTab(compact: compact);
+    }
+
+    return Scaffold(
+      backgroundColor: _paperCream,
+      appBar: AppBar(
+        backgroundColor: _paperCream,
+        foregroundColor: _paperInk,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          context.tr('ui_utilities_artistic_photo_collage_623d85'),
+          style: _editorialStyle(
+            size: compact ? 18 : 20,
+            color: _paperInk,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        actions: [_buildInfoIcon(context)],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            12,
+            horizontalPadding,
+            max(32, MediaQuery.paddingOf(context).bottom + 28),
+          ),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: contentWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildCollagePreviewHero(),
+                  const SizedBox(height: 16),
+                  _buildStudioTabs(),
+                  const SizedBox(height: 16),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    child: KeyedSubtree(
+                      key: ValueKey(_activeStudioTab),
+                      child: activeTab,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegacyCollageScreen(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isPhoneWidth = screenWidth < 430;
     final horizontalPadding = screenWidth < 360

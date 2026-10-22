@@ -13,6 +13,7 @@ import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/views/visitors/visitor_profile_screen.dart';
 import '../screens/single_match_finding_screen.dart';
 import '../screens/single_match_call_screen.dart';
+import '../widgets/single_match_hub_design.dart';
 
 class SingleMatchCallsTab extends StatefulWidget {
   final String houseId;
@@ -180,184 +181,314 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       0,
       (sum, e) => sum + e.durationSeconds ~/ 60,
     );
+    final palette = SingleMatchHubPalette.of(context);
+    final horizontalPadding = MediaQuery.sizeOf(context).width < 380
+        ? 14.0
+        : 20.0;
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 760),
         child: ListView(
           physics: SLResponsive.scrollPhysicsForPlatform(),
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            16,
+            horizontalPadding,
+            30,
+          ),
           children: [
-            // Nút gọi ngẫu nhiên
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: SLColors.paper,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFDCE7)),
-              ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.casino_rounded,
-                    size: 40,
-                    color: Color(0xFF7C61FF),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    context.tr('p4_match_random_title'),
-                    style: SLTheme.quicksand(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF32203B),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    context.tr('p4_match_random_subtitle'),
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8A798E),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () =>
-                              _startRandomCall(isVideo: false, isBlind: true),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B3B58),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          icon: const Text(
-                            '🎭',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          label: Text(
-                            context.tr('p4_match_blind_call'),
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () =>
-                              _startRandomCall(isVideo: true, isBlind: false),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF5E7E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          icon: const Text('⚡', style: TextStyle(fontSize: 18)),
-                          label: Text(
-                            context.tr('p4_match_direct_call'),
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            _buildCallHero(context, palette),
 
             if (callEntries.isNotEmpty) ...[
               const SizedBox(height: 18),
-              // Thống kê
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatTile(
-                      label: L10nService().translate('match_tngcucgi_8e041e'),
-                      value: '${callEntries.length}',
-                      icon: Icons.call_rounded,
-                      color: const Color(0xFFFF5E7E),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _StatTile(
-                      label: L10nService().translate('match_phttrchuyn_b7d1cd'),
-                      value: '$totalMinutes',
-                      icon: Icons.schedule_rounded,
-                      color: const Color(0xFF6366F1),
-                    ),
-                  ),
-                ],
+              _buildStats(
+                context,
+                palette,
+                calls: callEntries.length,
+                minutes: totalMinutes,
               ),
               const SizedBox(height: 18),
-              Row(
-                children: [
-                  Text(
-                    context.tr('p4_match_history_title'),
-                    style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2E2427),
-                    ),
-                  ),
-                ],
-              ),
+              _buildSectionHeader(context, palette),
               const SizedBox(height: 12),
               ...callEntries.map(_buildHistoryCard),
             ],
 
             if (callEntries.isEmpty && _history.isEmpty) ...[
               const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: SLColors.paper,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFFF0E5DF),
-                    width: 1.2,
+              _buildEmptyState(context, palette),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCallHero(BuildContext context, SingleMatchHubPalette palette) {
+    final isBusy = _callingHouseId != null;
+    return Semantics(
+      container: true,
+      label: context.tr('p4_match_random_title'),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [palette.soft, palette.surface],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: palette.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.call_rounded,
+                    color: Color(0xFF6366F1),
+                    size: 28,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.call_end_rounded,
-                      size: 52,
-                      color: SLColors.textTertiary,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.tr('p4_match_empty_title'),
-                      style: SLTheme.quicksand(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.textPrimary,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('p4_match_random_title'),
+                        style: SLTheme.quicksand(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          color: palette.ink,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      context.tr('p4_match_empty_subtitle'),
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.textSecondary,
+                      const SizedBox(height: 5),
+                      Text(
+                        context.tr('p4_match_random_subtitle'),
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                          color: palette.muted,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildCallAction(
+              context,
+              palette,
+              icon: Icons.call_rounded,
+              title: context.tr('match_githoi_ad3e35'),
+              subtitle: context.tr('match_chophpgith_5a78ca'),
+              filled: true,
+              enabled: !isBusy,
+              onPressed: () => _startRandomCall(isVideo: false, isBlind: false),
+            ),
+            const SizedBox(height: 10),
+            _buildCallAction(
+              context,
+              palette,
+              icon: Icons.videocam_rounded,
+              title: context.tr('match_givideonga_ba8333'),
+              subtitle: context.tr('match_chophpgivi_95d26f'),
+              filled: false,
+              enabled: !isBusy,
+              onPressed: () => _startRandomCall(isVideo: true, isBlind: false),
+            ),
+            if (isBusy) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: palette.accent,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.tr('match_anggi_fc34f1'),
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: palette.accent,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCallAction(
+    BuildContext context,
+    SingleMatchHubPalette palette, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool filled,
+    required bool enabled,
+    required VoidCallback onPressed,
+  }) {
+    final foreground = filled ? palette.onAction : palette.ink;
+    final background = filled ? palette.action : palette.surface;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: enabled ? onPressed : null,
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(58),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          backgroundColor: background,
+          foregroundColor: foreground,
+          side: BorderSide(
+            color: filled ? palette.action : palette.border,
+            width: filled ? 0 : 1.2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        icon: Icon(icon, color: filled ? palette.onAction : palette.accent),
+        label: Align(
+          alignment: Alignment.centerLeft,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+              ),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: filled
+                      ? palette.onAction.withValues(alpha: 0.82)
+                      : palette.muted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStats(
+    BuildContext context,
+    SingleMatchHubPalette palette, {
+    required int calls,
+    required int minutes,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatTile(
+            label: L10nService().translate('match_tngcucgi_8e041e'),
+            value: '$calls',
+            icon: Icons.call_rounded,
+            color: palette.accent,
+            background: palette.surface,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(
+            label: L10nService().translate('match_phttrchuyn_b7d1cd'),
+            value: '$minutes',
+            icon: Icons.schedule_rounded,
+            color: const Color(0xFF6366F1),
+            background: palette.surface,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(
+    BuildContext context,
+    SingleMatchHubPalette palette,
+  ) {
+    return Text(
+      context.tr('p4_match_history_title'),
+      style: SLTheme.quicksand(
+        fontSize: 17,
+        fontWeight: FontWeight.w900,
+        color: palette.ink,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, SingleMatchHubPalette palette) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: palette.border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: palette.soft,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.call_end_rounded,
+              size: 30,
+              color: palette.accent,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            context.tr('p4_match_empty_title'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: palette.ink,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.tr('p4_match_empty_subtitle'),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+              color: palette.muted,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -374,152 +505,166 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       'video_call' => const Color(0xFF6366F1),
       _ => const Color(0xFF38BDF8),
     };
+    final palette = SingleMatchHubPalette.of(context);
+    final isBusy = _callingHouseId != null;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
         decoration: BoxDecoration(
-          color: SLColors.paper,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white),
+          color: palette.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: palette.border),
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: const Color(0xFFFFDCE7),
-              backgroundImage: entry.peerAvatarUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(entry.peerAvatarUrl)
-                  : null,
-              child: entry.peerAvatarUrl.isEmpty
-                  ? Text(
-                      entry.peerName.isNotEmpty
-                          ? entry.peerName[0].toUpperCase()
-                          : '?',
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          entry.peerName.isEmpty
-                              ? L10nService().translate('match_hsc_81b822')
-                              : entry.peerName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: palette.soft,
+                  backgroundImage: entry.peerAvatarUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(entry.peerAvatarUrl)
+                      : null,
+                  child: entry.peerAvatarUrl.isEmpty
+                      ? Text(
+                          entry.peerName.isNotEmpty
+                              ? entry.peerName[0].toUpperCase()
+                              : '?',
                           style: SLTheme.quicksand(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF32203B),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          actionLabel,
-                          style: SLTheme.quicksand(
-                            fontSize: 10,
                             fontWeight: FontWeight.w900,
                             color: accent,
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    L10nService().format('p4_match_history_meta', {
-                      'time': _formatRelativeTime(entry.startedAt),
-                      'score': entry.compatibilityScore.toStringAsFixed(0),
-                    }),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    entry.peerName.isEmpty
+                        ? L10nService().translate('match_hsc_81b822')
+                        : entry.peerName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8A798E),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: palette.ink,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _formatDuration(entry.durationSeconds),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    actionLabel,
                     style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF5A495E),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: accent,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 8,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () => slPush<void>(
-                          context,
-                          VisitorProfileScreen(
-                            targetHouseId: entry.peerHouseId,
-                          ),
-                        ),
-                        icon: const Icon(Icons.person_search_rounded, size: 17),
-                        label: Text(
-                          L10nService().translate('match_mhs_d226ff'),
-                        ),
-                      ),
-                      TextButton.icon(
-                        onPressed: () => _launchCall(
-                          pick: SingleMatchCandidate(
-                            houseId: entry.peerHouseId,
-                            displayName: entry.peerName,
-                            houseName: entry.peerName,
-                            avatarUrl: entry.peerAvatarUrl,
-                            bio: '',
-                            intro: '',
-                            goal: entry.goal,
-                            voiceStyle: '',
-                            tags: const [],
-                            allowAudioCalls: true,
-                            allowVideoCalls: true,
-                            enabled: true,
-                            privacy: 'public',
-                            updatedAt: entry.startedAt,
-                            age: null,
-                          ),
-                          isVideo: isVideo,
-                          compatScore: entry.compatibilityScore,
-                        ),
-                        icon: Icon(
-                          isVideo
-                              ? Icons.videocam_rounded
-                              : Icons.call_made_rounded,
-                          size: 17,
-                        ),
-                        label: Text(
-                          context.tr(
-                            isVideo
-                                ? 'p4_match_call_video_again'
-                                : 'p4_match_call_again',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              L10nService().format('p4_match_history_meta', {
+                'time': _formatRelativeTime(entry.startedAt),
+                'score': entry.compatibilityScore.toStringAsFixed(0),
+              }),
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: palette.muted,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _formatDuration(entry.durationSeconds),
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: palette.ink,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => slPush<void>(
+                      context,
+                      VisitorProfileScreen(targetHouseId: entry.peerHouseId),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      foregroundColor: palette.ink,
+                      side: BorderSide(color: palette.border),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.person_search_rounded, size: 17),
+                    label: Text(context.tr('match_mhs_d226ff')),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: isBusy
+                        ? null
+                        : () => _launchCall(
+                            pick: SingleMatchCandidate(
+                              houseId: entry.peerHouseId,
+                              displayName: entry.peerName,
+                              houseName: entry.peerName,
+                              avatarUrl: entry.peerAvatarUrl,
+                              bio: '',
+                              intro: '',
+                              goal: entry.goal,
+                              voiceStyle: '',
+                              tags: const [],
+                              allowAudioCalls: true,
+                              allowVideoCalls: true,
+                              enabled: true,
+                              privacy: 'public',
+                              updatedAt: entry.startedAt,
+                              age: null,
+                            ),
+                            isVideo: isVideo,
+                            compatScore: entry.compatibilityScore,
+                          ),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: Icon(
+                      isVideo ? Icons.videocam_rounded : Icons.call_rounded,
+                      size: 17,
+                    ),
+                    label: Text(
+                      context.tr(
+                        isVideo
+                            ? 'p4_match_call_video_again'
+                            : 'p4_match_call_again',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -570,12 +715,14 @@ class _StatTile extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final Color background;
 
   const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    required this.background,
   });
 
   @override
@@ -583,7 +730,7 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: background,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -603,7 +750,7 @@ class _StatTile extends StatelessWidget {
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF8A798E),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

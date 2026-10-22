@@ -113,6 +113,17 @@ class StorageService {
         preserveOriginal: preserveOriginal,
       );
 
+  Future<List<XFile>> pickMemoryMedia({
+    int? limit,
+    bool preserveOriginal = false,
+  }) =>
+      _pickerService.pickMemoryMedia(
+        limit: limit,
+        preserveOriginal: preserveOriginal,
+      );
+
+  static bool isLivePhotoFile(XFile file) => StoragePickerService.isLivePhotoFile(file);
+
   Future<List<XFile>> pickMultipleMusicFiles({int maxFiles = 5}) =>
       _pickerService.pickMultipleMusicFiles(maxFiles: maxFiles);
 
@@ -1296,6 +1307,7 @@ class StorageService {
     int minWidth = 1080,
     int minHeight = 1920,
     bool requestIsFresh = false,
+    bool isLivePhoto = false,
     Future<void> Function(int bytes, bool isVideo)? beforeUpload,
     double? latitude,
     double? longitude,
@@ -1327,6 +1339,7 @@ class StorageService {
         },
         client: client,
         requestIsFresh: requestIsFresh,
+        isLivePhoto: isLivePhoto,
         beforeUpload: beforeUpload,
         latitude: latitude,
         longitude: longitude,
@@ -1341,11 +1354,12 @@ class StorageService {
           if (!kIsWeb && contentType.startsWith('video/')) {
             final optimized = await StorageVideoOptimizer.prepareVideoForUpload(
               file,
+              isLivePhoto: isLivePhoto,
             );
             compressedPath = optimized.temporaryPath;
             return (
               file: optimized.videoFile,
-              contentType: optimized.isOptimized ? 'video/mp4' : contentType,
+              contentType: optimized.temporaryPath != null ? 'video/mp4' : contentType,
             );
           }
           if (!kIsWeb &&

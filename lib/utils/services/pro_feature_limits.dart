@@ -4,6 +4,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Theo bảng chủ dự án chốt ngày 12/10/2026 (tài khoản thường dùng thử có giới hạn,
 /// PRO mở rộng). Hạn mức tốn tài nguyên máy chủ (AI, ảnh, video) nằm ở functions/.
 abstract final class ProFeatureLimits {
+  /// Giữ liên kết album vượt hạn mức thêm đủ 72 giờ sau lần nhắc đầu tiên.
+  static const Duration expiredShareGracePeriod = Duration(days: 3);
+
+  static int expiredShareGraceDaysRemaining({
+    required int startedAtMs,
+    required int nowMs,
+  }) {
+    final remainingMs =
+        expiredShareGracePeriod.inMilliseconds - (nowMs - startedAtMs);
+    if (remainingMs <= 0) return 0;
+    const dayMs = Duration.millisecondsPerDay;
+    return ((remainingMs + dayMs - 1) ~/ dayMs).clamp(
+      0,
+      expiredShareGracePeriod.inDays,
+    );
+  }
+
   /// Thư hẹn giờ: số thư đang chờ mở tối đa của tài khoản thường.
   static const int freeCapsulePending = 3;
 

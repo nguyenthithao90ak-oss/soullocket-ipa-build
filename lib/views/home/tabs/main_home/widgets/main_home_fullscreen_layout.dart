@@ -56,14 +56,23 @@ class _FullscreenHomeBody extends StatelessWidget {
         ? circleBottomLabel.trim()
         : context.tr('home_ngyyu_722b21');
     final quote = context.tr('home_together_subtitle');
-
+    final petUid = state._auth.currentUser?.uid;
+    final petHouseId = state._houseId;
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
-      body: HomeCompanionScene(
+      body: PetCareHomeScope(
+        uid: petUid,
+        houseId: petHouseId,
+        builder: (context, care) => HomeCompanionScene(
         followScroll: true,
         calm: true,
         guestVisits: true,
+        petCare: care,
+        partnerIsBunny: RoleUtils.isFemaleRole(
+          state._partnerRole,
+          genderSwapped: RoleUtils.readGenderSwapped(state._houseSettings),
+        ),
         enabled: uiState.homeCompanionEnabled,
         soundEnabled: uiState.homeCompanionSoundEnabled,
         maxVisibleCharacters: 2,
@@ -452,6 +461,7 @@ class _FullscreenHomeBody extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

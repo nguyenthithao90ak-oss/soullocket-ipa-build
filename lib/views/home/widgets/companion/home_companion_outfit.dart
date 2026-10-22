@@ -1,6 +1,14 @@
 import 'package:flutter/foundation.dart';
 
-enum HomeCompanionCharacter { bunny, bear, kuromi, melody }
+enum HomeCompanionCharacter {
+  bunny,
+  bear,
+  kuromi,
+  melody;
+
+  // Giữ ID và quyền cũ để đối soát, nhưng chưa cung cấp nhân vật thiếu giấy phép.
+  bool get isAvailable => this == bunny || this == bear;
+}
 
 enum CompanionHat { none, bow, cap, crown, beret, beanie }
 

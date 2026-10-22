@@ -205,24 +205,45 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
   }
 
+  bool _isInteractionSessionCurrent({
+    required String uid,
+    required String houseId,
+    required String role,
+    required int sessionId,
+  }) =>
+      !_isLiveWorkSessionStaleImpl(sessionId) &&
+      _auth.currentUser?.uid == uid &&
+      _houseId == houseId &&
+      _currentRole == role;
+
   void _sendPartnerInteraction(
     String type, {
     bool showSentNotice = true,
     String? emoji,
     String? customTitle,
     String? customMessage,
+    String? customNotificationBody,
   }) async {
-    if (_houseId == null) return;
+    final houseId = _houseId;
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (houseId == null || houseId.isEmpty || user == null) return;
+    final senderRole = _currentRole;
+    final partnerRole = _partnerRole;
+    final sessionId = _liveWorkSessionId;
+    bool isCurrent() => _isInteractionSessionCurrent(
+      uid: user.uid,
+      houseId: houseId,
+      role: senderRole,
+      sessionId: sessionId,
+    );
+    if (!isCurrent()) return;
 
     try {
       final myName = _resolveMyName();
       final partnerName = _resolvePartnerName();
-      final senderRole = _currentRole;
       final senderAvatar = _resolveAvatarForRole(senderRole);
       final sentAt = DateTime.now().millisecondsSinceEpoch;
-      final partnerOnline = _isRoleOnline(_partnerRole);
+      final partnerOnline = _isRoleOnline(partnerRole);
 
       final String title;
       final String body;
@@ -353,6 +374,15 @@ extension _MainHomeInteractions on _MainHomeTabState {
           break;
       }
 
+      final resolvedAlertBody = customNotificationBody?.trim().isNotEmpty == true
+          ? customNotificationBody!.trim()
+          : body;
+      final resolvedNotificationBody =
+          customNotificationBody?.trim().isNotEmpty == true
+          ? customNotificationBody!.trim()
+          : notificationBody;
+      final stickerName = _maybePresetForInteractionType(type)?.label;
+
       final payload = {
         'type': type,
         'emoji': emoji ?? '\u{1F496}',
@@ -361,51 +391,63 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'fromRole': senderRole,
         'fromRoleLabel': _resolveRoleBadge(senderRole),
         'fromAvatar': senderAvatar,
-        'toRole': _partnerRole,
+        'toRole': partnerRole,
         'toName': partnerName,
         'title': title,
-        'body': body,
+        'body': resolvedAlertBody,
         'message': message,
+        if (stickerName != null && stickerName.isNotEmpty)
+          'stickerName': stickerName,
         'sentAt': sentAt,
         'ts': ServerValue.timestamp,
       };
 
       final inboxRef = _dbRef
-          .child('houses/$_houseId/partner_inbox/$_partnerRole')
+          .child('houses/$houseId/partner_inbox/$partnerRole')
           .push();
-      await _dbRef.child('houses/$_houseId/alerts').push().set(payload);
+      await _dbRef.child('houses/$houseId/alerts').push().set(payload);
+      if (!isCurrent()) return;
       await inboxRef.set({...payload, 'timestamp': ServerValue.timestamp});
-      await _dbRef.child('houses/$_houseId/interactions/$type').set({
+      if (!isCurrent()) return;
+      await _dbRef.child('houses/$houseId/interactions/$type').set({
         ...payload,
         'timestamp': ServerValue.timestamp,
       });
+      if (!isCurrent()) return;
       try {
-        final prefs = await OfflineCacheService.getPrefs();
-        final lastFCM = prefs.getInt('il_last_sent_fcm_push_v2') ?? 0;
-        final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-        if (nowMs - lastFCM >= 3600000) {
-          await prefs.setInt('il_last_sent_fcm_push_v2', nowMs);
-          await _notificationService.sendPartnerNotification(
-            houseId: _houseId!,
+        await HomeInteractionCooldown.run(
+          key: HomeInteractionCooldown.key(
+            uid: user.uid,
+            houseId: houseId,
+            role: senderRole,
+            type: type,
+            channel: 'push',
+          ),
+          loadPreferences: OfflineCacheService.getPrefs,
+          isCurrent: isCurrent,
+          action: () => _notificationService.sendPartnerNotification(
+            houseId: houseId,
             title: title,
-            body: notificationBody,
+            body: resolvedNotificationBody,
             data: {
               'screen': 'home',
               'type': 'partner_care',
               'careType': type,
-              'houseId': _houseId!,
+              'houseId': houseId,
+              if (stickerName != null && stickerName.isNotEmpty)
+                'stickerName': stickerName,
             },
-          );
-        }
+          ),
+        );
       } catch (error) {
         debugPrint('[MainHome] Partner notification failed: $error');
       }
+      if (!isCurrent()) return;
 
       // Record daily quest progress
       await DailyQuestService().recordProgress('partner_interaction');
 
-      if (!mounted || !showSentNotice) return;
+      if (!isCurrent() || !showSentNotice) return;
       _showOutgoingInteractionNotice(
         interactionType: type,
         title: L10nScope.of(context).format('ui_home_sent_love_to_value1_91e959', {'value1': partnerName}),
@@ -417,6 +459,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
       );
       HapticFeedback.mediumImpact();
     } catch (e) {
+      if (!isCurrent()) return;
       _showLatestSnackBar(L10nService().translate('home_khngthgitn_55060e'));
     }
   }

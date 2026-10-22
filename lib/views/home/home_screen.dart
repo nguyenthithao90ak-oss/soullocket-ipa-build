@@ -29,6 +29,8 @@ import '../../utils/services/auth/auth_house_context_service.dart';
 import '../../core/sl_route.dart';
 import '../../core/routing/single_open_gate.dart';
 import '../../core/sl_theme.dart';
+import '../../core/app_appearance.dart';
+import '../../widgets/sl_settings_kit.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/friends_service.dart';
@@ -63,6 +65,7 @@ import '../ui_prefs.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:soullocket_app/utils/services/memory_share_service.dart';
+import '../../utils/services/pro_feature_limits.dart';
 // import 'tabs/community_tab.dart'; // DELETED_COMMUNITY_FEATURE 2026-06-28
 import 'tabs/diary_tab.dart';
 import 'tabs/game_tab.dart';
@@ -85,6 +88,7 @@ import '../../core/sl_page_physics.dart';
 import '../../utils/app_cache_manager.dart';
 import 'widgets/home_shell/soul_navigation_style.dart';
 import 'widgets/home_shell/navigation_restore_handle.dart';
+import 'widgets/home_shell/home_inactivity_reminder_dialog.dart';
 import '../../widgets/local_guide_companion.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
@@ -438,7 +442,6 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isCheckingScheduleNotifs = false;
   DateTime? _lastScheduleNotifsCheckAt;
   static const Duration _inactivityTimeout = Duration(minutes: 45);
-  static const int _inactivityCountdownSeconds = 5;
   static const Duration _scheduleNotifsCooldown = Duration(seconds: 30);
   String _prewarmedBackgroundUrl = '';
   bool _isPrewarmingShellMedia = false;
@@ -458,13 +461,6 @@ class _HomeScreenState extends State<HomeScreen>
   static const MethodChannel _appControlChannel = MethodChannel(
     'soul_locket/app_control',
   );
-  static const List<String> _vipRotatingThemes = <String>[
-    'theme-pink-glow',
-    'theme-default',
-    'theme-sunset',
-    'theme-ocean',
-    'theme-night',
-  ];
 
   static const _navItems = [
     _NavItem(labelKey: 'nav_home', activeColor: Color(0xFFE75480)),
@@ -1642,6 +1638,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    AppAppearanceScope.watch(context);
     final foregroundContent = _getOrBuildForegroundContent();
 
     return PopScope(
@@ -1761,40 +1758,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  String _resolveThemeKey(String themeKey) {
-    final key = themeKey.trim();
-    if (key == 'off') return 'off';
-    if (key == 'theme-vip-rotate') {
-      final slot =
-          DateTime.now().millisecondsSinceEpoch ~/
-          const Duration(seconds: 30).inMilliseconds;
-      return _vipRotatingThemes[slot % _vipRotatingThemes.length];
-    }
-    if (key != 'theme-auto') {
-      return key.isEmpty ? UiPrefsState.defaults.themeKey : key;
-    }
-
-    final now = DateTime.now();
-    final isNight = now.hour >= 19 || now.hour < 6;
-    if (isNight) return 'theme-night';
-
-    switch (now.month) {
-      case 12:
-      case 1:
-      case 2:
-        return 'theme-pink-glow';
-      case 6:
-      case 7:
-      case 8:
-        return 'theme-ocean';
-      case 9:
-      case 10:
-      case 11:
-        return 'theme-sunset';
-      default:
-        return 'theme-default';
-    }
-  }
+  String _resolveThemeKey(String themeKey) => AppThemeSelection.resolve(themeKey);
 
   String _resolveEffectKey(String effectKey, String resolvedThemeKey) {
     final raw = effectKey.trim();
@@ -1803,9 +1767,5 @@ class _HomeScreenState extends State<HomeScreen>
     return raw;
   }
 
-  bool _isDarkTheme(String themeKey) {
-    return themeKey == 'theme-night' ||
-        themeKey == 'theme-dark' ||
-        themeKey == 'theme-mystic-dark';
-  }
+  bool _isDarkTheme(String themeKey) => AppThemeSelection.isDark(themeKey);
 }

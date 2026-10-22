@@ -14,6 +14,7 @@ import '../../core/sl_route.dart';
 import '../../models/single_match_models.dart';
 import '../../utils/services/single_match_service.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/single_match_age_policy.dart';
 import 'single_match_settings_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../visitors/visitor_profile_screen.dart';
@@ -21,6 +22,7 @@ import 'tabs/single_match_chats_tab.dart';
 import 'tabs/single_match_calls_tab.dart';
 import 'dialogs/single_match_secret_code_dialog.dart';
 import 'widgets/single_match_hub_design.dart';
+import 'widgets/single_match_age_gate.dart';
 import '../chat/chat_detail_screen.dart';
 
 part 'single_match/single_match_action_panels.dart';
@@ -340,9 +342,12 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Future<void> _pickDob() async {
-    final initial =
-        DateTime.tryParse(_myDob) ??
-        DateTime.now().subtract(const Duration(days: 365 * 23));
+    final now = DateTime.now();
+    final parsed = DateTime.tryParse(_myDob);
+    // Không tự điền tuổi trưởng thành cho hồ sơ chưa có ngày sinh.
+    final initial = _ageFromDob(_myDob) != null && parsed != null
+        ? DateTime(parsed.year, parsed.month, parsed.day)
+        : DateTime(now.year, now.month, now.day);
     final picked = await showSLDatePicker(
       context: context,
       initialDate: initial,
@@ -364,7 +369,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       return;
     }
 
-    final preferences = _currentPreferences;
+    final preferences = SingleMatchAgePolicy.isAdult(_myDob)
+        ? _currentPreferences
+        : _currentPreferences.copyWith(enabled: false);
     if (preferences.enabled &&
         !preferences.allowAudioCalls &&
         !preferences.allowVideoCalls) {
@@ -790,7 +797,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   child: SingleMatchHubTabs(
                     controller: _tabController,
                     labels: [
-                      context.tr('match_ghpni_91676a'),
+                      context.tr('match_ghpngunhin_1ee82f'),
                       context.tr('chat_tab'),
                       context.tr('ui_single_call_b25622'),
                     ],
@@ -815,6 +822,13 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                         )
                       : _loadError != null
                       ? _buildLoadError()
+                      : !SingleMatchAgePolicy.isAdult(_savedDob)
+                      ? SingleMatchAgeGate(
+                          dob: _myDob,
+                          saving: _isSaving,
+                          onPickDob: _pickDob,
+                          onSave: _myDob != _savedDob ? _savePreferences : null,
+                        )
                       : TabBarView(
                           physics: const SLPagePhysics(),
                           controller: _tabController,

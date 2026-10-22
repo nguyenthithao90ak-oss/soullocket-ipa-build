@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../utilities/memory_puzzle/memory_puzzle_brand_mark.dart';
+import 'pet_care_game_screen.dart';
 import 'soul_block_diary_cover.dart';
 
 /// Màn thư viện độc lập với nền ảnh chung, không tạo hoặc tải quảng cáo.
@@ -15,6 +16,7 @@ class GameLibraryView extends StatelessWidget {
     this.cover,
     this.secondaryAction,
     this.secondaryLabel,
+    this.onOpenPetCare,
   });
 
   final bool isDownloaded;
@@ -24,6 +26,7 @@ class GameLibraryView extends StatelessWidget {
   final Widget? cover;
   final VoidCallback? secondaryAction;
   final String? secondaryLabel;
+  final VoidCallback? onOpenPetCare;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +116,10 @@ class GameLibraryView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 28),
+                    if (onOpenPetCare != null) ...[
+                      PetCareEntryCard(onTap: onOpenPetCare!),
+                      const SizedBox(height: 24),
+                    ],
                     Container(
                       key: const ValueKey('soul-block-feature-card'),
                       width: double.infinity,

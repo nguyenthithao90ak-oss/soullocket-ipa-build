@@ -106,20 +106,12 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
   }
 
   Future<void> _handleNotificationsEnabledChanged(bool value) async {
-    final previousValue = _notificationsEnabled;
+    if (_notificationToggleBusy || value == _notificationsEnabled) return;
     final permissionRequiredMessage = context.tr('home_bncncpquyn_ce1ded');
     final updateFailedMessage = context.tr('home_chathcpnht_c538a0');
     setState(() {
+      _notificationToggleBusy = true;
       _notificationsEnabled = value;
-      _notifAnniversary = value;
-      _notifPost = value;
-      _notifChat = value;
-      _notifHeart = value;
-      _notifFriend = value;
-      _smartDiaryReminder = value;
-      _smartCapsuleReminder = value;
-      _smartLoveNoteReminder = value;
-      _smartSleepReminder = value;
     });
 
     try {
@@ -129,56 +121,44 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           if (!mounted) return;
           setState(() {
             _notificationsEnabled = false;
-            _notifAnniversary = false;
-            _notifPost = false;
-            _notifChat = false;
-            _notifHeart = false;
-            _notifFriend = false;
-            _smartDiaryReminder = false;
-            _smartCapsuleReminder = false;
-            _smartLoveNoteReminder = false;
-            _smartSleepReminder = false;
           });
+          await NotificationService().setNotificationsEnabled(false);
           await _persistNotificationPrefs();
-          unawaited(SoulEventReminderService.instance.refresh());
-          unawaited(CalendarReminderService.instance.refresh());
-          unawaited(HabitReminderService.instance.refresh());
+          if (!mounted) return;
           _showToast(permissionRequiredMessage, success: false);
           _showDisableNotificationsOutsideAppNotice();
           return;
         }
       }
 
+      // Áp dụng local trước các lần ghi mạng: tắt vẫn có hiệu lực khi offline.
+      await NotificationService().setNotificationsEnabled(value);
       await _persistNotificationPrefs();
-      unawaited(SoulEventReminderService.instance.refresh());
-      unawaited(CalendarReminderService.instance.refresh());
-      unawaited(HabitReminderService.instance.refresh());
       await _syncNotificationTopics(value);
-      if (value) {
-        await NotificationService().syncDailySleepReminder();
-      } else {
-        await NotificationService().cancelDailySleepReminder();
-        await NotificationService().cancelInactivityReminder();
-      }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _notificationsEnabled = previousValue;
-        _notifAnniversary = previousValue;
-        _notifPost = previousValue;
-        _notifChat = previousValue;
-        _notifHeart = previousValue;
-        _notifFriend = previousValue;
-        _smartDiaryReminder = previousValue;
-        _smartCapsuleReminder = previousValue;
-        _smartLoveNoteReminder = previousValue;
-        _smartSleepReminder = previousValue;
-      });
-      await _persistNotificationPrefs();
+      // Không tự bật lại thông báo người dùng vừa tắt chỉ vì đồng bộ mạng lỗi.
       _showToast(
         AppErrorMapper.resolve(e, fallbackMessage: updateFailedMessage).message,
         success: false,
       );
+    } finally {
+      await _refreshLocalNotificationReminders();
+      if (mounted) setState(() => _notificationToggleBusy = false);
+    }
+  }
+
+  Future<void> _refreshLocalNotificationReminders() async {
+    try {
+      await Future.wait<void>([
+        SoulEventReminderService.instance.refresh(),
+        CalendarReminderService.instance.refresh(),
+        HabitReminderService.instance.refresh(),
+        NotificationService().syncDailySleepReminder(),
+        NotificationService().syncInactivityReminder(),
+      ]);
+    } catch (error) {
+      debugPrint('[Settings] Không làm mới được lịch thông báo local: $error');
     }
   }
 
@@ -370,7 +350,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     }
 
     for (final prefix in keepPrefixes) {
-      if (key == prefix || key.startsWith('${prefix}_')) {
+      // Nhiều prefix đã kết thúc bằng "_"; nối thêm sẽ tạo "__" và làm
+      // xóa nhầm pending upload hoặc trạng thái theo tài khoản.
+      if (key == prefix || key.startsWith(prefix)) {
         return true;
       }
     }
@@ -467,10 +449,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   helperText: _notificationsEnabled
                       ? context.tr('home_bttronghth_f0f025')
                       : context.tr('home_btappxinqu_1a6325'),
-                  onTap: _notificationsEnabled
-                      ? _showDisableNotificationsOutsideAppNotice
-                      : null,
-                  ignoreDirectSwitchTap: _notificationsEnabled,
+                  onTap: () => unawaited(
+                    _handleNotificationsEnabledChanged(!_notificationsEnabled),
+                  ),
                 ),
               ],
             ),
@@ -700,7 +681,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 final allKeys = prefs.getKeys();
                 int cleared = 0;
                 for (final key in allKeys) {
-                  if (!_shouldKeepAdvancedCacheKey(key)) {
+                  if (isRecognizedAdvancedCacheKey(key) &&
+                      !_shouldKeepAdvancedCacheKey(key)) {
                     await prefs.remove(key);
                     cleared++;
                   }
@@ -718,7 +700,6 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               },
             ),
             if (!kIsWeb) ...[SLSpacing.h8, _buildCachedPhotoSizeText()],
-            if (kDebugMode) ...[SLSpacing.h8, _buildTestNotificationButton()],
           ],
         ],
       ),
@@ -789,128 +770,17 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     String? helperText,
     VoidCallback? onTap,
     bool ignoreDirectSwitchTap = false,
-  }) => SLDetailToggle(
-    icon: icon,
-    title: title,
-    description: helperText,
-    value: value,
-    onChanged: onChanged,
-    onTap: onTap,
-    ignoreDirectSwitchTap: ignoreDirectSwitchTap,
+  }) => AbsorbPointer(
+    absorbing: _notificationToggleBusy,
+    child: SLDetailToggle(
+      icon: icon,
+      title: title,
+      description: helperText,
+      value: value,
+      onChanged: onChanged,
+      onTap: onTap,
+      ignoreDirectSwitchTap: ignoreDirectSwitchTap,
+    ),
   );
 
-  /// Nút gửi thông báo test đến điện thoại đối phương (dùng để kiểm tra)
-  Widget _buildTestNotificationButton() {
-    return SLDetailCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SLDetailHeading(
-            icon: Icons.notifications_active_outlined,
-            title: context.tr('p6_test_notifications_title'),
-            description: context.tr('p6_test_notifications_description'),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTestNotifBtn(
-                  label: context.tr('p6_test_chat_label'),
-                  color: SLDetailStyle.blue,
-                  type: 'chat',
-                  screen: 'chat',
-                  title: context.tr('p6_test_chat_title'),
-                  body: context.tr('p6_test_chat_body'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildTestNotifBtn(
-                  label: context.tr('p6_test_soul_merge_label'),
-                  color: SLDetailStyle.rose,
-                  type: 'soul_merge',
-                  screen: 'soul_merge',
-                  title: context.tr('p6_test_soul_merge_title'),
-                  body: context.tr('p6_test_soul_merge_body'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: _buildTestNotifBtn(
-              label: context.tr('p6_test_regular_notification_label'),
-              color: SLDetailStyle.sage,
-              type: 'home',
-              screen: 'home',
-              title: context.tr('p6_test_regular_notification_title'),
-              body: context.tr('p6_test_regular_notification_body'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTestNotifBtn({
-    required String label,
-    required Color color,
-    required String type,
-    required String screen,
-    required String title,
-    required String body,
-  }) {
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final houseId = _houseId;
-          if (houseId == null || houseId.isEmpty) {
-            _showToast(context.tr('p6_house_info_unavailable'), success: false);
-            return;
-          }
-          try {
-            await NotificationService().sendPartnerNotification(
-              houseId: houseId,
-              title: title,
-              body: body,
-              data: {'screen': screen, 'type': type},
-            );
-            if (!mounted) return;
-            _showToast(context.tr('p6_test_notification_sent'), success: true);
-          } catch (e) {
-            if (!mounted) return;
-            _showToast(
-              context
-                  .tr('p6_test_notification_failed')
-                  .replaceAll('{error}', AppErrorMapper.resolve(e).message),
-              success: false,
-            );
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(SLSettingsRadius.control),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                fontSize: 12.5,
-                color: color,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

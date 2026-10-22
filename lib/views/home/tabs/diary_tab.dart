@@ -202,7 +202,7 @@ class _DiaryTabState extends State<DiaryTab>
       selectedId: _diaryMyReactions[post.id],
       counts: _diaryReactionCounts[post.id] ?? const <String, int>{},
     );
-    if (!mounted || reactionId == null) return;
+    if (!mounted || _houseId?.trim() != houseId || reactionId == null) return;
     try {
       final previous = _diaryMyReactions[post.id];
       final next = await _diaryReactionService.toggle(
@@ -210,7 +210,7 @@ class _DiaryTabState extends State<DiaryTab>
         postId: post.id,
         reactionId: reactionId,
       );
-      if (!mounted) return;
+      if (!mounted || _houseId?.trim() != houseId) return;
       final counts = <String, int>{
         ...(_diaryReactionCounts[post.id] ?? const <String, int>{}),
       };
@@ -236,11 +236,11 @@ class _DiaryTabState extends State<DiaryTab>
         }
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || _houseId?.trim() != houseId) return;
       _showDiarySnackBar(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('home_khngxactms_fea0e9'),
+          fallbackMessage: context.tr('p4_soul_action_reaction_failed'),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );
@@ -424,6 +424,8 @@ class _DiaryTabState extends State<DiaryTab>
         photos: photos,
         expiryDays: expiryDays,
         password: password,
+        limitsOverride: memoryLimits,
+        proOverride: isProUser,
       );
       if (!mounted) {
         return;
@@ -1163,9 +1165,13 @@ class _DiaryTabState extends State<DiaryTab>
                       return ValueListenableBuilder<double>(
                         valueListenable: bgOpacityNotifier,
                         builder: (context, dragOpacity, _) {
-                          // Nền xung quanh tối hẳn (1.0) để làm nổi bật ảnh
-                          final double opacity =
-                              1.0 * dragOpacity * animation.value;
+                          // Khi mở route, phủ đen ngay từ frame đầu để nền album
+                          // không lóe qua. Khi kéo để đóng, vẫn cho nền mờ dần.
+                          final routeOpacity =
+                              animation.status == AnimationStatus.reverse
+                              ? animation.value
+                              : 1.0;
+                          final double opacity = dragOpacity * routeOpacity;
                           return Container(
                             color: Colors.black.withValues(alpha: opacity),
                           );
@@ -1842,6 +1848,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                               memoryId: widget.item['id']?.toString() ?? '',
                               fit: BoxFit.contain,
                               cacheWidth: AppConfig.diaryImageViewerCacheWidth,
+                              loadingBackgroundColor: Colors.black,
                               placeholderCacheWidth:
                                   _memoryThumbnailCacheWidthFor(
                                     MediaQuery.of(context),

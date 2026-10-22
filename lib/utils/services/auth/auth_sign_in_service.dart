@@ -37,6 +37,7 @@ import 'auth_support.dart';
 import 'account_deletion_response.dart';
 import '../../../models/account_deletion_status.dart';
 import '../l10n_service.dart';
+import '../../apple_account_deletion.dart';
 
 part 'auth_sign_in_service_social.dart';
 
@@ -49,6 +50,7 @@ class AuthSignInService {
     this._firebaseFunctions,
     HttpPost? httpPost,
     NowProvider? nowProvider,
+    Duration? emailSignInTimeout,
     required this._adminService,
     required this._houseContextService,
   }) : _sharedPreferencesProvider =
@@ -57,6 +59,8 @@ class AuthSignInService {
            googleSignInBuilder ?? (() => GoogleSignIn.instance),
        _httpPost = httpPost ?? http.post,
        _nowProvider = nowProvider ?? DateTime.now,
+       _emailSignInTimeout = emailSignInTimeout ??
+           const Duration(seconds: 12),
        _playIntegrityService = PlayIntegrityService();
 
   static const String dailyLoginLimitMessage =
@@ -66,14 +70,17 @@ class AuthSignInService {
   static const String wrongPasswordMessage = 'Sai mật khẩu. Vui lòng thử lại.';
   static bool _isGoogleSignInInitialized = false;
   static final _pendingSignOuts = Expando<Future<void>>();
+  static final _signOutGenerations = Expando<int>();
+  static final _pendingSignInOperations = Expando<Object>();
+  static final _pendingNativeAuthRequests =
+      Expando<Future<firebase_auth.UserCredential>>();
   // Firebase Auth không hủy native request khi Future phía Dart hết hạn.
   // Giữ request đang chạy để lần đăng nhập email kế tiếp không chạy song song
   // và không để phiên cũ xuất hiện muộn sau khi người dùng đã đổi tài khoản.
   static final _pendingEmailSignIns =
-      Expando<Future<firebase_auth.UserCredential>>();
+      Expando<_PendingEmailSignIn>();
   static final _pendingEmailSignups =
       Expando<Future<firebase_auth.UserCredential?>>();
-  static const Duration _emailSignInTimeout = Duration(seconds: 12);
   static const Duration _sessionFinalizeTimeout = Duration(seconds: 30);
   static const Duration _sessionFinalizePhaseTimeout = Duration(seconds: 12);
   static const String _dailyLoginTrackerPrefsKey = 'il_login_tracker';
@@ -118,6 +125,7 @@ class AuthSignInService {
   final FirebaseFunctions? _firebaseFunctions;
   final HttpPost _httpPost;
   final NowProvider _nowProvider;
+  final Duration _emailSignInTimeout;
   final AuthAdminService _adminService;
   final AuthHouseContextService _houseContextService;
   final PlayIntegrityService _playIntegrityService;
@@ -303,8 +311,42 @@ class AuthSignInService {
   Future<firebase_auth.UserCredential?> signInWithEmailPassword(
     String email,
     String password,
+  ) => _runSignIn(
+    (generation) => _signInWithEmailPassword(email, password, generation),
+  );
+
+  Future<firebase_auth.UserCredential?> _runSignIn(
+    Future<firebase_auth.UserCredential?> Function(int) signIn,
+  ) {
+    final auth = _auth;
+    if (_pendingSignInOperations[auth] != null ||
+        _pendingEmailSignups[auth] != null) {
+      return Future.error(
+        firebase_auth.FirebaseAuthException(code: 'too-many-requests'),
+      );
+    }
+    final operation = Object();
+    _pendingSignInOperations[auth] = operation;
+    // Lấy mốc đồng bộ trước await đầu tiên; logout xảy ra ngay sau cú chạm
+    // vẫn phải hủy request này, kể cả khi cleanup đã kết thúc trước precheck.
+    final generation = _signOutGenerations[auth] ?? 0;
+    return Future<firebase_auth.UserCredential?>.sync(
+      () => signIn(generation),
+    ).whenComplete(() {
+      if (identical(_pendingSignInOperations[auth], operation)) {
+        _pendingSignInOperations[auth] = null;
+      }
+    });
+  }
+
+  Future<firebase_auth.UserCredential?> _signInWithEmailPassword(
+    String email,
+    String password,
+    int signOutGeneration,
   ) async {
     await _pendingSignOuts[_auth];
+    await _waitForPendingEmailSignInBeforeSwitch();
+    _requireSignOutGeneration(signOutGeneration);
     final requestedEmail = email.trim().toLowerCase();
     final loginResolution = await _lookupLoginEmailResolution(
       requestedEmail,
@@ -328,6 +370,7 @@ class AuthSignInService {
       final userCredential = await _signInWithEmailPasswordSerialized(
         email: normalizedEmail,
         password: password,
+        signOutGeneration: signOutGeneration,
       );
 
       if (accountExistsHint == false) {
@@ -409,45 +452,86 @@ class AuthSignInService {
   Future<firebase_auth.UserCredential> _signInWithEmailPasswordSerialized({
     required String email,
     required String password,
+    required int signOutGeneration,
   }) async {
     final auth = _auth;
-    await _waitForPendingEmailSignInBeforeSwitch();
+    if (_pendingEmailSignIns[auth] != null) {
+      await _waitForPendingEmailSignInBeforeSwitch();
+    }
+    if (_pendingEmailSignups[auth] != null ||
+        _pendingEmailSignIns[auth] != null) {
+      throw firebase_auth.FirebaseAuthException(code: 'too-many-requests');
+    }
+    _requireSignOutGeneration(signOutGeneration);
 
     final request = auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
-    _pendingEmailSignIns[auth] = request;
+    final pending = _PendingEmailSignIn();
+    _pendingEmailSignIns[auth] = pending;
     void clearPendingEmailSignIn() {
-      if (identical(_pendingEmailSignIns[auth], request)) {
+      if (identical(_pendingEmailSignIns[auth], pending)) {
         _pendingEmailSignIns[auth] = null;
       }
     }
-    unawaited(
-      request.then<void>(
-        (_) => clearPendingEmailSignIn(),
-        onError: (Object _, StackTrace __) => clearPendingEmailSignIn(),
-      ),
-    );
+    pending.settled = request
+        .then<void>(
+          (credential) async {
+            pending.completedUid = credential.user?.uid;
+            if (pending.abandonedAfterTimeout) {
+              await _discardLateEmailSession(auth, credential);
+            }
+          },
+          onError: (Object _, StackTrace _) {},
+        )
+        .whenComplete(clearPendingEmailSignIn);
 
     return request.timeout(
       _emailSignInTimeout,
-      onTimeout: () => throw UiCopy.text('copy_b8239b73176f'),
+      onTimeout: () {
+        // Future.timeout không hủy native Firebase request. Giữ dấu vết để
+        // callback muộn có thể hủy phiên vừa được Auth tạo ngoài thời hạn.
+        pending.abandonedAfterTimeout = true;
+        throw UiCopy.text('copy_b8239b73176f');
+      },
     );
   }
 
-  Future<void> _waitForPendingEmailSignInBeforeSwitch() async {
-    final pending = _pendingEmailSignIns[_auth];
-    if (pending == null) return;
+  Future<void> _discardLateEmailSession(
+    firebase_auth.FirebaseAuth auth,
+    firebase_auth.UserCredential credential,
+  ) async {
+    // Nếu người dùng đã bấm đăng xuất, thao tác signOut chung sẽ dọn local
+    // trước; không chạy thêm một signOut native song song.
+    if (_pendingSignOuts[auth] != null) return;
+    final lateUid = credential.user?.uid;
+    if (lateUid == null || auth.currentUser?.uid != lateUid) return;
     try {
-      await pending;
-    } catch (_) {
-      // Request cũ thất bại vẫn phải được đợi tới khi native kết thúc.
+      await auth.signOut();
+    } catch (error) {
+      debugPrint('[Auth] Không hủy được phiên email đến muộn: $error');
     }
-    // Một request cũ có thể đã tạo phiên sau khi caller của nó timeout.
-    // Dọn phiên đó trước khi bắt đầu provider/login request mới.
-    if (_auth.currentUser != null) {
-      await signOut();
+  }
+
+  Future<void> _waitForPendingEmailSignInBeforeSwitch() async {
+    final auth = _auth;
+    while (true) {
+      final pending = _pendingEmailSignIns[auth];
+      if (pending == null) return;
+      if (!pending.abandonedAfterTimeout) {
+        throw firebase_auth.FirebaseAuthException(code: 'too-many-requests');
+      }
+      // Chờ cả native request lẫn signOut muộn. Chỉ chờ request sẽ cho phép
+      // cleanup của phiên cũ chạy sau khi tài khoản kế tiếp đã đăng nhập.
+      await pending.settled;
+      await _pendingSignOuts[auth];
+      if (pending.completedUid != null &&
+          auth.currentUser?.uid == pending.completedUid) {
+        await signOut();
+      }
+      // Nhiều caller có thể cùng chờ phiên hết hạn; kiểm tra lại sau await
+      // để chỉ một caller được bắt đầu request Auth mới.
     }
   }
 
@@ -698,9 +782,15 @@ class AuthSignInService {
     );
   }
 
-  Future<firebase_auth.UserCredential?> signInWithApple() async {
+  Future<firebase_auth.UserCredential?> signInWithApple() =>
+      _runSignIn(_signInWithApple);
+
+  Future<firebase_auth.UserCredential?> _signInWithApple(
+    int signOutGeneration,
+  ) async {
     await _waitForPendingEmailSignInBeforeSwitch();
     await _pendingSignOuts[_auth];
+    _requireSignOutGeneration(signOutGeneration);
     try {
       firebase_auth.UserCredential userCredential;
 
@@ -708,7 +798,10 @@ class AuthSignInService {
         final provider = firebase_auth.AppleAuthProvider()
           ..addScope('email')
           ..addScope('name');
-        userCredential = await _auth.signInWithPopup(provider);
+        userCredential = await _runNativeAuthRequest(
+          () => _auth.signInWithPopup(provider),
+          signOutGeneration: signOutGeneration,
+        );
       } else {
         final isAvailable = await SignInWithApple.isAvailable();
         if (!isAvailable) {
@@ -735,7 +828,10 @@ class AuthSignInService {
           rawNonce,
         );
         await _pendingSignOuts[_auth];
-        userCredential = await _auth.signInWithCredential(oauthCredential);
+        userCredential = await _runNativeAuthRequest(
+          () => _auth.signInWithCredential(oauthCredential),
+          signOutGeneration: signOutGeneration,
+        );
       }
 
       await _enforceNoNewAccountOnWeb(userCredential);
@@ -804,16 +900,25 @@ class AuthSignInService {
     }
   }
 
-  Future<firebase_auth.UserCredential?> signInWithGoogle() async {
+  Future<firebase_auth.UserCredential?> signInWithGoogle() =>
+      _runSignIn(_signInWithGoogle);
+
+  Future<firebase_auth.UserCredential?> _signInWithGoogle(
+    int signOutGeneration,
+  ) async {
     await _waitForPendingEmailSignInBeforeSwitch();
     await _pendingSignOuts[_auth];
+    _requireSignOutGeneration(signOutGeneration);
     try {
       firebase_auth.UserCredential userCredential;
 
       if (kIsWeb) {
         final provider = firebase_auth.GoogleAuthProvider();
         provider.addScope('email');
-        userCredential = await _auth.signInWithPopup(provider);
+        userCredential = await _runNativeAuthRequest(
+          () => _auth.signInWithPopup(provider),
+          signOutGeneration: signOutGeneration,
+        );
       } else {
         final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
         if (!_isGoogleSignInInitialized) {
@@ -872,7 +977,10 @@ class AuthSignInService {
           idToken: googleAuth.idToken,
         );
         await _pendingSignOuts[_auth];
-        userCredential = await _auth.signInWithCredential(credential);
+        userCredential = await _runNativeAuthRequest(
+          () => _auth.signInWithCredential(credential),
+          signOutGeneration: signOutGeneration,
+        );
       }
 
       await _enforceNoNewAccountOnWeb(userCredential);
@@ -990,12 +1098,17 @@ class AuthSignInService {
     String email,
     String password,
   ) {
-    if (_pendingEmailSignups[_auth] != null) {
+    if (_pendingEmailSignups[_auth] != null ||
+        _pendingSignInOperations[_auth] != null) {
       return Future.error(
         firebase_auth.FirebaseAuthException(code: 'too-many-requests'),
       );
     }
-    final operation = _registerWithEmailPassword(email, password);
+    final operation = _registerWithEmailPassword(
+      email,
+      password,
+      _signOutGenerations[_auth] ?? 0,
+    );
     _pendingEmailSignups[_auth] = operation;
     return operation.whenComplete(() {
       if (identical(_pendingEmailSignups[_auth], operation)) {
@@ -1007,8 +1120,11 @@ class AuthSignInService {
   Future<firebase_auth.UserCredential?> _registerWithEmailPassword(
     String email,
     String password,
+    int signOutGeneration,
   ) async {
     await _pendingSignOuts[_auth];
+    await _waitForPendingEmailSignInBeforeSwitch();
+    _requireSignOutGeneration(signOutGeneration);
     if (_auth.currentUser != null) {
       throw firebase_auth.FirebaseAuthException(code: 'operation-not-allowed');
     }
@@ -1020,9 +1136,12 @@ class AuthSignInService {
 
     try {
       await _pendingSignOuts[_auth];
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim().toLowerCase(),
-        password: password,
+      final userCredential = await _runNativeAuthRequest(
+        () => _auth.createUserWithEmailAndPassword(
+          email: email.trim().toLowerCase(),
+          password: password,
+        ),
+        signOutGeneration: signOutGeneration,
       );
       final createdUser = userCredential.user;
       if (createdUser == null) {
@@ -1164,6 +1283,7 @@ class AuthSignInService {
     final auth = _auth;
     final pending = _pendingSignOuts[auth];
     if (pending != null) return pending;
+    _signOutGenerations[auth] = (_signOutGenerations[auth] ?? 0) + 1;
     final operation = _performSignOut().whenComplete(() {
       _pendingSignOuts[auth] = null;
     });
@@ -1171,8 +1291,26 @@ class AuthSignInService {
     return operation;
   }
 
-  Future<void> waitForPendingSignOut() async {
-    await _pendingSignOuts[_auth];
+  Future<void> completeCustomTokenSignIn(
+    String token, {
+    required Future<void> Function(firebase_auth.UserCredential) complete,
+  }) async {
+    await _runSignIn((generation) async {
+      await _pendingSignOuts[_auth];
+      await _waitForPendingEmailSignInBeforeSwitch();
+      final credential = await _runNativeAuthRequest(
+        () => _auth.signInWithCustomToken(token),
+        signOutGeneration: generation,
+      );
+      final user = credential.user;
+      if (user == null) {
+        throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
+      }
+      _requireCurrentSession(user.uid);
+      await complete(credential);
+      _requireCurrentSession(user.uid);
+      return credential;
+    });
   }
 
   Future<void> _performSignOut() async {
@@ -1181,9 +1319,19 @@ class AuthSignInService {
       try {
         // Đợi native request kết thúc trước khi signOut để request cũ không
         // đăng nhập lại sau khi người dùng đã yêu cầu thoát.
-        await pendingEmailSignIn;
+        await pendingEmailSignIn.settled;
       } catch (_) {
         // Dù request lỗi vẫn tiếp tục dọn phiên local/Firebase.
+      }
+    }
+    final pendingNativeAuth = _pendingNativeAuthRequests[_auth];
+    if (pendingNativeAuth != null) {
+      try {
+        // Signup/provider có thể tạo phiên muộn giống email login. Chỉ chờ
+        // request native, không chờ toàn flow (flow có thể tự gọi signOut).
+        await pendingNativeAuth;
+      } catch (_) {
+        // Dù native thất bại vẫn phải dọn phiên local/Firebase.
       }
     }
     final prefs = await _prefs;
@@ -1209,7 +1357,7 @@ class AuthSignInService {
     asyncCleanups.add(
       Future<void>.sync(
         () => NotificationService().clearTokenOnSignOut(),
-      ).timeout(const Duration(seconds: 4)).catchError(
+      ).catchError(
         (error) => debugPrint('[Auth] Không xóa được push token: $error'),
       ),
     );
@@ -1217,7 +1365,7 @@ class AuthSignInService {
     try {
       if (!kIsWeb && _googleSignIn != null) {
         asyncCleanups.add(
-          _googleSignIn!.signOut().timeout(const Duration(seconds: 4)).catchError(
+          _googleSignIn!.signOut().catchError(
             (error) => debugPrint('[Auth] Google sign-out lỗi: $error'),
           ),
         );
@@ -1385,6 +1533,28 @@ class AuthSignInService {
     return date;
   }
 
+  Future<void> _revokeNativeAppleForDeletion(firebase_auth.User user) async {
+    if (!_usesNativeAppleFlow) return;
+    final providers = user.providerData.where((p) => p.providerId == 'apple.com');
+    if (providers.isEmpty) return;
+    await revokeAppleDeletionGrant(
+      uid: user.uid,
+      appleSubject: providers.first.uid ?? '',
+      currentUid: () => _auth.currentUser?.uid,
+      acquire: () async {
+        final nonce = generateNonce();
+        final credential = await SignInWithApple.getAppleIDCredential(
+          scopes: const [],
+          nonce: sha256.convert(utf8.encode(nonce)).toString(),
+          state: generateNonce(length: 12),
+        );
+        return (subject: credential.userIdentifier,
+          authorizationCode: credential.authorizationCode);
+      },
+      revoke: _auth.revokeTokenWithAuthorizationCode,
+    );
+  }
+
   Future<Map<String, dynamic>> deleteAccount({
     String? verificationProof,
     String? expectedUid,
@@ -1415,6 +1585,16 @@ class AuthSignInService {
       );
     }
 
+    try {
+      // Không reauthenticate Firebase ở đây: proof OTP đã gắn auth_time cũ.
+      // Hủy/lỗi thu hồi Apple thì chưa gửi yêu cầu xóa lên máy chủ.
+      await _revokeNativeAppleForDeletion(user);
+    } catch (_) {
+      throw AppErrorInfo(
+        kind: AppErrorKind.user,
+        message: L10nService().translate('auth_fallback_account_delete'),
+      );
+    }
     try {
       final result = await _deleteAccountFromServer(
         user,
@@ -1542,8 +1722,14 @@ class AuthSignInService {
           );
         }
         if (response.statusCode == 403) {
-          // AppCheck hoac quyen hanh: tai khoan khong co lenh xoa chan
-          return null;
+          // Chỉ mã lỗi App Check đã biết mới được map ở trên. 403 lạ phải
+          // fail-closed, không được suy ra là tài khoản không có yêu cầu xóa.
+          throw AppErrorInfo(
+            kind: AppErrorKind.server,
+            message: L10nService().translate(
+              'account_deletion_status_unavailable',
+            ),
+          );
         }
         throw const FormatException('deletion_status_failed');
       }
@@ -2156,6 +2342,30 @@ class AuthSignInService {
       throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
     }
   }
+
+  void _requireSignOutGeneration(int expectedGeneration) {
+    if ((_signOutGenerations[_auth] ?? 0) != expectedGeneration ||
+        _pendingSignOuts[_auth] != null) {
+      throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
+    }
+  }
+
+  Future<firebase_auth.UserCredential> _runNativeAuthRequest(
+    Future<firebase_auth.UserCredential> Function() start, {
+    required int signOutGeneration,
+  }) async {
+    final auth = _auth;
+    _requireSignOutGeneration(signOutGeneration);
+    final request = start();
+    _pendingNativeAuthRequests[auth] = request;
+    try {
+      return await request;
+    } finally {
+      if (identical(_pendingNativeAuthRequests[auth], request)) {
+        _pendingNativeAuthRequests[auth] = null;
+      }
+    }
+  }
 }
 
 class _ServerLoginGuardPrecheck {
@@ -2182,4 +2392,10 @@ class _LoginEmailResolution {
 
   final String email;
   final String source;
+}
+
+class _PendingEmailSignIn {
+  late final Future<void> settled;
+  String? completedUid;
+  bool abandonedAfterTimeout = false;
 }

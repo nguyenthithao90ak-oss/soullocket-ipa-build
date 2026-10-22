@@ -7,6 +7,7 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/widgets/couple_default_avatar.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:soullocket_app/utils/services/features/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
@@ -21,6 +22,7 @@ class HomeCompactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final subtitleText = subtitle?.trim() ?? '';
 
     return Semantics(
@@ -35,7 +37,7 @@ class HomeCompactHeader extends StatelessWidget {
             style: SLTheme.quicksand(
               fontSize: 23,
               fontWeight: FontWeight.w700,
-              color: SLColors.textPrimary,
+              color: dark ? SLSettingsColors.darkInk : SLColors.textPrimary,
               height: 1.2,
               letterSpacing: -0.3,
             ),
@@ -49,7 +51,9 @@ class HomeCompactHeader extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: SLColors.textSecond,
+                color: dark
+                    ? SLSettingsColors.darkInkSecondary
+                    : SLColors.textSecond,
                 height: 1.35,
               ),
             ),
@@ -328,6 +332,7 @@ class HomeUpcomingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final visible = items.take(3).toList(growable: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -342,7 +347,9 @@ class HomeUpcomingCard extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: SLColors.textPrimary,
+                    color: dark
+                        ? SLSettingsColors.darkInk
+                        : SLColors.textPrimary,
                   ),
                 ),
               ),
@@ -350,7 +357,9 @@ class HomeUpcomingCard extends StatelessWidget {
             TextButton(
               onPressed: onSeeAll,
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFA82E48),
+                foregroundColor: (dark
+                    ? SLSettingsPalette.dark.accent
+                    : const Color(0xFFA82E48)),
                 minimumSize: const Size(48, 44),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
@@ -362,7 +371,9 @@ class HomeUpcomingCard extends StatelessWidget {
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFA82E48),
+                      color: (dark
+                          ? SLSettingsPalette.dark.accent
+                          : const Color(0xFFA82E48)),
                     ),
                   ),
                   Icon(
@@ -377,7 +388,7 @@ class HomeUpcomingCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Material(
-          color: SLColors.paper,
+          color: dark ? SLSettingsColors.darkSurface : SLColors.paper,
           borderRadius: BorderRadius.circular(24),
           clipBehavior: Clip.antiAlias,
           child: visible.isEmpty
@@ -387,9 +398,17 @@ class HomeUpcomingCard extends StatelessWidget {
                   children: [
                     _UpcomingFeature(item: visible.first),
                     for (final item in visible.skip(1)) ...[
-                      const Padding(
-                        padding: EdgeInsetsDirectional.only(start: 16, end: 16),
-                        child: Divider(height: 1, color: SLColors.borderLight),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          start: 16,
+                          end: 16,
+                        ),
+                        child: Divider(
+                          height: 1,
+                          color: dark
+                              ? SLSettingsColors.darkDivider
+                              : SLColors.borderLight,
+                        ),
                       ),
                       _UpcomingRow(item: item),
                     ],
@@ -413,6 +432,7 @@ class _UpcomingFeature extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       button: true,
       label: '${item.title}, ${item.when}',
@@ -428,7 +448,9 @@ class _UpcomingFeature extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: SLColors.paperBlush,
+                  color: dark
+                      ? SLSettingsColors.darkSurfaceMuted
+                      : SLColors.paperBlush,
                   borderRadius: BorderRadius.circular(18),
                 ),
                 alignment: Alignment.center,
@@ -451,7 +473,9 @@ class _UpcomingFeature extends StatelessWidget {
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: SLColors.textPrimary,
+                        color: dark
+                            ? SLSettingsColors.darkInk
+                            : SLColors.textPrimary,
                         height: 1.3,
                       ),
                     ),
@@ -463,7 +487,9 @@ class _UpcomingFeature extends StatelessWidget {
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: SLColors.textSecond,
+                        color: dark
+                            ? SLSettingsColors.darkInkSecondary
+                            : SLColors.textSecond,
                       ),
                     ),
                   ],
@@ -473,7 +499,9 @@ class _UpcomingFeature extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: SLColors.textSecond,
+                color: dark
+                    ? SLSettingsColors.darkInkSecondary
+                    : SLColors.textSecond,
                 textDirection: Directionality.of(context),
               ),
             ],
@@ -491,6 +519,7 @@ class _UpcomingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       button: true,
       label: '${item.title}, ${item.when}',
@@ -521,7 +550,9 @@ class _UpcomingRow extends StatelessWidget {
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: SLColors.textPrimary,
+                      color: dark
+                          ? SLSettingsColors.darkInk
+                          : SLColors.textPrimary,
                     ),
                   ),
                 ),
@@ -531,7 +562,9 @@ class _UpcomingRow extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFFA82E48),
+                    color: (dark
+                        ? SLSettingsPalette.dark.accent
+                        : const Color(0xFFA82E48)),
                   ),
                 ),
               ],
@@ -551,14 +584,17 @@ class _UpcomingEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.event_available_outlined,
             size: 22,
-            color: SLColors.textSecond,
+            color: dark
+                ? SLSettingsColors.darkInkSecondary
+                : SLColors.textSecond,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -567,7 +603,9 @@ class _UpcomingEmpty extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: SLColors.textSecond,
+                color: dark
+                    ? SLSettingsColors.darkInkSecondary
+                    : SLColors.textSecond,
               ),
             ),
           ),
@@ -575,7 +613,9 @@ class _UpcomingEmpty extends StatelessWidget {
             TextButton(
               onPressed: onRetry,
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFA82E48),
+                foregroundColor: (dark
+                    ? SLSettingsPalette.dark.accent
+                    : const Color(0xFFA82E48)),
                 minimumSize: const Size(48, 44),
               ),
               child: Text(context.tr('core_retry')),
@@ -594,6 +634,7 @@ class _UpcomingRetry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 8, 4),
       child: Row(
@@ -604,14 +645,18 @@ class _UpcomingRetry extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: SLColors.textSecond,
+                color: dark
+                    ? SLSettingsColors.darkInkSecondary
+                    : SLColors.textSecond,
               ),
             ),
           ),
           TextButton(
             onPressed: onRetry,
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFA82E48),
+              foregroundColor: (dark
+                  ? SLSettingsPalette.dark.accent
+                  : const Color(0xFFA82E48)),
               minimumSize: const Size(48, 44),
             ),
             child: Text(context.tr('core_retry')),
@@ -665,102 +710,186 @@ class HomeMapMiniCard extends StatelessWidget {
       excludeSemantics: true,
       child: Material(
         key: const ValueKey('home-map-mini'),
-        color: dark ? const Color(0xFF302C34) : SLColors.paper,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 190),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: AlignmentDirectional.topStart,
+              end: AlignmentDirectional.bottomEnd,
+              colors: dark
+                  ? const [Color(0xFF3B343C), Color(0xFF2F3C3A)]
+                  : const [Color(0xFFFFF7F5), Color(0xFFEEF8F5)],
+            ),
+            border: Border.all(
+              color: dark ? const Color(0xFF5B4C59) : const Color(0xFFF2DDE4),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    (dark ? const Color(0xFF1B171B) : const Color(0xFFDFAFC0))
+                        .withValues(alpha: dark ? 0.24 : 0.16),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 190),
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      height: 84,
-                      child: mine == null && partner == null
-                          ? ColoredBox(
-                              key: const ValueKey('home-map-no-location'),
-                              color: dark
-                                  ? const Color(0xFF38434A)
-                                  : const Color(0xFFE4F2EF),
-                              child: Center(
-                                child: Icon(
-                                  Icons.explore_rounded,
-                                  size: 36,
-                                  color: dark
-                                      ? const Color(0xFFA8C7C1)
-                                      : const Color(0xFF7FA9A0),
-                                ),
-                              ),
-                            )
-                          : _HomeMiniMapPreview(
-                              myPoint: mine,
-                              partnerPoint: partner,
-                              myAvatarUrl: myAvatarUrl,
-                              partnerAvatarUrl: partnerAvatarUrl,
-                              myFemale: myFemale,
-                              partnerFemale: partnerFemale,
-                              tileProvider: tileProvider,
-                            ),
-                    ),
-                  ),
-                  if (mine != null || partner != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
-                      child: Text(
-                        context.tr('home_compact_map_attribution'),
-                        textAlign: TextAlign.end,
-                        textScaler: TextScaler.noScaling,
-                        style: SLTheme.quicksand(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w600,
-                          color: muted,
-                          height: 1.1,
+                  PositionedDirectional(
+                    top: -13,
+                    end: -10,
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: dark ? 0.16 : 0.28,
+                        child: Transform.rotate(
+                          angle: 0.16,
+                          child: UtilityStickerImage(
+                            stickerId: 'wish',
+                            size: 62,
+                            fallbackIcon: Icons.auto_awesome_rounded,
+                            fallbackColor: dark
+                                ? const Color(0xFFF3B5C7)
+                                : const Color(0xFFD97796),
+                          ),
                         ),
                       ),
                     ),
-                  const SizedBox(height: 8),
+                  ),
+                  PositionedDirectional(
+                    bottom: -14,
+                    start: -10,
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: dark ? 0.13 : 0.2,
+                        child: Transform.rotate(
+                          angle: -0.2,
+                          child: UtilityStickerImage(
+                            stickerId: 'gift',
+                            size: 48,
+                            fallbackIcon: Icons.card_giftcard_rounded,
+                            fallbackColor: dark
+                                ? const Color(0xFFE3B1D2)
+                                : const Color(0xFFD882A6),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.favorite_rounded,
-                              size: 12,
-                              color: dark
-                                  ? const Color(0xFFF5A1B6)
-                                  : const Color(0xFFD65D7C),
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: _miniCardText(
-                                title,
-                                color: dark
-                                    ? const Color(0xFFAAD2C7)
-                                    : const Color(0xFF3B796D),
-                                fontSize: 11.5,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: SizedBox(
+                            height: 84,
+                            child: mine == null && partner == null
+                                ? ColoredBox(
+                                    key: const ValueKey('home-map-no-location'),
+                                    color: dark
+                                        ? const Color(0xFF38434A)
+                                        : const Color(0xFFE4F2EF),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.explore_rounded,
+                                        size: 36,
+                                        color: dark
+                                            ? const Color(0xFFA8C7C1)
+                                            : const Color(0xFF7FA9A0),
+                                      ),
+                                    ),
+                                  )
+                                : _HomeMiniMapPreview(
+                                    myPoint: mine,
+                                    partnerPoint: partner,
+                                    myAvatarUrl: myAvatarUrl,
+                                    partnerAvatarUrl: partnerAvatarUrl,
+                                    myFemale: myFemale,
+                                    partnerFemale: partnerFemale,
+                                    tileProvider: tileProvider,
+                                  ),
+                          ),
+                        ),
+                        if (mine != null || partner != null)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+                            child: Text(
+                              context.tr('home_compact_map_attribution'),
+                              textAlign: TextAlign.end,
+                              textScaler: TextScaler.noScaling,
+                              style: SLTheme.quicksand(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                color: muted,
+                                height: 1.1,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        _miniCardText(distanceText, color: ink, fontSize: 14),
-                        if (detail.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          _miniCardText(
-                            detail,
-                            color: muted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ],
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.favorite_rounded,
+                                    size: 12,
+                                    color: dark
+                                        ? const Color(0xFFF5A1B6)
+                                        : const Color(0xFFD65D7C),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: _miniCardText(
+                                      title,
+                                      color: dark
+                                          ? const Color(0xFFAAD2C7)
+                                          : const Color(0xFF3B796D),
+                                      fontSize: 11.5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Opacity(
+                                    opacity: dark ? 0.8 : 0.94,
+                                    child: UtilityStickerImage(
+                                      stickerId: 'wish',
+                                      size: 21,
+                                      fallbackIcon: Icons.auto_awesome_rounded,
+                                      fallbackColor: dark
+                                          ? const Color(0xFFF3B5C7)
+                                          : const Color(0xFFD97796),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              _miniCardText(
+                                distanceText,
+                                color: ink,
+                                fontSize: 14,
+                              ),
+                              if (detail.isNotEmpty) ...[
+                                const SizedBox(height: 3),
+                                _miniCardText(
+                                  detail,
+                                  color: muted,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1143,164 +1272,241 @@ class HomeInsightMiniCard extends StatelessWidget {
                   ? const [Color(0xFF3E344A), Color(0xFF332D3D)]
                   : const [Color(0xFFF4EDFF), Color(0xFFEDE4F8)],
             ),
+            border: Border.all(
+              color: dark ? const Color(0xFF5C4C6C) : const Color(0xFFE4D4F4),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    (dark ? const Color(0xFF201A28) : const Color(0xFFC8A8E1))
+                        .withValues(alpha: dark ? 0.22 : 0.16),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: InkWell(
             onTap: onTap,
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 190),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_month_rounded,
-                          size: 14,
-                          color: accent,
-                        ),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: _miniCardText(
-                            context.tr('home_compact_this_month'),
-                            color: accent,
-                            fontSize: 12,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  PositionedDirectional(
+                    top: -13,
+                    end: -9,
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: dark ? 0.15 : 0.25,
+                        child: Transform.rotate(
+                          angle: 0.15,
+                          child: UtilityStickerImage(
+                            stickerId: 'love_card',
+                            size: 62,
+                            fallbackIcon: Icons.favorite_rounded,
+                            fallbackColor: dark
+                                ? const Color(0xFFF0B5D2)
+                                : const Color(0xFFD77AA9),
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                    if (insight == null) ...[
-                      const SizedBox(height: 12),
-                      Icon(Icons.auto_awesome_rounded, size: 26, color: accent),
-                      const SizedBox(height: 8),
-                      _miniCardText(
-                        context.tr('home_anggomthmc_0715ce'),
-                        color: muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        maxLines: 4,
-                      ),
-                    ] else ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _miniCardText(
-                                  numberFormat(memories),
-                                  key: const ValueKey('home-month-memories'),
-                                  color: ink,
-                                  fontSize: 34,
-                                  maxLines: 1,
-                                ),
-                                _miniCardText(
-                                  context.tr('home_compact_memories_unit'),
-                                  color: muted,
-                                  fontSize: 12,
-                                ),
-                              ],
-                            ),
+                  ),
+                  PositionedDirectional(
+                    bottom: -14,
+                    start: -10,
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: dark ? 0.13 : 0.2,
+                        child: Transform.rotate(
+                          angle: -0.18,
+                          child: UtilityStickerImage(
+                            stickerId: 'calendar',
+                            size: 48,
+                            fallbackIcon: Icons.calendar_month_rounded,
+                            fallbackColor: dark
+                                ? const Color(0xFFD7B8F0)
+                                : const Color(0xFFA97BD0),
                           ),
-                          const SizedBox(width: 4),
-                          Transform.rotate(
-                            angle: -0.12,
-                            child: Container(
-                              width: 32,
-                              height: 36,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: dark
-                                    ? const Color(0xFF55435E)
-                                    : const Color(0xFFFFFAFF),
-                                borderRadius: BorderRadius.circular(11),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: accent.withValues(alpha: 0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.photo_library_rounded,
-                                size: 21,
-                                color: Color(0xFFD880A2),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _miniCardText(
-                              scoreLabel,
-                              color: muted,
-                              fontSize: 11,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          _miniCardText(
-                            numberFormat(score),
-                            key: const ValueKey('home-month-score'),
-                            color: ink,
-                            fontSize: 12,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          value: score / 100,
-                          minHeight: 6,
-                          backgroundColor: accent.withValues(alpha: 0.15),
-                          valueColor: AlwaysStoppedAnimation<Color>(accent),
                         ),
                       ),
-                      const SizedBox(height: 9),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(
-                            alpha: dark ? 0.08 : 0.65,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
                           children: [
-                            const Icon(
-                              Icons.wb_sunny_rounded,
-                              size: 13,
-                              color: Color(0xFFD99C62),
+                            Icon(
+                              Icons.calendar_month_rounded,
+                              size: 14,
+                              color: accent,
+                            ),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: _miniCardText(
+                                context.tr('home_compact_this_month'),
+                                color: accent,
+                                fontSize: 12,
+                              ),
                             ),
                             const SizedBox(width: 4),
-                            Flexible(
-                              child: _miniCardText(
-                                L10nService().translateActiveDays(
-                                  insight.activeDays,
-                                ),
-                                key: const ValueKey('home-month-active-days'),
-                                color: muted,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                            Opacity(
+                              opacity: dark ? 0.78 : 0.92,
+                              child: UtilityStickerImage(
+                                stickerId: 'love_card',
+                                size: 21,
+                                fallbackIcon: Icons.favorite_rounded,
+                                fallbackColor: dark
+                                    ? const Color(0xFFF0B5D2)
+                                    : const Color(0xFFD77AA9),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ],
-                ),
+                        if (insight == null) ...[
+                          const SizedBox(height: 12),
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 26,
+                            color: accent,
+                          ),
+                          const SizedBox(height: 8),
+                          _miniCardText(
+                            context.tr('home_anggomthmc_0715ce'),
+                            color: muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            maxLines: 4,
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _miniCardText(
+                                      numberFormat(memories),
+                                      key: const ValueKey(
+                                        'home-month-memories',
+                                      ),
+                                      color: ink,
+                                      fontSize: 34,
+                                      maxLines: 1,
+                                    ),
+                                    _miniCardText(
+                                      context.tr('home_compact_memories_unit'),
+                                      color: muted,
+                                      fontSize: 12,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Transform.rotate(
+                                angle: -0.12,
+                                child: Container(
+                                  width: 32,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: dark
+                                        ? const Color(0xFF55435E)
+                                        : const Color(0xFFFFFAFF),
+                                    borderRadius: BorderRadius.circular(11),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: accent.withValues(alpha: 0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.photo_library_rounded,
+                                    size: 21,
+                                    color: Color(0xFFD880A2),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _miniCardText(
+                                  scoreLabel,
+                                  color: muted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              _miniCardText(
+                                numberFormat(score),
+                                key: const ValueKey('home-month-score'),
+                                color: ink,
+                                fontSize: 12,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: score / 100,
+                              minHeight: 6,
+                              backgroundColor: accent.withValues(alpha: 0.15),
+                              valueColor: AlwaysStoppedAnimation<Color>(accent),
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(
+                                alpha: dark ? 0.08 : 0.65,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.wb_sunny_rounded,
+                                  size: 13,
+                                  color: Color(0xFFD99C62),
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: _miniCardText(
+                                    L10nService().translateActiveDays(
+                                      insight.activeDays,
+                                    ),
+                                    key: const ValueKey(
+                                      'home-month-active-days',
+                                    ),
+                                    color: muted,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

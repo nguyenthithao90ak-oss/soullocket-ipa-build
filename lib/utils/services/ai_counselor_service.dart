@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import '../ai_data_consent.dart';
 
 enum AiTask {
   friendlyChat('friendly_chat'),
@@ -42,20 +43,25 @@ class AiCounselorService {
     : _invoke = _invokeFirebase,
       _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
       _locale = (() => L10nService().localeCode),
-      _translate = ((key) => L10nService().translate(key));
+      _translate = ((key) => L10nService().translate(key)),
+      _hasDataConsent = AiDataConsent.hasConsent;
 
   @visibleForTesting
   AiCounselorService.forTesting(
     this._invoke,
     this._currentUid,
     this._locale,
-    this._translate,
-  );
+    this._translate, {
+    Future<bool> Function(String)? hasDataConsent,
+  }) : _hasDataConsent = hasDataConsent ?? _testConsent;
+
+  static Future<bool> _testConsent(String _) async => true;
 
   final AiCallableInvoker _invoke;
   final String? Function() _currentUid;
   final String Function() _locale;
   final String Function(String) _translate;
+  final Future<bool> Function(String) _hasDataConsent;
 
   static Future<dynamic> _invokeFirebase(
     String name,
@@ -180,8 +186,26 @@ class AiCounselorService {
   }) async {
     final id = requestId ?? createRequestId();
     final uid = _currentUid();
+    bool consent = false;
+    try {
+      consent = uid != null && await _hasDataConsent(uid);
+    } catch (_) {
+      // Không đọc được lựa chọn thì không gửi dữ liệu ra nhà xử lý AI.
+    }
+    if (uid == null || !consent || _currentUid() != uid) {
+      return AiTaskOutcome(
+        requestId: id,
+        status: 'failed',
+        errorMessage: _translate(
+          uid == null || _currentUid() != uid
+              ? 'ai_task_auth_error'
+              : 'ai_data_consent_title',
+        ),
+      );
+    }
     try {
       final data = await _call('generateAiTask', {
+        'aiConsentVersion': AiDataConsent.version,
         'taskId': task.id,
         'input': input,
         'locale': _locale(),
@@ -203,7 +227,7 @@ class AiCounselorService {
             'failed-precondition',
           ].contains(code);
       // Timeout/mất ACK chỉ kiểm tra trạng thái. Không tự phát lại generate.
-      if (uncertain && uid != null && _currentUid() == uid) {
+      if (uncertain && _currentUid() == uid) {
         final recovered = await getTaskResult(task, id);
         if (code != 'failed-precondition' || recovered.status != 'unknown') {
           return recovered;

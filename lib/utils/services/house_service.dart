@@ -384,7 +384,6 @@ class HouseService {
     required String relationshipMode,
     String? recoveryQuestion,
     String? recoveryAnswer,
-    String? houseCreationOtp,
     String createdWith = 'email',
     String? customHouseId,
   }) async {
@@ -438,8 +437,6 @@ class HouseService {
         'relationshipMode': normalizedRelationshipMode,
         'recoveryQuestion': normalizedRecoveryQuestion,
         'recoveryAnswer': normalizedRecoveryAnswer,
-        if ((houseCreationOtp ?? '').trim().isNotEmpty)
-          'houseCreationOtp': houseCreationOtp!.trim(),
         'createdWith': normalizedCreatedWith,
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
         'deviceProof': identity.proof,
@@ -483,12 +480,10 @@ class HouseService {
       if (_isDeviceRequiredError(error)) {
         throw UiCopyException('copy_457a7add0800');
       }
-      if (message == 'house_creation_otp_required') {
-        rethrow;
-      }
       // Tạo nhà không còn bước xác minh Gmail: mã cũ kiểu HOUSE_CREATION_* (nếu
       // máy chủ cũ còn trả) chỉ hiện câu lỗi chung, không hiện mã thô hay đòi mã Gmail.
-      if (message != null && message.startsWith('HOUSE_CREATION_')) {
+      if (message != null &&
+          message.toUpperCase().startsWith('HOUSE_CREATION_')) {
         throw UiCopyException('copy_7af94c91604b');
       }
       if (message != null && message.isNotEmpty) {

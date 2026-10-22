@@ -86,6 +86,7 @@ const int _kGpsHistoryFetchLimit = 600;
 const int _kMapRouteCacheMaxEntries = 24;
 const int _kMapReverseGeocodeCacheMaxEntries = 48;
 const double _kMapMaxLiveAccuracyMeters = 100;
+const double _kMapIosReducedAccuracyMeters = 5000;
 const double _kMapGoodAccuracyMeters = 30;
 const double _kMapFairAccuracyMeters = 75;
 const Duration _kMapRouteCacheTtl = Duration(minutes: 10);
@@ -828,9 +829,13 @@ class _MapScreenState extends State<MapScreen>
   bool _isGpsPointAccurateEnough(_GpsPoint? point) {
     if (point == null) return false;
     final accuracy = point.accuracy;
+    final maxAccuracy =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+        ? _kMapIosReducedAccuracyMeters
+        : _kMapMaxLiveAccuracyMeters;
     return accuracy != null &&
         accuracy.isFinite &&
-        accuracy <= _kMapMaxLiveAccuracyMeters;
+        accuracy <= maxAccuracy;
   }
 
   bool _isStableLiveGpsPoint(_GpsPoint? current, _GpsPoint? lastKnown) {

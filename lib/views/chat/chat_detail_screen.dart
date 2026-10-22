@@ -27,6 +27,7 @@ import '../../utils/app_cache_manager.dart';
 import '../relationship/video_call_screen.dart';
 import 'chat_message_preview.dart';
 import 'widgets/chat_message_retry_notice.dart';
+import 'widgets/chat_text_widgets.dart';
 import 'watch_together_screen.dart';
 import '../../utils/services/purchase_service.dart';
 import 'package:image_picker/image_picker.dart';

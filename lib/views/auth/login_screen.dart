@@ -827,43 +827,41 @@ class _LoginScreenState extends State<LoginScreen> {
     unawaited(AuthSupportDialog.show(context));
   }
 
-  void _handleSocialLogin(String provider) async {
+  Future<void> _handleSocialLogin(String provider) async {
     if (_authActionInProgress || _isLoading || _isSuccessTransition) return;
-    var handedOffToAppEntry = false;
-
     if (!SocialAuthActionHelper.isSupportedProvider(provider)) {
       return;
     }
 
-    final canContinue = await _securityFlowGuard.guard(
-      context,
-      action: SocialAuthActionHelper.sensitiveActionFor(provider),
-      onWarnStepUp: _showMathCaptcha,
-    );
-    if (!canContinue) {
-      return;
-    }
-
-    // Hỏi giới tính trước khi đăng nhập mạng xã hội để tránh bị AppEntry tự động chuyển hướng làm ẩn dialog
-    final selectedRole = await _askGender();
-    if (selectedRole == null) {
-      return;
-    }
-
-    // Lưu ngay vai trò vào SharedPreferences và SecureStorage trước khi gọi API đăng nhập
-    _prefs ??= await SharedPreferences.getInstance();
-    final prefs = _prefs!;
-    await prefs.setString('il_role', selectedRole);
-    await SecureStorageService.instance.write(
-      SecureStorageService.keyRole,
-      selectedRole,
-    );
-
-    if (mounted) {
-      setState(() => _isLoading = true);
-    }
-
+    // Khóa đồng bộ ngay trước await đầu tiên, kể cả trong lúc guard/CAPTCHA và
+    // hộp chọn giới tính đang mở, để hai lần chạm không tạo hai phiên Auth.
+    _authActionInProgress = true;
+    setState(() => _isLoading = true);
+    var handedOffToAppEntry = false;
+    var providerAttempted = false;
     try {
+      final canContinue = await _securityFlowGuard.guard(
+        context,
+        action: SocialAuthActionHelper.sensitiveActionFor(provider),
+        onWarnStepUp: _showMathCaptcha,
+      );
+      if (!canContinue) return;
+
+      // Hỏi giới tính trước khi đăng nhập mạng xã hội để AppEntry không tự
+      // chuyển hướng và che mất hộp thoại.
+      final selectedRole = await _askGender();
+      if (selectedRole == null) return;
+
+      // Lưu vai trò trước khi gọi provider để phiên mới luôn có scope rõ ràng.
+      _prefs ??= await SharedPreferences.getInstance();
+      final prefs = _prefs!;
+      await prefs.setString('il_role', selectedRole);
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyRole,
+        selectedRole,
+      );
+
+      providerAttempted = true;
       final result = switch (provider) {
         'Facebook' => await _authService.signInWithFacebook(),
         'Apple' => await _authService.signInWithApple(),
@@ -941,14 +939,28 @@ class _LoginScreenState extends State<LoginScreen> {
         '[Auth][LoginScreen] social login success -> navigate AppEntry',
       );
       handedOffToAppEntry = true;
-      setState(() => _isLoading = false);
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+      setState(() {
+        _isLoading = false;
+        _isSuccessTransition = true;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
       Navigator.of(
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
       return;
     } catch (e) {
+      if (providerAttempted) {
+        // Lỗi ở bước lưu scope hoặc đọc house sau khi provider đã cấp phiên
+        // không được để lại một phiên đăng nhập nửa chừng trên màn Login.
+        try {
+          await _authService.signOut().timeout(const Duration(seconds: 4));
+        } catch (cleanupError) {
+          debugPrint(
+            '[Auth][LoginScreen] social cleanup failed: $cleanupError',
+          );
+        }
+      }
       _failedAuthAttempts++;
       final resolvedMessage = AppErrorMapper.resolve(
         e,
@@ -964,6 +976,7 @@ class _LoginScreenState extends State<LoginScreen> {
             : resolvedMessage,
       );
     } finally {
+      _authActionInProgress = false;
       if (mounted && !handedOffToAppEntry) {
         setState(() => _isLoading = false);
       }

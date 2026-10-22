@@ -42,6 +42,7 @@ class MemoryViewerActionsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     final width = MediaQuery.sizeOf(context).width;
     return PopupMenuButton<String>(
       key: const ValueKey('memory-viewer-actions'),
@@ -53,13 +54,13 @@ class MemoryViewerActionsButton extends StatelessWidget {
       position: PopupMenuPosition.under,
       offset: const Offset(0, 6),
       padding: const EdgeInsets.all(12),
-      color: DiaryAlbumStyle.paper,
+      color: colors.paper,
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.black.withValues(alpha: 0.2),
       elevation: 10,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: DiaryAlbumStyle.line),
+        side: BorderSide(color: colors.line),
       ),
       icon: const Icon(Icons.more_horiz_rounded, color: Colors.white, size: 24),
       itemBuilder: (context) => [
@@ -89,10 +90,11 @@ class MemoryViewerActionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return SafeArea(
       top: false,
       child: Material(
-        color: DiaryAlbumStyle.paper,
+        color: colors.paper,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
@@ -102,11 +104,7 @@ class MemoryViewerActionSheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
-                child: Container(
-                  width: 36,
-                  height: 3,
-                  color: DiaryAlbumStyle.line,
-                ),
+                child: Container(width: 36, height: 3, color: colors.line),
               ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(10, 16, 10, 10),
@@ -114,7 +112,7 @@ class MemoryViewerActionSheet extends StatelessWidget {
               ),
               for (final action in _memoryActions) ...[
                 if (action.value == 'delete')
-                  const Divider(height: 16, color: DiaryAlbumStyle.line),
+                  Divider(height: 16, color: colors.line),
                 InkWell(
                   key: ValueKey('memory-action-${action.value}'),
                   borderRadius: BorderRadius.circular(10),
@@ -146,7 +144,7 @@ class _MemoryActionsHeading extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     context.tr('home_tychnnh_5e18e0'),
     style: SLTheme.quicksand(
-      color: DiaryAlbumStyle.muted,
+      color: DiaryAlbumPalette.of(context).muted,
       fontSize: 12,
       fontWeight: FontWeight.w700,
     ),
@@ -160,6 +158,7 @@ class _MemoryActionContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     final item = _memoryActions.firstWhere((item) => item.value == action);
     return Row(
       children: [
@@ -167,17 +166,21 @@ class _MemoryActionContent extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: item.wash,
+            color: colors.isDark
+                ? colors.tint(item.color).withValues(alpha: 0.12)
+                : item.wash,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(item.icon, color: item.color, size: 20),
+          child: Icon(item.icon, color: colors.tint(item.color), size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             context.tr(item.label),
             style: SLTheme.quicksand(
-              color: item.value == 'delete' ? item.color : DiaryAlbumStyle.ink,
+              color: item.value == 'delete'
+                  ? colors.tint(item.color)
+                  : colors.ink,
               fontSize: 14,
               fontWeight: FontWeight.w700,
               height: 1.35,

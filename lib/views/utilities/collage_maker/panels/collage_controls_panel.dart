@@ -38,8 +38,8 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: _paperPanelDecoration(
-        color: const Color(0xFFFFF8F2),
-        borderColor: const Color(0xFFDCC9B8),
+        color: _paperShell,
+        borderColor: _paperLine,
         flipped: true,
       ),
       child: Column(
@@ -71,7 +71,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                           setState(() {
                             _selectedStyle = style;
                             _selectedAspectRatio = aspect;
-                            _generatedCollageBytes = null;
+                            _markCollagePreviewDirty();
                             _hasFullQualityRender = false;
                           });
                           if (_getFilteredUrls().isNotEmpty) {
@@ -87,7 +87,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                           padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
                           decoration: BoxDecoration(
                             color: selected
-                                ? const Color(0xFFF2E4DA)
+                                ? _paperCream
                                 : Colors.white.withValues(alpha: 0.74),
                             borderRadius: _paperRadius(flipped: !selected),
                             border: Border.all(
@@ -177,6 +177,38 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
             bottom: 9,
             right: 9,
             height: 12,
+            child: DecoratedBox(decoration: image),
+          ),
+        ];
+        break;
+      case 'masonry':
+        blocks = [
+          Positioned(
+            left: 7,
+            top: 6,
+            width: 19,
+            height: 30,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 29,
+            top: 6,
+            width: 18,
+            height: 17,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            left: 29,
+            bottom: 6,
+            width: 18,
+            height: 11,
+            child: DecoratedBox(decoration: image),
+          ),
+          Positioned(
+            right: 7,
+            top: 6,
+            width: 18,
+            height: 22,
             child: DecoratedBox(decoration: image),
           ),
         ];
@@ -338,7 +370,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                       onTap: () {
                         setState(() {
                           _selectedAspectRatio = preset.id;
-                          _generatedCollageBytes = null;
+                          _markCollagePreviewDirty();
                         });
                         if (_getFilteredUrls().isNotEmpty) {
                           _generateCollage();
@@ -353,9 +385,9 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFFF2E4DA)
-                              : const Color(0xFFFFF8F2),
-                          borderRadius: _paperRadius(flipped: !isSelected),
+                              ? _paperCream
+                              : _paperShell,
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected ? _paperRoseDeep : _paperLine,
                             width: isSelected ? 2 : 1.2,
@@ -376,7 +408,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                                   height: previewHeight,
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? _paperRoseDeep
+                                        ? _paperCocoa
                                         : _paperMist,
                                     borderRadius: _paperRadius(flipped: true),
                                     border: Border.all(
@@ -397,7 +429,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                               style: SLTheme.quicksand(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: isSelected ? _paperRoseDeep : _paperInk,
+                                color: isSelected ? _paperCocoa : _paperInk,
                               ),
                             ),
                             const SizedBox(height: 1),
@@ -443,8 +475,8 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: _paperPanelDecoration(
-        color: const Color(0xFFF9EFE5),
-        borderColor: const Color(0xFFDCC7B3),
+        color: _paperShell,
+        borderColor: _paperLine,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,13 +507,13 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
             min: 0.82,
             max: 1.18,
             divisions: 12,
-            activeColor: _paperRoseDeep,
-            inactiveColor: const Color(0xFFDCC7B3),
+            activeColor: _paperCocoa,
+            inactiveColor: _paperLine,
             onChanged: (value) {
               setState(() => _photoScale = value);
             },
             onChangeEnd: (_) {
-              setState(() => _generatedCollageBytes = null);
+              setState(_markCollagePreviewDirty);
               if (_getFilteredUrls().isNotEmpty) {
                 _generateCollage();
               }
@@ -501,7 +533,12 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
     );
   }
 
-  Widget _buildStyleOption(String id, IconData icon, String label) {
+  Widget _buildStyleOption(
+    String id,
+    IconData icon,
+    String label, {
+    double? width,
+  }) {
     final preset = _CollageMakerScreenState._stylePresets.firstWhere(
       (item) => item.id == id,
       orElse: () => _CollageMakerScreenState._stylePresets.first,
@@ -512,7 +549,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       onTap: () {
         setState(() {
           _selectedStyle = id;
-          _generatedCollageBytes = null;
+          _markCollagePreviewDirty();
         });
         if (_getFilteredUrls().isNotEmpty) {
           _generateCollage();
@@ -520,62 +557,55 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        width: 118,
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+        width: width ?? 140,
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 11),
         decoration: BoxDecoration(
-          color: isSelected ? preset.background : const Color(0xFFFFF9F2),
-          borderRadius: _paperRadius(flipped: !isSelected),
+          color: isSelected ? _paperCream : _paperShell,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? preset.accent : _paperLine,
-            width: 2,
+            width: isSelected ? 1.8 : 1.1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: preset.accent.withValues(alpha: isSelected ? 0.16 : 0.05),
-              blurRadius: isSelected ? 18 : 10,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          boxShadow: _paperShadow(
+            isSelected ? preset.accent : _paperCocoa,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? preset.accent.withValues(alpha: 0.14)
-                    : Colors.white.withValues(alpha: 0.88),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? preset.accent.withValues(alpha: 0.45)
-                      : _paperLine.withValues(alpha: 0.7),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildQuickPresetPreview(
+                    style: id,
+                    icon: icon,
+                    selected: isSelected,
+                  ),
                 ),
-              ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: isSelected ? preset.accent : _paperMuted,
-              ),
+                const SizedBox(width: 6),
+                Icon(
+                  isSelected ? Icons.check_circle_rounded : icon,
+                  size: isSelected ? 18 : 16,
+                  color: isSelected ? preset.accent : _paperMuted,
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 9),
             Text(
               label,
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: _editorialStyle(
-                size: 14,
-                fontWeight: FontWeight.w700,
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                height: 1.2,
+                fontWeight: FontWeight.w800,
                 color: isSelected ? preset.accent : _paperInk,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
-              preset.subtitle,
+              '${preset.minPhotos}–${preset.maxPhotos}',
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -591,20 +621,22 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
     );
   }
 
-  Widget _buildBackgroundThemePicker() {
+  Widget _buildBackgroundThemePicker({bool showTitle = true}) {
     final compact = MediaQuery.sizeOf(context).width < 380;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          context.tr('util_nnnhghp_2dfd7a'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w700,
-            color: _paperInk,
-            fontSize: 15,
+        if (showTitle) ...[
+          Text(
+            context.tr('util_nnnhghp_2dfd7a'),
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w700,
+              color: _paperInk,
+              fontSize: 15,
+            ),
           ),
-        ),
-        SLSpacing.h8,
+          SLSpacing.h8,
+        ],
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -618,7 +650,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                       onTap: () {
                         setState(() {
                           _selectedBackgroundTheme = preset.id;
-                          _generatedCollageBytes = null;
+                          _markCollagePreviewDirty();
                         });
                         if (_getFilteredUrls().isNotEmpty) {
                           _generateCollage();
@@ -631,8 +663,8 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                         decoration: BoxDecoration(
                           color: selected
                               ? preset.background
-                              : const Color(0xFFFFF9F2),
-                          borderRadius: _paperRadius(flipped: !selected),
+                              : _paperShell,
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: selected ? preset.accent : _paperLine,
                             width: selected ? 2 : 1.2,
@@ -650,7 +682,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.72),
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(9),
                                 border: Border.all(
                                   color: preset.accent.withValues(
                                     alpha: selected ? 0.42 : 0.22,
@@ -714,15 +746,13 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       width: double.infinity,
       padding: EdgeInsets.all(compact ? 14 : 16),
       decoration: _paperPanelDecoration(
-        color: const Color(0xFFFFF8F2),
-        borderColor: const Color(0xFFDCC9B8),
-        flipped: true,
+        color: _paperShell,
+        borderColor: _paperLine,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeading(
-            step: '1',
+          _buildStudioPanelHeader(
             title: L10nService().translate('util_chnnh_719c35'),
             icon: Icons.add_photo_alternate_rounded,
             subtitle: context.tr(
@@ -775,10 +805,10 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         constraints: const BoxConstraints(minHeight: 68),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
-          color: selected
-              ? _paperRoseDeep.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(18),
+           color: selected
+               ? _paperRoseDeep.withValues(alpha: 0.12)
+               : _paperShell,
+           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? _paperRoseDeep : _paperLine,
             width: selected ? 1.8 : 1.1,
@@ -824,20 +854,9 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       key: const ValueKey('memory-source-options'),
       padding: EdgeInsets.fromLTRB(12, compact ? 12 : 14, 12, 12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF7EF), Color(0xFFF8EFE6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _paperRose.withValues(alpha: 0.42)),
-        boxShadow: [
-          BoxShadow(
-            color: _paperRoseDeep.withValues(alpha: 0.07),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
-          ),
-        ],
+        color: _paperCream,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _paperLine),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -907,16 +926,6 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                       )
                     : const Icon(Icons.refresh_rounded, size: 19),
               ),
-              const SizedBox(width: 4),
-              _buildMemoryInfoChip(
-                icon: hasPhotos
-                    ? Icons.cloud_done_rounded
-                    : Icons.cloud_off_rounded,
-                label: hasPhotos
-                    ? context.tr('memory_puzzle_cached')
-                    : context.tr('util_0nh_e58f05'),
-                highlighted: hasPhotos,
-              ),
             ],
           ),
           if (_isMemoryLoading && !hasPhotos) ...[
@@ -925,7 +934,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
               borderRadius: BorderRadius.circular(99),
               child: const LinearProgressIndicator(
                 minHeight: 4,
-                backgroundColor: Color(0xFFEAD8CA),
+                 backgroundColor: _paperLine,
                 valueColor: AlwaysStoppedAnimation<Color>(_paperRoseDeep),
               ),
             ),
@@ -1042,7 +1051,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
               fit: StackFit.expand,
               children: [
                 ColoredBox(
-                  color: const Color(0xFFEEDFD3),
+                   color: _paperCream,
                   child: isPrivate
                       ? PrivateDiaryImage(
                           houseId: widget.houseId,
@@ -1167,8 +1176,8 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       key: const ValueKey('device-source-options'),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8EFE5),
-        borderRadius: BorderRadius.circular(18),
+         color: _paperCream,
+         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _paperLine.withValues(alpha: 0.85)),
       ),
       child: Column(

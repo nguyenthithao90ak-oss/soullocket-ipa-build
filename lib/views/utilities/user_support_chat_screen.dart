@@ -15,6 +15,7 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/services/storage/support_pending_send_store.dart';
+import '../../widgets/ai_data_consent_dialog.dart';
 import 'support_guide_catalog.dart';
 import 'support_ticket_shared.dart';
 import 'widgets/support_chat_widgets.dart';
@@ -418,6 +419,12 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
     final category = supportGuideCategoryById(_guideCategoryId);
+    if (!await requestAiDataConsent(context, uid: uid,
+      isCurrent: () => mounted && FirebaseAuth.instance.currentUser?.uid == uid,
+    )) {
+      return;
+    }
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid || _aiThinking) return;
     final categoryLabel = category == null ? '' : context.tr(category.titleKey);
     final seq = ++_aiSeq;
     _msgCtrl.clear();
@@ -915,6 +922,13 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       onReopen: _reopenClosedTicket,
       onSend: _onComposerSend,
       onBack: () => Navigator.of(context).maybePop(),
+      onAiPrivacy: () {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid == null) return;
+        unawaited(requestAiDataConsent(context, uid: uid, manage: true,
+          isCurrent: () => mounted && FirebaseAuth.instance.currentUser?.uid == uid,
+        ));
+      },
       onContactTeam: () => unawaited(_openTeamSheet()),
       guide: supportStatusIsClosed(_ticketStatus)
           ? null

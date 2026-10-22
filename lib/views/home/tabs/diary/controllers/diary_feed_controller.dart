@@ -307,34 +307,36 @@ class DiaryFeedController extends ChangeNotifier {
       return '';
     }
 
-    final candidates = <String?>[if (authUser != null) authUser.displayName];
-
-    try {
-      final snap = await _dbRef
-          .child('users/$uid')
-          .get()
-          .timeout(const Duration(seconds: 8));
-      final raw = snap.value;
-      if (raw is Map) {
-        candidates.addAll([
-          raw['displayName']?.toString(),
-          raw['name']?.toString(),
-          raw['fullName']?.toString(),
-          raw['username']?.toString(),
-          _emailLocalPart(raw['email']?.toString()),
-        ]);
-      }
-    } catch (e) {
-      debugPrint('[DiaryFeed] resolveAuthorName fallback parse error: $e');
-    }
-
-    candidates.addAll([if (authUser != null) _emailLocalPart(authUser.email)]);
-
-    return _firstNameCandidate(candidates);
+    // Hồ sơ RTDB chỉ cho phép đọc chính UID của người đăng nhập. Tên hiện
+    // tại đã có trong Auth hoặc tên role của House, nên không cần tạo thêm
+    // một lượt đọc users/{uid} có thể bị từ chối.
+    return _firstNameCandidate([
+      if (authUser != null) authUser.displayName,
+      if (authUser != null) _emailLocalPart(authUser.email),
+    ]);
   }
 
   Future<void> _hydrateAuthorNames(Iterable<DiaryPost> posts) async {
     final currentUser = _auth.currentUser;
+    final namesFromPosts = <String, String>{};
+    for (final post in posts) {
+      final uid = post.authorId.trim();
+      if (uid.isEmpty) {
+        continue;
+      }
+      final role = _resolveAuthorRole(
+        authorId: uid,
+        authorRole: post.authorRole,
+      );
+      final storedName = _normalizeAuthorLabel(
+        post.authorName,
+        authorId: uid,
+        authorRole: role,
+      );
+      if (storedName.isNotEmpty) {
+        namesFromPosts[uid] = storedName;
+      }
+    }
     final uids = posts
         .map((post) => post.authorId.trim())
         .where(
@@ -353,33 +355,33 @@ class DiaryFeedController extends ChangeNotifier {
     final resolved = <String, String>{};
 
     try {
-      await Future.wait(
-        uids.map((uid) async {
-          try {
-            final snap = await _dbRef
-                .child('users/$uid')
-                .get()
-                .timeout(const Duration(seconds: 3));
-            final userData = snap.value;
-            if (userData is Map) {
-              final name = _firstNameCandidate([
-                userData['displayName']?.toString(),
-                userData['name']?.toString(),
-                userData['fullName']?.toString(),
-                userData['username']?.toString(),
-                _emailLocalPart(userData['email']?.toString()),
-              ]);
-              if (name.isNotEmpty) {
-                resolved[uid] = name;
-              }
-            }
-          } catch (error) {
-            debugPrint(
-              '[SuppressedError] lib/views/home/tabs/diary/controllers/diary_feed_controller.dart: $error',
-            );
+      // Không đọc users/{uid} ở đây: rule RTDB chỉ cho tài khoản đọc hồ sơ
+      // của chính mình, nên việc tìm tên người còn lại tạo ra Permission
+      // denied lặp lại. Tên đã lưu trong bài, tên theo role của House và
+      // metadata Auth đủ để hiển thị mà không cần mở rộng quyền đọc.
+      for (final uid in uids) {
+        final nameFromPost = namesFromPosts[uid];
+        if (nameFromPost != null && nameFromPost.isNotEmpty) {
+          resolved[uid] = nameFromPost;
+          continue;
+        }
+
+        final roleName = _houseNameForRole(_memberRoleByUid[uid] ?? '');
+        if (roleName.isNotEmpty) {
+          resolved[uid] = roleName;
+          continue;
+        }
+
+        if (currentUser?.uid == uid) {
+          final authName = _firstNameCandidate([
+            currentUser?.displayName,
+            _emailLocalPart(currentUser?.email),
+          ]);
+          if (authName.isNotEmpty) {
+            resolved[uid] = authName;
           }
-        }),
-      );
+        }
+      }
     } catch (e) {
       debugPrint('[DiaryFeed] resolve user names error: $e');
       // Fallback: resolve từ auth cho current user

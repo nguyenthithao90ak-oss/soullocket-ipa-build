@@ -134,7 +134,7 @@ class UtilitiesHubTitle extends StatelessWidget {
 }
 
 /// Hàng nút chủ đề; `null` là "Tất cả".
-class UtilitiesCategoryChips extends StatelessWidget {
+class UtilitiesCategoryChips extends StatefulWidget {
   const UtilitiesCategoryChips({
     super.key,
     required this.categories,
@@ -151,30 +151,98 @@ class UtilitiesCategoryChips extends StatelessWidget {
   final Map<UtilityCategory?, GlobalKey> chipKeys;
 
   @override
+  State<UtilitiesCategoryChips> createState() => _UtilitiesCategoryChipsState();
+}
+
+class _UtilitiesCategoryChipsState extends State<UtilitiesCategoryChips> {
+  bool _canScrollBefore = false;
+  bool _canScrollAfter = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_syncScrollAffordance);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncScrollAffordance();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant UtilitiesCategoryChips oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_syncScrollAffordance);
+      widget.controller.addListener(_syncScrollAffordance);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncScrollAffordance();
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_syncScrollAffordance);
+    super.dispose();
+  }
+
+  void _syncScrollAffordance() {
+    final controller = widget.controller;
+    if (!controller.hasClients) return;
+    final position = controller.position;
+    final canScrollBefore = position.pixels > position.minScrollExtent + 1;
+    final canScrollAfter =
+        position.pixels < position.maxScrollExtent - 1;
+    if (canScrollBefore == _canScrollBefore &&
+        canScrollAfter == _canScrollAfter) {
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _canScrollBefore = canScrollBefore;
+        _canScrollAfter = canScrollAfter;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      controller: controller,
+    final list = ListView(
+      controller: widget.controller,
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       children: [
         _CategoryChip(
-          key: chipKeys[null],
+          key: widget.chipKeys[null],
           label: context.tr('utilities_filter_all'),
-          selected: active == null,
-          onTap: () => onSelected(null),
+          selected: widget.active == null,
+          onTap: () => widget.onSelected(null),
         ),
-        for (final category in categories)
+        for (final category in widget.categories)
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 8),
             child: _CategoryChip(
-              key: chipKeys[category],
+              key: widget.chipKeys[category],
               label: context.tr(utilityCategoryTitleKey(category)),
-              selected: active == category,
-              onTap: () => onSelected(category),
+              selected: widget.active == category,
+              onTap: () => widget.onSelected(category),
             ),
           ),
       ],
+    );
+    if (!_canScrollBefore && !_canScrollAfter) return list;
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (bounds) => LinearGradient(
+        colors: [
+          _canScrollBefore ? Colors.transparent : Colors.white,
+          Colors.white,
+          Colors.white,
+          _canScrollAfter ? Colors.transparent : Colors.white,
+        ],
+        stops: const [0, .06, .94, 1],
+      ).createShader(bounds),
+      child: list,
     );
   }
 }

@@ -42,7 +42,12 @@ const List<String> _videoTypeKeys = <String>[
   'kind',
 ];
 
-const List<String> _videoFlagKeys = <String>['isVideo', 'is_video'];
+const List<String> _videoFlagKeys = <String>[
+  'isVideo',
+  'is_video',
+  'isLivePhoto',
+  'is_live_photo',
+];
 
 const List<String> _extensionKeys = <String>[
   'extension',

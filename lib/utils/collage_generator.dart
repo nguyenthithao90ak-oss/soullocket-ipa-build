@@ -36,11 +36,11 @@ class CollageDecor {
       badge: UiCopy.text('copy_b8493e2150b5'),
       occasionLabel: occasionLabel,
       message: message,
-      footerText: UiCopy.text('copy_21611872b94e'),
-      primary: const Color(0xFFA76F61),
-      secondary: const Color(0xFFC7D4C8),
-      backgroundTop: const Color(0xFFF7F0E6),
-      backgroundBottom: const Color(0xFFF0E3D4),
+      footerText: UiCopy.text('app_name'),
+      primary: const Color(0xFF244342),
+      secondary: const Color(0xFFC99E78),
+      backgroundTop: const Color(0xFFFCFBF7),
+      backgroundBottom: const Color(0xFFEDE9E1),
       showBlessing: true,
     );
   }
@@ -50,11 +50,11 @@ class CollageDecor {
       badge: UiCopy.text('copy_707b15afff03'),
       occasionLabel: UiCopy.text('copy_a8d05a7109d2'),
       message: '',
-      footerText: UiCopy.text('copy_21611872b94e'),
-      primary: const Color(0xFF6A4C40),
-      secondary: const Color(0xFFD7C4B8),
-      backgroundTop: const Color(0xFFFFF8F2),
-      backgroundBottom: const Color(0xFFF1E4D6),
+      footerText: UiCopy.text('app_name'),
+      primary: const Color(0xFF32474B),
+      secondary: const Color(0xFFC8A88F),
+      backgroundTop: const Color(0xFFFFFCF8),
+      backgroundBottom: const Color(0xFFF0EBE5),
       showBlessing: false,
     );
   }
@@ -101,17 +101,19 @@ class CollageRenderOptions {
   double get renderScale => isPreviewQuality ? 0.62 : 1.0;
 }
 
-class _CollageCanvasFrame {
-  final double width;
-  final double height;
-  final double offsetX;
-  final double offsetY;
+class _CollagePage {
+  final Size size;
+  final Rect photoArea;
+  final double typeScale;
+  final double gap;
+  final String heading;
 
-  const _CollageCanvasFrame({
-    required this.width,
-    required this.height,
-    this.offsetX = 0,
-    this.offsetY = 0,
+  const _CollagePage({
+    required this.size,
+    required this.photoArea,
+    required this.typeScale,
+    required this.gap,
+    required this.heading,
   });
 }
 
@@ -120,7 +122,7 @@ Random _layoutRandom(CollageRenderOptions options, int salt) {
 }
 
 class CollageGenerator {
-  static String get watermark => UiCopy.text('copy_21611872b94e');
+  static String get watermark => UiCopy.text('app_name');
   static final Map<String, ui.Image> _loadedStickerImages =
       <String, ui.Image>{};
 
@@ -143,78 +145,19 @@ class CollageGenerator {
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    Size canvasSize;
     if (renderScale != 1.0) {
       canvas.save();
       canvas.scale(renderScale, renderScale);
     }
 
-    switch (styleType) {
-      case 'polaroid':
-        canvasSize = _drawPolaroidCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-      case 'masonry':
-        canvasSize = _drawMasonryCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-      case 'story':
-        canvasSize = _drawStoryCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-      case 'scatter':
-        canvasSize = _drawScatterCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-      case 'heart':
-        canvasSize = _drawHeartCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-      case 'poster':
-        canvasSize = _drawPosterCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-      case 'grid':
-      default:
-        canvasSize = _drawGridCollage(
-          canvas,
-          images,
-          title,
-          effectiveDecor,
-          options,
-        );
-        break;
-    }
+    final canvasSize = _drawCollagePage(
+      canvas,
+      images,
+      title,
+      styleType,
+      effectiveDecor,
+      options,
+    );
     if (renderScale != 1.0) {
       canvas.restore();
     }
@@ -318,88 +261,14 @@ class CollageGenerator {
     CollageDecor decor,
     CollageRenderOptions options,
   ) {
-    final rect = Rect.fromLTWH(0, 0, width, height);
     if (options.backgroundTheme != 'default') {
       _drawCuteBackgroundTheme(canvas, width, height, decor, options);
       return;
     }
-
-    final paint = Paint()
-      ..shader = ui.Gradient.linear(const Offset(0, 0), Offset(width, height), [
-        decor.backgroundTop,
-        decor.backgroundBottom,
-      ]);
-    canvas.drawRect(rect, paint);
-
-    canvas.drawCircle(
-      Offset(width * 0.12, height * 0.14),
-      min(width, height) * 0.15,
-      Paint()..color = decor.secondary.withValues(alpha: 0.18),
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, width, height),
+      Paint()..color = decor.backgroundTop,
     );
-    canvas.drawCircle(
-      Offset(width * 0.88, height * 0.18),
-      min(width, height) * 0.18,
-      Paint()..color = decor.primary.withValues(alpha: 0.10),
-    );
-    canvas.drawCircle(
-      Offset(width * 0.76, height * 0.86),
-      min(width, height) * 0.12,
-      Paint()..color = const Color(0xFFC7D4C8).withValues(alpha: 0.18),
-    );
-    canvas.drawCircle(
-      Offset(width * 0.52, height * 0.10),
-      min(width, height) * 0.10,
-      Paint()..color = Colors.white.withValues(alpha: 0.12),
-    );
-    canvas.drawCircle(
-      Offset(width * 0.48, height * 0.68),
-      min(width, height) * 0.16,
-      Paint()..color = decor.primary.withValues(alpha: 0.05),
-    );
-    _drawRobotCatMascot(
-      canvas,
-      Offset(width * 0.12, height * 0.23),
-      min(width, height) * 0.16,
-      opacity: 0.16,
-      rotation: -0.18,
-    );
-    _drawBoyMascot(
-      canvas,
-      Offset(width * 0.88, height * 0.23),
-      min(width, height) * 0.15,
-      opacity: 0.16,
-      rotation: 0.14,
-    );
-
-    final random = _layoutRandom(options, 0x0242);
-    final int charmCount = (width * height / 180000).ceil().clamp(12, 34);
-    for (int i = 0; i < charmCount; i++) {
-      final double x = random.nextDouble() * width;
-      final double y = random.nextDouble() * height;
-      final double size = 10 + random.nextDouble() * 18;
-      final color = i.isEven ? decor.primary : const Color(0xFFC7D4C8);
-      if (i % 5 == 0) {
-        _drawRobotCatMascot(
-          canvas,
-          Offset(x, y),
-          size * 1.45,
-          opacity: 0.13,
-          rotation: (random.nextDouble() - 0.5) * 0.5,
-        );
-      } else if (i % 5 == 1) {
-        _drawBoyMascot(
-          canvas,
-          Offset(x, y),
-          size * 1.35,
-          opacity: 0.12,
-          rotation: (random.nextDouble() - 0.5) * 0.5,
-        );
-      } else if (i % 3 == 0) {
-        _drawHeart(canvas, Offset(x, y), size, color.withValues(alpha: 0.18));
-      } else {
-        _drawSparkle(canvas, Offset(x, y), size, color.withValues(alpha: 0.20));
-      }
-    }
   }
 
   static void _drawCuteBackgroundTheme(
@@ -825,566 +694,168 @@ class CollageGenerator {
     canvas.drawPath(path, Paint()..color = color);
   }
 
-  static void _drawRobotCatMascot(
-    Canvas canvas,
-    Offset center,
-    double size, {
-    double opacity = 1,
-    double rotation = 0,
+  static ui.Paragraph _editorialParagraph(
+    String text,
+    double width,
+    double fontSize,
+    Color color, {
+    FontWeight weight = FontWeight.w400,
+    int maxLines = 2,
+    double letterSpacing = 0,
+    TextAlign align = TextAlign.left,
   }) {
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(rotation);
-
-    final blue = const Color(0xFF38BDF8).withValues(alpha: opacity);
-    final white = Colors.white.withValues(alpha: opacity * 0.92);
-    final red = const Color(0xFFFF4B6E).withValues(alpha: opacity);
-    final line = const Color(0xFF2563EB).withValues(alpha: opacity * 0.55);
-
-    canvas.drawCircle(Offset.zero, size, Paint()..color = blue);
-    canvas.drawCircle(
-      Offset(0, size * 0.08),
-      size * 0.72,
-      Paint()..color = white,
-    );
-    canvas.drawCircle(
-      Offset(0, -size * 0.08),
-      size * 0.09,
-      Paint()..color = red,
-    );
-    canvas.drawCircle(
-      Offset(-size * 0.25, -size * 0.18),
-      size * 0.11,
-      Paint()..color = Colors.white.withValues(alpha: opacity),
-    );
-    canvas.drawCircle(
-      Offset(size * 0.25, -size * 0.18),
-      size * 0.11,
-      Paint()..color = Colors.white.withValues(alpha: opacity),
-    );
-    canvas.drawCircle(
-      Offset(-size * 0.25, -size * 0.17),
-      size * 0.045,
-      Paint()..color = line,
-    );
-    canvas.drawCircle(
-      Offset(size * 0.25, -size * 0.17),
-      size * 0.045,
-      Paint()..color = line,
-    );
-
-    final whiskerPaint = Paint()
-      ..color = line
-      ..strokeWidth = max(1, size * 0.025)
-      ..strokeCap = StrokeCap.round;
-    for (final dy in [-0.02, 0.12]) {
-      canvas.drawLine(
-        Offset(-size * 0.62, size * dy),
-        Offset(-size * 0.18, size * (dy + 0.02)),
-        whiskerPaint,
-      );
-      canvas.drawLine(
-        Offset(size * 0.18, size * (dy + 0.02)),
-        Offset(size * 0.62, size * dy),
-        whiskerPaint,
-      );
-    }
-    canvas.drawLine(
-      Offset(0, size * 0.03),
-      Offset(0, size * 0.32),
-      whiskerPaint,
-    );
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: Offset(0, size * 0.22),
-        width: size * 0.42,
-        height: size * 0.28,
-      ),
-      0,
-      pi,
-      false,
-      whiskerPaint,
-    );
-    canvas.drawCircle(
-      Offset(0, size * 0.9),
-      size * 0.12,
-      Paint()..color = const Color(0xFFFFD166).withValues(alpha: opacity),
-    );
-    canvas.restore();
+    final builder =
+        ui.ParagraphBuilder(
+            ui.ParagraphStyle(
+              textAlign: align,
+              fontSize: fontSize,
+              fontWeight: weight,
+              height: 1.18,
+              maxLines: maxLines,
+              ellipsis: '…',
+            ),
+          )
+          ..pushStyle(ui.TextStyle(color: color, letterSpacing: letterSpacing))
+          ..addText(text);
+    return builder.build()..layout(ui.ParagraphConstraints(width: width));
   }
 
-  static void _drawBoyMascot(
-    Canvas canvas,
-    Offset center,
-    double size, {
-    double opacity = 1,
-    double rotation = 0,
+  static ({double height, List<(ui.Paragraph, Offset)> lines}) _layoutHeader(
+    double width,
+    String title,
+    CollageDecor decor, {
+    double? typeScale,
   }) {
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(rotation);
+    final scale = typeScale ?? (width / 1080).clamp(0.45, 1.2).toDouble();
+    final inset = width * 0.06;
+    final textWidth = width - inset * 2;
+    final lines = <(ui.Paragraph, Offset)>[];
+    var y = 42 * scale;
+    void add(
+      String text,
+      double size,
+      Color color, {
+      FontWeight weight = FontWeight.w400,
+      int maxLines = 2,
+      double tracking = 0,
+    }) {
+      if (text.trim().isEmpty) return;
+      final paragraph = _editorialParagraph(
+        text,
+        textWidth,
+        size * scale,
+        color,
+        weight: weight,
+        maxLines: maxLines,
+        letterSpacing: tracking * scale,
+      );
+      lines.add((paragraph, Offset(inset, y)));
+      y += paragraph.height;
+    }
 
-    final skin = const Color(0xFFFFD7B5).withValues(alpha: opacity);
-    final hair = const Color(0xFF2F2A37).withValues(alpha: opacity);
-    final shirt = const Color(0xFFFFD166).withValues(alpha: opacity);
-    final line = const Color(0xFF7C2D12).withValues(alpha: opacity * 0.55);
+    add(
+      decor.badge.toUpperCase(),
+      17,
+      decor.primary.withValues(alpha: 0.70),
+      weight: FontWeight.w600,
+      maxLines: 1,
+      tracking: 2.6,
+    );
+    y += 14 * scale;
+    add(title, 58, decor.primary, weight: FontWeight.w600);
+    y += 12 * scale;
+    add(decor.occasionLabel, 23, decor.primary.withValues(alpha: 0.66));
+    return (height: y + 26 * scale, lines: lines);
+  }
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(0, size * 0.72),
-          width: size * 1.34,
-          height: size * 0.88,
-        ),
-        Radius.circular(size * 0.28),
-      ),
-      Paint()..color = shirt,
-    );
-    canvas.drawCircle(Offset.zero, size * 0.58, Paint()..color = skin);
-    canvas.drawPath(
-      Path()
-        ..moveTo(-size * 0.58, -size * 0.18)
-        ..quadraticBezierTo(
-          -size * 0.14,
-          -size * 0.75,
-          size * 0.58,
-          -size * 0.18,
-        )
-        ..quadraticBezierTo(
-          size * 0.18,
-          -size * 0.50,
-          -size * 0.58,
-          -size * 0.18,
-        )
-        ..close(),
-      Paint()..color = hair,
-    );
-    final glassPaint = Paint()
-      ..color = line
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = max(1, size * 0.035);
-    canvas.drawCircle(
-      Offset(-size * 0.20, size * 0.02),
-      size * 0.14,
-      glassPaint,
-    );
-    canvas.drawCircle(
-      Offset(size * 0.20, size * 0.02),
-      size * 0.14,
-      glassPaint,
-    );
-    canvas.drawLine(
-      Offset(-size * 0.06, size * 0.02),
-      Offset(size * 0.06, size * 0.02),
-      glassPaint,
-    );
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: Offset(0, size * 0.23),
-        width: size * 0.34,
-        height: size * 0.18,
-      ),
-      0.15,
-      pi - 0.3,
-      false,
-      glassPaint,
-    );
-    canvas.restore();
+  static double _headerHeight(
+    double width,
+    String title,
+    CollageDecor decor, {
+    double? typeScale,
+  }) {
+    final layout = _layoutHeader(width, title, decor, typeScale: typeScale);
+    for (final line in layout.lines) {
+      line.$1.dispose();
+    }
+    return layout.height;
   }
 
   static void _drawHeader(
     Canvas canvas,
     double width,
     String title,
-    CollageDecor decor,
-  ) {
-    final hasMessage = decor.showBlessing && decor.message.trim().isNotEmpty;
-    final headerHeight = hasMessage ? 246.0 : 196.0;
-    final headerRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(28, 24, width - 56, headerHeight),
-      const Radius.circular(34),
-    );
-    final center = headerRect.outerRect.center.dx;
-    canvas.drawRRect(
-      headerRect,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          headerRect.outerRect.topLeft,
-          headerRect.outerRect.bottomRight,
-          [
-            decor.primary.withValues(alpha: 0.98),
-            decor.primary.withValues(alpha: 0.72),
-            decor.secondary.withValues(alpha: 0.94),
-          ],
-          [0.0, 0.55, 1.0],
-        ),
-    );
-    canvas.drawRRect(
-      headerRect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = Colors.white.withValues(alpha: 0.38),
-    );
-    // Hai chấm sáng tạo cảm giác bìa tạp chí, không che phần chữ.
-    _drawSparkle(
-      canvas,
-      Offset(width - 76, 58),
-      15,
-      Colors.white.withValues(alpha: 0.66),
-    );
-    _drawSparkle(
-      canvas,
-      Offset(72, headerHeight + 4),
-      8,
-      Colors.white.withValues(alpha: 0.44),
-    );
-
-    final ribbon = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(center, 58),
-        width: min(330, width - 120),
-        height: 34,
-      ),
-      const Radius.circular(999),
-    );
-    canvas.drawRRect(
-      ribbon,
-      Paint()..color = Colors.white.withValues(alpha: 0.18),
-    );
-    _drawCenteredTextInRect(
-      canvas,
-      UiCopy.text('copy_ddd02b1c9d5d'),
-      ribbon.outerRect,
-      Colors.white,
-      width < 420 ? 12 : 14,
-      letterSpacing: 1.0,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-    );
-
-    final badgeWidth = min(
-      max(138, decor.badge.length * 8.0 + 30),
-      width - 100,
-    ).toDouble();
-    final badge = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(center, 103),
-        width: badgeWidth,
-        height: 28,
-      ),
-      const Radius.circular(999),
-    );
-    canvas.drawRRect(
-      badge,
-      Paint()..color = Colors.white.withValues(alpha: 0.86),
-    );
-    _drawText(
-      canvas,
-      decor.badge.toUpperCase(),
-      center,
-      95,
-      decor.primary,
-      width < 420 ? 10 : 11,
-      maxWidth: badgeWidth - 14,
-      centerWidth: badgeWidth - 14,
-      letterSpacing: 0.8,
-    );
-
-    final titleMaxWidth = min(
-      width - 100,
-      headerRect.outerRect.width - 48,
-    ).toDouble();
-    final titleSize = width < 420 ? 35.0 : 48.0;
-    final titleY = hasMessage ? 124.0 : 122.0;
-    final titleH = _drawText(
-      canvas,
-      title,
-      center,
-      titleY,
-      Colors.white,
-      titleSize,
-      maxWidth: titleMaxWidth,
-      centerWidth: titleMaxWidth,
-    );
-    final occasionY = titleY + titleH + 6;
-    _drawText(
-      canvas,
-      decor.occasionLabel,
-      center,
-      occasionY,
-      Colors.white.withValues(alpha: 0.88),
-      width < 420 ? 16 : 19,
-      maxWidth: titleMaxWidth,
-      centerWidth: titleMaxWidth,
-      isBold: false,
-      fontStyle: FontStyle.italic,
-    );
-    if (hasMessage) {
-      final messageWidth = min(
-        width - 112,
-        headerRect.outerRect.width - 46,
-      ).toDouble();
-      final messageRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          center - messageWidth / 2,
-          headerHeight - 54,
-          messageWidth,
-          34,
-        ),
-        const Radius.circular(17),
-      );
-      canvas.drawRRect(
-        messageRect,
-        Paint()..color = Colors.white.withValues(alpha: 0.17),
-      );
-      _drawText(
-        canvas,
-        decor.message,
-        center,
-        headerHeight - 47,
-        Colors.white.withValues(alpha: 0.9),
-        13,
-        maxWidth: messageWidth - 20,
-        centerWidth: messageWidth - 20,
-        isBold: false,
-      );
+    CollageDecor decor, {
+    double? typeScale,
+  }) {
+    final layout = _layoutHeader(width, title, decor, typeScale: typeScale);
+    for (final line in layout.lines) {
+      canvas.drawParagraph(line.$1, line.$2);
+      line.$1.dispose();
     }
+  }
+
+  static double _footerHeight(
+    double width,
+    CollageDecor decor, {
+    double? typeScale,
+  }) {
+    final scale = typeScale ?? (width / 1080).clamp(0.45, 1.2).toDouble();
+    return (decor.showBlessing && decor.message.trim().isNotEmpty ? 148 : 82) *
+        scale;
   }
 
   static void _drawFooter(
     Canvas canvas,
     double width,
     double height,
-    CollageDecor decor,
-  ) {
-    final footerRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(width - 254, height - 72, 194, 40),
-      const Radius.circular(999),
+    CollageDecor decor, {
+    double? typeScale,
+  }) {
+    final scale = typeScale ?? (width / 1080).clamp(0.45, 1.2).toDouble();
+    final inset = width * 0.06;
+    final textWidth = width - inset * 2;
+    var y = height - _footerHeight(width, decor, typeScale: scale) + 22 * scale;
+    if (decor.showBlessing && decor.message.trim().isNotEmpty) {
+      final message = _editorialParagraph(
+        decor.message,
+        textWidth,
+        21 * scale,
+        decor.primary.withValues(alpha: 0.76),
+        align: TextAlign.center,
+      );
+      canvas.drawParagraph(message, Offset(inset, y));
+      y += message.height + 17 * scale;
+      message.dispose();
+    }
+    final brandRect = Rect.fromLTWH(
+      width / 2 - 90 * scale,
+      y,
+      180 * scale,
+      22 * scale,
     );
-    canvas.drawRRect(
-      footerRect,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.68)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    final linePaint = Paint()
+      ..color = decor.primary.withValues(alpha: 0.18)
+      ..strokeWidth = scale;
+    canvas.drawLine(
+      Offset(inset, brandRect.center.dy),
+      Offset(brandRect.left - 18 * scale, brandRect.center.dy),
+      linePaint,
     );
-    canvas.drawRRect(
-      footerRect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0
-        ..color = decor.primary.withValues(alpha: 0.12),
+    canvas.drawLine(
+      Offset(brandRect.right + 18 * scale, brandRect.center.dy),
+      Offset(width - inset, brandRect.center.dy),
+      linePaint,
     );
-    _drawText(
+    _drawCenteredTextInRect(
       canvas,
       decor.footerText,
-      footerRect.outerRect.center.dx,
-      height - 66,
-      decor.primary.withValues(alpha: 0.88),
-      14,
-      maxWidth: footerRect.outerRect.width - 28,
-      centerWidth: footerRect.outerRect.width - 28,
+      brandRect,
+      decor.primary.withValues(alpha: 0.56),
+      16 * scale,
       isBold: false,
-      fontStyle: FontStyle.italic,
+      letterSpacing: 1.5 * scale,
     );
-  }
-
-  /// Họa tiết nền riêng cho từng bố cục. Lớp này nằm dưới ảnh nên tạo chiều sâu
-  /// mà không làm mất trọng tâm là kỷ niệm của người dùng.
-  static void _drawStyleAtmosphere(
-    Canvas canvas,
-    double width,
-    double height,
-    String style,
-    CollageDecor decor,
-    CollageRenderOptions options,
-  ) {
-    final soft = Paint()
-      ..color = decor.primary.withValues(alpha: 0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    final faint = Paint()
-      ..color = decor.secondary.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    switch (style) {
-      case 'grid':
-        for (var x = 70.0; x < width; x += 180) {
-          canvas.drawLine(Offset(x, 246), Offset(x, height - 72), faint);
-        }
-        for (var y = 286.0; y < height - 70; y += 180) {
-          canvas.drawLine(Offset(34, y), Offset(width - 34, y), faint);
-        }
-        for (var i = 0; i < 10; i++) {
-          _drawSparkle(
-            canvas,
-            Offset(
-              58 + ((i * 137) % max(1, width - 116)).toDouble(),
-              268 + ((i * 83) % max(1, height - 350)).toDouble(),
-            ),
-            5 + (i % 3) * 2,
-            decor.primary.withValues(alpha: 0.22),
-          );
-        }
-        break;
-      case 'masonry':
-        final path = Path()
-          ..moveTo(36, 300)
-          ..cubicTo(
-            width * .10,
-            height * .42,
-            width * .04,
-            height * .58,
-            40,
-            height - 110,
-          )
-          ..moveTo(width - 36, 300)
-          ..cubicTo(
-            width * .90,
-            height * .44,
-            width * .96,
-            height * .62,
-            width - 42,
-            height - 110,
-          );
-        canvas.drawPath(path, soft);
-        for (final point in <Offset>[
-          const Offset(58, 370),
-          const Offset(76, 520),
-          Offset(width - 60, 430),
-          Offset(width - 78, 620),
-        ]) {
-          _drawLeaf(
-            canvas,
-            point,
-            decor.secondary.withValues(alpha: 0.36),
-            point.dx < width / 2 ? -0.5 : 0.5,
-          );
-        }
-        break;
-      case 'polaroid':
-        for (final tape in <(Offset, double)>[
-          (Offset(width * .18, 278), -0.16),
-          (Offset(width * .76, 328), 0.12),
-          (Offset(width * .34, height - 122), 0.08),
-        ]) {
-          canvas.save();
-          canvas.translate(tape.$1.dx, tape.$1.dy);
-          canvas.rotate(tape.$2);
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              const Rect.fromLTWH(-48, -13, 96, 26),
-              const Radius.circular(5),
-            ),
-            Paint()..color = decor.secondary.withValues(alpha: 0.34),
-          );
-          canvas.restore();
-        }
-        break;
-      case 'scatter':
-        canvas.drawOval(
-          Rect.fromLTWH(70, 250, width - 140, height - 330),
-          faint,
-        );
-        canvas.drawOval(
-          Rect.fromLTWH(120, 300, width - 240, height - 430),
-          soft,
-        );
-        for (var i = 0; i < 9; i++) {
-          final angle = (i / 9) * pi * 2;
-          _drawSparkle(
-            canvas,
-            Offset(
-              width / 2 + cos(angle) * (width * .38),
-              height / 2 + sin(angle) * (height * .35),
-            ),
-            7,
-            decor.primary.withValues(alpha: 0.28),
-          );
-        }
-        break;
-      case 'story':
-        const x = 48.0;
-        canvas.drawLine(Offset(x, 286), Offset(x, height - 90), soft);
-        for (var i = 0; i < 5; i++) {
-          final y = 330 + i * ((height - 460) / 4);
-          canvas.drawCircle(
-            Offset(x, y),
-            8,
-            Paint()..color = decor.primary.withValues(alpha: 0.25),
-          );
-          canvas.drawCircle(
-            Offset(x, y),
-            3,
-            Paint()..color = decor.primary.withValues(alpha: 0.72),
-          );
-        }
-        break;
-      case 'poster':
-        final center = Offset(width * .83, 270);
-        for (var i = 0; i < 14; i++) {
-          final angle = -pi * .95 + i * (pi * 1.9 / 13);
-          final end =
-              center +
-              Offset(cos(angle) * width * .72, sin(angle) * width * .72);
-          canvas.drawLine(center, end, faint);
-        }
-        _drawSun(canvas, center, 42, decor.secondary.withValues(alpha: 0.34));
-        break;
-      case 'heart':
-        for (final point in <Offset>[
-          Offset(width * .14, 310),
-          Offset(width * .86, 320),
-          Offset(width * .12, height - 150),
-          Offset(width * .88, height - 150),
-        ]) {
-          _drawHeart(canvas, point, 20, decor.primary.withValues(alpha: 0.24));
-        }
-        break;
-    }
-  }
-
-  static void _drawLeaf(
-    Canvas canvas,
-    Offset center,
-    Color color,
-    double rotation,
-  ) {
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(rotation);
-    final path = Path()
-      ..moveTo(0, -18)
-      ..cubicTo(15, -13, 17, 5, 0, 18)
-      ..cubicTo(-17, 5, -15, -13, 0, -18)
-      ..close();
-    canvas.drawPath(path, Paint()..color = color);
-    canvas.drawLine(
-      const Offset(0, -12),
-      const Offset(0, 12),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.38)
-        ..strokeWidth = 2,
-    );
-    canvas.restore();
-  }
-
-  static void _drawSun(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    Color color,
-  ) {
-    canvas.drawCircle(center, radius, Paint()..color = color);
-    for (var i = 0; i < 8; i++) {
-      final angle = i * pi / 4;
-      canvas.drawLine(
-        center + Offset(cos(angle) * (radius + 8), sin(angle) * (radius + 8)),
-        center + Offset(cos(angle) * (radius + 21), sin(angle) * (radius + 21)),
-        Paint()
-          ..color = color.withValues(alpha: 0.7)
-          ..strokeWidth = 4,
-      );
-    }
   }
 
   static void _drawSelectedStickers(
@@ -1406,32 +877,24 @@ class CollageGenerator {
     stickers.shuffle(random);
 
     final positions = <Offset>[
-      Offset(width * 0.12, height * 0.31),
-      Offset(width * 0.88, height * 0.33),
-      Offset(width * 0.16, height * 0.62),
-      Offset(width * 0.83, height * 0.64),
+      Offset(width * 0.09, height * 0.32),
+      Offset(width * 0.91, height * 0.32),
+      Offset(width * 0.09, height * 0.82),
+      Offset(width * 0.91, height * 0.82),
       Offset(width * 0.50, height * 0.92),
-      Offset(width * 0.29, height * 0.43),
-      Offset(width * 0.72, height * 0.47),
-      Offset(width * 0.08, height * 0.82),
-      Offset(width * 0.92, height * 0.82),
+      Offset(width * 0.18, height * 0.52),
+      Offset(width * 0.82, height * 0.52),
     ];
-    positions.shuffle(random);
-    final baseSize = min(width, height) * 0.045;
+    final baseSize = min(width, height) * 0.034;
 
     for (int i = 0; i < stickers.length; i++) {
       final basePosition = positions[i % positions.length];
       final ring = i ~/ positions.length;
-      final wave = (i / max(1, stickers.length - 1)) * pi;
-      final size =
-          (baseSize * (0.90 + random.nextDouble() * 0.45) + sin(wave) * 6)
-              .clamp(34.0, 72.0)
-              .toDouble();
-      final position = basePosition.translate(
-        (random.nextDouble() - 0.5) * (28 + ring * 10),
-        (random.nextDouble() - 0.5) * (22 + ring * 10),
-      );
-      final rotation = (random.nextDouble() - 0.5) * 0.6;
+      final size = (baseSize * (1.0 - min(0.12, ring * 0.04)))
+          .clamp(28.0, 56.0)
+          .toDouble();
+      final position = basePosition.translate(0, ring * 8.0);
+      final rotation = i.isEven ? -0.08 : 0.08;
 
       canvas.save();
       canvas.translate(position.dx, position.dy);
@@ -1506,38 +969,6 @@ class CollageGenerator {
     }
   }
 
-  static _CollageCanvasFrame _resolveCanvasFrame(
-    double contentWidth,
-    double contentHeight,
-    CollageRenderOptions options,
-  ) {
-    final targetRatio = options.safeOutputAspectRatio;
-    if (targetRatio == null) {
-      return _CollageCanvasFrame(width: contentWidth, height: contentHeight);
-    }
-
-    final currentRatio = contentWidth / contentHeight;
-    if ((currentRatio - targetRatio).abs() < 0.02) {
-      return _CollageCanvasFrame(width: contentWidth, height: contentHeight);
-    }
-
-    if (currentRatio < targetRatio) {
-      final width = max(contentWidth, contentHeight * targetRatio);
-      return _CollageCanvasFrame(
-        width: width,
-        height: contentHeight,
-        offsetX: (width - contentWidth) / 2,
-      );
-    }
-
-    final height = max(contentHeight, contentWidth / targetRatio);
-    return _CollageCanvasFrame(
-      width: contentWidth,
-      height: height,
-      offsetY: (height - contentHeight) / 2,
-    );
-  }
-
   static Rect _coverSourceRect(
     ui.Image img,
     Rect destRect, {
@@ -1608,24 +1039,6 @@ class CollageGenerator {
     canvas.clipRRect(clipRRect);
 
     _drawImageWithTransform(canvas, img, imageRect, transform);
-    canvas.drawRect(
-      imageRect,
-      Paint()..color = Colors.white.withValues(alpha: 0.18),
-    );
-    canvas.drawRect(
-      imageRect,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          imageRect.topCenter,
-          imageRect.bottomCenter,
-          [
-            Colors.white.withValues(alpha: 0.14),
-            Colors.transparent,
-            Colors.black.withValues(alpha: 0.08),
-          ],
-          [0.0, 0.58, 1.0],
-        ),
-    );
 
     canvas.restore();
 
@@ -1638,32 +1051,6 @@ class CollageGenerator {
     );
   }
 
-  static void _drawCircularPhotoSurface(
-    Canvas canvas,
-    ui.Image img,
-    double size, {
-    CollagePhotoTransform? transform,
-  }) {
-    final Rect bounds = Rect.fromLTWH(-size / 2, -size / 2, size, size);
-    canvas.save();
-    canvas.clipPath(Path()..addOval(bounds));
-    _drawImageWithTransform(canvas, img, bounds, transform);
-    canvas.drawOval(
-      bounds,
-      Paint()..color = Colors.white.withValues(alpha: 0.15),
-    );
-    canvas.restore();
-
-    canvas.drawCircle(
-      Offset.zero,
-      size / 2,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = max(2.0, size * 0.02)
-        ..color = Colors.white.withValues(alpha: 0.62),
-    );
-  }
-
   static void _drawFrameImage(
     Canvas canvas,
     ui.Image img,
@@ -1672,16 +1059,20 @@ class CollageGenerator {
     double radius = 28,
     CollagePhotoTransform? transform,
   }) {
-    final outerRect = imageRect.inflate(2);
+    final matteRect = imageRect.inflate(7);
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.12)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+      ..color = Colors.black.withValues(alpha: 0.10)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        outerRect.shift(const Offset(0, 12)),
-        Radius.circular(radius + 4),
+        matteRect.shift(const Offset(0, 8)),
+        Radius.circular(radius + 7),
       ),
       shadowPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(matteRect, Radius.circular(radius + 7)),
+      Paint()..color = Colors.white.withValues(alpha: 0.94),
     );
     _drawImageSurfaceWithTransform(
       canvas,
@@ -1692,751 +1083,486 @@ class CollageGenerator {
     );
   }
 
-  static Size _drawGridCollage(
-    Canvas canvas,
-    List<ui.Image> images,
+  static _CollagePage _layoutPage(
     String title,
+    String style,
     CollageDecor decor,
     CollageRenderOptions options,
   ) {
-    final int n = images.length;
-    final int cols = sqrt(n).ceil();
-    final int rows = (n / cols).ceil();
-    const double padding = 22.0;
-    const double headerH = 270.0;
-    const double footerH = 84.0;
-    final double photoScale = options.safePhotoScale;
-    final double cellW = 280.0 * photoScale;
-    final double cellH = 280.0 * photoScale;
-
-    final double contentWidth = cols * cellW + padding * (cols + 1);
-    final double contentHeight =
-        rows * cellH + padding * (rows + 1) + headerH + footerH;
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'grid',
-      decor,
-      options,
+    final ratio =
+        options.safeOutputAspectRatio ??
+        (style == 'story'
+            ? 9 / 16
+            : style == 'poster'
+            ? 4 / 3
+            : 0.8);
+    final width = max(1080.0, 720.0 * ratio);
+    final height = width / ratio;
+    final scale = min(width / 1080, height / 1350).clamp(0.62, 1.2).toDouble();
+    final inset = width * 0.06 / options.safePhotoScale;
+    final heading = title.trim().isNotEmpty
+        ? title
+        : UiCopy.text('copy_6acd69a50487');
+    return _CollagePage(
+      size: Size(width, height),
+      photoArea: Rect.fromLTRB(
+        inset,
+        _headerHeight(width, heading, decor, typeScale: scale) + 10 * scale,
+        width - inset,
+        height - _footerHeight(width, decor, typeScale: scale) - 10 * scale,
+      ),
+      typeScale: scale,
+      gap: 22 * scale / options.safePhotoScale,
+      heading: heading,
     );
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    for (int i = 0; i < images.length; i++) {
-      final img = images[i];
-      final int c = i % cols;
-      final int r = i ~/ cols;
-      final double x = padding + c * (cellW + padding);
-      final double y = headerH + padding + r * (cellH + padding);
-      _drawFrameImage(
-        canvas,
-        img,
-        Rect.fromLTWH(x, y, cellW, cellH),
-        decor,
-        transform: i < options.photoTransforms.length
-            ? options.photoTransforms[i]
-            : null,
-      );
-    }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
-    canvas.restore();
-    _drawSelectedStickers(
-      canvas,
-      frame.width,
-      frame.height,
-      options.stickers,
-      decor,
-      options,
-    );
-
-    return Size(frame.width, frame.height);
   }
 
-  static Size _drawMasonryCollage(
-    Canvas canvas,
-    List<ui.Image> images,
-    String title,
-    CollageDecor decor,
-    CollageRenderOptions options,
-  ) {
-    int cols = 2;
-    if (images.length > 6) cols = 3;
-    if (images.length > 18) cols = 4;
-    if (images.length > 32) cols = 5;
-
-    final double colWidth = 280.0 * options.safePhotoScale;
-    const double padding = 22.0;
-    const double headerH = 270.0;
-    const double footerH = 84.0;
-    final double tileHeight = colWidth * 1.02;
-
-    final double contentWidth = cols * colWidth + padding * (cols + 1);
-    final List<Map<String, dynamic>> drawPositions = [];
-
-    double cursorY = headerH + padding;
-    int imageIndex = 0;
-
-    while (imageIndex < images.length) {
-      final int remaining = images.length - imageIndex;
-      final int itemsThisRow = min(cols, remaining);
-      final double rowWidth =
-          itemsThisRow * colWidth + max(0, itemsThisRow - 1) * padding;
-      final double startX = max(padding, (contentWidth - rowWidth) / 2);
-
-      for (int col = 0; col < itemsThisRow; col++) {
-        final ui.Image img = images[imageIndex];
-        final double x = startX + col * (colWidth + padding);
-
-        drawPositions.add({
-          'img': img,
-          'index': imageIndex,
-          'x': x,
-          'y': cursorY,
-          'w': colWidth,
-          'h': tileHeight,
-        });
-        imageIndex++;
+  static int _gridColumns(
+    Rect area,
+    int count,
+    double gap, {
+    double preferredRatio = 1,
+  }) {
+    var columns = 1;
+    var bestScore = double.infinity;
+    for (var candidate = 1; candidate <= count; candidate++) {
+      final rows = (count / candidate).ceil();
+      final cellWidth = (area.width - gap * (candidate - 1)) / candidate;
+      final cellHeight = (area.height - gap * (rows - 1)) / rows;
+      if (cellWidth <= 0 || cellHeight <= 0) continue;
+      final empty = (candidate * rows - count) / count;
+      final score =
+          log(cellWidth / cellHeight / preferredRatio).abs() + empty * 0.65;
+      if (score < bestScore) {
+        bestScore = score;
+        columns = candidate;
       }
-
-      cursorY += tileHeight + padding;
     }
-
-    final double contentHeight = cursorY - padding + footerH;
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'masonry',
-      decor,
-      options,
-    );
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    for (final pos in drawPositions) {
-      final ui.Image img = pos['img'];
-      final int index = pos['index'];
-      final double x = pos['x'];
-      final double y = pos['y'];
-      final double w = pos['w'];
-      final double h = pos['h'];
-      _drawFrameImage(
-        canvas,
-        img,
-        Rect.fromLTWH(x, y, w, h),
-        decor,
-        radius: 24,
-        transform: index < options.photoTransforms.length
-            ? options.photoTransforms[index]
-            : null,
-      );
-    }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
-    canvas.restore();
-    _drawSelectedStickers(
-      canvas,
-      frame.width,
-      frame.height,
-      options.stickers,
-      decor,
-      options,
-    );
-
-    return Size(frame.width, frame.height);
+    return columns;
   }
 
-  static Size _drawPolaroidCollage(
-    Canvas canvas,
-    List<ui.Image> images,
-    String title,
-    CollageDecor decor,
-    CollageRenderOptions options,
-  ) {
-    final int n = images.length;
-    final double photoScale = options.safePhotoScale;
-    final double expectedArea = n * (400.0 * photoScale) * (450.0 * photoScale);
-    final double side = sqrt(expectedArea) * 1.5;
-    final double contentWidth = max(1200.0, side);
-    final double contentHeight = max(1320.0, side + 150);
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'polaroid',
-      decor,
-      options,
+  static List<Rect> _gridRects(
+    Rect area,
+    int count,
+    double gap, {
+    double preferredRatio = 1,
+  }) {
+    if (count == 0) return const [];
+    final columns = _gridColumns(
+      area,
+      count,
+      gap,
+      preferredRatio: preferredRatio,
     );
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    const double marginX = 200;
-    const double marginY = 270;
-    final double availW = contentWidth - marginX * 2;
-    final double availH = contentHeight - marginY - 200;
-
-    final random = _layoutRandom(options, 0x1205);
-
-    for (int i = 0; i < images.length; i++) {
-      final img = images[i];
-      canvas.save();
-
-      final double x = marginX + random.nextDouble() * availW;
-      final double y = marginY + 100 + random.nextDouble() * availH;
-      final double angle = (random.nextDouble() - 0.5) * 0.52;
-
-      canvas.translate(x, y);
-      canvas.rotate(angle);
-
-      final double pW = 370 * photoScale;
-      final double pH = 440 * photoScale;
-      final shadowPaint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.14)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-      canvas.drawRect(
-        Rect.fromLTWH(-pW / 2 + 5, -pH / 2 + 12, pW, pH),
-        shadowPaint,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(-pW / 2, -pH / 2, pW, pH),
-          Radius.circular(14 * photoScale),
-        ),
-        Paint()..color = Colors.white,
-      );
-      canvas.drawRect(
-        Rect.fromLTWH(-pW / 2, -pH / 2, pW, pH),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2
-          ..color = Colors.black.withValues(alpha: 0.06),
-      );
-
-      final double imgPadding = 16 * photoScale;
-      final double drawW = pW - imgPadding * 2;
-      final double drawH = drawW;
-
-      _drawImageSurfaceWithTransform(
-        canvas,
-        img,
-        Rect.fromLTWH(-pW / 2 + imgPadding, -pH / 2 + imgPadding, drawW, drawH),
-        radius: 18 * photoScale,
-        transform: i < options.photoTransforms.length
-            ? options.photoTransforms[i]
-            : null,
-      );
-      _drawText(
-        canvas,
-        decor.footerText,
-        0,
-        pH / 2 - 48 * photoScale,
-        decor.primary.withValues(alpha: 0.66),
-        15 * photoScale,
-        maxWidth: pW - 40,
-        isBold: false,
-        fontStyle: FontStyle.italic,
-      );
-
-      canvas.restore();
-    }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
-    canvas.restore();
-    _drawSelectedStickers(
-      canvas,
-      frame.width,
-      frame.height,
-      options.stickers,
-      decor,
-      options,
-    );
-    return Size(frame.width, frame.height);
-  }
-
-  static Size _drawScatterCollage(
-    Canvas canvas,
-    List<ui.Image> images,
-    String title,
-    CollageDecor decor,
-    CollageRenderOptions options,
-  ) {
-    final int n = images.length;
-    final double photoScale = options.safePhotoScale;
-    final double expectedArea = n * (300.0 * photoScale) * (300.0 * photoScale);
-    final double side = sqrt(expectedArea) * 1.3;
-    final double contentWidth = max(1000.0, side);
-    final double contentHeight = max(1180.0, side + 150);
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'scatter',
-      decor,
-      options,
-    );
-
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    const double marginX = 150;
-    const double marginY = 270;
-    final double availW = contentWidth - marginX * 2;
-    final double availH = contentHeight - marginY - 170;
-
-    final random = _layoutRandom(options, 0x1260);
-
-    for (int i = 0; i < images.length; i++) {
-      final img = images[i];
-      canvas.save();
-      final double x = marginX + random.nextDouble() * availW;
-      final double y = marginY + 100 + random.nextDouble() * availH;
-      final double angle = (random.nextDouble() - 0.5) * 0.52;
-
-      canvas.translate(x, y);
-      canvas.rotate(angle);
-
-      final double size = (280 + random.nextDouble() * 150) * photoScale;
-      final double ratio = img.width / img.height;
-      double dw = size;
-      double dh = size / ratio;
-
-      if (ratio < 1) {
-        dh = size;
-        dw = size * ratio;
-      }
-      final shadowPaint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.14)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
-      final imageRect = Rect.fromLTWH(-dw / 2, -dh / 2, dw, dh);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          imageRect.shift(const Offset(0, 12)),
-          const Radius.circular(26),
-        ),
-        shadowPaint,
-      );
-
-      _drawImageSurfaceWithTransform(
-        canvas,
-        img,
-        imageRect,
-        radius: 24,
-        transform: i < options.photoTransforms.length
-            ? options.photoTransforms[i]
-            : null,
-      );
-
-      canvas.restore();
-    }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
-    canvas.restore();
-    _drawSelectedStickers(
-      canvas,
-      frame.width,
-      frame.height,
-      options.stickers,
-      decor,
-      options,
-    );
-    return Size(frame.width, frame.height);
-  }
-
-  static Size _drawStoryCollage(
-    Canvas canvas,
-    List<ui.Image> images,
-    String title,
-    CollageDecor decor,
-    CollageRenderOptions options,
-  ) {
-    final double photoScale = options.safePhotoScale;
-    const double padding = 28.0;
-    const double headerH = 270.0;
-    const double footerH = 84.0;
-    final double contentWidth = max(940.0, 1020.0 * photoScale);
-    final double innerWidth = contentWidth - padding * 2;
-    final double heroHeight = innerWidth * 0.92;
-
-    double cursorY = headerH + padding;
-    final heroRect = Rect.fromLTWH(padding, cursorY, innerWidth, heroHeight);
-    cursorY = heroRect.bottom + padding;
-
-    final double columnWidth = (innerWidth - padding) / 2;
-    final double tileHeight = max(182.0, 220.0 * photoScale);
-    final List<Rect> extraRects = [];
-    int index = 1;
-
-    while (index < images.length) {
-      final bool useWideTile =
-          (index % 5 == 0 || images.length - index == 1) &&
-          index < images.length;
-      if (useWideTile) {
-        final double wideHeight = tileHeight * 0.84;
-        extraRects.add(Rect.fromLTWH(padding, cursorY, innerWidth, wideHeight));
-        cursorY += wideHeight + padding;
-        index += 1;
-        continue;
-      }
-
-      final int rowCount = min(2, images.length - index);
-      for (int col = 0; col < rowCount; col++) {
-        extraRects.add(
+    final rows = (count / columns).ceil();
+    final cellHeight = (area.height - gap * (rows - 1)) / rows;
+    final rects = <Rect>[];
+    for (var row = 0; row < rows; row++) {
+      final items = min(columns, count - row * columns);
+      final cellWidth = (area.width - gap * (items - 1)) / items;
+      for (var column = 0; column < items; column++) {
+        rects.add(
           Rect.fromLTWH(
-            padding + col * (columnWidth + padding),
-            cursorY,
-            columnWidth,
-            tileHeight,
+            area.left + column * (cellWidth + gap),
+            area.top + row * (cellHeight + gap),
+            cellWidth,
+            cellHeight,
           ),
         );
       }
-      cursorY += tileHeight + padding;
-      index += rowCount;
     }
-
-    final double contentHeight = cursorY + footerH;
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'story',
-      decor,
-      options,
-    );
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    _drawFrameImage(
-      canvas,
-      images.first,
-      heroRect,
-      decor,
-      radius: 34,
-      transform: options.photoTransforms.isNotEmpty
-          ? options.photoTransforms.first
-          : null,
-    );
-    for (int rectIndex = 0; rectIndex < extraRects.length; rectIndex++) {
-      final imageIndex = rectIndex + 1;
-      if (imageIndex >= images.length) {
-        break;
-      }
-      _drawFrameImage(
-        canvas,
-        images[imageIndex],
-        extraRects[rectIndex],
-        decor,
-        radius: 26,
-      );
-    }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
-    canvas.restore();
-    _drawSelectedStickers(
-      canvas,
-      frame.width,
-      frame.height,
-      options.stickers,
-      decor,
-      options,
-    );
-    return Size(frame.width, frame.height);
+    return rects;
   }
 
-  static Size _drawPosterCollage(
-    Canvas canvas,
+  static List<Rect> _masonryRects(
+    Rect area,
     List<ui.Image> images,
-    String title,
-    CollageDecor decor,
-    CollageRenderOptions options,
+    double gap,
   ) {
-    final double photoScale = options.safePhotoScale;
-    const double padding = 28.0;
-    const double headerH = 270.0;
-    const double footerH = 84.0;
-    final double contentWidth = max(1180.0, 1320.0 * photoScale);
-    final double innerWidth = contentWidth - padding * 2;
-    final double leadWidth = images.length == 1
-        ? innerWidth
-        : innerWidth * 0.58;
-    final double leadHeight = max(410.0, 560.0 * photoScale);
-    final double sideWidth = innerWidth - leadWidth - padding;
-    const double topY = headerH + padding;
-
-    final List<(int, Rect)> placements = [
-      (0, Rect.fromLTWH(padding, topY, leadWidth, leadHeight)),
-    ];
-
-    int imageIndex = 1;
-    if (images.length == 2) {
-      placements.add((
-        1,
-        Rect.fromLTWH(
-          padding + leadWidth + padding,
-          topY,
-          sideWidth,
-          leadHeight,
-        ),
-      ));
-      imageIndex = 2;
-    } else if (images.length > 2) {
-      final double stackHeight = (leadHeight - padding) / 2;
-      placements.add((
-        1,
-        Rect.fromLTWH(
-          padding + leadWidth + padding,
-          topY,
-          sideWidth,
-          stackHeight,
-        ),
-      ));
-      placements.add((
-        2,
-        Rect.fromLTWH(
-          padding + leadWidth + padding,
-          topY + stackHeight + padding,
-          sideWidth,
-          stackHeight,
-        ),
-      ));
-      imageIndex = 3;
+    final columns = _gridColumns(area, images.length, gap);
+    final width = (area.width - gap * (columns - 1)) / columns;
+    final assignments = List.generate(columns, (_) => <int>[]);
+    final totals = List<double>.filled(columns, 0);
+    final heights = <double>[];
+    for (var index = 0; index < images.length; index++) {
+      final ratio = (images[index].width / images[index].height)
+          .clamp(0.6, 1.6)
+          .toDouble();
+      // Một nhịp cao/thấp nhẹ giữ mẫu so le rõ cả khi ảnh cùng tỉ lệ.
+      final height = width / ratio * (index.isEven ? 1.1 : 0.9);
+      heights.add(height);
+      var column = 0;
+      for (var candidate = 1; candidate < columns; candidate++) {
+        if (totals[candidate] < totals[column]) column = candidate;
+      }
+      assignments[column].add(index);
+      totals[column] += height + gap;
     }
-
-    double cursorY = topY + leadHeight + padding;
-    if (imageIndex < images.length) {
-      final int cols = min(3, max(1, images.length - imageIndex));
-      final double tileWidth = (innerWidth - padding * (cols - 1)) / cols;
-      final double tileHeight = max(176.0, tileWidth * 0.74);
-
-      while (imageIndex < images.length) {
-        final int rowCount = min(cols, images.length - imageIndex);
-        for (int col = 0; col < rowCount; col++) {
-          placements.add((
-            imageIndex + col,
-            Rect.fromLTWH(
-              padding + col * (tileWidth + padding),
-              cursorY,
-              tileWidth,
-              tileHeight,
-            ),
-          ));
-        }
-        imageIndex += rowCount;
-        cursorY += tileHeight + padding;
+    final rects = List<Rect>.filled(images.length, Rect.zero);
+    for (var column = 0; column < columns; column++) {
+      final indexes = assignments[column];
+      final photoHeight = indexes.fold<double>(0, (sum, i) => sum + heights[i]);
+      final factor = (area.height - gap * (indexes.length - 1)) / photoHeight;
+      var y = area.top;
+      for (final index in indexes) {
+        final height = heights[index] * factor;
+        rects[index] = Rect.fromLTWH(
+          area.left + column * (width + gap),
+          y,
+          width,
+          height,
+        );
+        y += height + gap;
       }
     }
-
-    final double contentHeight = cursorY + footerH;
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'poster',
-      decor,
-      options,
-    );
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    for (final placement in placements) {
-      if (placement.$1 >= images.length) {
-        continue;
-      }
-      _drawFrameImage(
-        canvas,
-        images[placement.$1],
-        placement.$2,
-        decor,
-        radius: placement.$1 == 0 ? 34 : 24,
-        transform: placement.$1 < options.photoTransforms.length
-            ? options.photoTransforms[placement.$1]
-            : null,
-      );
-    }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
-    canvas.restore();
-    _drawSelectedStickers(
-      canvas,
-      frame.width,
-      frame.height,
-      options.stickers,
-      decor,
-      options,
-    );
-    return Size(frame.width, frame.height);
+    return rects;
   }
 
-  static Size _drawHeartCollage(
+  static List<Rect> _featuredRects(
+    Rect area,
+    int count,
+    double gap, {
+    required bool story,
+  }) {
+    if (count == 1) return [area];
+    final vertical = area.width / area.height < (story ? 1.5 : 0.62);
+    final share = story ? (count > 8 ? 0.36 : 0.5) : (count > 8 ? 0.43 : 0.58);
+    final Rect lead;
+    final Rect rest;
+    if (vertical) {
+      final split = area.top + area.height * share;
+      lead = Rect.fromLTRB(area.left, area.top, area.right, split - gap / 2);
+      rest = Rect.fromLTRB(area.left, split + gap / 2, area.right, area.bottom);
+    } else {
+      final split = area.left + area.width * share;
+      lead = Rect.fromLTRB(area.left, area.top, split - gap / 2, area.bottom);
+      rest = Rect.fromLTRB(split + gap / 2, area.top, area.right, area.bottom);
+    }
+    return [lead, ..._gridRects(rest, count - 1, gap)];
+  }
+
+  static Rect _fitRotatedCard(Rect slot, double ratio, double angle) {
+    final c = cos(angle).abs();
+    final s = sin(angle).abs();
+    final width = min(
+      slot.width / (c + s / ratio),
+      slot.height / (s + c / ratio),
+    );
+    return Rect.fromCenter(
+      center: slot.center,
+      width: width,
+      height: width / ratio,
+    );
+  }
+
+  static CollagePhotoTransform? _transformAt(
+    CollageRenderOptions options,
+    int index,
+  ) {
+    return index < options.photoTransforms.length
+        ? options.photoTransforms[index]
+        : null;
+  }
+
+  static void _drawPolaroidPhoto(
+    Canvas canvas,
+    ui.Image image,
+    Rect card,
+    int index,
+    CollageDecor decor,
+    double scale,
+    CollagePhotoTransform? transform,
+  ) {
+    final paper = RRect.fromRectAndRadius(card, Radius.circular(6 * scale));
+    canvas.drawShadow(
+      Path()..addRRect(paper),
+      Colors.black.withValues(alpha: 0.16),
+      9 * scale,
+      false,
+    );
+    canvas.drawRRect(paper, Paint()..color = Colors.white);
+    final edge = card.width * 0.038;
+    final captionHeight = card.height * 0.13;
+    _drawImageSurfaceWithTransform(
+      canvas,
+      image,
+      Rect.fromLTRB(
+        card.left + edge,
+        card.top + edge,
+        card.right - edge,
+        card.bottom - captionHeight,
+      ),
+      radius: 3 * scale,
+      transform: transform,
+    );
+    final captionY = card.bottom - captionHeight / 2;
+    canvas.drawLine(
+      Offset(card.left + edge * 1.5, captionY),
+      Offset(card.left + card.width * 0.28, captionY),
+      Paint()
+        ..color = decor.secondary.withValues(alpha: 0.5)
+        ..strokeWidth = scale,
+    );
+    _drawCenteredTextInRect(
+      canvas,
+      (index + 1).toString().padLeft(2, '0'),
+      Rect.fromCenter(
+        center: Offset(card.right - edge * 2, captionY),
+        width: card.width * 0.12,
+        height: captionHeight * 0.8,
+      ),
+      decor.primary.withValues(alpha: 0.6),
+      min(16 * scale, captionHeight * 0.45),
+      isBold: false,
+      letterSpacing: scale,
+    );
+  }
+
+  static void _drawHeartPhotos(
     Canvas canvas,
     List<ui.Image> images,
-    String title,
-    CollageDecor decor,
-    CollageRenderOptions options,
-  ) {
-    const double contentWidth = 1600.0;
-    const double contentHeight = 1720.0;
-    final frame = _resolveCanvasFrame(contentWidth, contentHeight, options);
-
-    _drawBackground(canvas, frame.width, frame.height, decor, options);
-    canvas.save();
-    canvas.translate(frame.offsetX, frame.offsetY);
-    _drawStyleAtmosphere(
-      canvas,
-      contentWidth,
-      contentHeight,
-      'heart',
-      decor,
-      options,
+    _CollagePage page,
+    CollageRenderOptions options, {
+    Rect? photoArea,
+  }) {
+    final area = photoArea ?? page.photoArea;
+    final width = min(area.width, area.height * 1.06);
+    final bounds = Rect.fromCenter(
+      center: area.center,
+      width: width,
+      height: width / 1.06,
     );
-    _drawHeader(
-      canvas,
-      contentWidth,
-      title.isNotEmpty ? title : UiCopy.text('copy_6acd69a50487'),
-      decor,
-    );
-
-    final int n = images.length;
-    if (n == 0) {
-      canvas.restore();
-      return Size(frame.width, frame.height);
-    }
-
-    final double size =
-        min<double>(200.0, 2000.0 / sqrt(n)) * options.safePhotoScale;
-    final random = _layoutRandom(options, 0x1541);
-    // Phân bố đều dọc đường cong trái tim để giữ rõ hình
-    final steps = max(n, 24);
-    final double stepSize = (pi * 2.0) / steps;
-    final double startOffset = random.nextDouble() * stepSize;
-
-    Offset getHeartPoint(
-      double t,
-      double scale,
-      double offsetX,
-      double offsetY,
+    Offset point(double x, double y) =>
+        Offset(bounds.left + bounds.width * x, bounds.top + bounds.height * y);
+    final heart = Path()..moveTo(point(0.5, 0.17).dx, point(0.5, 0.17).dy);
+    void curve(
+      double x1,
+      double y1,
+      double x2,
+      double y2,
+      double x3,
+      double y3,
     ) {
-      final double x = 16 * pow(sin(t), 3).toDouble();
-      final double y =
-          13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t);
-      return Offset(x * scale + offsetX, -y * scale + offsetY);
+      final a = point(x1, y1);
+      final b = point(x2, y2);
+      final c = point(x3, y3);
+      heart.cubicTo(a.dx, a.dy, b.dx, b.dy, c.dx, c.dy);
     }
 
-    for (int i = 0; i < n; i++) {
-      canvas.save();
-      // Phân bố đều theo i, thêm nhiễu nhẹ cho tự nhiên
-      final double baseT = startOffset + i * stepSize;
-      final double t = baseT + (random.nextDouble() - 0.5) * stepSize * 0.3;
-      // Ảnh phía dưới (đáy tim) to hơn, phía trên nhỏ hơn
-      final double normalizedPos = (sin(t) + 1.0) / 2.0;
-      final double photoScale = 28.0 + normalizedPos * 10.0;
-      final Offset pt = getHeartPoint(
-        t,
-        photoScale,
-        contentWidth / 2,
-        contentHeight / 2 + 180,
-      );
+    curve(0.2, -0.08, 0, 0.15, 0, 0.37);
+    curve(0, 0.62, 0.26, 0.82, 0.5, 1);
+    curve(0.74, 0.82, 1, 0.62, 1, 0.37);
+    curve(1, 0.15, 0.8, -0.08, 0.5, 0.17);
+    heart.close();
+    canvas.drawShadow(
+      heart,
+      Colors.black.withValues(alpha: 0.14),
+      10 * page.typeScale,
+      false,
+    );
+    canvas.drawPath(heart, Paint()..color = Colors.white);
+    canvas.save();
+    canvas.clipPath(heart);
 
-      final double jx = (random.nextDouble() - 0.5) * 16;
-      final double jy = (random.nextDouble() - 0.5) * 16;
-
-      canvas.translate(pt.dx + jx, pt.dy + jy);
-      canvas.rotate((random.nextDouble() - 0.5) * 0.5);
-
-      canvas.drawCircle(
-        Offset.zero,
-        size / 2 + 10,
-        Paint()
-          ..color = Colors.black.withValues(alpha: 0.12)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
-      );
-      canvas.drawCircle(
-        Offset.zero,
-        size / 2 + 3,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = Colors.white.withValues(alpha: 0.65),
-      );
-
-      final ui.Image img = images[i];
-      _drawCircularPhotoSurface(
-        canvas,
-        img,
-        size,
-        transform: i < options.photoTransforms.length
-            ? options.photoTransforms[i]
-            : null,
-      );
-
-      canvas.restore();
+    // Phủ kín hình tim; số ảnh ít vẫn giữ được silhouette, không rải ảnh một góc.
+    final rows = max(1, (sqrt(images.length) * 0.85).round());
+    final counts = List<int>.filled(rows, 1);
+    final weights = List<double>.generate(rows, (row) {
+      if (rows <= 2) return 1;
+      final y = (row + 0.5) / rows;
+      return y < 0.3 ? 0.9 : 1.15 - 0.85 * y;
+    });
+    for (var placed = rows; placed < images.length; placed++) {
+      var row = 0;
+      for (var candidate = 1; candidate < rows; candidate++) {
+        if ((counts[candidate] + 1) / weights[candidate] <
+            (counts[row] + 1) / weights[row]) {
+          row = candidate;
+        }
+      }
+      counts[row]++;
     }
-
-    _drawFooter(canvas, contentWidth, contentHeight, decor);
+    var index = 0;
+    final rowHeight = bounds.height / rows;
+    for (var row = 0; row < rows; row++) {
+      final cellWidth = bounds.width / counts[row];
+      for (var column = 0; column < counts[row]; column++) {
+        final rect = Rect.fromLTWH(
+          bounds.left + column * cellWidth,
+          bounds.top + row * rowHeight,
+          cellWidth,
+          rowHeight,
+        ).deflate(page.gap * 0.22);
+        _drawImageWithTransform(
+          canvas,
+          images[index],
+          rect,
+          _transformAt(options, index),
+        );
+        index++;
+      }
+    }
     canvas.restore();
+    canvas.drawPath(
+      heart,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 9 * page.typeScale
+        ..color = Colors.white,
+    );
+  }
+
+  static Size _drawCollagePage(
+    Canvas canvas,
+    List<ui.Image> images,
+    String title,
+    String style,
+    CollageDecor decor,
+    CollageRenderOptions options,
+  ) {
+    final page = _layoutPage(title, style, decor, options);
+    _drawBackground(canvas, page.size.width, page.size.height, decor, options);
+    _drawHeader(
+      canvas,
+      page.size.width,
+      page.heading,
+      decor,
+      typeScale: page.typeScale,
+    );
+    if (style == 'heart') {
+      final area = page.photoArea;
+      if (area.width / area.height > 1.5 && images.length > 1) {
+        final lead = Rect.fromLTWH(
+          area.left,
+          area.top,
+          min(area.height * 1.06, area.width * 0.44),
+          area.height,
+        );
+        _drawHeartPhotos(
+          canvas,
+          [images.first],
+          page,
+          options,
+          photoArea: lead,
+        );
+        final rest = Rect.fromLTRB(
+          lead.right + page.gap,
+          area.top,
+          area.right,
+          area.bottom,
+        );
+        final rects = _gridRects(rest, images.length - 1, page.gap);
+        for (var index = 1; index < images.length; index++) {
+          _drawFrameImage(
+            canvas,
+            images[index],
+            rects[index - 1],
+            decor,
+            radius: 14 * page.typeScale,
+            transform: _transformAt(options, index),
+          );
+        }
+      } else {
+        _drawHeartPhotos(canvas, images, page, options);
+      }
+    } else {
+      final List<Rect> rects;
+      switch (style) {
+        case 'masonry':
+          rects = _masonryRects(page.photoArea, images, page.gap);
+          break;
+        case 'story':
+        case 'poster':
+          rects = _featuredRects(
+            page.photoArea,
+            images.length,
+            page.gap,
+            story: style == 'story',
+          );
+          break;
+        default:
+          rects = _gridRects(
+            page.photoArea,
+            images.length,
+            page.gap,
+            preferredRatio: style == 'polaroid' ? 0.84 : 1,
+          );
+      }
+      final random = _layoutRandom(
+        options,
+        style == 'polaroid' ? 0x1205 : 0x1260,
+      );
+      for (var index = 0; index < images.length; index++) {
+        final image = images[index];
+        final slot = rects[index];
+        final transform = _transformAt(options, index);
+        if (style == 'polaroid' || style == 'scatter') {
+          final angle =
+              (index.isEven ? -1 : 1) * (0.018 + random.nextDouble() * 0.035);
+          final ratio = style == 'polaroid'
+              ? 0.84
+              : (image.width / image.height).clamp(0.6, 1.6).toDouble();
+          final card = _fitRotatedCard(
+            slot.deflate(page.gap * 0.3),
+            ratio,
+            angle,
+          );
+          canvas.save();
+          canvas.translate(card.center.dx, card.center.dy);
+          canvas.rotate(angle);
+          final local = Rect.fromCenter(
+            center: Offset.zero,
+            width: card.width,
+            height: card.height,
+          );
+          if (style == 'polaroid') {
+            _drawPolaroidPhoto(
+              canvas,
+              image,
+              local,
+              index,
+              decor,
+              page.typeScale,
+              transform,
+            );
+          } else {
+            _drawFrameImage(
+              canvas,
+              image,
+              local,
+              decor,
+              radius: 10 * page.typeScale,
+              transform: transform,
+            );
+          }
+          canvas.restore();
+        } else {
+          _drawFrameImage(
+            canvas,
+            image,
+            slot,
+            decor,
+            radius: 14 * page.typeScale,
+            transform: transform,
+          );
+        }
+      }
+    }
+    _drawFooter(
+      canvas,
+      page.size.width,
+      page.size.height,
+      decor,
+      typeScale: page.typeScale,
+    );
     _drawSelectedStickers(
       canvas,
-      frame.width,
-      frame.height,
+      page.size.width,
+      page.size.height,
       options.stickers,
       decor,
       options,
     );
-    return Size(frame.width, frame.height);
+    return page.size;
   }
 }

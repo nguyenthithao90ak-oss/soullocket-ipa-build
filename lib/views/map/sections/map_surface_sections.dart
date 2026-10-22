@@ -69,7 +69,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    palette.canvas.withValues(alpha: 0.55),
+                    palette.canvas.withValues(
+                      alpha: palette.dark ? 0.16 : 0.55,
+                    ),
                     Colors.transparent,
                     Colors.transparent,
                     Colors.transparent,
@@ -85,7 +87,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             child: CustomPaint(
               painter: MapCuteCanvasPainter(
                 dark: palette.dark,
-                intensity: .34,
+                intensity: palette.dark ? .16 : .34,
               ),
             ),
           ),
@@ -511,7 +513,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                               ),
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color: palette.accent(mapLavender).withValues(alpha: .24),
+                                color: palette
+                                    .accent(mapLavender)
+                                    .withValues(alpha: .24),
                               ),
                             ),
                             child: Text(
@@ -549,7 +553,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           context.tr('map_trngthigps_9dd74f'),
@@ -600,10 +605,13 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                               ),
                               if (!kIsWeb)
                                 OutlinedButton.icon(
-                                  onPressed: () => app_permission.openAppSettings(),
+                                  onPressed: () =>
+                                      app_permission.openAppSettings(),
                                   icon: const Icon(Icons.settings_rounded),
                                   label: Text(
-                                    context.tr('ui_map_permission_settings_fffa2a'),
+                                    context.tr(
+                                      'ui_map_permission_settings_fffa2a',
+                                    ),
                                   ),
                                 ),
                             ],

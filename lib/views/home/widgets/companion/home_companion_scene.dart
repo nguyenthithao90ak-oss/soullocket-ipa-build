@@ -19,6 +19,7 @@ import 'home_companion_metrics.dart';
 import 'home_companion_mood.dart';
 import 'home_companion_wardrobe.dart';
 import '../../../ui_prefs.dart';
+import '../../tabs/pet_care/pet_care_progress.dart' as pet_care;
 
 export 'home_companion_mood.dart' show HomeCompanionPartnerStatus;
 
@@ -52,9 +53,11 @@ class HomeCompanionScene extends StatefulWidget {
     this.partnerStatus = HomeCompanionPartnerStatus.unknown,
     this.partnerStatusListenable,
     this.partnerName = '',
+    this.partnerIsBunny = true,
     this.partnerHasLetter = false,
     this.onOpenPartnerLetter,
     this.guestVisits = false,
+    this.petCare,
   });
 
   /// Nhịp khách ghé chơi (giây thời gian Home đang hiển thị).
@@ -95,7 +98,7 @@ class HomeCompanionScene extends StatefulWidget {
   /// Home: nghỉ lâu hơn giữa các lần đi dạo, ít quét bụi hơn.
   final bool calm;
 
-  /// Thỏ đại diện người ấy, gấu đại diện mình (chỉ khi có [partnerName]).
+  /// Presence của người ấy, áp dụng cho nhân vật chọn bởi [partnerIsBunny].
   final HomeCompanionPartnerStatus partnerStatus;
 
   /// Ưu tiên hơn [partnerStatus]: Home cập nhật presence qua notifier riêng,
@@ -103,15 +106,23 @@ class HomeCompanionScene extends StatefulWidget {
   final ValueListenable<HomeCompanionPartnerStatus>? partnerStatusListenable;
   final String partnerName;
 
-  /// Người ấy vừa để lại lời nhắn chưa đọc: thỏ cầm phong thư đi tìm gấu.
+  /// Nữ là Thỏ, Nam là Gấu. Mặc định giữ tương thích các caller cũ.
+  final bool partnerIsBunny;
+
+  /// Người ấy vừa để lại lời nhắn chưa đọc: bé đại diện cầm thư đi tìm mình.
   final bool partnerHasLetter;
 
-  /// Chạm vào thỏ đang cầm thư để mở đọc.
+  /// Chạm vào bé đại diện người ấy đang cầm thư để mở đọc.
   final VoidCallback? onOpenPartnerLetter;
 
   /// Home: Kuromi/Melody (đã mở khóa) thỉnh thoảng ghé chơi rồi về, không
   /// chiếm chỗ của hai bé chính.
   final bool guestVisits;
+
+  /// Snapshot local của Trạm Mây. Painter chỉ lắng nghe notifier này để
+  /// đổi biểu cảm; nội dung Home không bị dựng lại theo từng animation.
+  final ValueListenable<Map<pet_care.PetCarePet, pet_care.PetCareVitals>>?
+  petCare;
 
   @override
   State<HomeCompanionScene> createState() => _HomeCompanionSceneState();
@@ -152,7 +163,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   Set<HomeCompanionCharacter> _limitCharacters(
     Iterable<HomeCompanionCharacter> characters,
-  ) => characters.take(_visibleCharacterLimit).toSet();
+  ) => characters
+      .where((character) => character.isAvailable)
+      .take(_visibleCharacterLimit)
+      .toSet();
   HomeCompanionOutfit _outfitFor(
     HomeCompanionCharacter character,
     Map<HomeCompanionCharacter, HomeCompanionOutfit> local,
@@ -166,10 +180,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         ? HomeCompanionCharacter.values
         : _rewards!.state?.enabled == true
         ? _rewards!.state!.unlocked
-        : const {
-            HomeCompanionCharacter.bunny,
-            HomeCompanionCharacter.bear,
-          };
+        : const {HomeCompanionCharacter.bunny, HomeCompanionCharacter.bear};
     final next = _limitCharacters(available);
     if (!setEquals(next, _characters)) {
       _characters = Set.of(next);
@@ -362,15 +373,25 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   bool get _hasPartner => widget.partnerName.trim().isNotEmpty;
+  HomeCompanionCharacter get _partnerCharacter => widget.partnerIsBunny
+      ? HomeCompanionCharacter.bunny
+      : HomeCompanionCharacter.bear;
+  HomeCompanionCharacter get _selfCharacter => widget.partnerIsBunny
+      ? HomeCompanionCharacter.bear
+      : HomeCompanionCharacter.bunny;
 
   void _partnerStatusChanged() {
     if (mounted) _refreshPartner();
   }
 
-  /// Thỏ = người ấy: ngủ khi người ấy offline lâu, chạy tới chào gấu khi
-  /// người ấy vừa online, cầm thư khi có lời nhắn chưa đọc.
+  /// Bé của người ấy ngủ khi offline lâu, chào mình khi online và cầm thư.
   void _refreshPartner({bool announce = true}) {
-    const partner = HomeCompanionCharacter.bunny;
+    final partner = _partnerCharacter;
+    final self = _selfCharacter;
+    _motionFor(self).dozing = false;
+    _moods[self]!
+      ..dozing = false
+      ..carryingLetter = false;
     final active = _hasPartner;
     final status = active
         ? widget.partnerStatusListenable?.value ?? widget.partnerStatus
@@ -398,16 +419,18 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   void _visitSelf() {
-    const self = HomeCompanionCharacter.bear;
+    final self = _selfCharacter;
     if (!_characters.contains(self) ||
-        !_characters.contains(HomeCompanionCharacter.bunny) ||
+        !_characters.contains(_partnerCharacter) ||
         !widget.animate ||
         _reduced ||
         widget.pinToViewport ||
         _anyPlay) {
       return;
     }
-    _motion.visitFriend(_buddy, userInvited: true);
+    _motionFor(
+      _partnerCharacter,
+    ).visitFriend(_motionFor(self), userInvited: true);
   }
 
   String _partnerLine(HomeCompanionPartnerStatus status) {
@@ -452,9 +475,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       return;
     }
     if (!_hasPartner) return;
-    if (character == HomeCompanionCharacter.bunny) {
+    if (character == _partnerCharacter) {
       _say(character, _partnerLine(_partnerStatusNow));
-    } else if (character == HomeCompanionCharacter.bear) {
+    } else if (character == _selfCharacter) {
       _say(character, L10nScope.of(context).translate('companion_self_bubble'));
     }
   }
@@ -511,14 +534,14 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _nextStatusCheckAt = _socialClock + 60;
       _refreshPartner();
     }
-    // Thư chưa đọc: định kỳ nhắc bằng bong bóng và chạy tới chỗ gấu.
+    // Thư chưa đọc: định kỳ nhắc bằng bong bóng và chạy tới chỗ mình.
     if (_hasPartner &&
         widget.partnerHasLetter &&
-        _characters.contains(HomeCompanionCharacter.bunny) &&
+        _characters.contains(_partnerCharacter) &&
         _socialClock >= _nextLetterCueAt) {
       _nextLetterCueAt = _socialClock + 25;
       _say(
-        HomeCompanionCharacter.bunny,
+        _partnerCharacter,
         L10nScope.of(context).format('companion_partner_letter_bubble', {
           'name': widget.partnerName.trim(),
         }),
@@ -566,22 +589,21 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         ? HomeCompanionCharacter.values.toSet()
         : _rewards!.state?.enabled == true
         ? _rewards!.state!.unlocked
-        : const {
-            HomeCompanionCharacter.bunny,
-            HomeCompanionCharacter.bear,
-          };
+        : const {HomeCompanionCharacter.bunny, HomeCompanionCharacter.bear};
     return [
       for (final character in const [
         HomeCompanionCharacter.kuromi,
         HomeCompanionCharacter.melody,
       ])
-        if (unlocked.contains(character) && !_characters.contains(character))
+        if (character.isAvailable &&
+            unlocked.contains(character) &&
+            !_characters.contains(character))
           character,
     ];
   }
 
   void _setActiveCharacters(Set<HomeCompanionCharacter> next) {
-    _characters = Set.of(next);
+    _characters = _limitCharacters(next);
     _traffic.dispose();
     _traffic = HomeCompanionTraffic({
       for (final character in _characters) character: _motionFor(character),
@@ -721,6 +743,16 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     if (oldWidget.partnerStatusListenable != widget.partnerStatusListenable) {
       oldWidget.partnerStatusListenable?.removeListener(_partnerStatusChanged);
       widget.partnerStatusListenable?.addListener(_partnerStatusChanged);
+    }
+    if (oldWidget.partnerIsBunny != widget.partnerIsBunny) {
+      for (final character in [_selfCharacter, _partnerCharacter]) {
+        _bubbleText.remove(character);
+        _bubbleStart.remove(character);
+        _bubbleUntil.remove(character);
+        _moods[character]!.setBubble(null, 0);
+      }
+      _partnerStatusNow = HomeCompanionPartnerStatus.unknown;
+      _letterNow = false;
     }
     _refreshPartner();
     _sync();
@@ -1104,7 +1136,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     final character = _spriteAt(global);
     if (character == null || _spriteGestureRejected) return;
     _spriteHandledThisTap = true;
-    if (character == HomeCompanionCharacter.bunny &&
+    if (character == _partnerCharacter &&
         _hasPartner &&
         widget.partnerHasLetter &&
         widget.onOpenPartnerLetter != null) {
@@ -1787,6 +1819,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                               ),
                                               play: _play,
                                               socialPlay: _socialPlay,
+                                              careListenable: widget.petCare,
                                               paintOffset: widget.followScroll
                                                   ? _paintOffset
                                                   : null,
@@ -1813,6 +1846,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                                   ),
                                                   play: _play,
                                                   socialPlay: _socialPlay,
+                                                  careListenable:
+                                                      widget.petCare,
                                                   paintOffset:
                                                       widget.followScroll
                                                       ? _paintOffset
@@ -1827,6 +1862,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                                       Brightness.dark,
                                                 ),
                                           ),
+                                          if (_characters.contains(HomeCompanionCharacter.kuromi) ||
+                                              _characters.contains(HomeCompanionCharacter.melody))
                                           CustomPaint(
                                             key: const ValueKey(
                                               'home-companion-guests-paint',

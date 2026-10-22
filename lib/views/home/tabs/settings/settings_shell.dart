@@ -72,9 +72,9 @@ extension _SettingsTabShell on _SettingsTabState {
     var isPro = _isVipActive || cachedPro == true;
     if (!isPro) {
       try {
-        final access = await PurchaseService()
-            .getVipAccessInfo()
-            .timeout(const Duration(seconds: 5));
+        final access = await PurchaseService().getVipAccessInfo().timeout(
+          const Duration(seconds: 5),
+        );
         isPro = access.isVip;
         if (mounted && access.isVip && !_isVipActive) {
           setState(() => _isVipActive = true);
@@ -264,7 +264,6 @@ extension _SettingsTabShell on _SettingsTabState {
       'voice',
       'calendar',
       'capsule',
-      'cinema',
       'wheel',
       'vault',
       'surprise_maker',
@@ -345,11 +344,6 @@ extension _SettingsTabShell on _SettingsTabState {
             ? null
             : CapsuleScreen(houseId: houseId, myName: myName);
         break;
-      case 'cinema':
-        screen = houseId.isEmpty
-            ? null
-            : CinemaScreen(houseId: houseId, myName: myName);
-        break;
       case 'wheel':
         screen = houseId.isEmpty ? null : WheelScreen(houseId: houseId);
         break;
@@ -406,10 +400,6 @@ extension _SettingsTabShell on _SettingsTabState {
   Widget _buildResponsiveSettingsScaffold() {
     final isDark = _settingsIsDark;
     final palette = SLSettingsPalette.resolve(isDark);
-    final double headerHeight =
-        MediaQuery.paddingOf(context).top +
-        SettingsHomeHeader.contentHeight +
-        1;
     return Scaffold(
       backgroundColor: palette.canvas,
       body: SafeArea(
@@ -419,67 +409,73 @@ extension _SettingsTabShell on _SettingsTabState {
           children: [
             Positioned.fill(child: SLSettingsBackdrop(isDark: isDark)),
             Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: SLResponsive.maxContentWidthForWidth(
-                            constraints.maxWidth,
-                            handsetMax: 560,
-                            tabletMax: 720,
-                            desktopMax: 760,
-                          ),
-                        ),
-                        child: ListView(
-                          physics: SLResponsive.scrollPhysicsForPlatform(),
-                          padding: EdgeInsets.only(
-                            top: headerHeight,
-                            bottom: MediaQuery.paddingOf(context).bottom + 20,
-                          ),
-                          children: [
-                            _buildSettingsSyncBanner(),
-                            SettingsInitialContent(
-                              ready: _settingsIdentityReady,
-                              failed: _settingsIdentityLoadFailed,
-                              loadingLabel: context.tr('settings_loading_data'),
-                              errorLabel: context.tr(
-                                'settings_initial_load_error',
+              child: Column(
+                children: [
+                  _buildSettingsHeader(),
+                  Expanded(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: SLResponsive.maxContentWidthForWidth(
+                                  constraints.maxWidth,
+                                  handsetMax: 560,
+                                  tabletMax: 720,
+                                  desktopMax: 760,
+                                ),
                               ),
-                              retryLabel: context.tr('core_retry'),
-                              onRetry: () {
-                                _settingsPanelNavigation.restartBootstrap();
-                                setState(() {
-                                  _settingsIdentityLoadFailed = false;
-                                  _isBootstrappingSettings = true;
-                                });
-                                unawaited(_fetchSettingsData());
-                              },
-                              builder: (_) => Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                              child: ListView(
+                                physics:
+                                    SLResponsive.scrollPhysicsForPlatform(),
+                                padding: EdgeInsets.only(
+                                  bottom:
+                                      MediaQuery.paddingOf(context).bottom + 20,
+                                ),
                                 children: [
-                                  ..._buildNewSettingsList(isDark),
-                                  const SizedBox(height: 24),
-                                  _buildSettingsFooter(),
+                                  _buildSettingsSyncBanner(),
+                                  SettingsInitialContent(
+                                    ready: _settingsIdentityReady,
+                                    failed: _settingsIdentityLoadFailed,
+                                    loadingLabel: context.tr(
+                                      'settings_loading_data',
+                                    ),
+                                    errorLabel: context.tr(
+                                      'settings_initial_load_error',
+                                    ),
+                                    retryLabel: context.tr('core_retry'),
+                                    onRetry: () {
+                                      _settingsPanelNavigation
+                                          .restartBootstrap();
+                                      setState(() {
+                                        _settingsIdentityLoadFailed = false;
+                                        _isBootstrappingSettings = true;
+                                      });
+                                      unawaited(_fetchSettingsData());
+                                    },
+                                    builder: (_) => Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        ..._buildNewSettingsList(isDark),
+                                        const SizedBox(height: 24),
+                                        _buildSettingsFooter(),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _buildSettingsHeader(),
             ),
           ],
         ),
@@ -518,8 +514,31 @@ extension _SettingsTabShell on _SettingsTabState {
             );
           },
         ),
+        const SizedBox(width: 8),
+        SettingsHeaderAction(
+          icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+          tooltip: context.tr('topup_change_theme'),
+          isDark: isDark,
+          onTap: () => unawaited(_toggleSettingsTheme()),
+        ),
       ],
     );
+  }
+
+  Future<void> _toggleSettingsTheme() async {
+    final isDark = SLSettingsPalette.isNightTheme;
+    try {
+      await UiPrefs.setThemeKey(isDark ? 'theme-default' : 'theme-dark');
+    } catch (error, stackTrace) {
+      debugPrint('[Settings] Could not switch light/dark theme: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        _showToast(
+          context.tr('settings_initial_load_error'),
+          success: false,
+        );
+      }
+    }
   }
 
   Widget _buildSettingsSyncBanner() {
@@ -596,56 +615,145 @@ extension _SettingsTabShell on _SettingsTabState {
   Widget _buildSettingsQuickActions(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: PairingSettingsShortcut(
-                houseId: _houseId,
-                isDark: isDark,
-                onTap: () async {
-                  await slPush<void>(context, const PairingDashboardScreen());
-                  if (!mounted) return;
-                  // Người nhập mã có thể vừa chuyển nhà; cập nhật nguồn của ô này.
-                  final houseId = await _houseService.getCurrentHouseId(
-                    preferFresh: true,
-                  );
-                  if (!mounted || _houseId == houseId) return;
-                  _settingsPanelNavigation.restartBootstrap();
-                  setState(() {
-                    _houseId = houseId;
-                    _settingsIdentityReady = false;
-                    _isBootstrappingSettings = true;
-                  });
-                  unawaited(_fetchSettingsData());
-                },
+      child: SettingsQuickActionsLayout(
+        primary: PairingSettingsShortcut(
+          houseId: _houseId,
+          isDark: isDark,
+          onTap: () async {
+            await slPush<void>(context, const PairingDashboardScreen());
+            if (!mounted) return;
+            // Người nhập mã có thể vừa chuyển nhà; cập nhật nguồn của ô này.
+            final houseId = await _houseService.getCurrentHouseId(
+              preferFresh: true,
+            );
+            if (!mounted || _houseId == houseId) return;
+            _settingsPanelNavigation.restartBootstrap();
+            setState(() {
+              _houseId = houseId;
+              _settingsIdentityReady = false;
+              _isBootstrappingSettings = true;
+            });
+            unawaited(_fetchSettingsData());
+          },
+        ),
+        secondary: _buildSettingsQuickAction(
+          icon: Icons.timelapse_rounded,
+          guideKey: _countdownGuideKey,
+          color: SLSettingsColors.coral,
+          title: context.tr('settings_countdown_space_label'),
+          isDark: isDark,
+          badge: const UtilityVipBadge(compact: true),
+          onTap: () => _togglePanel('countdownMode'),
+        ),
+        // Lối vào trang Giao diện: chủ đề, hình nền, phông chữ, nhạc nền.
+        tertiary: _buildSettingsQuickAction(
+          icon: Icons.palette_outlined,
+          color: SLSettingsColors.violet,
+          title: context.tr('theme'),
+          isDark: isDark,
+          onTap: () => _togglePanel('theme'),
+        ),
+      ),
+    );
+  }
+
+  void _openCoupleShowcase() {
+    final houseId = (_houseId ?? '').trim();
+    if (!kDebugMode || houseId.isEmpty) return;
+    unawaited(slPush<void>(context, CoupleShowcaseScreen(houseId: houseId)));
+  }
+
+  Widget _buildCoupleShowcaseShortcut(bool isDark) {
+    final palette = SLSettingsPalette.resolve(isDark);
+    final colors = isDark
+        ? const <Color>[Color(0xFF4B2D43), Color(0xFF2C2942)]
+        : const <Color>[Color(0xFFFFE7EF), Color(0xFFFFF0D8)];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Semantics(
+        button: true,
+        label: context.tr('couple_showcase_shortcut_title'),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(SLSettingsRadius.card),
+          child: InkWell(
+            onTap: _openCoupleShowcase,
+            borderRadius: BorderRadius.circular(SLSettingsRadius.card),
+            child: Ink(
+              padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: AlignmentDirectional.centerStart,
+                  end: AlignmentDirectional.centerEnd,
+                  colors: colors,
+                ),
+                borderRadius: BorderRadius.circular(SLSettingsRadius.card),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : const Color(0xFFF4CBD7),
+                ),
+                boxShadow: palette.shadow,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : Colors.white.withValues(alpha: 0.72),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      color: isDark
+                          ? const Color(0xFFFFC9D7)
+                          : SLSettingsColors.accentStrong,
+                      size: 25,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('couple_showcase_shortcut_title'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: palette.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          context.tr('couple_showcase_shortcut_desc'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            height: 1.25,
+                            color: palette.inkSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: palette.accent,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildSettingsQuickAction(
-                icon: Icons.timelapse_rounded,
-                guideKey: _countdownGuideKey,
-                color: SLSettingsColors.coral,
-                title: context.tr('settings_countdown_space_label'),
-                isDark: isDark,
-                badge: const UtilityVipBadge(compact: true),
-                onTap: () => _togglePanel('countdownMode'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildSettingsQuickAction(
-                icon: Icons.palette_outlined,
-                guideKey: _themeGuideKey,
-                color: SLSettingsColors.violet,
-                title: context.tr('theme'),
-                isDark: isDark,
-                onTap: () => _togglePanel('theme'),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -658,6 +766,8 @@ extension _SettingsTabShell on _SettingsTabState {
     required String title,
     required bool isDark,
     required VoidCallback onTap,
+    String? caption,
+    SLSettingsTone captionTone = SLSettingsTone.neutral,
     Widget? badge,
   }) {
     return KeyedSubtree(
@@ -666,6 +776,8 @@ extension _SettingsTabShell on _SettingsTabState {
         icon: icon,
         color: color,
         title: title,
+        caption: caption,
+        captionTone: captionTone,
         isDark: isDark,
         badge: badge,
         onTap: onTap,
@@ -724,6 +836,8 @@ extension _SettingsTabShell on _SettingsTabState {
       ),
       _buildSectionTitle(context.tr('settings_categories_title')),
       _buildSettingsQuickActions(isDark),
+      if (kDebugMode && _relationshipMode != 'single')
+        _buildCoupleShowcaseShortcut(isDark),
       _buildSectionTitle(context.tr('settings_menu_preferences')),
       _buildiOSSectionCard([
         if (_relationshipMode != 'single') ...[

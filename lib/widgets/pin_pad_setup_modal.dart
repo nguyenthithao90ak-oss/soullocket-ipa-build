@@ -9,6 +9,7 @@ import '../core/sl_route.dart';
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
 import 'sensitive_content_guard.dart';
+import 'sl_settings_kit.dart';
 
 part 'pin_pad_setup/pin_pad_background_part.dart';
 
@@ -506,17 +507,21 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
 
   double _keypadButtonSize(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    final height =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.paddingOf(context).vertical;
     if (width >= SLResponsive.tablet) return 84;
-    if (width < 360) return 68;
-    return 76;
+    if (width < 360 || height < 700) return 64;
+    return 72;
   }
 
-  double _dotSpacing(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    return width < 360 ? 5 : 8;
-  }
+  SLSettingsPalette _pinPalette(BuildContext context) =>
+      SLSettingsPalette.resolve(
+        Theme.of(context).brightness == Brightness.dark,
+      );
 
   Widget _buildFullscreenBody(BuildContext context, String displayedError) {
+    final palette = _pinPalette(context);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final maxPanelWidth = screenWidth >= SLResponsive.tablet ? 560.0 : 520.0;
     final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
@@ -529,161 +534,212 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     return PopScope(
       canPop: !widget.isUnlock,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8EEF4),
+        backgroundColor: palette.isDark
+            ? palette.canvas
+            : const Color(0xFFFFF4F8),
         body: Stack(
           children: [
-            const Positioned.fill(
+            Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Color(0xFFFFF8FB),
-                      Color(0xFFFBEFF5),
-                      Color(0xFFF6EAF0),
-                    ],
+                    colors: palette.isDark
+                        ? [palette.canvasTop, palette.canvas, palette.surface]
+                        : const [
+                            Color(0xFFFFFBFD),
+                            Color(0xFFFFF0F6),
+                            Color(0xFFF8F0FC),
+                          ],
                     begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    end: Alignment.bottomLeft,
                   ),
                 ),
               ),
             ),
             _buildAmbientOrb(
               alignment: const Alignment(-1.12, -0.82),
-              color: const Color(0x14D81B60),
-              size: 180,
+              color: const Color(0x16E65372),
+              size: 190,
             ),
             _buildAmbientOrb(
               alignment: const Alignment(1.08, -0.18),
-              color: const Color(0x12FFB6C9),
+              color: const Color(0x16FFB6C9),
               size: 220,
             ),
             _buildAmbientOrb(
               alignment: const Alignment(0.82, 1.06),
-              color: const Color(0x108E6BE8),
-              size: 200,
+              color: const Color(0x148E6BE8),
+              size: 214,
+            ),
+            _buildAmbientOrb(
+              alignment: const Alignment(-0.92, 0.92),
+              color: const Color(0x10F4A37A),
+              size: 142,
             ),
             SafeArea(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  18,
-                  horizontalPadding,
-                  20,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxPanelWidth),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (!widget.isUnlock)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(Icons.close_rounded),
-                              color: SLColors.textSecond,
-                              tooltip: L10nService().translate('core_close'),
-                            ),
-                          )
-                        else
-                          const SizedBox(height: 16),
-                        const SizedBox(height: 8),
-                        _buildFullscreenHeader(displayedError, context),
-                        const SizedBox(height: 28),
-                        _buildFullscreenKeypadSection(context),
-                        if (widget.isUnlock) ...[
-                          const SizedBox(height: 10),
-                          TextButton(
-                            onPressed: _canUseForgotPin && !_isRecoveringPin
-                                ? _handleForgotPin
-                                : null,
-                            child: Text(
-                              _canUseForgotPin
-                                  ? _forgotPinActionLabel
-                                  : _forgotPinDisabledLabel,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: _canUseForgotPin
-                                    ? SLColors.primary
-                                    : SLColors.primary.withValues(alpha: 0.45),
-                              ),
-                            ),
-                          ),
-                          if ((widget.forgotPinHint ?? '').trim().isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                              ),
-                              child: Text(
-                                _confirmDeliveryHint,
-                                textAlign: TextAlign.center,
-                                style: SLTheme.quicksand(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: SLColors.textSecond,
-                                  height: 1.35,
-                                ),
-                              ),
-                            ),
-                        ],
-                        if (!widget.isUnlock) ...[
-                          const SizedBox(height: 22),
-                          Row(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        12,
+                        horizontalPadding,
+                        12,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxPanelWidth),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: SLColors.textSecond,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    side: BorderSide(
-                                      color: SLColors.primary
-                                          .withValues(alpha: 0.18),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    L10nService().translate('core_cancel'),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 14,
-                                      letterSpacing: 1.0,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SLSpacing.w12,
-                              Expanded(
-                                flex: 2,
-                                child: SLTheme.primaryButton(
-                                  text: _primaryActionLabel,
-                                  onPressed: _currentPin.length >=
-                                              _minimumSubmitLength &&
-                                          !_isInputLocked
-                                      ? _onSubmit
+                              _buildFullscreenHeader(displayedError, context),
+                              const SizedBox(height: 16),
+                              _buildFullscreenKeypadSection(context),
+                              if (widget.isUnlock) ...[
+                                const SizedBox(height: 10),
+                                TextButton(
+                                  onPressed:
+                                      _canUseForgotPin && !_isRecoveringPin
+                                      ? _handleForgotPin
                                       : null,
+                                  child: Text(
+                                    _canUseForgotPin
+                                        ? _forgotPinActionLabel
+                                        : _forgotPinDisabledLabel,
+                                    textAlign: TextAlign.center,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: _canUseForgotPin
+                                          ? palette.accent
+                                          : palette.inkTertiary,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                if ((widget.forgotPinHint ?? '')
+                                    .trim()
+                                    .isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
+                                    ),
+                                    child: Text(
+                                      _confirmDeliveryHint,
+                                      textAlign: TextAlign.center,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: palette.inkSecondary,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ],
                           ),
-                        ],
-                      ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (!widget.isUnlock)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        10,
+                        horizontalPadding,
+                        12,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxPanelWidth),
+                          child: _buildSetupActions(context),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSetupActions(BuildContext context) {
+    final palette = _pinPalette(context);
+    final canSubmit =
+        _currentPin.length >= _minimumSubmitLength && !_isInputLocked;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    );
+    final cancel = OutlinedButton(
+      onPressed: () => Navigator.of(context).pop(),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: palette.inkSecondary,
+        minimumSize: const Size(0, 52),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        side: BorderSide(color: palette.accent.withValues(alpha: 0.22)),
+        shape: shape,
+        textStyle: SLTheme.quicksand(fontSize: 14, fontWeight: FontWeight.w800),
+      ),
+      child: Text(
+        L10nService().translate('core_cancel'),
+        textAlign: TextAlign.center,
+      ),
+    );
+    final primary = DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: canSubmit
+            ? const LinearGradient(
+                colors: [SLColors.primaryActive, SLSettingsColors.accentStrong],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : null,
+        color: canSubmit ? null : palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: canSubmit
+            ? [
+                BoxShadow(
+                  color: SLColors.primary.withValues(alpha: 0.22),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
+      ),
+      child: FilledButton(
+        onPressed: canSubmit ? _onSubmit : null,
+        style: FilledButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          disabledForegroundColor: palette.inkSecondary,
+          disabledBackgroundColor: Colors.transparent,
+          minimumSize: const Size(0, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: shape,
+          textStyle: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        child: Text(_primaryActionLabel, textAlign: TextAlign.center),
+      ),
+    );
+    if (MediaQuery.textScalerOf(context).scale(14) > 20) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [primary, const SizedBox(height: 8), cancel],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: cancel),
+        const SizedBox(width: 12),
+        Expanded(flex: 2, child: primary),
+      ],
     );
   }
 
@@ -698,128 +754,258 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
         child: Container(
           width: size,
           height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         ),
       ),
     );
   }
 
-  Widget _buildFullscreenHeader(
-    String displayedError,
-    BuildContext context,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildFullscreenHeader(String displayedError, BuildContext context) {
+    final palette = _pinPalette(context);
+    final errorColor = palette.isDark
+        ? Theme.of(context).colorScheme.error
+        : SLColors.danger;
+    return Stack(
       children: [
-        Center(
-          child: Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.92),
-              border: Border.all(
-                color: SLColors.primary.withValues(alpha: 0.12),
+        Container(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: palette.isDark
+                  ? [palette.surface, palette.surfaceMuted]
+                  : [
+                      Colors.white.withValues(alpha: 0.82),
+                      const Color(0xFFFFF4F8).withValues(alpha: 0.74),
+                    ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: palette.isDark
+                  ? palette.border
+                  : Colors.white.withValues(alpha: 0.92),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: SLColors.primary.withValues(alpha: 0.08),
+                blurRadius: 26,
+                offset: const Offset(0, 12),
+              ),
+              BoxShadow(
+                color: SLColors.accentPurple.withValues(alpha: 0.08),
+                blurRadius: 28,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: SizedBox(
+                  width: 84,
+                  height: 84,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: SLColors.primaryGradient,
+                          boxShadow: [
+                            BoxShadow(
+                              color: SLColors.primary.withValues(alpha: 0.24),
+                              blurRadius: 22,
+                              offset: const Offset(0, 9),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: palette.isDark
+                              ? palette.surface
+                              : SLColors.paper,
+                          border: Border.all(
+                            color: palette.isDark
+                                ? palette.border
+                                : Colors.white.withValues(alpha: 0.96),
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          widget.isUnlock
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_person_rounded,
+                          color: palette.accent,
+                          size: 30,
+                        ),
+                      ),
+                      const Positioned(
+                        top: -1,
+                        right: 2,
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: SLColors.warningGold,
+                          size: 17,
+                        ),
+                      ),
+                      const Positioned(
+                        bottom: 1,
+                        left: 0,
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: SLColors.primary,
+                          size: 17,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _resolvedTitle,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w900,
+                  color: palette.accent,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _resolvedSubtitle,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: palette.ink,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _resolvedCuteMessage,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: palette.inkSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _buildPinDots(context),
+              const SizedBox(height: 10),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _hasError
+                        ? errorColor.withValues(alpha: 0.10)
+                        : palette.isDark
+                        ? palette.surface
+                        : Colors.white.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(
+                      color: (_hasError ? errorColor : palette.accent)
+                          .withValues(alpha: 0.14),
+                    ),
+                  ),
+                  child: Text(
+                    _resolvedProgressText,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _hasError ? errorColor : palette.inkSecondary,
+                    ),
+                  ),
+                ),
+              ),
+              if (_hasError) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: errorColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: errorColor.withValues(alpha: 0.16),
+                    ),
+                  ),
+                  child: Text(
+                    displayedError,
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: errorColor,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (!widget.isUnlock)
+          PositionedDirectional(
+            top: 6,
+            end: 6,
+            child: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close_rounded),
+              color: palette.inkSecondary,
+              tooltip: L10nService().translate('core_close'),
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+              style: IconButton.styleFrom(
+                backgroundColor: palette.surface.withValues(alpha: 0.72),
               ),
             ),
-            child: Icon(
-              widget.isUnlock
-                  ? Icons.lock_open_rounded
-                  : Icons.lock_person_rounded,
-              color: SLColors.primary,
-              size: 36,
-            ),
           ),
-        ),
-        const SizedBox(height: 22),
-        Text(
-          _resolvedTitle,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-            color: SLColors.primaryActive,
-            letterSpacing: 0.3,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          _resolvedSubtitle,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: SLColors.textPrimary,
-            height: 1.45,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _resolvedCuteMessage,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: SLColors.textSecond,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildPinDots(context),
-        const SizedBox(height: 12),
-        Text(
-          _resolvedProgressText,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: _hasError ? SLColors.danger : SLColors.textSecond,
-          ),
-        ),
-        if (_hasError) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              color: SLColors.danger.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: SLColors.danger.withValues(alpha: 0.16),
-              ),
-            ),
-            child: Text(
-              displayedError,
-              textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: SLColors.danger,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
 
   Widget _buildFullscreenKeypadSection(BuildContext context) {
-    return DecoratedBox(
+    final palette = _pinPalette(context);
+    return Container(
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.7)),
+        color: palette.isDark
+            ? palette.surface.withValues(alpha: 0.6)
+            : Colors.white.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: palette.isDark
+              ? palette.border
+              : Colors.white.withValues(alpha: 0.62),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: SLColors.primary.withValues(alpha: 0.04),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(6, 24, 6, 0),
-        child: RepaintBoundary(
-          child: _buildKeypad(context),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
+        child: RepaintBoundary(child: _buildKeypad(context)),
       ),
     );
   }
@@ -1104,54 +1290,89 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
   }
 
   Widget _buildPinDots(BuildContext context) {
-    final dotSpacing = _dotSpacing(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_pinSlotCount, (index) {
-        bool isActive = index < _currentPin.length;
-        bool isNext = index == _currentPin.length;
-        final isRequiredSlot = index < _requiredPinLength;
-        final inactiveRequiredSize =
-            MediaQuery.sizeOf(context).width < 360 ? 12.0 : 14.0;
-        final inactiveOptionalSize =
-            MediaQuery.sizeOf(context).width < 360 ? 9.0 : 10.0;
-        final activeSize =
-            MediaQuery.sizeOf(context).width >= SLResponsive.tablet
-                ? 22.0
-                : 20.0;
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          margin: EdgeInsets.symmetric(horizontal: dotSpacing),
-          width: isActive
-              ? activeSize
-              : (isRequiredSlot ? inactiveRequiredSize : inactiveOptionalSize),
-          height: isActive
-              ? activeSize
-              : (isRequiredSlot ? inactiveRequiredSize : inactiveOptionalSize),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isActive
-                ? SLColors.primary
-                : (isRequiredSlot
-                    ? SLColors.bgElevated.withValues(alpha: 0.72)
-                    : SLColors.bgElevated.withValues(alpha: 0.34)),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: SLColors.primary.withValues(alpha: 0.36),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    )
-                  ]
-                : null,
-            border: isNext && index < _pinSlotCount
-                ? Border.all(color: SLColors.primary, width: 2.2)
-                : null,
+    final palette = _pinPalette(context);
+    final activeSize = MediaQuery.sizeOf(context).width >= SLResponsive.tablet
+        ? 22.0
+        : 20.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Giữ từng ô cố định để đủ tám số vẫn vừa thẻ và không xô các ô còn lại.
+        final spacing = min(
+          12.0,
+          max(
+            0.0,
+            (constraints.maxWidth - activeSize * _pinSlotCount) /
+                (_pinSlotCount - 1),
           ),
         );
-      }),
+        return ExcludeSemantics(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var index = 0; index < _pinSlotCount; index++) ...[
+                if (index > 0) SizedBox(width: spacing),
+                SizedBox(
+                  width: activeSize,
+                  height: activeSize,
+                  child: Center(
+                    child: _buildPinDot(index, activeSize, palette),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPinDot(int index, double activeSize, SLSettingsPalette palette) {
+    final isActive = index < _currentPin.length;
+    final isNext = index == _currentPin.length;
+    final isRequiredSlot = index < _requiredPinLength;
+    const inactiveRequiredSize = 14.0;
+    const inactiveOptionalSize = 10.0;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeInOut,
+      width: isActive
+          ? activeSize
+          : (isRequiredSlot ? inactiveRequiredSize : inactiveOptionalSize),
+      height: isActive
+          ? activeSize
+          : (isRequiredSlot ? inactiveRequiredSize : inactiveOptionalSize),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: isActive ? SLColors.primaryGradient : null,
+        color: isActive
+            ? null
+            : (isRequiredSlot
+                  ? palette.accent.withValues(alpha: 0.14)
+                  : palette.accent.withValues(alpha: 0.06)),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: SLColors.primary.withValues(alpha: 0.18),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+        border: isNext && index < _pinSlotCount
+            ? Border.all(color: palette.accent, width: 2.2)
+            : isActive
+            ? null
+            : Border.all(
+                color: palette.accent.withValues(
+                  alpha: isRequiredSlot ? 0.28 : 0.15,
+                ),
+              ),
+      ),
+      alignment: Alignment.center,
+      child: isActive
+          ? const Icon(Icons.favorite_rounded, color: Colors.white, size: 10)
+          : null,
     );
   }
 
@@ -1209,11 +1430,13 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     IconData? icon,
     VoidCallback? onTapOverride,
   }) {
-    bool isDelete = value == 'delete';
+    final palette = _pinPalette(context);
+    final isDelete = value == 'delete';
+    final isBiometric = value == 'bio';
     final onTap = _isInputLocked
         ? null
         : (onTapOverride ??
-            (isDelete ? _onDeletePressed : () => _onNumberPressed(value)));
+              (isDelete ? _onDeletePressed : () => _onNumberPressed(value)));
 
     return Material(
       color: Colors.transparent,
@@ -1221,49 +1444,96 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
         onTap: onTap,
         splashColor: SLColors.primary.withValues(alpha: 0.15),
         highlightColor: SLColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(size),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: size,
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isDelete
-                ? Colors.transparent
-                : SLColors.bgElevated.withValues(alpha: 0.78),
+            gradient: palette.isDark
+                ? LinearGradient(
+                    colors: [
+                      isDelete
+                          ? palette.accentSoft
+                          : isBiometric
+                          ? SLColors.accentPurple.withValues(alpha: 0.20)
+                          : palette.surfaceMuted,
+                      palette.surface,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : isDelete
+                ? LinearGradient(
+                    colors: [
+                      SLColors.primarySoft.withValues(alpha: 0.92),
+                      Colors.white.withValues(alpha: 0.72),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : isBiometric
+                ? LinearGradient(
+                    colors: [
+                      SLColors.tertiarySoft.withValues(alpha: 0.92),
+                      Colors.white.withValues(alpha: 0.80),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.96),
+                      const Color(0xFFFFF2F6).withValues(alpha: 0.84),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
             border: Border.all(
-              color: isDelete
-                  ? Colors.transparent
-                  : SLColors.bgElevated.withValues(alpha: 0.86),
-              width: 1.5,
+              color: palette.isDark
+                  ? palette.border
+                  : isDelete
+                  ? SLColors.primary.withValues(alpha: 0.18)
+                  : isBiometric
+                  ? SLColors.accentPurple.withValues(alpha: 0.22)
+                  : Colors.white.withValues(alpha: 0.94),
+              width: 1.25,
             ),
-            boxShadow: isDelete
-                ? null
-                : [
-                    BoxShadow(
-                      color: SLColors.primary.withValues(alpha: 0.08),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    )
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color:
+                    (isDelete
+                            ? SLColors.primary
+                            : isBiometric
+                            ? SLColors.accentPurple
+                            : SLColors.primary)
+                        .withValues(alpha: 0.10),
+                blurRadius: 12,
+                spreadRadius: 1,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           alignment: Alignment.center,
           child: icon != null
               ? Icon(
                   icon,
                   color: _isInputLocked
-                      ? SLColors.primary.withValues(alpha: 0.4)
-                      : SLColors.primary,
+                      ? palette.inkTertiary
+                      : isBiometric
+                      ? palette.tint(SLColors.accentPurpleDark)
+                      : palette.accent,
                   size: size * 0.42,
                 )
               : Text(
                   value,
                   style: SLTheme.quicksand(
-                    fontSize: size * 0.42,
+                    fontSize: size * 0.38,
                     fontWeight: FontWeight.w800,
                     color: _isInputLocked
-                        ? SLColors.primary.withValues(alpha: 0.4)
-                        : SLColors.primary,
+                        ? palette.inkTertiary
+                        : palette.accent,
                   ),
                 ),
         ),

@@ -465,14 +465,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       _applyAuthState(authState);
     }
 
-    if (!result.shouldResetToHome) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(
-        context,
-        rootNavigator: true,
-      ).popUntil((route) => route.isFirst);
-    });
   }
 
   @override

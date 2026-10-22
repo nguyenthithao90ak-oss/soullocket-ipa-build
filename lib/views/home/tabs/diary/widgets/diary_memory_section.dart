@@ -104,6 +104,7 @@ enum _DiaryMonthSelection { all }
 
 class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   static const int _thumbnailWarmupCount = 18;
+  DiaryAlbumPalette get _colors => DiaryAlbumPalette.of(context);
   PreparedDiaryMemoryFeed? _lastPreparedFeed;
   String _thumbnailWarmupSignature = '';
   bool _isUploadingMemory = false;
@@ -174,9 +175,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
           child: Container(
             key: const ValueKey('diary_month_filter_sheet'),
             constraints: BoxConstraints(maxHeight: screenHeight * 0.74),
-            decoration: const BoxDecoration(
-              color: DiaryAlbumStyle.paper,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: _colors.paper,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -191,7 +194,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           style: SLTheme.quicksand(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: DiaryAlbumStyle.ink,
+                            color: _colors.ink,
                           ),
                         ),
                       ),
@@ -241,16 +244,14 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           selected: isSelected,
-                          selectedTileColor: DiaryAlbumStyle.rose.withValues(
+                          selectedTileColor: _colors.rose.withValues(
                             alpha: 0.1,
                           ),
                           leading: Icon(
                             isAll
                                 ? Icons.auto_awesome_rounded
                                 : Icons.calendar_month_outlined,
-                            color: isSelected
-                                ? DiaryAlbumStyle.rose
-                                : DiaryAlbumStyle.muted,
+                            color: isSelected ? _colors.rose : _colors.muted,
                           ),
                           title: Text(
                             label,
@@ -261,13 +262,13 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               fontWeight: isSelected
                                   ? FontWeight.w800
                                   : FontWeight.w600,
-                              color: DiaryAlbumStyle.ink,
+                              color: _colors.ink,
                             ),
                           ),
                           trailing: isSelected
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check_circle_rounded,
-                                  color: DiaryAlbumStyle.rose,
+                                  color: _colors.rose,
                                 )
                               : const SizedBox(width: 24, height: 24),
                           onTap: () => Navigator.of(
@@ -309,10 +310,10 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
         children: [
           Text(
             context.tr('Lọc theo tháng'),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: DiaryAlbumStyle.muted,
+              color: _colors.muted,
             ),
           ),
           const SizedBox(height: 8),
@@ -325,23 +326,23 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                 key: const ValueKey('diary_month_filter_button'),
                 onPressed: _showMonthPicker,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: DiaryAlbumStyle.ink,
-                  backgroundColor: DiaryAlbumStyle.paper,
+                  foregroundColor: _colors.ink,
+                  backgroundColor: _colors.paper,
                   minimumSize: const Size(48, 52),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 10,
                   ),
-                  side: const BorderSide(color: DiaryAlbumStyle.line),
+                  side: BorderSide(color: _colors.line),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.calendar_month_rounded,
-                      color: DiaryAlbumStyle.rose,
+                      color: _colors.rose,
                       size: 21,
                     ),
                     const SizedBox(width: 10),
@@ -353,14 +354,14 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: DiaryAlbumStyle.ink,
+                          color: _colors.ink,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(
+                    Icon(
                       Icons.expand_more_rounded,
-                      color: DiaryAlbumStyle.muted,
+                      color: _colors.muted,
                       size: 24,
                     ),
                   ],
@@ -715,7 +716,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     style: SLTheme.quicksand(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: DiaryAlbumStyle.muted,
+                                      color: _colors.muted,
                                     ),
                                   ),
                                 ),
@@ -791,9 +792,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             },
                             child: RawScrollbar(
                               controller: _scrollController,
-                              thumbColor: DiaryAlbumStyle.rose.withValues(
-                                alpha: 0.45,
-                              ),
+                              thumbColor: _colors.rose.withValues(alpha: 0.45),
                               radius: const Radius.circular(8),
                               thickness: 3,
                               interactive: true,
@@ -952,13 +951,17 @@ class DiaryMemoryFixedBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(color: DiaryAlbumStyle.canvas),
+      decoration: BoxDecoration(color: colors.canvas),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const RepaintBoundary(
-            child: CustomPaint(painter: _DiaryMemoryPatternPainter()),
+          RepaintBoundary(
+            child: Opacity(
+              opacity: colors.isDark ? 0.35 : 1,
+              child: const CustomPaint(painter: _DiaryMemoryPatternPainter()),
+            ),
           ),
           Positioned(
             top: -12,
@@ -1003,6 +1006,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 12),
       child: Column(
@@ -1017,7 +1021,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
                   context.tr('home_albumngy_7e474f'),
                   style: SLTheme.quicksand(
                     fontSize: 11,
-                    color: DiaryAlbumStyle.muted,
+                    color: colors.muted,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1036,7 +1040,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: DiaryAlbumStyle.ink,
+                  color: colors.ink,
                 ),
               ),
               Text(
@@ -1046,13 +1050,13 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: DiaryAlbumStyle.muted,
+                  color: colors.muted,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(height: 1, color: DiaryAlbumStyle.line),
+          Divider(height: 1, color: colors.line),
         ],
       ),
     );
@@ -1074,11 +1078,12 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 22, 20, 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: DiaryAlbumStyle.roseWash,
+        color: colors.roseWash,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -1095,7 +1100,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: DiaryAlbumStyle.rose,
+                    color: colors.rose,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1104,7 +1109,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: DiaryAlbumStyle.ink,
+                    color: colors.ink,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1116,7 +1121,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
                       dateString,
                       style: SLTheme.quicksand(
                         fontSize: 12,
-                        color: DiaryAlbumStyle.muted,
+                        color: colors.muted,
                       ),
                     ),
                     Text(
@@ -1125,7 +1130,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
                       }),
                       style: SLTheme.quicksand(
                         fontSize: 12,
-                        color: DiaryAlbumStyle.muted,
+                        color: colors.muted,
                       ),
                     ),
                   ],
@@ -1175,7 +1180,6 @@ class _DiaryMemoryPhotoCell extends StatefulWidget {
 
 class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
   int _retryCount = 0;
-  int _imageAttempt = 0;
   bool _manualRetry = false;
   bool _urlsRefreshing = false;
   bool _isOffline = !NetworkReachability.isOnline;
@@ -1189,7 +1193,6 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
       setState(() {
         _isOffline = !online;
         _retryCount = 0;
-        _imageAttempt++;
       });
     });
     _refreshUrlsIfNeeded();
@@ -1206,7 +1209,6 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     super.didUpdateWidget(oldWidget);
     if (widget.photo != oldWidget.photo) {
       _retryCount = 0;
-      _imageAttempt++;
       _refreshUrlsIfNeeded();
     }
   }
@@ -1261,14 +1263,15 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
         setState(() {
           _manualRetry = false;
           _retryCount = 0;
-          _imageAttempt++;
         });
       }
     }
   }
 
+  DiaryAlbumPalette get _colors => DiaryAlbumPalette.of(context);
+
   Widget _buildImageRetry() => ColoredBox(
-    color: DiaryAlbumStyle.canvas,
+    color: _colors.canvas,
     child: Center(
       child: IconButton(
         tooltip: context.tr('core_retry'),
@@ -1279,7 +1282,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                 height: 22,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Icon(Icons.refresh_rounded, color: DiaryAlbumStyle.rose),
+            : Icon(Icons.refresh_rounded, color: _colors.rose),
       ),
     ),
   );
@@ -1415,9 +1418,9 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(7, 7, 7, 16),
           decoration: BoxDecoration(
-            color: DiaryAlbumStyle.paper,
+            color: _colors.paper,
             borderRadius: BorderRadius.circular(17),
-            border: Border.all(color: DiaryAlbumStyle.line),
+            border: Border.all(color: _colors.line),
             boxShadow: [
               BoxShadow(
                 color: DiaryAlbumStyle.ink.withValues(alpha: 0.06),
@@ -1448,14 +1451,22 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                           fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
                         )
                       : CachedNetworkImage(
-                          key: ValueKey('$photoId-$_imageAttempt'),
+                          // Giữ lại element theo ảnh để feed rebuild/URL ký mới
+                          // không làm placeholder lóe lại trên màn hình.
+                          key: ValueKey(photoId),
                           imageUrl: photoUrl,
                           memCacheWidth: imageCacheWidth,
                           fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
                           filterQuality: FilterQuality.high,
+                          useOldImageOnUrlChange: true,
+                          fadeInDuration: Duration.zero,
+                          fadeOutDuration: Duration.zero,
+                          placeholderFadeInDuration: Duration.zero,
                           placeholder: (context, url) => _isOffline
                               ? _buildImageRetry()
-                              : const DiaryImageLoading(),
+                              : DiaryImageLoading(
+                                  backgroundColor: _colors.paper,
+                                ),
                           errorWidget: (context, url, error) {
                             if (_retryCount < 1 && _needsSignedRefresh(photo)) {
                               _retryCount++;
@@ -1513,10 +1524,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(17),
-                        border: Border.all(
-                          color: DiaryAlbumStyle.rose,
-                          width: 2,
-                        ),
+                        border: Border.all(color: _colors.rose, width: 2),
                         color: DiaryAlbumStyle.ink.withValues(alpha: 0.25),
                       ),
                       alignment: Alignment.center,
@@ -1958,20 +1966,26 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
+    final warningInk = colors.isDark
+        ? const Color(0xFFF5CE86)
+        : const Color(0xFF8E5B00);
     final statusChips = <Widget>[
       _DiaryMemoryHeroChip(
         icon: Icons.photo_rounded,
         label: L10nService().format('diary_photos_count', {
           'count': totalPhotos,
         }),
-        color: DiaryAlbumStyle.muted,
+        color: colors.muted,
         background: Colors.transparent,
       ),
       _DiaryMemoryHeroChip(
         icon: _statusIcon,
         label: _statusLabel,
-        color: _statusColor,
-        background: _statusBackground,
+        color: colors.tint(_statusColor),
+        background: colors.isDark && _statusBackground != Colors.transparent
+            ? colors.inset
+            : _statusBackground,
       ),
     ];
 
@@ -1984,9 +1998,9 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
             decoration: BoxDecoration(
-              color: DiaryAlbumStyle.paper,
+              color: colors.paper,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: DiaryAlbumStyle.line),
+              border: Border.all(color: colors.line),
               boxShadow: [
                 BoxShadow(
                   color: DiaryAlbumStyle.ink.withValues(alpha: 0.07),
@@ -2012,7 +2026,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                             style: SLTheme.quicksand(
                               fontSize: constraints.maxWidth < 330 ? 21 : 24,
                               fontWeight: FontWeight.w800,
-                              color: DiaryAlbumStyle.ink,
+                              color: colors.ink,
                               height: 1.18,
                             ),
                           ),
@@ -2024,7 +2038,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                             style: SLTheme.quicksand(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: DiaryAlbumStyle.muted,
+                              color: colors.muted,
                               height: 1.4,
                             ),
                           ),
@@ -2061,7 +2075,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF7A5200),
+                    color: colors.isDark ? warningInk : const Color(0xFF7A5200),
                     height: 1.35,
                   ),
                 );
@@ -2071,7 +2085,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                     context.tr('home_thli_4dffdf'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF8E5B00),
+                      color: warningInk,
                     ),
                   ),
                 );
@@ -2083,9 +2097,15 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF4D6),
+                    color: colors.isDark
+                        ? const Color(0xFF352C1D)
+                        : const Color(0xFFFFF4D6),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFF0C36A)),
+                    border: Border.all(
+                      color: colors.isDark
+                          ? const Color(0xFF6B5333)
+                          : const Color(0xFFF0C36A),
+                    ),
                   ),
                   child: compact
                       ? Column(
@@ -2094,9 +2114,9 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.error_outline_rounded,
-                                  color: Color(0xFF8E5B00),
+                                  color: warningInk,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 10),
@@ -2111,9 +2131,9 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                         )
                       : Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline_rounded,
-                              color: Color(0xFF8E5B00),
+                              color: warningInk,
                               size: 18,
                             ),
                             const SizedBox(width: 10),

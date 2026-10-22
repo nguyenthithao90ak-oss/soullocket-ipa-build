@@ -860,7 +860,6 @@ const _uiCopyFallback = <String, Map<String, String>>{
 "copy_acc31b27dfe9": {'vi': "Thiệp Tình Yêu", 'en': "Love Cards"},
 "copy_e0f3f270aa01": {'vi': "Giấc ngủ", 'en': "Sleep"},
 "copy_b49c0d00a6f5": {'vi': "phim đang chiếu", 'en': "movie is showing"},
-"copy_a7d5bcf6f5f2": {'vi': "{value1} mời bạn vào rạp phim", 'en': "{value1} invites you into the cinema"},
 "copy_e0326fc7f4cb": {'vi': "Chấp nhận để xem \"{value1}\" cùng nhau.", 'en': "Accept to see \"{value1}\" together."},
 "copy_fdaa024832ca": {'vi': "Cuộc gọi đã đóng trong lúc chờ quyền media.", 'en': "Call closed while waiting for media permission."},
 "copy_f68819406a61": {'vi': "Cuộc gọi đã đóng.", 'en': "Call closed."},

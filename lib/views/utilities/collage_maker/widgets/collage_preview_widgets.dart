@@ -21,35 +21,28 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
               ? const EdgeInsets.fromLTRB(12, 12, 12, 12)
               : const EdgeInsets.fromLTRB(16, 14, 16, 16),
           decoration: _paperPanelDecoration(
-            color: const Color(0xFFFFF8F2),
-            borderColor: const Color(0xFFD8C7B7),
-            flipped: true,
+            color: _paperShell,
+            borderColor: _paperLine,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
-                  _IntroChip(
-                    label: context.tr('util_chnhnh_37f4ff'),
-                    fixedHeight: 32,
-                  ),
-                  SizedBox(width: compact ? 6 : 8),
                   Expanded(
-                    child: Container(
-                      height: 1,
-                      color: _paperLine.withValues(alpha: 0.72),
+                    child: _buildStudioPanelHeader(
+                      title: context.tr('util_chnhnh_37f4ff'),
+                      icon: Icons.tune_rounded,
                     ),
                   ),
-                  SizedBox(width: compact ? 6 : 8),
                   Container(
                     height: 34,
                     padding:
                         EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF7EADF),
-                      borderRadius: BorderRadius.circular(14),
+                      color: _paperCream,
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: _paperLine),
                     ),
                     child: Text(
@@ -72,8 +65,8 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8EFE4),
-                    borderRadius: _paperRadius(flipped: true),
+                    color: _paperCream,
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: _paperLine),
                   ),
                   child: Text(
@@ -135,28 +128,32 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                                   child: InkWell(
                                     onTap: () => _removeMemoryPhoto(memoryItem),
                                     customBorder: const CircleBorder(),
-                                    child: Ink(
-                                      width: 26,
-                                      height: 26,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.96),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: _paperLine),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: _paperCocoa.withValues(
-                                                alpha: 0.10),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.close_rounded,
-                                        size: 15,
-                                        color: _paperRoseDeep,
-                                      ),
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: Ink(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.96),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: _paperLine),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _paperCocoa.withValues(alpha: 0.10),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: _paperRoseDeep,
+                          ),
+                        ),
+                      ),
                                     ),
                                   ),
                                 ),
@@ -209,8 +206,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             height: tileSize,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color:
-                  hovered ? const Color(0xFFF4E6D9) : const Color(0xFFF6EBDD),
+              color: hovered ? _paperMist : _paperCream,
               borderRadius: tileRadius,
               border: Border.all(
                 color: hovered || selected ? _paperRoseDeep : _paperLine,
@@ -346,7 +342,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
 
     return ClipRect(
       child: ColoredBox(
-        color: const Color(0xFFF9F3EC),
+        color: _paperCream,
         child: Center(
           child: Transform.translate(
             offset: Offset(

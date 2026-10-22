@@ -23,6 +23,7 @@ class _DiaryPublicMemoryImageState extends State<DiaryPublicMemoryImage> {
   final List<({ImageStream stream, ImageStreamListener listener})> _listeners = [];
   ImageInfo? _fullImage;
   ImageInfo? _previewImage;
+  ImageInfo? _retainedImage;
   Timer? _deadline;
   int _generation = 0;
   bool _started = false;
@@ -63,8 +64,15 @@ class _DiaryPublicMemoryImageState extends State<DiaryPublicMemoryImage> {
     _started = true;
     final generation = ++_generation;
     _disconnect();
-    _releaseAfterFrame(_fullImage);
-    _releaseAfterFrame(_previewImage);
+    final previousImage = _fullImage ?? _previewImage;
+    if (widget.imageProvider == null) {
+      _releaseAfterFrame(previousImage);
+      _releaseAfterFrame(_retainedImage);
+      _retainedImage = null;
+    } else if (previousImage != null) {
+      _releaseAfterFrame(_retainedImage);
+      _retainedImage = previousImage;
+    }
     _fullImage = null;
     _previewImage = null;
     _fullFailed = widget.imageProvider == null;
@@ -73,7 +81,11 @@ class _DiaryPublicMemoryImageState extends State<DiaryPublicMemoryImage> {
     if (widget.imageProvider == null) return;
     _deadline = Timer(widget.loadTimeout, () {
       if (!mounted || generation != _generation || _fullImage != null) return;
-      setState(() => _timedOut = true);
+      setState(() {
+        _timedOut = true;
+        _releaseAfterFrame(_retainedImage);
+        _retainedImage = null;
+      });
     });
     _subscribing = true;
     try {
@@ -106,6 +118,10 @@ class _DiaryPublicMemoryImageState extends State<DiaryPublicMemoryImage> {
               _timedOut = false;
               _deadline?.cancel();
             }
+            if (_retainedImage != null) {
+              _releaseAfterFrame(_retainedImage);
+              _retainedImage = null;
+            }
           }
           if (_subscribing) {
             apply();
@@ -121,7 +137,11 @@ class _DiaryPublicMemoryImageState extends State<DiaryPublicMemoryImage> {
             } else {
               _fullFailed = true;
             }
-            if (_fullFailed && _previewFailed) _deadline?.cancel();
+            if (_fullFailed && _previewFailed) {
+              _deadline?.cancel();
+              _releaseAfterFrame(_retainedImage);
+              _retainedImage = null;
+            }
           }
           if (_subscribing) {
             apply();
@@ -158,12 +178,15 @@ class _DiaryPublicMemoryImageState extends State<DiaryPublicMemoryImage> {
     _disconnect();
     _fullImage?.dispose();
     _previewImage?.dispose();
+    _retainedImage?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final image = _fullImage ?? _previewImage;
+    // Khi đổi ảnh, ưu tiên frame cũ cho tới khi ảnh đầy đủ mới sẵn sàng;
+    // preview mới không được thay thế đột ngột bằng một frame đang giải mã.
+    final image = _fullImage ?? _retainedImage ?? _previewImage;
     if (image != null) {
       return RawImage(
         image: image.image,

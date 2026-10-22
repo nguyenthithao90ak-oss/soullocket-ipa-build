@@ -232,18 +232,22 @@ extension _MainHomeListeners on _MainHomeTabState {
     _healthCycleSyncSubscription?.cancel();
     _healthCycleSyncSubscription = null;
     if (!WidgetService.supportsMobileWidgets) return;
+    final uid = _auth.currentUser?.uid;
+    bool current() => mounted && _houseId == houseId &&
+        uid != null && _auth.currentUser?.uid == uid;
     final healthRef = _dbRef.child('houses/$houseId/health_cycle');
     _healthCycleSyncSubscription = healthRef.onValue.listen(
       (event) {
-        if (!mounted || _houseId != houseId) return;
+        if (!current()) return;
         // Debounce 500ms trước khi sync cycle widget
         _healthCycleWidgetSyncDebounce?.cancel();
         _healthCycleWidgetSyncDebounce = Timer(
           const Duration(milliseconds: 500),
           () {
-            if (!mounted || _houseId != houseId) return;
+            if (!current()) return;
             unawaited(
               WidgetService.updateCycleWidgetData(
+                houseId: houseId,
                 cycleData: event.snapshot.value,
               ),
             );
@@ -251,6 +255,9 @@ extension _MainHomeListeners on _MainHomeTabState {
         );
       },
       onError: (Object error) {
+        if (!current()) return;
+        _healthCycleWidgetSyncDebounce?.cancel();
+        unawaited(WidgetService.updateCycleWidgetData(houseId: houseId, cycleData: null));
         debugPrint('[MainHomeListeners] Health cycle stream failed: $error');
       },
     );

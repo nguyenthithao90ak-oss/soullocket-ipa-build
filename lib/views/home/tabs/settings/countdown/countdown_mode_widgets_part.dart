@@ -417,37 +417,37 @@ class _CountdownModeSheetDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = SLSettingsPalette.resolve(
+      Theme.of(context).brightness == Brightness.dark,
+    );
     return DropdownButtonFormField<String>(
       key: ValueKey(value),
       initialValue: value,
       isExpanded: true,
-      iconEnabledColor: AppearancePanelStyle.muted,
-      dropdownColor: AppearancePanelStyle.paper,
+      iconEnabledColor: palette.inkSecondary,
+      dropdownColor: palette.surfaceMuted,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppearancePanelStyle.paper,
+        fillColor: palette.surfaceMuted,
         labelStyle: SLTheme.quicksand(
-          color: AppearancePanelStyle.muted,
+          color: palette.inkSecondary,
           fontWeight: FontWeight.w800,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppearancePanelStyle.line),
+          borderSide: BorderSide(color: palette.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppearancePanelStyle.line),
+          borderSide: BorderSide(color: palette.border),
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(14)),
-          borderSide: BorderSide(color: AppearancePanelStyle.rose, width: 1.5),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(color: palette.accent, width: 1.5),
         ),
       ),
-      style: SLTheme.quicksand(
-        color: AppearancePanelStyle.ink,
-        fontWeight: FontWeight.w800,
-      ),
+      style: SLTheme.quicksand(color: palette.ink, fontWeight: FontWeight.w800),
       items: options
           .map(
             (entry) => DropdownMenuItem<String>(
@@ -457,7 +457,7 @@ class _CountdownModeSheetDropdown extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
-                  color: AppearancePanelStyle.ink,
+                  color: palette.ink,
                   fontWeight: FontWeight.w800,
                 ),
               ),

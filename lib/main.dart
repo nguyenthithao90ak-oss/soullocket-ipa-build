@@ -220,45 +220,96 @@ void main() {
       ErrorWidget.builder = (FlutterErrorDetails details) {
         return Material(
           color: SLColors.bgMain,
-          child: Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.favorite, color: SLColors.primary, size: 44),
-                const SizedBox(height: 12),
-                Text(
-                  L10nService().translate('runtime_error_retry'),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: SLColors.danger,
-                    decoration: TextDecoration.none,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // ErrorWidget có thể được chèn vào một ô rất hẹp (ví dụ ô đếm
+              // ngày trên Home). Giới hạn chiều rộng và cho phần nút co lại
+              // để màn lỗi không tạo thêm overflow vàng đen.
+              final width = constraints.maxWidth.isFinite
+                  ? constraints.maxWidth
+                  : 320.0;
+              final horizontalPadding = width < 180
+                  ? (width / 2).clamp(0.0, 8.0).toDouble()
+                  : 16.0;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: width,
+                    maxWidth: width,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.favorite,
+                          color: SLColors.primary,
+                          size: 44,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          L10nService().translate('runtime_error_retry'),
+                          maxLines: 3,
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.quicksand(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: SLColors.danger,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () {
+                              final navigator =
+                                  NotificationService.navigatorKey.currentState;
+                              if (navigator?.canPop() ?? false) {
+                                navigator!.pop();
+                              } else {
+                                AppRouter.router.go('/');
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.refresh_rounded),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    L10nService().translate('retry'),
+                                    style: GoogleFonts.quicksand(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: () {
-                    final navigator =
-                        NotificationService.navigatorKey.currentState;
-                    if (navigator?.canPop() ?? false) {
-                      navigator!.pop();
-                    } else {
-                      AppRouter.router.go('/');
-                    }
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(
-                    L10nService().translate('retry'),
-                    style: GoogleFonts.quicksand(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         );
       };

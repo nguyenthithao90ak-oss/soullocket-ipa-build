@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
@@ -23,7 +24,6 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/notifications/notification_center_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
-import 'package:soullocket_app/views/utilities/cinema_screen.dart';
 import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
 import 'package:soullocket_app/views/utilities/secret_vault_screen.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -52,11 +52,19 @@ class NotificationService {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+  NotificationService._internal()
+    : _fcm = FirebaseMessaging.instance,
+      _localNotif = FlutterLocalNotificationsPlugin();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotif =
-      FlutterLocalNotificationsPlugin();
+  @visibleForTesting
+  NotificationService.forTesting({
+    required FirebaseMessaging messaging,
+    required FlutterLocalNotificationsPlugin localNotifications,
+  }) : _fcm = messaging,
+       _localNotif = localNotifications;
+
+  final FirebaseMessaging _fcm;
+  final FlutterLocalNotificationsPlugin _localNotif;
   StreamSubscription<String>? _tokenRefreshSubscription;
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
@@ -80,6 +88,25 @@ class NotificationService {
   bool _appForeground = true;
   String? _reminderSignedOutUid;
   Future<void> _localNotificationWrites = Future<void>.value();
+  int _notificationPreferenceRevision = 0;
+
+  /// Công tắc tổng không thay đổi lựa chọn từng loại. Hủy cả lịch và thẻ
+  /// local đã hiện, cùng hàng đợi ghi để tác vụ cũ không sống lại sau khi tắt.
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('il_notifications_enabled', enabled);
+    // Ghi preference trước rồi mới tăng revision để mọi tác vụ đang đợi thấy
+    // trạng thái tắt, còn tác vụ đã đọc trạng thái cũ bị chặn bởi revision.
+    _notificationPreferenceRevision++;
+    _reminderGeneration++;
+    if (enabled || kIsWeb) return;
+    await _ensureLocalPluginInitialized();
+    await _withLocalNotificationWrite(() => _localNotif.cancelAll());
+  }
+
+  bool _canWriteLocalNotification(SharedPreferences prefs, int revision) =>
+      revision == _notificationPreferenceRevision &&
+      (prefs.getBool('il_notifications_enabled') ?? true);
 
   static const int _dailySleepReminderId =
       NotificationReminderPlan.firstSleepId;
@@ -751,32 +778,6 @@ class NotificationService {
           );
         }
         break;
-      case 'cinema':
-        final targetHouseId =
-            data['houseId']?.toString() ??
-            data['targetHouseId']?.toString() ??
-            data['target_house_id']?.toString() ??
-            myHouseId;
-        if (targetHouseId == null || targetHouseId.isEmpty) {
-          destination = const HomeScreen(initialTab: 3);
-        } else {
-          final myName = await _resolveCurrentUserCinemaName(
-            houseService,
-            targetHouseId,
-          );
-          final inviteId =
-              data['inviteId']?.toString() ?? data['invite_id']?.toString();
-          destination = CinemaScreen(
-            houseId: targetHouseId,
-            myName: myName,
-            initialUrl: data['url']?.toString(),
-            initialTitle: data['title']?.toString(),
-            autoJoinInviteId: inviteId == null || inviteId.isEmpty
-                ? null
-                : inviteId,
-          );
-        }
-        break;
       case 'soul_events':
         if (requestUid == null ||
             myHouseId == null ||
@@ -808,7 +809,7 @@ class NotificationService {
             currentHouse != myHouseId) {
           return;
         }
-        final calendarName = await _resolveCurrentUserCinemaName(
+        final calendarName = await _resolveCurrentUserDisplayName(
           houseService,
           myHouseId,
         );
@@ -837,7 +838,7 @@ class NotificationService {
             FirebaseAuth.instance.currentUser?.uid != requestUid) {
           return;
         }
-        final habitName = await _resolveCurrentUserCinemaName(
+        final habitName = await _resolveCurrentUserDisplayName(
           houseService,
           myHouseId,
         );
@@ -978,7 +979,7 @@ class NotificationService {
     );
   }
 
-  Future<String> _resolveCurrentUserCinemaName(
+  Future<String> _resolveCurrentUserDisplayName(
     HouseService houseService,
     String houseId,
   ) async {
@@ -1040,7 +1041,11 @@ class NotificationService {
     String fallbackKey,
   ) {
     final type = payloadData['type']?.toString() ?? '';
-    if (type == 'soul_merge_call') {
+    final screen = payloadData['screen']?.toString() ?? '';
+    // Backend cũ có thể phải dùng `partner_message` để qua whitelist, nhưng
+    // vẫn giữ `screen=soul_merge_call`. Dùng cùng roomId cho cả hai dạng để
+    // lần rung lại cập nhật đúng một thẻ và khi kết thúc có thể dismiss được.
+    if (type == 'soul_merge_call' || screen == 'soul_merge_call') {
       final roomId = payloadData['roomId']?.toString().trim() ?? '';
       if (roomId.isNotEmpty) return roomId.hashCode;
     }
@@ -1055,7 +1060,6 @@ class NotificationService {
   }
 
   NotificationDetails _notificationDetails({
-    bool isCinemaInvite = false,
     bool isIncomingCall = false,
     bool isPriority = false,
   }) {
@@ -1079,15 +1083,6 @@ class NotificationService {
         fullScreenIntent: isIncomingCall,
         icon: '@mipmap/ic_launcher',
         color: const Color(0xFFFF5E7E),
-        actions: isCinemaInvite
-            ? <AndroidNotificationAction>[
-                AndroidNotificationAction(
-                  'cinema_accept',
-                  UiCopy.text('pairing_ui_request_accept'),
-                  showsUserInterface: true,
-                ),
-              ]
-            : null,
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -1104,38 +1099,46 @@ class NotificationService {
     Map<String, dynamic>? data,
     String? dedupeKey,
   }) async {
-    if (title.trim().isEmpty && body.trim().isEmpty) return;
-    await initialize();
-    if (!await hasPermission()) return;
+    if (kIsWeb || (title.trim().isEmpty && body.trim().isEmpty)) return;
+    final revision = _notificationPreferenceRevision;
+    final prefs = await SharedPreferences.getInstance();
+    if (!_canWriteLocalNotification(prefs, revision)) return;
+    // Hiển thị local không cần lưu lại token FCM hay đồng bộ toàn bộ lịch.
+    await _ensureLocalPluginInitialized();
 
     final payloadData = <String, dynamic>{...?data};
     final key = dedupeKey ?? '$title|$body|${jsonEncode(payloadData)}';
-    final now = DateTime.now();
-    final shouldSkip =
-        _lastForegroundMessageKey == key &&
-        _lastForegroundShownAt != null &&
-        now.difference(_lastForegroundShownAt!) < const Duration(seconds: 5);
-    _lastForegroundMessageKey = key;
-    _lastForegroundShownAt = now;
-    if (shouldSkip) return;
-    final isCinemaInvite = payloadData['type']?.toString() == 'cinema_invite';
-    final isIncomingCall =
-        payloadData['type']?.toString() == 'soul_merge_call' ||
-        payloadData['screen']?.toString() == 'soul_merge_call';
-    final notificationId = _notificationIdForPayload(payloadData, key);
-    final isPriority = await _shouldUsePriorityChannel(payloadData);
+    await _withLocalNotificationWrite(() async {
+      if (!_canWriteLocalNotification(prefs, revision) ||
+          !await hasPermission()) {
+        return;
+      }
+      final isPriority = await _shouldUsePriorityChannel(payloadData);
+      if (!_canWriteLocalNotification(prefs, revision)) return;
+      final now = DateTime.now();
+      final shouldSkip =
+          _lastForegroundMessageKey == key &&
+          _lastForegroundShownAt != null &&
+          now.difference(_lastForegroundShownAt!) < const Duration(seconds: 5);
+      if (shouldSkip) return;
+      _lastForegroundMessageKey = key;
+      _lastForegroundShownAt = now;
+      final isIncomingCall =
+          payloadData['type']?.toString() == 'soul_merge_call' ||
+          payloadData['screen']?.toString() == 'soul_merge_call';
+      final notificationId = _notificationIdForPayload(payloadData, key);
 
-    await _localNotif.show(
-      id: notificationId,
-      title: title,
-      body: body,
-      notificationDetails: _notificationDetails(
-        isCinemaInvite: isCinemaInvite,
-        isIncomingCall: isIncomingCall,
-        isPriority: isPriority,
-      ),
-      payload: jsonEncode(payloadData),
-    );
+      await _localNotif.show(
+        id: notificationId,
+        title: title,
+        body: body,
+        notificationDetails: _notificationDetails(
+          isIncomingCall: isIncomingCall,
+          isPriority: isPriority,
+        ),
+        payload: jsonEncode(payloadData),
+      );
+    });
   }
 
   /// Hiển thị/rung lại cảnh báo cuộc gọi bằng notification native.
@@ -1193,21 +1196,56 @@ class NotificationService {
     required String title,
     required String body,
     Map<String, String>? data,
+    bool throwOriginalException = false,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    final requestData = <String, dynamic>{
+      'houseId': houseId,
+      'title': title,
+      'body': body,
+      'data': data ?? const <String, String>{},
+      'audience': 'partner',
+    };
+
     try {
       await CloudFunctionsHelper.callSecure<dynamic>(
         'queuePartnerNotificationSecure',
-        payload: <String, dynamic>{
-          'houseId': houseId,
-          'title': title,
-          'body': body,
-          'data': data ?? const <String, String>{},
-          'audience': 'partner',
-        },
+        payload: requestData,
+        // Callable đang enforce App Check ở production. Ép helper chuẩn bị và
+        // refresh token một lần để thao tác gọi không bị rơi FCM chỉ vì app
+        // vừa khởi động hoặc token debug chưa sẵn sàng.
+        requireAppCheck: true,
+        throwOriginalException: throwOriginalException,
       );
+    } on FirebaseFunctionsException catch (error) {
+      // Một số bản Function cũ chưa có whitelist `soul_merge_call`. Khi đó
+      // giữ screen/room của cuộc gọi nhưng dùng type legacy đã được chấp nhận;
+      // server mới vẫn đi qua nhánh chính và không gửi trùng.
+      final requestedType = data?['type']?.trim().toLowerCase();
+      if (throwOriginalException &&
+          requestedType == 'soul_merge_call' &&
+          error.code.trim().toLowerCase() == 'invalid-argument') {
+        final compatibilityData = <String, String>{
+          ...?data,
+          'type': 'partner_message',
+        };
+        await CloudFunctionsHelper.callSecure<dynamic>(
+          'queuePartnerNotificationSecure',
+          payload: <String, dynamic>{
+            ...requestData,
+            'data': compatibilityData,
+          },
+          requireAppCheck: true,
+          throwOriginalException: true,
+        );
+        return;
+      }
+      debugPrint(
+        'Failed to queue partner notification: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể xếp hàng thông báo cho đối tác.').message}',
+      );
+      rethrow;
     } catch (e) {
       debugPrint(
         'Failed to queue partner notification: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xếp hàng thông báo cho đối tác.').message}',
@@ -1238,6 +1276,7 @@ class NotificationService {
           'data': data ?? const <String, String>{},
           'audience': 'house',
         },
+        requireAppCheck: true,
       );
     } catch (e) {
       debugPrint(
@@ -1372,13 +1411,15 @@ class NotificationService {
     required bool Function() active,
   }) async {
     if (kIsWeb || !active()) return false;
+    final revision = _notificationPreferenceRevision;
+    final prefs = await SharedPreferences.getInstance();
+    bool canWrite() =>
+        active() && _canWriteLocalNotification(prefs, revision);
+    if (!canWrite()) return false;
     await _ensureLocalPluginInitialized();
-    if (!active() || !await _ensureTimeZoneReady()) return false;
+    if (!canWrite() || !await _ensureTimeZoneReady()) return false;
     return _withLocalNotificationWrite(() async {
-      final prefs = await SharedPreferences.getInstance();
-      if (!active() ||
-          !(prefs.getBool('il_notifications_enabled') ?? true) ||
-          !await hasPermission()) {
+      if (!canWrite() || !await hasPermission()) {
         return false;
       }
       final pending = await _localNotif.pendingNotificationRequests();
@@ -1386,7 +1427,7 @@ class NotificationService {
       if (!replacesExisting && pending.length >= _nativeScheduleLimit) {
         return false;
       }
-      if (!active() || !scheduledDate.isAfter(DateTime.now())) return false;
+      if (!canWrite() || !scheduledDate.isAfter(DateTime.now())) return false;
       await _localNotif.zonedSchedule(
         id: id,
         title: title,
@@ -1396,7 +1437,7 @@ class NotificationService {
         payload: jsonEncode(data),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
-      if (!active()) {
+      if (!canWrite()) {
         await _localNotif.cancel(id: id);
         return false;
       }

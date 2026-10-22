@@ -33,6 +33,7 @@ class PrivateDiaryImage extends StatefulWidget {
     this.diskCache,
     this.isOnline,
     this.onlineChanges,
+    this.loadingBackgroundColor,
   });
 
   final String houseId;
@@ -66,6 +67,10 @@ class PrivateDiaryImage extends StatefulWidget {
   final bool Function()? isOnline;
   final Stream<bool>? onlineChanges;
 
+  /// Nền của trạng thái chờ. Viewer toàn màn hình dùng đen để không lóe màu
+  /// nền album trong vài khung hình giải mã ảnh lớn.
+  final Color? loadingBackgroundColor;
+
   @override
   State<PrivateDiaryImage> createState() => _PrivateDiaryImageState();
 }
@@ -85,6 +90,10 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   );
   ImageProvider<Object>? _provider;
   ImageProvider<Object>? _placeholder;
+  ImageProvider<Object>? _retainedProvider;
+  ImageProvider<Object>? _retainedPlaceholder;
+  bool _ownsRetainedProvider = false;
+  bool _ownsRetainedPlaceholder = false;
   bool _ownsPlaceholder = false;
   PrivateDiaryImageCache? _cache;
   PrivateDiaryImageCacheEntry? _entry;
@@ -180,32 +189,87 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     if (_visible) {
       unawaited(_load());
     } else {
-      _clear();
+      // Khi mở viewer bằng Navigator, route album bị tắt TickerMode trong lúc
+      // Hero còn đang chuyển cảnh. Giữ frame hiện tại qua transition để ảnh
+      // không chớp về loading; chuyển tab thật sự vẫn dọn ảnh như trước.
+      final route = ModalRoute.of(context);
+      _clear(retainVisibleImage: route != null && !route.isCurrent);
     }
   }
 
-  void _clear() {
+  void _clear({bool retainVisibleImage = false}) {
     ++_generation;
     _expiry?.cancel();
     _loadingDeadline?.cancel();
     final provider = _provider;
     final retained = _entry != null && (_cache?.contains(_entry!) ?? false);
+    if (retainVisibleImage) {
+      if (provider != null) {
+        _releaseRetainedProvider();
+        _retainedProvider = provider;
+        _ownsRetainedProvider = !retained;
+      }
+      if (_placeholder != null) {
+        _releaseRetainedPlaceholder();
+        _retainedPlaceholder = _placeholder;
+        _ownsRetainedPlaceholder = _ownsPlaceholder;
+      }
+    }
     _provider = null;
     _entry = null;
-    if (provider != null && !retained) unawaited(provider.evict());
+    if (provider != null && !retainVisibleImage && !retained) {
+      unawaited(provider.evict());
+    }
     final placeholder = _placeholder;
     _placeholder = null;
     // Ảnh tạm lấy từ cache RAM dùng chung thì không thu hồi.
-    if (placeholder != null && _ownsPlaceholder) {
+    if (placeholder != null && _ownsPlaceholder && !retainVisibleImage) {
       unawaited(placeholder.evict());
     }
     _ownsPlaceholder = false;
+    if (!retainVisibleImage) {
+      _releaseRetainedProvider();
+      _releaseRetainedPlaceholder();
+    }
+  }
+
+  void _releaseRetainedProvider() {
+    final provider = _retainedProvider;
+    _retainedProvider = null;
+    final owned = _ownsRetainedProvider;
+    _ownsRetainedProvider = false;
+    if (provider != null && owned) unawaited(provider.evict());
+  }
+
+  void _releaseRetainedPlaceholder() {
+    final placeholder = _retainedPlaceholder;
+    _retainedPlaceholder = null;
+    final owned = _ownsRetainedPlaceholder;
+    _ownsRetainedPlaceholder = false;
+    if (placeholder != null && owned) unawaited(placeholder.evict());
+  }
+
+  void _releaseRetainedAfterFrame() {
+    final provider = _retainedProvider;
+    final placeholder = _retainedPlaceholder;
+    final ownsProvider = _ownsRetainedProvider;
+    final ownsPlaceholder = _ownsRetainedPlaceholder;
+    _retainedProvider = null;
+    _retainedPlaceholder = null;
+    _ownsRetainedProvider = false;
+    _ownsRetainedPlaceholder = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ownsProvider && provider != null) unawaited(provider.evict());
+      if (ownsPlaceholder && placeholder != null) {
+        unawaited(placeholder.evict());
+      }
+    });
   }
 
   Future<void> _load({bool refresh = false}) async {
     final previous = _entry;
     if (refresh && previous != null) _cache?.remove(previous);
-    _clear();
+    _clear(retainVisibleImage: true);
     if (!_visible || !mounted) return;
     final started = Stopwatch()..start();
     final generation = _generation;
@@ -486,6 +550,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   void _show(PrivateDiaryImageCacheEntry entry) {
     _entry = entry;
     setState(() => _provider = entry.provider);
+    _releaseRetainedAfterFrame();
     _expiry = Timer(entry.remaining, () => unawaited(_load(refresh: true)));
   }
 
@@ -528,6 +593,10 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     super.dispose();
   }
 
+  Widget _loading() => DiaryImageLoading(
+    backgroundColor: widget.loadingBackgroundColor,
+  );
+
   Widget _placeholderImage() => Image(
     image: _placeholder!,
     fit: widget.fit,
@@ -535,7 +604,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     height: double.infinity,
     filterQuality: FilterQuality.high,
     gaplessPlayback: true,
-    errorBuilder: (_, _, _) => const DiaryImageLoading(),
+    errorBuilder: (_, _, _) => _loading(),
   );
 
   Widget _retry() => Center(
@@ -564,11 +633,35 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   Widget build(BuildContext context) {
     final placeholder = _placeholder;
     // Đang có ảnh tạm thì giữ ảnh tạm, kể cả khi bản lớn lỗi (vẫn cho thử lại sau).
-    if (_failed) return placeholder == null ? _retry() : _placeholderImage();
+    if (_failed) {
+      final retainedProvider = _retainedProvider ?? _retainedPlaceholder;
+      if (retainedProvider != null) {
+        return Image(
+          image: retainedProvider,
+          fit: widget.fit,
+          width: double.infinity,
+          height: double.infinity,
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+        );
+      }
+      return placeholder == null ? _retry() : _placeholderImage();
+    }
     final provider = _provider;
     if (provider == null) {
+      final retainedProvider = _retainedProvider ?? _retainedPlaceholder;
+      if (retainedProvider != null) {
+        return Image(
+          image: retainedProvider,
+          fit: widget.fit,
+          width: double.infinity,
+          height: double.infinity,
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+        );
+      }
       return placeholder == null
-          ? const DiaryImageLoading()
+          ? _loading()
           : _placeholderImage();
     }
     return Image(
@@ -577,12 +670,12 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       width: double.infinity,
       height: double.infinity,
       filterQuality: FilterQuality.high,
-      gaplessPlayback: false,
+      gaplessPlayback: true,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
           wasSynchronouslyLoaded || frame != null
           ? child
           : placeholder == null
-          ? const DiaryImageLoading()
+          ? _loading()
           : _placeholderImage(),
       errorBuilder: (_, error, stack) {
         if (kDebugMode) {

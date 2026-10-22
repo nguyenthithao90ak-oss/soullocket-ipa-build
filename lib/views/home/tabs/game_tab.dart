@@ -3,6 +3,7 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async' show StreamSubscription, unawaited;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -16,6 +17,7 @@ import '../../../utils/services/offline_cache_service.dart';
 import '../../utilities/memory_puzzle/memory_puzzle_screen.dart';
 import '../../utilities/memory_puzzle/memory_puzzle_session.dart';
 import 'game_library_view.dart';
+import 'pet_care_game_screen.dart';
 import 'soul_block_diary_cover.dart';
 
 class GameTab extends StatefulWidget {
@@ -293,6 +295,19 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  Future<void> _openPetCareGame(BuildContext context) async {
+    await slPushRoute<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => const PetCareGameScreen(),
+        settings: const RouteSettings(name: 'pet_care_game'),
+      ),
+      identity: const ValueKey('pet_care_game'),
+      rootNavigator: true,
+    );
+    if (mounted) setState(() => _coverRevision++);
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -309,6 +324,11 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       ),
       secondaryLabel: context.tr('memory_puzzle_open'),
       secondaryAction: () => unawaited(_openMemoryPuzzle(context)),
+      // Trạm Mây và luồng chăm bé liên quan chỉ mở trong debug để thử
+      // nghiệm; bản chính thức/release tạm thời không quảng bá luồng này.
+      onOpenPetCare: kDebugMode
+          ? () => unawaited(_openPetCareGame(context))
+          : null,
       onDelete: downloaded
           ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block')
           : null,

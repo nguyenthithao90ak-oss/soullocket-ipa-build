@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 
 import '../app_lifecycle_presence_guard.dart';
@@ -14,10 +15,21 @@ class StoragePickerService {
 
   final ImagePicker _picker;
 
+  static const MethodChannel _memoryMediaPickerChannel = MethodChannel(
+    'soullocket/memory_media_picker',
+  );
+
   static const int pickerImageQuality = AppConfig.imageCompressQuality;
   static const double pickerMaxWidth = 1080;
   static const double pickerMaxHeight = 1080;
   static const int maxGallerySelectionPerBatch = 999;
+
+  /// Tên tạm do picker native cấp; giữ được qua journal và khởi động lại app.
+  static bool isLivePhotoFile(XFile file) => [file.name, file.path].any((value) {
+    final name = value.replaceAll('\\', '/').split('/').last.toLowerCase();
+    return name.startsWith('live_photo_') &&
+        (name.endsWith('.mov') || name.endsWith('.mp4'));
+  });
 
   static int clampImagePickLimit(
     int? requested, {
@@ -230,6 +242,72 @@ class StoragePickerService {
       return files.take(normalizedLimit).toList();
     }
     return files;
+  }
+
+  /// Chọn media cho Kỷ niệm.
+  ///
+  /// Trên iOS, picker native trả Live Photo dưới dạng video ghép ngắn (.mov),
+  /// nên pipeline upload hiện có có thể nén, tạo thumbnail và phát lặp như
+  /// video dọc. Nếu channel chưa có (bản cũ/hot restart), dùng picker chung.
+  Future<List<XFile>> pickMemoryMedia({
+    int? limit,
+    bool preserveOriginal = false,
+  }) async {
+    final normalizedLimit = clampImagePickLimit(limit);
+    if (normalizedLimit <= 0) {
+      return const <XFile>[];
+    }
+
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return pickMedia(
+        limit: normalizedLimit,
+        preserveOriginal: preserveOriginal,
+      );
+    }
+
+    try {
+      final raw = await _guardedPicker(
+        () => _memoryMediaPickerChannel.invokeMethod<List<dynamic>>(
+          'pickMemoryMedia',
+          <String, dynamic>{
+            'limit': normalizedLimit,
+            'preserveOriginal': preserveOriginal,
+          },
+        ),
+      );
+      if (raw == null) {
+        return const <XFile>[];
+      }
+      return raw
+          .whereType<Map<dynamic, dynamic>>()
+          .map((entry) {
+            final path = entry['path']?.toString().trim() ?? '';
+            if (path.isEmpty) return null;
+            final name = entry['name']?.toString().trim() ?? '';
+            final mimeType = entry['mimeType']?.toString().trim();
+            return XFile(
+              path,
+              name: name.isEmpty ? null : name,
+              mimeType: mimeType?.isEmpty == true ? null : mimeType,
+            );
+          })
+          .whereType<XFile>()
+          .take(normalizedLimit)
+          .toList(growable: false);
+    } on MissingPluginException {
+      return pickMedia(
+        limit: normalizedLimit,
+        preserveOriginal: preserveOriginal,
+      );
+    } on PlatformException catch (error) {
+      if (error.code == 'unsupported' || error.code == 'not_implemented') {
+        return pickMedia(
+          limit: normalizedLimit,
+          preserveOriginal: preserveOriginal,
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<XFile?> snapPhoto() {

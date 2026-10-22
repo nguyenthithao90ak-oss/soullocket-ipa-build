@@ -47,6 +47,7 @@ class StoragePrivateMemoryUploadHelper {
     required Future<({XFile file, String contentType})> Function() prepareFile,
     required http.Client client,
     bool requestIsFresh = false,
+    bool isLivePhoto = false,
     Future<void> Function(int bytes, bool isVideo)? beforeUpload,
     double? latitude,
     double? longitude,
@@ -80,6 +81,7 @@ class StoragePrivateMemoryUploadHelper {
     final scope = <String, dynamic>{'houseId': houseId, 'requestId': requestId};
     final finalizePayload = <String, dynamic>{
       ...scope,
+      if (isLivePhoto) 'isLivePhoto': true,
       'authorName': authorName,
       if (latitude != null && longitude != null) 'lat': latitude,
       if (latitude != null && longitude != null) 'lng': longitude,
@@ -139,6 +141,7 @@ class StoragePrivateMemoryUploadHelper {
       guard();
       final created = await invoke('createPrivateMemoryUpload', {
         ...scope,
+        if (isLivePhoto) 'isLivePhoto': true,
         'contentType': prepared.contentType,
         'size': size,
         'md5': digest.toString(),

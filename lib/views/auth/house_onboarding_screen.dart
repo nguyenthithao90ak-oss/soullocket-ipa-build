@@ -6,10 +6,8 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/services/l10n_service.dart';
@@ -103,7 +101,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   String? _autoCreateFailureDetail;
   int _authSyncRetryCount = 0;
   int _transientCreateRetryCount = 0;
-  String? _houseCreationOtp;
   String _selectedSecurityQuestion = L10nService().translate(
     'Ngày sinh của bạn?',
   );
@@ -919,7 +916,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
             relationshipMode: relationshipMode,
             recoveryQuestion: _enableRecovery ? recoveryQuestion : null,
             recoveryAnswer: _enableRecovery ? recoveryAnswer : null,
-            houseCreationOtp: _houseCreationOtp,
             createdWith: 'email',
             customHouseId: customHouseId,
           )
@@ -930,7 +926,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
             },
           );
       debugPrint('[HouseOnboarding] _createHouse success: $createdHouseId');
-      _houseCreationOtp = null;
       _authSyncRetryCount = 0;
       _transientCreateRetryCount = 0;
       if (!mounted) return;
@@ -990,13 +985,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       // Tới được đây nghĩa là bước bàn giao (nếu đã bắt đầu) không xong: phải mở
       // khóa nút ở `finally`, nếu không màn lỗi giữ nút bị vô hiệu.
       handedOffToParent = false;
-      if (_isHouseCreationOtpRequired(e)) {
-        final otp = await _requestHouseCreationOtp(user);
-        if (otp == null || !mounted) return;
-        _houseCreationOtp = otp;
-        return _createHouse(customHouseId: customHouseId);
-      }
-      _houseCreationOtp = null;
       final errorInfo = AppErrorMapper.resolve(e);
       debugPrint('[HouseOnboarding] _createHouse failed: ${errorInfo.message}');
       if (!mounted) return;
@@ -1130,79 +1118,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  bool _isHouseCreationOtpRequired(Object error) {
-    return error is FirebaseFunctionsException &&
-        error.message?.trim() == 'house_creation_otp_required';
-  }
-
-  Future<String?> _requestHouseCreationOtp(User user) async {
-    final email = user.email?.trim().toLowerCase() ?? '';
-    if (email.isEmpty || !mounted) return null;
-    try {
-      await _authService.sendOtpEmail(email);
-    } catch (_) {
-      if (mounted) {
-        _showError(L10nService().translate('forgot_pwd_err_send_code_failed'));
-      }
-      return null;
-    }
-
-    if (!mounted) return null;
-
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => SLAlertDialog(
-        title: Text(context.tr('forgot_pwd_step4_title_enter')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              L10nService().format('forgot_pwd_step4_desc_sent', {
-                'email': _authService.maskEmail(email),
-              }),
-            ),
-            SLSpacing.h16,
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(6),
-              ],
-              decoration: InputDecoration(
-                labelText: context.tr('forgot_pwd_label_otp'),
-                hintText: context.tr('forgot_pwd_label_otp'),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          SLDialogAction(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.tr('forgot_pwd_btn_back_step')),
-          ),
-          SLDialogAction(
-            primary: true,
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(context.tr('forgot_pwd_btn_continue')),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (result == null || result.length != 6) {
-      if (mounted) {
-        _showError(L10nService().translate('forgot_pwd_err_enter_otp'));
-      }
-      return null;
-    }
-    return result;
   }
 
   Future<String?> _recoverExistingHouseId(User user) async {

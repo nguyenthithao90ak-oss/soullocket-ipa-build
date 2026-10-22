@@ -40,10 +40,9 @@ class AppEntryAuthState {
 }
 
 class AppEntryResumeResult {
-  final bool shouldResetToHome;
   final AppEntryAuthState? authState;
 
-  const AppEntryResumeResult({this.shouldResetToHome = false, this.authState});
+  const AppEntryResumeResult({this.authState});
 }
 
 class AppEntryHouseSessionResult {
@@ -324,12 +323,9 @@ class AppEntryController {
 
     _scheduleDeviceRegistration();
 
-    final shouldResetToHome = await _applyStaleSessionPolicy(
+    await _applyStaleSessionPolicy(
       keepInMemoryTimestamp: true,
     );
-    if (shouldResetToHome) {
-      return const AppEntryResumeResult(shouldResetToHome: true);
-    }
 
     if (!context.mounted) {
       return const AppEntryResumeResult();
@@ -575,7 +571,7 @@ class AppEntryController {
     }
   }
 
-  Future<bool> _applyStaleSessionPolicy({
+  Future<void> _applyStaleSessionPolicy({
     bool keepInMemoryTimestamp = false,
   }) async {
     final prefs = await getPrefs();
@@ -585,7 +581,6 @@ class AppEntryController {
       keepInMemoryTimestamp: keepInMemoryTimestamp,
     );
     _lastPausedAt = result.resolvedPausedAt;
-    return result.shouldResetToHome;
   }
 
   Future<void> _persistBackgroundTimestamp(DateTime timestamp) async {

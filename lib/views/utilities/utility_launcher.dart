@@ -16,7 +16,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'calendar_screen.dart';
 import 'capsule_screen.dart';
-import 'cinema_screen.dart';
 import 'collage_maker_screen.dart';
 import 'creative_diary_screen.dart';
 import 'diary_export_screen.dart';
@@ -178,8 +177,6 @@ abstract final class UtilityLauncher {
         screen = CalendarScreen(houseId: houseId, myName: myName);
       case 'capsule':
         screen = CapsuleScreen(houseId: houseId, myName: myName);
-      case 'cinema':
-        screen = CinemaScreen(houseId: houseId, myName: myName);
       case 'wheel':
         screen = WheelScreen(houseId: houseId);
       case 'vault':

@@ -4,13 +4,15 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../map_location_access.dart';
 
-const mapRose = Color(0xFFD96888);
-const mapBlue = Color(0xFF6FA8D8);
-const mapSage = Color(0xFF4F9D8A);
-const mapLavender = Color(0xFF8C78C5);
-const mapInk = Color(0xFF4D3046);
-const mapPeach = Color(0xFFFFC7B6);
-const mapButter = Color(0xFFFFE5A8);
+// Bảng màu của phương án B: nền than trung tính, mint làm màu hành động.
+// Các màu phụ vẫn đủ khác nhau để phân biệt vị trí của hai người và trạng thái.
+const mapRose = Color(0xFFE77B98);
+const mapBlue = Color(0xFF8EAFB8);
+const mapSage = Color(0xFF73E2C1);
+const mapLavender = Color(0xFF9ACFC5);
+const mapInk = Color(0xFF0E171A);
+const mapPeach = Color(0xFFD9B59F);
+const mapButter = Color(0xFFCBE6DC);
 
 /// Nét vẽ canvas nhẹ để màn bản đồ có cảm giác như một trang scrapbook.
 /// Các hình chỉ là lớp trang trí, không che marker hoặc bắt tương tác.
@@ -86,7 +88,11 @@ class MapCuteCanvasPainter extends CustomPainter {
         Offset(center.dx, center.dy + radius),
         stroke,
       );
-      canvas.drawCircle(center, radius * .22, Paint()..color = color.withValues(alpha: opacity));
+      canvas.drawCircle(
+        center,
+        radius * .22,
+        Paint()..color = color.withValues(alpha: opacity),
+      );
     }
 
     void dashedPath(
@@ -111,16 +117,73 @@ class MapCuteCanvasPainter extends CustomPainter {
       }
     }
 
-    bubble(Offset(size.width * .06, size.height * .12), size.width * .14, mapRose);
-    bubble(Offset(size.width * .94, size.height * .18), size.width * .17, mapLavender);
-    bubble(Offset(size.width * .88, size.height * .92), size.width * .13, mapBlue);
-    bubble(Offset(size.width * .12, size.height * .9), size.width * .11, mapPeach);
+    // Phương án B dùng chrome tối giản. Trên nền than chỉ giữ vài đường
+    // contour rất mảnh để tạo chiều sâu, không vẽ tim/sparkle pastel.
+    if (dark) {
+      final contour = Paint()
+        ..color = const Color(0xFF8FE8CB).withValues(alpha: opacity * .35)
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = dense ? 1 : 1.2;
+      for (var y = -size.height * .1; y < size.height * 1.1; y += 34) {
+        canvas.drawLine(
+          Offset(-size.width * .1, y),
+          Offset(size.width * 1.1, y + size.height * .08),
+          contour,
+        );
+      }
+      final route = Path()
+        ..moveTo(-size.width * .08, size.height * .72)
+        ..cubicTo(
+          size.width * .24,
+          size.height * .58,
+          size.width * .58,
+          size.height * .84,
+          size.width * 1.08,
+          size.height * .34,
+        );
+      dashedPath(route, const Color(0xFF73E2C1), width: 1.2, dash: 10, gap: 10);
+      return;
+    }
+
+    bubble(
+      Offset(size.width * .06, size.height * .12),
+      size.width * .14,
+      mapRose,
+    );
+    bubble(
+      Offset(size.width * .94, size.height * .18),
+      size.width * .17,
+      mapLavender,
+    );
+    bubble(
+      Offset(size.width * .88, size.height * .92),
+      size.width * .13,
+      mapBlue,
+    );
+    bubble(
+      Offset(size.width * .12, size.height * .9),
+      size.width * .11,
+      mapPeach,
+    );
 
     heart(Offset(size.width * .12, size.height * .18), dense ? 7 : 11, mapRose);
     heart(Offset(size.width * .88, size.height * .12), dense ? 6 : 9, mapRose);
-    heart(Offset(size.width * .82, size.height * .86), dense ? 7 : 10, mapLavender);
-    sparkle(Offset(size.width * .22, size.height * .68), dense ? 6 : 9, mapButter);
-    sparkle(Offset(size.width * .78, size.height * .42), dense ? 5 : 8, mapBlue);
+    heart(
+      Offset(size.width * .82, size.height * .86),
+      dense ? 7 : 10,
+      mapLavender,
+    );
+    sparkle(
+      Offset(size.width * .22, size.height * .68),
+      dense ? 6 : 9,
+      mapButter,
+    );
+    sparkle(
+      Offset(size.width * .78, size.height * .42),
+      dense ? 5 : 8,
+      mapBlue,
+    );
 
     // Hai nét cong nhỏ gợi đường nối giữa hai người.
     line(
@@ -191,9 +254,8 @@ class MapCuteCanvasPainter extends CustomPainter {
     }
   }
 
-  Color paletteColor(Color color) => dark
-      ? Color.lerp(color, Colors.white, .24)!
-      : color;
+  Color paletteColor(Color color) =>
+      dark ? Color.lerp(color, Colors.white, .24)! : color;
 
   @override
   bool shouldRepaint(covariant MapCuteCanvasPainter oldDelegate) =>
@@ -244,14 +306,19 @@ class _MapIllustratedPreviewPainter extends CustomPainter {
       rect,
       Paint()
         ..shader = LinearGradient(
-          colors: [background, dark ? const Color(0xFF29243A) : const Color(0xFFF2F8FF)],
+          colors: [
+            background,
+            dark ? const Color(0xFF29243A) : const Color(0xFFF2F8FF),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(rect),
     );
 
     final paper = Paint()
-      ..color = (dark ? Colors.white : mapRose).withValues(alpha: dark ? .035 : .045)
+      ..color = (dark ? Colors.white : mapRose).withValues(
+        alpha: dark ? .035 : .045,
+      )
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     for (var y = 22.0; y < size.height; y += 27) {
@@ -266,13 +333,34 @@ class _MapIllustratedPreviewPainter extends CustomPainter {
     final roads = <Path>[
       Path()
         ..moveTo(-12, size.height * .24)
-        ..cubicTo(size.width * .24, size.height * .04, size.width * .35, size.height * .45, size.width + 12, size.height * .22),
+        ..cubicTo(
+          size.width * .24,
+          size.height * .04,
+          size.width * .35,
+          size.height * .45,
+          size.width + 12,
+          size.height * .22,
+        ),
       Path()
         ..moveTo(size.width * .14, size.height + 10)
-        ..cubicTo(size.width * .30, size.height * .57, size.width * .72, size.height * .78, size.width * .86, -10),
+        ..cubicTo(
+          size.width * .30,
+          size.height * .57,
+          size.width * .72,
+          size.height * .78,
+          size.width * .86,
+          -10,
+        ),
       Path()
         ..moveTo(-10, size.height * .73)
-        ..cubicTo(size.width * .34, size.height * .55, size.width * .55, size.height * .98, size.width + 10, size.height * .64),
+        ..cubicTo(
+          size.width * .34,
+          size.height * .55,
+          size.width * .55,
+          size.height * .98,
+          size.width + 10,
+          size.height * .64,
+        ),
     ];
     for (final path in roads) {
       canvas.drawPath(path, roadPaint);
@@ -280,7 +368,14 @@ class _MapIllustratedPreviewPainter extends CustomPainter {
 
     final routePath = Path()
       ..moveTo(size.width * .20, size.height * .66)
-      ..cubicTo(size.width * .33, size.height * .39, size.width * .55, size.height * .83, size.width * .79, size.height * .36);
+      ..cubicTo(
+        size.width * .33,
+        size.height * .39,
+        size.width * .55,
+        size.height * .83,
+        size.width * .79,
+        size.height * .36,
+      );
     final routePaint = Paint()
       ..color = route
       ..style = PaintingStyle.stroke
@@ -301,12 +396,17 @@ class _MapIllustratedPreviewPainter extends CustomPainter {
       Offset(size.width * .70, size.height * .78),
       Offset(size.width * .89, size.height * .18),
     ]) {
-      canvas.drawCircle(point, 2.5, Paint()..color = rose.withValues(alpha: .72));
+      canvas.drawCircle(
+        point,
+        2.5,
+        Paint()..color = rose.withValues(alpha: .72),
+      );
     }
   }
 
   void _drawPin(Canvas canvas, Offset center, Color color, Color ink) {
-    final shadow = Paint()..color = Colors.black.withValues(alpha: dark ? .18 : .10);
+    final shadow = Paint()
+      ..color = Colors.black.withValues(alpha: dark ? .18 : .10);
     canvas.drawCircle(center.translate(0, 5), 13, shadow);
     final fill = Paint()..color = color;
     canvas.drawCircle(center, 12, fill);
@@ -315,14 +415,32 @@ class _MapIllustratedPreviewPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawCircle(center, 12, outline);
-    canvas.drawCircle(center, 4, Paint()..color = Colors.white.withValues(alpha: .92));
+    canvas.drawCircle(
+      center,
+      4,
+      Paint()..color = Colors.white.withValues(alpha: .92),
+    );
   }
 
   void _drawHeart(Canvas canvas, Offset center, Color color) {
     final path = Path()
       ..moveTo(center.dx, center.dy + 11)
-      ..cubicTo(center.dx - 17, center.dy - 1, center.dx - 10, center.dy - 13, center.dx, center.dy - 4)
-      ..cubicTo(center.dx + 10, center.dy - 13, center.dx + 17, center.dy - 1, center.dx, center.dy + 11)
+      ..cubicTo(
+        center.dx - 17,
+        center.dy - 1,
+        center.dx - 10,
+        center.dy - 13,
+        center.dx,
+        center.dy - 4,
+      )
+      ..cubicTo(
+        center.dx + 10,
+        center.dy - 13,
+        center.dx + 17,
+        center.dy - 1,
+        center.dx,
+        center.dy + 11,
+      )
       ..close();
     canvas.drawPath(path, Paint()..color = color.withValues(alpha: .78));
   }
@@ -359,12 +477,14 @@ class MapNavigationBar extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [palette.surface, palette.tint(mapRose)],
+            colors: [palette.surface, palette.tint(mapSage)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: palette.accent(mapRose).withValues(alpha: .30)),
+          border: Border.all(
+            color: palette.accent(mapSage).withValues(alpha: .30),
+          ),
         ),
         child: SizedBox(
           height: 56,
@@ -375,7 +495,7 @@ class MapNavigationBar extends StatelessWidget {
               child: IconButtonTheme(
                 data: IconButtonThemeData(
                   style: IconButton.styleFrom(
-                    foregroundColor: palette.muted,
+                    foregroundColor: palette.ink,
                     backgroundColor: Colors.transparent,
                     minimumSize: const Size(48, 48),
                     padding: EdgeInsets.zero,
@@ -818,21 +938,31 @@ class MapDistanceCard extends StatelessWidget {
 class MapPalette {
   const MapPalette(this.dark);
 
-  factory MapPalette.of(BuildContext context) =>
-      MapPalette(Theme.of(context).brightness == Brightness.dark);
+  factory MapPalette.of(BuildContext context) {
+    // Map B là thiết kế riêng của màn bản đồ, độc lập với theme của màn khác.
+    Theme.of(context);
+    return const MapPalette(true);
+  }
 
   final bool dark;
 
-  Color get canvas => dark ? const Color(0xFF211C2D) : const Color(0xFFFFF7FB);
-  Color get surface => dark ? const Color(0xFF2B253B) : const Color(0xFFFFFFFF);
-  Color get ink => dark ? const Color(0xFFFFF7FC) : mapInk;
-  Color get muted => dark ? const Color(0xFFCFC1D4) : const Color(0xFF806A7C);
-  Color get border => dark ? const Color(0xFF52415E) : const Color(0xFFF0DCE8);
+  Color get canvas => dark ? const Color(0xFF11191B) : const Color(0xFFFFF7FB);
+  Color get surface => dark ? const Color(0xFF202A2D) : const Color(0xFFFFFFFF);
+  Color get ink => dark ? const Color(0xFFF1FAF7) : mapInk;
+  Color get muted => dark ? const Color(0xFFA9BCB7) : const Color(0xFF806A7C);
+  Color get border => dark ? const Color(0xFF3D4D4F) : const Color(0xFFF0DCE8);
 
-  Color accent(Color color) =>
-      dark ? Color.lerp(color, Colors.white, .35)! : color;
+  Color accent(Color color) {
+    if (!dark) return color;
+    if (color == mapSage) return const Color(0xFF7CE8C7);
+    if (color == mapRose) return const Color(0xFFF08DA8);
+    if (color == mapBlue) return const Color(0xFFA6C4C9);
+    if (color == mapLavender) return const Color(0xFFA7DED1);
+    return Color.lerp(color, Colors.white, .28)!;
+  }
+
   Color tint(Color color) =>
-      Color.alphaBlend(color.withValues(alpha: dark ? .16 : .08), surface);
+      Color.alphaBlend(color.withValues(alpha: dark ? .10 : .08), surface);
 }
 
 class MapSlidingPanel extends StatelessWidget {
@@ -854,9 +984,11 @@ class MapSlidingPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
+    // Trạng thái mặc định phải giống mẫu B: chỉ lộ phần tóm tắt thấp ở đáy
+    // màn hình. Người dùng vẫn có thể kéo lên để xem các thẻ chi tiết.
     final headingHeight =
-        (82 + (MediaQuery.textScalerOf(context).scale(18) - 18) * 4)
-            .clamp(82.0, 164.0)
+        (104 + (MediaQuery.textScalerOf(context).scale(18) - 18) * 4)
+            .clamp(104.0, 164.0)
             .toDouble();
     return NotificationListener<DraggableScrollableNotification>(
       onNotification: (notification) {
@@ -865,11 +997,11 @@ class MapSlidingPanel extends StatelessWidget {
       },
       child: DraggableScrollableSheet(
         controller: controller,
-        initialChildSize: .42,
+        initialChildSize: .28,
         minChildSize: .20,
         maxChildSize: .84,
         snap: true,
-        snapSizes: const [.20, .42, .84],
+        snapSizes: const [.20, .28, .84],
         builder: (context, scrollController) => Align(
           alignment: Alignment.bottomCenter,
           child: ConstrainedBox(
@@ -902,9 +1034,7 @@ class MapSlidingPanel extends StatelessWidget {
                     Positioned.fill(
                       child: IgnorePointer(
                         child: CustomPaint(
-                          painter: MapCuteCanvasPainter(
-                            dark: palette.dark,
-                          ),
+                          painter: MapCuteCanvasPainter(dark: palette.dark),
                         ),
                       ),
                     ),
@@ -914,7 +1044,10 @@ class MapSlidingPanel extends StatelessWidget {
                         slivers: [
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 10, bottom: 8),
+                              padding: const EdgeInsets.only(
+                                top: 10,
+                                bottom: 8,
+                              ),
                               child: Center(
                                 child: Container(
                                   width: 36,
@@ -923,7 +1056,7 @@ class MapSlidingPanel extends StatelessWidget {
                                     gradient: LinearGradient(
                                       colors: [
                                         palette.border,
-                                        palette.accent(mapRose),
+                                        palette.accent(mapSage),
                                         palette.border,
                                       ],
                                     ),
@@ -947,14 +1080,17 @@ class MapSlidingPanel extends StatelessWidget {
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                  ),
                                   child: ValueListenableBuilder<double>(
                                     valueListenable: extent,
-                                    builder: (context, value, _) => MapPanelHeading(
-                                      single: single,
-                                      expanded: value > .55,
-                                      onToggle: onToggle,
-                                    ),
+                                    builder: (context, value, _) =>
+                                        MapPanelHeading(
+                                          single: single,
+                                          expanded: value > .55,
+                                          onToggle: onToggle,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -1021,54 +1157,102 @@ class MapPanelHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
+    // Ở cỡ chữ lớn hoặc màn hình hẹp, giữ nút chỉ đường ở dạng biểu tượng
+    // để hàng tiêu đề không bị tràn ngang. Tooltip vẫn giữ tên đầy đủ.
+    final compactActions = MediaQuery.textScalerOf(context).scale(14) > 18;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [palette.tint(mapRose), palette.tint(mapBlue)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: palette.accent(mapRose).withValues(alpha: .18)),
-          ),
-          child: Icon(
-            single ? Icons.explore_outlined : Icons.favorite_outline,
-            size: 23,
-            color: palette.accent(mapRose),
-          ),
-        ),
-        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 context.tr(
-                  single ? 'map_refresh_title_single' : 'map_refresh_title',
+                  single
+                      ? 'map_refresh_compact_title_single'
+                      : 'map_refresh_compact_title',
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: palette.ink,
-                  letterSpacing: -.5,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                context.tr('map_refresh_subtitle'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11.5, color: palette.muted),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: palette.ink,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: palette.tint(mapSage),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.my_location_rounded,
+                      size: 14,
+                      color: palette.accent(mapSage),
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      context.tr('map_refresh_location_subtitle'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: palette.muted,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
+        const SizedBox(width: 8),
+        Tooltip(
+          message: context.tr('map_refresh_directions'),
+          child: SizedBox(
+            width: compactActions ? 40 : null,
+            child: FilledButton(
+              onPressed: onToggle,
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.accent(mapSage),
+                foregroundColor: mapInk,
+                elevation: 0,
+                minimumSize: const Size(0, 40),
+                padding: EdgeInsets.symmetric(
+                  horizontal: compactActions ? 0 : 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: mapInk,
+                ),
+              ),
+              child: compactActions
+                  ? const Icon(Icons.near_me_rounded, size: 17)
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.near_me_rounded, size: 16),
+                        const SizedBox(width: 5),
+                        Text(context.tr('map_refresh_directions')),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
         IconButton(
           key: const ValueKey('map_panel_toggle'),
           tooltip: context.tr(
@@ -1076,13 +1260,16 @@ class MapPanelHeading extends StatelessWidget {
           ),
           onPressed: onToggle,
           style: IconButton.styleFrom(
-            foregroundColor: palette.ink,
-            backgroundColor: palette.surface,
-            minimumSize: const Size(48, 48),
+            foregroundColor: palette.muted,
+            backgroundColor: palette.tint(mapSage),
+            minimumSize: const Size(40, 40),
+            fixedSize: const Size(40, 40),
+            padding: EdgeInsets.zero,
             side: BorderSide(color: palette.border),
           ),
           icon: Icon(
             expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+            size: 21,
           ),
         ),
       ],
@@ -1355,171 +1542,172 @@ class MapPersonTile extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: palette.tint(baseAccent),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: accent.withValues(alpha: .18),
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: avatarUrl.trim().isEmpty
-                                ? sticker
-                                : CachedNetworkImage(
-                                    imageUrl: avatarUrl,
-                                    fit: BoxFit.cover,
-                                    memCacheWidth: 120,
-                                    maxWidthDiskCache: 240,
-                                    fadeInDuration: Duration.zero,
-                                    fadeOutDuration: Duration.zero,
-                                    placeholder: (_, _) => sticker,
-                                    errorWidget: (_, _, _) => sticker,
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 52,
+                        height: 52,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: palette.tint(baseAccent),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: accent.withValues(alpha: .18),
                                   ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: active ? mapSage : palette.muted,
-                              border: Border.all(
-                                color: palette.surface,
-                                width: 2.5,
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: avatarUrl.trim().isEmpty
+                                    ? sticker
+                                    : CachedNetworkImage(
+                                        imageUrl: avatarUrl,
+                                        fit: BoxFit.cover,
+                                        memCacheWidth: 120,
+                                        maxWidthDiskCache: 240,
+                                        fadeInDuration: Duration.zero,
+                                        fadeOutDuration: Duration.zero,
+                                        placeholder: (_, _) => sticker,
+                                        errorWidget: (_, _, _) => sticker,
+                                      ),
                               ),
                             ),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: active ? mapSage : palette.muted,
+                                  border: Border.all(
+                                    color: palette.surface,
+                                    width: 2.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isMe
+                                  ? L10nService().format(
+                                      'map_refresh_me_name',
+                                      {'name': name},
+                                    )
+                                  : name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: palette.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              status,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: active
+                                    ? palette.accent(mapSage)
+                                    : palette.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (hasPosition && onFocus != null)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 8),
+                          child: Icon(
+                            Icons.near_me_outlined,
+                            size: 20,
+                            color: accent,
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                ),
+                if (hasPosition)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [palette.tint(baseAccent), palette.surface],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(17),
+                      border: Border.all(color: accent.withValues(alpha: .10)),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          isMe
-                              ? L10nService().format('map_refresh_me_name', {
-                                  'name': name,
-                                })
-                              : name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: palette.ink,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 16,
+                              color: accent,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                address,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w600,
+                                  color: palette.ink,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          status,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: active
-                                ? palette.accent(mapSage)
-                                : palette.muted,
-                          ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              updated,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: palette.muted,
+                              ),
+                            ),
+                            if (accuracy != null && accuracy!.isFinite)
+                              Text(
+                                L10nService().format('map_refresh_accuracy', {
+                                  'meters': accuracy!.round().toString(),
+                                }),
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: palette.muted,
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  if (hasPosition && onFocus != null)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 8),
-                      child: Icon(
-                        Icons.near_me_outlined,
-                        size: 20,
-                        color: accent,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (hasPosition)
-              Container(
-                margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [palette.tint(baseAccent), palette.surface],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(17),
-                  border: Border.all(color: accent.withValues(alpha: .10)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 16,
-                          color: accent,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            address,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.4,
-                              fontWeight: FontWeight.w600,
-                              color: palette.ink,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 4,
-                      children: [
-                        Text(
-                          updated,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            color: palette.muted,
-                          ),
-                        ),
-                        if (accuracy != null && accuracy!.isFinite)
-                          Text(
-                            L10nService().format('map_refresh_accuracy', {
-                              'meters': accuracy!.round().toString(),
-                            }),
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: palette.muted,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
               ],
             ),
           ],
@@ -1566,7 +1754,7 @@ class MapDetailsSection extends StatelessWidget {
           height: 34,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [palette.tint(accent), palette.tint(mapPeach)],
+              colors: [palette.tint(accent), palette.tint(mapSage)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

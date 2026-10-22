@@ -3,13 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppBackgroundSessionTracker {
   const AppBackgroundSessionTracker({
     this.lastBackgroundAtPrefsKey = 'il_app_last_background_at_ms_v1',
-    this.lastHomeTabPrefsKey = 'il_home_last_tab_v1',
-    this.resumeResetThreshold = const Duration(minutes: 5),
   });
 
   final String lastBackgroundAtPrefsKey;
-  final String lastHomeTabPrefsKey;
-  final Duration resumeResetThreshold;
 
   Future<void> persistBackgroundTimestamp(
     SharedPreferences prefs,
@@ -45,10 +41,6 @@ class AppBackgroundSessionTracker {
     await prefs.remove(lastBackgroundAtPrefsKey);
   }
 
-  Future<void> resetSavedHomeState(SharedPreferences prefs) async {
-    await prefs.remove(lastHomeTabPrefsKey);
-  }
-
   Future<AppBackgroundResumePolicyResult> applyResumePolicy(
     SharedPreferences prefs, {
     required DateTime? inMemoryPausedAt,
@@ -62,20 +54,10 @@ class AppBackgroundSessionTracker {
       return const AppBackgroundResumePolicyResult();
     }
 
-    final shouldResetToHome =
-        DateTime.now().difference(pausedAt) >= resumeResetThreshold;
     await clearPersistedBackgroundTimestamp(prefs);
-
-    if (shouldResetToHome) {
-      await resetSavedHomeState(prefs);
-      return const AppBackgroundResumePolicyResult(
-        shouldResetToHome: true,
-        resolvedPausedAt: null,
-      );
-    }
-
+    // Thời gian ở nền chỉ phục vụ kiểm tra khóa app, không được xóa màn/tab
+    // đang làm hoặc bỏ qua bước xác thực khi người dùng quay lại.
     return AppBackgroundResumePolicyResult(
-      shouldResetToHome: false,
       resolvedPausedAt: keepInMemoryTimestamp ? pausedAt : null,
     );
   }
@@ -83,10 +65,8 @@ class AppBackgroundSessionTracker {
 
 class AppBackgroundResumePolicyResult {
   const AppBackgroundResumePolicyResult({
-    this.shouldResetToHome = false,
     this.resolvedPausedAt,
   });
 
-  final bool shouldResetToHome;
   final DateTime? resolvedPausedAt;
 }

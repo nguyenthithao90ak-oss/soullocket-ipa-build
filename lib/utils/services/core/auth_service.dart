@@ -406,11 +406,11 @@ class AuthService {
   Future<void> signInWithCustomTokenAndSetPassword(
     String token,
     String newPassword,
-  ) async {
-    await _signInService.waitForPendingSignOut();
-    await _recoveryService.signInWithCustomTokenAndSetPassword(
+  ) {
+    return _signInService.completeCustomTokenSignIn(
       token,
-      newPassword,
+      complete: (credential) =>
+          _recoveryService.completePasswordRecovery(credential, newPassword),
     );
   }
 

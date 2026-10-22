@@ -1,6 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import '../calendar/calendar_civil_date.dart';
+import '../health_data_privacy.dart';
 
 /// ============================================================
 ///  HealthPeriodService — Gra (Logic/Data)
@@ -23,33 +25,63 @@ class HealthPeriodService {
   static const int pmsWarningDays = 3; // Cảnh báo trước 3 ngày tới tháng
 
   /// Khi bạn Nữ nhập Cột mốc "Ngày Rụng Dâu"
-  Future<void> logPeriodStart(String houseId, DateTime startDate) async {
+  Future<void> logPeriodStart(
+    String houseId,
+    DateTime startDate, {
+    bool shareWithPartner = false,
+    Map<String, dynamic>? cycleData,
+  }) async {
     final ref = _db.ref('houses/$houseId/health_period');
 
-    // Lưu lịch sử
-    await ref.child('history').push().set({
-      'start_date_ms': startDate.millisecondsSinceEpoch,
-      'logged_at': ServerValue.timestamp,
-    });
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) {
+      throw StateError('Cần đăng nhập để lưu dữ liệu sức khỏe.');
+    }
+    if (cycleData != null && cycleData['ownerUid'] != ownerUid) {
+      throw StateError('Phiên lưu dữ liệu sức khỏe đã thay đổi.');
+    }
+    final historyKey = ref.child('history').push().key;
+    if (historyKey == null || historyKey.isEmpty) {
+      throw StateError('Không tạo được mốc chu kỳ.');
+    }
 
     // Tính toán trạm dừng chân tiếp theo
     final nextPredictedDate =
         CalendarCivilDate.addDays(startDate, defaultCycleLength);
 
     // Cập nhật lên Cổng Chính (Home) để Trae bắt vẽ Giọt Nước
-    await ref.update({
+    final periodUpdate = <String, dynamic>{
+      'ownerUid': ownerUid,
+      'shareWithPartner': shareWithPartner,
+      'history/$historyKey': {
+        'start_date_ms': startDate.millisecondsSinceEpoch,
+        'logged_at': ServerValue.timestamp,
+      },
       'last_period_ms': startDate.millisecondsSinceEpoch,
       'next_predicted_ms': nextPredictedDate.millisecondsSinceEpoch,
-    });
+    };
+    if (cycleData == null) {
+      await ref.update(periodUpdate);
+    } else {
+      // Một lần update nguyên tử: rules từ chối node nào thì không lưu dở node kia.
+      await _db.ref('houses/$houseId').update({
+        'health_cycle': cycleData,
+        for (final entry in periodUpdate.entries)
+          'health_period/${entry.key}': entry.value,
+      });
+    }
 
     // 🔴 Gọi Background Function Firebase để tự động lên lịch báo thức...
-    _scheduleNotificationsForBoyfriend(nextPredictedDate);
+    if (shareWithPartner) {
+      _scheduleNotificationsForBoyfriend(nextPredictedDate);
+    }
   }
 
   /// Hàm lắng nghe chu kỳ (Để Trae vẽ Widgets Nhắc Nhở)
   Stream<Map<dynamic, dynamic>?> listenToCycleData(String houseId) {
     return _db.ref('houses/$houseId/health_period').onValue.map((event) {
       if (!event.snapshot.exists) return null;
+      if (!canDisplayHealthData(event.snapshot.value, FirebaseAuth.instance.currentUser?.uid)) return null;
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);
     });
   }

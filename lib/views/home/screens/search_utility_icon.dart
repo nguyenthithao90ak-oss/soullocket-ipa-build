@@ -29,7 +29,6 @@ class SearchUtilityIcon extends StatelessWidget {
     'wheel',
     'surprise_maker',
     'diary_export',
-    'cinema',
     'tarot',
     'collage',
     'store',
@@ -57,7 +56,7 @@ class SearchUtilityIcon extends StatelessWidget {
       'capsule' || 'tarot' || 'sleep_tracker' => const Color(0xFF8770BA),
       'finance' || 'creative_diary' => const Color(0xFF258E83),
       'drawing' || 'health' => const Color(0xFFCD6086),
-      'wheel' || 'cinema' => const Color(0xFFBD795B),
+      'wheel' => const Color(0xFFBD795B),
       'couple_connect' => const Color(0xFF8D6488),
       _ => fallbackColor,
     };
@@ -396,20 +395,6 @@ class _UtilityIllustration extends CustomPainter {
         line(18, 30, 23, 30);
         circle(36, 34, 9, fill: light);
         arrow(36, 33);
-      case 'cinema':
-        panel(const Rect.fromLTWH(11, 13, 30, 27), 5, Colors.white);
-        panel(const Rect.fromLTWH(11, 11, 30, 9), 2, light);
-        for (final x in [15.0, 25.0, 35.0]) {
-          line(x, 12, x - 4, 19);
-        }
-        canvas.drawPath(
-          Path()
-            ..moveTo(23, 25)
-            ..lineTo(23, 35)
-            ..lineTo(32, 30)
-            ..close(),
-          Paint()..color = color,
-        );
       case 'tarot':
         canvas.save();
         canvas.translate(26, 26);

@@ -13,12 +13,18 @@ class DiaryAccessLockedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Stack(
       children: [
-        Positioned.fill(child: SLTheme.meshPattern()),
+        Positioned.fill(
+          child: colors.isDark
+              ? ColoredBox(color: colors.canvas)
+              : SLTheme.meshPattern(),
+        ),
         Center(
           child: SLTheme.glassCard(
             padding: const EdgeInsets.all(32),
+            color: colors.isDark ? colors.paper : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -33,17 +39,14 @@ class DiaryAccessLockedView extends StatelessWidget {
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: SLColors.textPrimary,
+                    color: colors.ink,
                   ),
                 ),
                 SLSpacing.h12,
                 Text(
                   context.tr('home_mkhaxemnhn_77ff5c'),
                   textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 14,
-                    color: SLColors.textSecondary,
-                  ),
+                  style: SLTheme.quicksand(fontSize: 14, color: colors.muted),
                 ),
                 SLSpacing.gapH(32),
                 SLTheme.primaryButton(
@@ -108,12 +111,13 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: const Color(0xFFEEE8E3),
+          color: colors.inset,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -160,10 +164,11 @@ class _DiarySegmentBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Semantics(
       selected: active,
       child: Material(
-        color: active ? DiaryAlbumStyle.paper : Colors.transparent,
+        color: active ? colors.paper : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -178,9 +183,7 @@ class _DiarySegmentBtn extends StatelessWidget {
                   Icon(
                     icon,
                     size: 18,
-                    color: active
-                        ? DiaryAlbumStyle.rose
-                        : DiaryAlbumStyle.muted,
+                    color: active ? colors.rose : colors.muted,
                   ),
                   const SizedBox(width: 7),
                   Flexible(
@@ -190,9 +193,7 @@ class _DiarySegmentBtn extends StatelessWidget {
                       style: SLTheme.quicksand(
                         fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                         fontSize: 13,
-                        color: active
-                            ? DiaryAlbumStyle.ink
-                            : DiaryAlbumStyle.muted,
+                        color: active ? colors.ink : colors.muted,
                       ),
                     ),
                   ),
@@ -249,12 +250,14 @@ class DiaryHouseSetupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
       decoration: _softDiaryCard(
-        color: Colors.white.withValues(alpha: 0.96),
+        color: colors.paper,
+        borderColor: colors.line,
         strongShadow: true,
         radius: 20,
       ),
@@ -270,7 +273,7 @@ class DiaryHouseSetupCard extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: const Color(0xFF5F6F83),
+              color: colors.ink,
               fontWeight: FontWeight.w900,
               fontSize: 18,
             ),
@@ -280,7 +283,7 @@ class DiaryHouseSetupCard extends StatelessWidget {
             message,
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: const Color(0xFF7C8AA0),
+              color: colors.muted,
               fontWeight: FontWeight.w700,
               height: 1.5,
             ),
@@ -308,14 +311,15 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: colors.paper,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x52FFFFFF), width: 1.4),
+        border: Border.all(color: colors.line, width: 1.4),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF73A6).withValues(alpha: 0.11),
@@ -338,7 +342,7 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
             context.tr('home_chactmsno_a4ad4d'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: const Color(0xFF6F7B90),
+              color: colors.ink,
               fontWeight: FontWeight.w900,
               fontSize: 15,
             ),
@@ -348,7 +352,7 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
             context.tr('home_vitdngcmxc_6ac761'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              color: const Color(0xFF8A97A9),
+              color: colors.muted,
               fontWeight: FontWeight.w700,
               fontSize: 12,
             ),
@@ -365,6 +369,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = DiaryAlbumPalette.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Column(
@@ -377,7 +382,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
             style: SLTheme.quicksand(
               fontSize: 15,
               fontWeight: FontWeight.w900,
-              color: SLColors.textPrimary,
+              color: colors.ink,
             ),
           ),
           SLSpacing.h4,
@@ -386,7 +391,7 @@ class DiaryMemoryEmptyStateCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 12,
-              color: SLColors.textSecondary,
+              color: colors.muted,
               fontWeight: FontWeight.w600,
             ),
           ),

@@ -25,6 +25,7 @@ import '../calendar/calendar_display_format.dart';
 import '../calendar/calendar_widget_payload.dart';
 import '../calendar/calendar_civil_date.dart';
 import '../sleep_tracking_math.dart';
+import '../health_data_privacy.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -155,7 +156,9 @@ class WidgetService {
   static bool _didBootstrap = false;
   static int _sleepSyncRevision = 0;
   static int _calendarSyncRevision = 0;
+  static int _cycleSyncRevision = 0;
   static final _calendarWrites = CalendarWidgetWriteQueue();
+  static final _cycleWrites = CalendarWidgetWriteQueue();
   static final Map<String, Object?> _runtimeWidgetData = <String, Object?>{};
   static final StorageService _storageService = StorageService();
   static Future<void> ensureInitialized({bool forceUpdate = false}) async {
@@ -312,7 +315,12 @@ class WidgetService {
     weatherBackgroundNotifier.value = const WeatherBackgroundSnapshot();
     _sleepSyncRevision++;
     _calendarSyncRevision++;
+    _cycleSyncRevision++;
     await ensureInitialized();
+    await _cycleWrites.enqueue(() async {
+      await _clearPrivateCycleWidgetData();
+      await _refreshCycleWidget();
+    });
     await HomeWidget.saveWidgetData<String>(
       'sleep_snapshot_v2',
       jsonEncode({
@@ -1342,104 +1350,123 @@ class WidgetService {
 
   static Future<void> syncCycleWidgetData({required String houseId}) =>
       _syncCycleWidgetData(
+        houseId,
         () => HealthCycleService().getCycleSettings(houseId),
       );
 
-  static Future<void> updateCycleWidgetData({required Object? cycleData}) =>
-      _syncCycleWidgetData(() async {
-        return cycleData is Map
-            ? CycleSettings.fromMap(Map<String, dynamic>.from(cycleData))
-            : null;
-      });
+  static Future<void> updateCycleWidgetData({
+    required String houseId,
+    required Object? cycleData,
+  }) => _syncCycleWidgetData(houseId, () async {
+    return cycleData is Map &&
+            canDisplayHealthData(cycleData, FirebaseAuth.instance.currentUser?.uid)
+        ? CycleSettings.fromMap(Map<String, dynamic>.from(cycleData))
+        : null;
+  });
+
+  static Future<void> _refreshCycleWidget() => _updateAuxiliaryWidget(
+    androidName: androidWidgetCycleName,
+    qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
+    iOSName: iOSWidgetCycleName,
+  );
 
   static Future<void> _syncCycleWidgetData(
+    String houseId,
     Future<CycleSettings?> Function() loadSettings,
   ) async {
     if (!supportsMobileWidgets) return;
+    final revision = ++_cycleSyncRevision;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    SharedPreferences? prefs;
+    bool current() =>
+        revision == _cycleSyncRevision &&
+        FirebaseAuth.instance.currentUser?.uid == uid &&
+        houseId.isNotEmpty &&
+        prefs?.getString('il_house_id') == houseId;
+    bool consented() => uid != null &&
+        prefs?.getBool(healthConsentKey(uid, houseId)) == true;
     try {
       await ensureInitialized();
-      final hasConsent = await SharedPreferences.getInstance().then(
-        (prefs) => prefs.getBool('il_health_consent') ?? false,
+      prefs = await SharedPreferences.getInstance();
+      if (!current()) return;
+      final settings = consented()
+          ? await loadSettings().timeout(const Duration(seconds: 10))
+          : null;
+      if (!current()) return;
+      final state = settings == null
+          ? null
+          : HealthCycleService().calculateCurrentState(settings);
+      final expectedDate = state == null ? '' : await _formatCalendarDate(
+        CalendarCivilDate.addDays(DateTime.now(), state.nextPeriodIn),
       );
-      if (!hasConsent) {
+      await _cycleWrites.enqueue(() async {
+        if (!current()) return;
+        if (state == null || !consented()) {
+          await _clearPrivateCycleWidgetData();
+          await _refreshCycleWidget();
+          return;
+        }
+        // Không để native đọc một snapshot trộn dữ liệu cũ/mới.
         await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
-        await _updateAuxiliaryWidget(
-          androidName: androidWidgetCycleName,
-          qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
-          iOSName: iOSWidgetCycleName,
-        );
-        return;
-      }
-
-      final settings = await loadSettings();
-      if (settings == null) {
-        await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
-        await _updateAuxiliaryWidget(
-          androidName: androidWidgetCycleName,
-          qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
-          iOSName: iOSWidgetCycleName,
-        );
-        return;
-      }
-
-      final state = HealthCycleService().calculateCurrentState(settings);
-
-      await _saveWidgetDataIfChanged<bool>('cycle_enabled', true);
-      await _saveWidgetDataIfChanged<String>('cycle_phase', state.phase.name);
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_phase_label',
-        L10nService().translate(switch (state.phase) {
-          CyclePhase.menstruation => 'cycle_ui_phase_period',
-          CyclePhase.follicular => 'cycle_ui_phase_follicular',
-          CyclePhase.ovulation => 'cycle_ui_phase_ovulation',
-          CyclePhase.luteal => 'cycle_ui_phase_luteal',
-        }),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_next_period_in',
-        '${L10nService().translate('cycle_ui_until_next_period')}: '
-            '${state.nextPeriodIn == 0 ? L10nService().translate('milestone_today') : L10nService().format('milestone_days_left', {'days': state.nextPeriodIn})}',
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_next_period_days',
-        state.nextPeriodIn.toString(),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_days_label',
-        L10nService().translate('p3_health_days_remaining'),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_target_label',
-        L10nService().translate('cycle_ui_until_next_period'),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_expected_date',
-        L10nService().format('cycle_ui_expected_on', {
-          'date': await _formatCalendarDate(
-            CalendarCivilDate.addDays(DateTime.now(), state.nextPeriodIn),
-          ),
-        }),
-      );
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_estimate_label',
-        L10nService().translate('cycle_ui_estimate'),
-      );
-      await _saveWidgetDataIfChanged<String>('cycle_tip', state.tip);
-      await _saveWidgetDataIfChanged<String>(
-        'cycle_progress',
-        (state.progressPercent / 100.0).toStringAsFixed(3),
-      );
-
-      await _updateAuxiliaryWidget(
-        androidName: androidWidgetCycleName,
-        qualifiedAndroidName: qualifiedAndroidWidgetCycleName,
-        iOSName: iOSWidgetCycleName,
-      );
+        final values = <String, String>{
+          'cycle_phase': state.phase.name,
+          'cycle_phase_label': L10nService().translate(switch (state.phase) {
+            CyclePhase.menstruation => 'cycle_ui_phase_period',
+            CyclePhase.follicular => 'cycle_ui_phase_follicular',
+            CyclePhase.ovulation => 'cycle_ui_phase_ovulation',
+            CyclePhase.luteal => 'cycle_ui_phase_luteal',
+          }),
+          'cycle_next_period_in':
+              '${L10nService().translate('cycle_ui_until_next_period')}: '
+              '${state.nextPeriodIn == 0 ? L10nService().translate('milestone_today') : L10nService().format('milestone_days_left', {'days': state.nextPeriodIn})}',
+          'cycle_next_period_days': state.nextPeriodIn.toString(),
+          'cycle_days_label': L10nService().translate('p3_health_days_remaining'),
+          'cycle_target_label': L10nService().translate('cycle_ui_until_next_period'),
+          'cycle_expected_date': L10nService().format(
+            'cycle_ui_expected_on', {'date': expectedDate}),
+          'cycle_estimate_label': L10nService().translate('cycle_ui_estimate'),
+          'cycle_tip': state.tip,
+          'cycle_progress': (state.progressPercent / 100.0).toStringAsFixed(3),
+        };
+        for (final entry in values.entries) {
+          if (!current() || !consented()) {
+            await _clearPrivateCycleWidgetData();
+            await _refreshCycleWidget();
+            return;
+          }
+          await _saveWidgetDataIfChanged<String>(entry.key, entry.value);
+        }
+        if (!current() || !consented()) {
+          await _clearPrivateCycleWidgetData();
+        } else {
+          await _saveWidgetDataIfChanged<bool>('cycle_enabled', true);
+        }
+        await _refreshCycleWidget();
+      });
     } catch (e) {
+      await _cycleWrites.enqueue(() async {
+        if (revision != _cycleSyncRevision ||
+            FirebaseAuth.instance.currentUser?.uid != uid) {
+          return;
+        }
+        await _clearPrivateCycleWidgetData();
+        await _refreshCycleWidget();
+      });
       debugPrint(
         'Error syncing cycle widget: ${AppErrorMapper.resolve(e).message}',
       );
     }
+  }
+
+  static Future<void> _clearPrivateCycleWidgetData() async {
+    await _saveWidgetDataIfChanged<bool>('cycle_enabled', false);
+    for (final key in const [
+      'cycle_phase', 'cycle_phase_label', 'cycle_next_period_in',
+      'cycle_next_period_days', 'cycle_expected_date', 'cycle_tip',
+    ]) {
+      await _saveWidgetDataIfChanged<String>(key, '');
+    }
+    await _saveWidgetDataIfChanged<String>('cycle_progress', '0');
   }
 
   static Future<String> _formatCalendarDate(

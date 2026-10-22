@@ -110,7 +110,30 @@ class PermissionHelper {
       return true;
     }
 
-    if (status == LocationPermission.deniedForever || !context.mounted) {
+    if (!context.mounted) return false;
+    if (status == LocationPermission.deniedForever) {
+      final openSettings = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => SLAlertDialog(
+          scrollable: true,
+          title: Text(ctx.tr('map_refresh_permission_blocked')),
+          content: Text(ctx.tr('map_refresh_permission_blocked_body')),
+          actions: [
+            SLDialogAction(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ctx.tr('map_refresh_not_now')),
+            ),
+            SLDialogAction(
+              primary: true,
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(ctx.tr('map_refresh_open_settings')),
+            ),
+          ],
+        ),
+      );
+      if (openSettings == true) {
+        await _withLifecyclePresenceGuard(Geolocator.openAppSettings);
+      }
       return false;
     }
     final accepted = await _showDisclosureDialog(context, title, disclosure);

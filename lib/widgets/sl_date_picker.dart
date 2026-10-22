@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
 import 'sl_dialog.dart';
+import 'sl_settings_kit.dart';
 
 class SLPickerStyle {
   static ButtonStyle actionStyle(TextTheme textTheme, {bool primary = false}) =>
@@ -37,145 +38,192 @@ class SLPickerStyle {
       ? SLDialogStyle.primary
       : Colors.transparent;
 
-  static DatePickerThemeData dateTheme(TextTheme textTheme) =>
-      DatePickerThemeData(
-        backgroundColor: SLDialogStyle.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 8,
-        shadowColor: const Color(0x2643322D),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: SLDialogStyle.border),
-        ),
-        headerBackgroundColor: SLDialogStyle.field,
-        headerForegroundColor: SLColors.ink,
-        headerHeadlineStyle: textTheme.headlineSmall?.copyWith(
-          fontSize: 24,
-          fontWeight: FontWeight.w800,
-        ),
-        headerHelpStyle: textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-        ),
-        weekdayStyle: textTheme.bodySmall?.copyWith(
-          color: SLDialogStyle.secondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-        dayStyle: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-        dayForegroundColor: WidgetStateProperty.resolveWith(_foreground),
-        dayBackgroundColor: WidgetStateProperty.resolveWith(_background),
-        dayOverlayColor: WidgetStatePropertyAll(
-          SLDialogStyle.primary.withValues(alpha: 0.1),
-        ),
-        dayShape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        todayForegroundColor: WidgetStateProperty.resolveWith(_foreground),
-        todayBackgroundColor: WidgetStateProperty.resolveWith(_background),
-        todayBorder: const BorderSide(color: SLDialogStyle.primary),
-        yearStyle: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-        yearForegroundColor: WidgetStateProperty.resolveWith(_foreground),
-        yearBackgroundColor: WidgetStateProperty.resolveWith(_background),
-        yearShape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        subHeaderForegroundColor: SLDialogStyle.primary,
-        toggleButtonTextStyle: textTheme.titleSmall?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-        ),
-        dividerColor: SLDialogStyle.border,
-        cancelButtonStyle: actionStyle(textTheme),
-        confirmButtonStyle: actionStyle(textTheme, primary: true),
-      );
+  static DatePickerThemeData dateTheme(
+    TextTheme textTheme, {
+    bool isDark = false,
+  }) => isDark
+      ? DatePickerThemeData(
+          backgroundColor: SLSettingsColors.darkSurface,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: SLSettingsColors.darkBorder),
+          ),
+          headerBackgroundColor: SLSettingsColors.darkSurfaceMuted,
+          headerForegroundColor: SLSettingsColors.darkInk,
+          headerHeadlineStyle: textTheme.headlineSmall,
+          weekdayStyle: textTheme.bodySmall?.copyWith(
+            color: SLSettingsColors.darkInkSecondary,
+          ),
+          dayStyle: textTheme.bodyMedium,
+          yearStyle: textTheme.bodyLarge,
+          dividerColor: SLSettingsColors.darkBorder,
+        )
+      : DatePickerThemeData(
+          backgroundColor: SLDialogStyle.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 8,
+          shadowColor: const Color(0x2643322D),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: SLDialogStyle.border),
+          ),
+          headerBackgroundColor: SLDialogStyle.field,
+          headerForegroundColor: SLColors.ink,
+          headerHeadlineStyle: textTheme.headlineSmall?.copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+          ),
+          headerHelpStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+          weekdayStyle: textTheme.bodySmall?.copyWith(
+            color: SLDialogStyle.secondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+          dayStyle: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          dayForegroundColor: WidgetStateProperty.resolveWith(_foreground),
+          dayBackgroundColor: WidgetStateProperty.resolveWith(_background),
+          dayOverlayColor: WidgetStatePropertyAll(
+            SLDialogStyle.primary.withValues(alpha: 0.1),
+          ),
+          dayShape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          todayForegroundColor: WidgetStateProperty.resolveWith(_foreground),
+          todayBackgroundColor: WidgetStateProperty.resolveWith(_background),
+          todayBorder: const BorderSide(color: SLDialogStyle.primary),
+          yearStyle: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+          yearForegroundColor: WidgetStateProperty.resolveWith(_foreground),
+          yearBackgroundColor: WidgetStateProperty.resolveWith(_background),
+          yearShape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          subHeaderForegroundColor: SLDialogStyle.primary,
+          toggleButtonTextStyle: textTheme.titleSmall?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+          dividerColor: SLDialogStyle.border,
+          cancelButtonStyle: actionStyle(textTheme),
+          confirmButtonStyle: actionStyle(textTheme, primary: true),
+        );
 
-  static TimePickerThemeData timeTheme(TextTheme textTheme) =>
-      TimePickerThemeData(
-        backgroundColor: SLDialogStyle.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: SLDialogStyle.border),
-        ),
-        elevation: 8,
-        helpTextStyle: textTheme.labelLarge?.copyWith(
-          color: SLDialogStyle.secondary,
-          fontWeight: FontWeight.w700,
-        ),
-        hourMinuteColor: WidgetStateColor.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? const Color(0xFFEAD8C2)
-              : SLDialogStyle.field,
-        ),
-        hourMinuteTextColor: SLDialogStyle.primary,
-        hourMinuteTextStyle: textTheme.displaySmall?.copyWith(
-          fontWeight: FontWeight.w700,
-        ),
-        hourMinuteShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        dialBackgroundColor: SLDialogStyle.field,
-        dialHandColor: SLDialogStyle.primary,
-        dialTextColor: WidgetStateColor.resolveWith(_foreground),
-        dialTextStyle: textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        dayPeriodColor: const Color(0xFFEAD8C2),
-        dayPeriodTextColor: SLDialogStyle.primary,
-        dayPeriodShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        dayPeriodBorderSide: const BorderSide(color: SLDialogStyle.border),
-        entryModeIconColor: SLDialogStyle.primary,
-        timeSelectorSeparatorColor: const WidgetStatePropertyAll(
-          SLDialogStyle.primary,
-        ),
-        cancelButtonStyle: actionStyle(textTheme),
-        confirmButtonStyle: actionStyle(textTheme, primary: true),
-      );
+  static TimePickerThemeData timeTheme(
+    TextTheme textTheme, {
+    bool isDark = false,
+  }) => isDark
+      ? TimePickerThemeData(
+          backgroundColor: SLSettingsColors.darkSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: SLSettingsColors.darkBorder),
+          ),
+          helpTextStyle: textTheme.labelLarge?.copyWith(
+            color: SLSettingsColors.darkInkSecondary,
+          ),
+          hourMinuteTextStyle: textTheme.displaySmall,
+          dialTextStyle: textTheme.bodyLarge,
+        )
+      : TimePickerThemeData(
+          backgroundColor: SLDialogStyle.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: SLDialogStyle.border),
+          ),
+          elevation: 8,
+          helpTextStyle: textTheme.labelLarge?.copyWith(
+            color: SLDialogStyle.secondary,
+            fontWeight: FontWeight.w700,
+          ),
+          hourMinuteColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? const Color(0xFFEAD8C2)
+                : SLDialogStyle.field,
+          ),
+          hourMinuteTextColor: SLDialogStyle.primary,
+          hourMinuteTextStyle: textTheme.displaySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+          hourMinuteShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          dialBackgroundColor: SLDialogStyle.field,
+          dialHandColor: SLDialogStyle.primary,
+          dialTextColor: WidgetStateColor.resolveWith(_foreground),
+          dialTextStyle: textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          dayPeriodColor: const Color(0xFFEAD8C2),
+          dayPeriodTextColor: SLDialogStyle.primary,
+          dayPeriodShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          dayPeriodBorderSide: const BorderSide(color: SLDialogStyle.border),
+          entryModeIconColor: SLDialogStyle.primary,
+          timeSelectorSeparatorColor: const WidgetStatePropertyAll(
+            SLDialogStyle.primary,
+          ),
+          cancelButtonStyle: actionStyle(textTheme),
+          confirmButtonStyle: actionStyle(textTheme, primary: true),
+        );
 
-  static ThemeData theme(ThemeData current) => current.copyWith(
-    colorScheme: current.colorScheme.copyWith(
-      brightness: Brightness.light,
-      primary: SLDialogStyle.primary,
-      onPrimary: SLDialogStyle.surface,
-      surface: SLDialogStyle.surface,
-      onSurface: SLColors.ink,
-      onSurfaceVariant: SLDialogStyle.secondary,
-      outline: SLDialogStyle.border,
-      error: SLDialogStyle.danger,
-    ),
-    textTheme: current.textTheme.apply(
-      bodyColor: SLColors.ink,
-      displayColor: SLColors.ink,
-    ),
-    iconTheme: const IconThemeData(color: SLDialogStyle.primary),
-    textSelectionTheme: TextSelectionThemeData(
-      cursorColor: SLDialogStyle.primary,
-      selectionColor: SLDialogStyle.primary.withValues(alpha: 0.2),
-      selectionHandleColor: SLDialogStyle.primary,
-    ),
-    dialogTheme: SLDialogStyle.theme(current.textTheme),
-    datePickerTheme: dateTheme(current.textTheme),
-    timePickerTheme: timeTheme(current.textTheme),
-    inputDecorationTheme: current.inputDecorationTheme.copyWith(
-      filled: true,
-      fillColor: SLDialogStyle.field,
-      labelStyle: const TextStyle(color: SLDialogStyle.secondary),
-      hintStyle: const TextStyle(color: SLDialogStyle.secondary),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: SLDialogStyle.border),
+  static ThemeData theme(ThemeData current) {
+    if (current.brightness == Brightness.dark) {
+      return current.copyWith(
+        dialogTheme: SLDialogStyle.theme(current.textTheme, isDark: true),
+        datePickerTheme: dateTheme(current.textTheme, isDark: true),
+        timePickerTheme: timeTheme(current.textTheme, isDark: true),
+      );
+    }
+    return current.copyWith(
+      colorScheme: current.colorScheme.copyWith(
+        brightness: Brightness.light,
+        primary: SLDialogStyle.primary,
+        onPrimary: SLDialogStyle.surface,
+        surface: SLDialogStyle.surface,
+        onSurface: SLColors.ink,
+        onSurfaceVariant: SLDialogStyle.secondary,
+        outline: SLDialogStyle.border,
+        error: SLDialogStyle.danger,
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: SLDialogStyle.border),
+      textTheme: current.textTheme.apply(
+        bodyColor: SLColors.ink,
+        displayColor: SLColors.ink,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: SLDialogStyle.primary, width: 1.5),
+      iconTheme: const IconThemeData(color: SLDialogStyle.primary),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: SLDialogStyle.primary,
+        selectionColor: SLDialogStyle.primary.withValues(alpha: 0.2),
+        selectionHandleColor: SLDialogStyle.primary,
       ),
-    ),
-  );
+      dialogTheme: SLDialogStyle.theme(current.textTheme),
+      datePickerTheme: dateTheme(current.textTheme),
+      timePickerTheme: timeTheme(current.textTheme),
+      inputDecorationTheme: current.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: SLDialogStyle.field,
+        labelStyle: const TextStyle(color: SLDialogStyle.secondary),
+        hintStyle: const TextStyle(color: SLDialogStyle.secondary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: SLDialogStyle.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: SLDialogStyle.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(
+            color: SLDialogStyle.primary,
+            width: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Future<DateTime?> showSLDatePicker({
@@ -328,6 +376,8 @@ class _SLDatePickerDialogState extends State<SLDatePickerDialog> {
   Widget build(BuildContext context) {
     final localizations = MaterialLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final scheme = theme.colorScheme;
     return Dialog(
       constraints: const BoxConstraints(maxWidth: 392),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -348,7 +398,9 @@ class _SLDatePickerDialogState extends State<SLDatePickerDialog> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: SLDialogStyle.field,
+                            color: isDark
+                                ? scheme.surfaceContainerHighest
+                                : SLDialogStyle.field,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(Icons.calendar_month_rounded),
@@ -361,7 +413,9 @@ class _SLDatePickerDialogState extends State<SLDatePickerDialog> {
                               Text(
                                 widget.helpText,
                                 style: theme.textTheme.labelLarge?.copyWith(
-                                  color: SLDialogStyle.secondary,
+                                  color: isDark
+                                      ? scheme.onSurfaceVariant
+                                      : SLDialogStyle.secondary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -376,7 +430,9 @@ class _SLDatePickerDialogState extends State<SLDatePickerDialog> {
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontSize: 21,
                                     fontWeight: FontWeight.w800,
-                                    color: SLColors.ink,
+                                    color: isDark
+                                        ? scheme.onSurface
+                                        : SLColors.ink,
                                   ),
                                 ),
                               ),
@@ -398,7 +454,12 @@ class _SLDatePickerDialogState extends State<SLDatePickerDialog> {
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: SLDialogStyle.border),
+                  Divider(
+                    height: 1,
+                    color: isDark
+                        ? scheme.outlineVariant
+                        : SLDialogStyle.border,
+                  ),
                   if (_input)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
@@ -433,7 +494,10 @@ class _SLDatePickerDialogState extends State<SLDatePickerDialog> {
               ),
             ),
           ),
-          const Divider(height: 1, color: SLDialogStyle.border),
+          Divider(
+            height: 1,
+            color: isDark ? scheme.outlineVariant : SLDialogStyle.border,
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             child: OverflowBar(

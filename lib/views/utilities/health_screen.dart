@@ -4,6 +4,7 @@ import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
@@ -12,6 +13,7 @@ import '../../utils/services/health_period_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/calendar/calendar_civil_date.dart';
+import '../../utils/health_data_privacy.dart';
 import 'widgets/health_cycle_dashboard.dart';
 
 class HealthScreen extends StatefulWidget {
@@ -30,7 +32,12 @@ class _HealthScreenState extends State<HealthScreen> {
   int _length = 28;
   int _periodDays = 5;
   bool _hasConsent = false;
-  bool _shareWithPartner = true;
+  bool _canEdit = false;
+  bool _readDenied = false;
+  bool _saving = false;
+  late final String? _healthUid;
+  // Dữ liệu sức khỏe riêng tư cho đến khi người dùng chủ động bật chia sẻ.
+  bool _shareWithPartner = false;
   Map<String, dynamic>? _cycleWidgetData;
   List<DateTime> _recentHistory = const [];
 
@@ -39,6 +46,7 @@ class _HealthScreenState extends State<HealthScreen> {
   @override
   void initState() {
     super.initState();
+    _healthUid = FirebaseAuth.instance.currentUser?.uid;
     _checkInitialConsent();
     _loadHealthData();
   }
@@ -47,7 +55,8 @@ class _HealthScreenState extends State<HealthScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _hasConsent = prefs.getBool('il_health_consent') ?? false;
+        _hasConsent = _healthUid != null &&
+            prefs.getBool(healthConsentKey(_healthUid, widget.houseId)) == true;
       });
     }
   }
@@ -61,6 +70,10 @@ class _HealthScreenState extends State<HealthScreen> {
         content: Text(context.tr('p3_health_consent_body')),
         actions: [
           SLDialogAction(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.tr('p3_cancel')),
+          ),
+          SLDialogAction(
             primary: true,
 
             onPressed: () => Navigator.pop(ctx, true),
@@ -72,7 +85,11 @@ class _HealthScreenState extends State<HealthScreen> {
 
     if (result == true) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('il_health_consent', true);
+      if (_healthUid == null ||
+          FirebaseAuth.instance.currentUser?.uid != _healthUid) {
+        return;
+      }
+      await prefs.setBool(healthConsentKey(_healthUid, widget.houseId), true);
       if (mounted) {
         setState(() {
           _hasConsent = true;
@@ -80,7 +97,7 @@ class _HealthScreenState extends State<HealthScreen> {
       }
       if (_cycleWidgetData != null) {
         unawaited(
-          WidgetService.updateCycleWidgetData(cycleData: _cycleWidgetData),
+          WidgetService.updateCycleWidgetData(houseId: widget.houseId, cycleData: _cycleWidgetData),
         );
       }
     }
@@ -97,15 +114,25 @@ class _HealthScreenState extends State<HealthScreen> {
         .child('houses/${widget.houseId}/health_cycle')
         .onValue
         .listen((event) {
-          if (!mounted) return;
+          if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
           final raw = event.snapshot.value;
-          _cycleWidgetData = raw is Map ? Map<String, dynamic>.from(raw) : null;
+          final visible = canDisplayHealthData(raw, _healthUid);
+          _cycleWidgetData = visible ? Map<String, dynamic>.from(raw as Map) : null;
+          setState(() {
+            _canEdit = raw == null || (raw is Map && raw['ownerUid'] == _healthUid);
+            _readDenied = raw != null && !visible;
+            if (!visible) {
+              _lastDate = null;
+              _recentHistory = const [];
+              _shareWithPartner = false;
+            }
+          });
           if (_hasConsent) {
             unawaited(
-              WidgetService.updateCycleWidgetData(cycleData: _cycleWidgetData),
+              WidgetService.updateCycleWidgetData(houseId: widget.houseId, cycleData: _cycleWidgetData),
             );
           }
-          if (raw is Map) {
+          if (visible && raw is Map) {
             final data = Map<String, dynamic>.from(raw);
             if (mounted) {
               setState(() {
@@ -114,11 +141,21 @@ class _HealthScreenState extends State<HealthScreen> {
                 }
                 _length = data['length'] ?? 28;
                 _periodDays = data['periodDays'] ?? 5;
-                _shareWithPartner = data['shareWithPartner'] != false;
+                _shareWithPartner = data['shareWithPartner'] == true;
                 _recentHistory = _parseRecentHistory(data['history']);
               });
             }
           }
+        }, onError: (Object error) {
+          if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
+          setState(() {
+            _readDenied = true;
+            _canEdit = false;
+            _lastDate = null;
+            _recentHistory = const [];
+            _cycleWidgetData = null;
+          });
+          unawaited(WidgetService.updateCycleWidgetData(houseId: widget.houseId, cycleData: null));
         });
   }
 
@@ -162,32 +199,52 @@ class _HealthScreenState extends State<HealthScreen> {
   }
 
   Future<void> _saveHealthData() async {
-    if (_lastDate == null) return;
+    if (_saving || _lastDate == null || !_canEdit || !_hasConsent ||
+        _healthUid == null || FirebaseAuth.instance.currentUser?.uid != _healthUid) {
+      return;
+    }
+    _saving = true;
+    final savedDate = _lastDate!;
     final cycleData = <String, dynamic>{
       'lastDate': DateFormat('yyyy-MM-dd').format(_lastDate!),
       'length': _length,
       'periodDays': _periodDays,
+      'ownerUid': _healthUid,
       'shareWithPartner': _shareWithPartner,
       'history': _buildHistoryIsoDates(_lastDate!),
       'updatedAt': ServerValue.timestamp,
     };
-    await _dbRef.child('houses/${widget.houseId}/health_cycle').set(cycleData);
+    try {
+    // Lưu cài đặt và lịch sử trong cùng thao tác, không báo thành công khi lưu dở.
+    await HealthPeriodService().logPeriodStart(
+      widget.houseId,
+      savedDate,
+      shareWithPartner: _shareWithPartner,
+      cycleData: cycleData,
+    );
 
-    // Log the period start and trigger notification scheduling
-    await HealthPeriodService().logPeriodStart(widget.houseId, _lastDate!);
-
-    // Sync widget cycle data
-    unawaited(WidgetService.updateCycleWidgetData(cycleData: cycleData));
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
+    // Chỉ cập nhật giao diện trong đúng phiên đã bắt đầu thao tác.
+    unawaited(WidgetService.updateCycleWidgetData(houseId: widget.houseId, cycleData: cycleData));
 
     if (mounted) {
       setState(() {
         _recentHistory = _buildHistoryIsoDates(
-          _lastDate!,
+          savedDate,
         ).map(DateTime.parse).toList(growable: false);
       });
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SLSnackBar(content: Text(context.tr('p3_health_saved'))));
+    }
+    } catch (_) {
+      if (mounted && FirebaseAuth.instance.currentUser?.uid == _healthUid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SLSnackBar(content: Text(context.tr('err_save_info'))),
+        );
+      }
+    } finally {
+      _saving = false;
     }
   }
 
@@ -305,15 +362,20 @@ class _HealthScreenState extends State<HealthScreen> {
                         SLSpacing.h16,
                         if (!_hasConsent)
                           _buildConsentButton()
+                        else if (_readDenied)
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(context.tr('err_permission_denied')),
+                          )
                         else ...[
                           _buildMainDashboard(cycleData),
                           SLSpacing.h24,
-                          Padding(
+                          if (_canEdit) Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: _buildSettingsSection(),
                           ),
                           SLSpacing.h24,
-                          Padding(
+                          if (_canEdit) Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: _buildPrivacyAndNotesSection(),
                           ),

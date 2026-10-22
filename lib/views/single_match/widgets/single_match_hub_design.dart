@@ -49,9 +49,9 @@ class SingleMatchHubTabs extends StatelessWidget {
   final List<String> labels;
 
   static const _icons = [
-    Icons.favorite_outline_rounded,
-    Icons.chat_bubble_outline_rounded,
-    Icons.call_outlined,
+    Icons.explore_rounded,
+    Icons.chat_bubble_rounded,
+    Icons.call_rounded,
   ];
 
   @override

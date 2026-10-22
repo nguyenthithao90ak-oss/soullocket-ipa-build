@@ -40,6 +40,11 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final offeredCharacters = const [
+      HomeCompanionCharacter.melody,
+      HomeCompanionCharacter.kuromi,
+    ].where((character) => character.isAvailable).toList();
+    if (offeredCharacters.isEmpty) return const SizedBox.shrink();
     final state = widget.state;
     final enabled = widget.available && state?.enabled == true;
     return Container(
@@ -81,7 +86,7 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
             const SizedBox(height: 8),
             Text(context.tr('reward_store_error'), style: KeepsakeStyle.text(context, size: 12)),
           ],
-          for (final character in const [HomeCompanionCharacter.melody, HomeCompanionCharacter.kuromi]) ...[
+          for (final character in offeredCharacters) ...[
             const SizedBox(height: 14),
             _characterCard(context, character, enabled ? state : null),
           ],

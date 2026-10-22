@@ -8,6 +8,7 @@ import 'home_companion_outfit.dart';
 import 'home_companion_play.dart';
 import 'home_companion_metrics.dart';
 import 'home_companion_mood.dart';
+import '../../tabs/pet_care/pet_care_progress.dart' as pet_care;
 
 export 'home_companion_outfit.dart';
 
@@ -23,6 +24,8 @@ class HomeCompanionPainter extends CustomPainter {
     this.play,
     this.socialPlay,
     this.mood,
+    this.care,
+    this.careListenable,
   }) : super(
          repaint: Listenable.merge([
            motion,
@@ -30,6 +33,7 @@ class HomeCompanionPainter extends CustomPainter {
            play,
            socialPlay,
            mood,
+           careListenable,
          ]),
        );
 
@@ -42,6 +46,13 @@ class HomeCompanionPainter extends CustomPainter {
   final HomeCompanionPlay? play;
   final HomeCompanionPlay? socialPlay;
   final HomeCompanionMood? mood;
+
+  /// Chỉ dùng cho hai bé chính trên Home. Khách Kuromi/Melody luôn bỏ qua.
+  /// Trạng thái null giữ nguyên artwork Home cũ.
+  final pet_care.PetCareVitals? care;
+  final ValueListenable<
+    Map<pet_care.PetCarePet, pet_care.PetCareVitals>
+  >? careListenable;
   HomeCompanionPlay? get _activePlay =>
       (socialPlay?.active ?? false) && socialPlay!.contains(character)
       ? socialPlay
@@ -52,6 +63,28 @@ class HomeCompanionPainter extends CustomPainter {
   HomeCompanionOutfit get _outfit =>
       outfit ?? HomeCompanionOutfit.defaults(character);
   bool get _isBear => character == HomeCompanionCharacter.bear;
+  pet_care.PetCarePet? get _carePet => switch (character) {
+    HomeCompanionCharacter.bunny => pet_care.PetCarePet.rabbit,
+    HomeCompanionCharacter.bear => pet_care.PetCarePet.bear,
+    _ => null,
+  };
+  pet_care.PetCareVitals? get _care =>
+      care ?? (careListenable == null || _carePet == null
+          ? null
+          : careListenable!.value[_carePet]);
+  bool get _hasCare => _care != null && _carePet != null;
+  bool get _careDirty => _hasCare && _care!.isDirty;
+  bool get _careHungry => _hasCare && _care!.isHungry;
+  bool get _careCrying => _hasCare && _care!.isCrying;
+  bool get _careAngry => _hasCare && _care!.mood == pet_care.PetCareMood.angry;
+  bool get _careSleepy =>
+      _hasCare &&
+      (_care!.sleeping ||
+          _care!.mood == pet_care.PetCareMood.sleepy ||
+          _care!.mood == pet_care.PetCareMood.sleeping);
+  bool get _careHappy =>
+      _hasCare &&
+      (_care!.mood == pet_care.PetCareMood.happy || _care!.joy >= 82);
 
   /// Ngủ gật chỉ khi đang đứng yên, không giữa cú nhảy hoặc trò chơi.
   bool get _dozing =>
@@ -91,7 +124,7 @@ class HomeCompanionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (!motion.hasSurfaces || size.isEmpty) return;
+    if (!character.isAvailable || !motion.hasSurfaces || size.isEmpty) return;
 
     canvas.save();
     canvas.clipRect(Offset.zero & size);
@@ -221,13 +254,14 @@ class HomeCompanionPainter extends CustomPainter {
     } else if (_outfit.clothes != CompanionClothes.classic) {
       _paintCoat(canvas);
     }
+    _paintCareBody(canvas);
     _paintScarfTail(canvas, moving: moving, step: step, breathe: breathe);
     _paintHead(
       canvas,
       earSway:
           (moving ? step * 0.11 + liftRatio * 0.08 : breathe * 0.035) +
           greeting * 0.07,
-      happy: celebrating,
+      happy: celebrating || _careHappy,
       sweeping: sweeping,
       affection: affection,
       tilt: greeting * 0.035 + (moving ? -step * 0.028 : 0),
@@ -444,6 +478,74 @@ class HomeCompanionPainter extends CustomPainter {
       _cream,
       shade: _creamShade,
     );
+  }
+
+  /// Lớp chăm bé chỉ phủ lên nét gốc, nhờ vậy khi chưa có snapshot Home vẫn
+  /// giữ nguyên artwork hiện tại. Các đốm là hình vẽ vector nhỏ, không dùng
+  /// emoji hay asset ngoài.
+  void _paintCareBody(Canvas canvas) {
+    if (!_hasCare) return;
+    if (_careDirty) {
+      final mud = Paint()..color = const Color(0xFF9A765D).withValues(alpha: 0.78);
+      final mudLight = Paint()..color = const Color(0xFFC19B76).withValues(alpha: 0.68);
+      for (final spot in const [
+        Offset(-8, -21),
+        Offset(6, -16),
+        Offset(-3, -9),
+        Offset(10, -8),
+      ]) {
+        canvas.drawOval(
+          Rect.fromCenter(center: spot, width: 4.5, height: 3.2),
+          mud,
+        );
+      }
+      for (final spot in const [Offset(-11, -13), Offset(3, -26)]) {
+        canvas.drawCircle(spot, 1.8, mudLight);
+      }
+      // Mùi bụi nhỏ phía vai: đủ nhận ra bẩn nhưng không che mất áo.
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-17, -28)
+          ..quadraticBezierTo(-20, -31, -17, -34)
+          ..moveTo(15, -25)
+          ..quadraticBezierTo(18, -29, 16, -32),
+        color: const Color(0xFF9A765D).withValues(alpha: 0.58),
+        width: 1.15,
+      );
+    }
+    if (_careHungry) {
+      // Một nhịp bụng nhỏ báo đói, tránh thêm chữ cứng lên Home.
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-4, -13)
+          ..quadraticBezierTo(-1, -10, 2, -13)
+          ..quadraticBezierTo(5, -16, 7, -13),
+        color: const Color(0xFFB47E76).withValues(alpha: 0.72),
+        width: 1.05,
+      );
+    }
+    if (_careHappy) {
+      for (final point in const [Offset(-20, -25), Offset(18, -21)]) {
+        _paintCareSparkle(canvas, point, 2.8);
+      }
+    }
+  }
+
+  void _paintCareSparkle(Canvas canvas, Offset center, double radius) {
+    final paint = Paint()..color = const Color(0xFFFFD978).withValues(alpha: 0.9);
+    canvas.drawLine(
+      center - Offset(radius, 0),
+      center + Offset(radius, 0),
+      paint..strokeWidth = 1.1,
+    );
+    canvas.drawLine(
+      center - Offset(0, radius),
+      center + Offset(0, radius),
+      paint..strokeWidth = 1.1,
+    );
+    canvas.drawCircle(center, 0.8, paint);
   }
 
   void _paintBearOveralls(Canvas canvas) {
@@ -696,7 +798,7 @@ class HomeCompanionPainter extends CustomPainter {
     final blink = blinkPhase > 4.97 && blinkPhase < 5.11;
     final eyeY = sweeping ? -48.0 : -49.0;
     for (final eyeX in const [-7.5, 10.5]) {
-      if (blink || happy || _dozing) {
+      if (blink || happy || _dozing || _careSleepy) {
         _stroke(
           canvas,
           Path()
@@ -750,7 +852,60 @@ class HomeCompanionPainter extends CustomPainter {
     );
     _paintGlasses(canvas);
     _paintHat(canvas);
+    _paintCareFace(canvas);
     canvas.restore();
+  }
+
+  void _paintCareFace(Canvas canvas) {
+    if (!_hasCare) return;
+    if (_careDirty) {
+      final mud = Paint()..color = const Color(0xFF8E6B55).withValues(alpha: 0.78);
+      canvas.drawOval(const Rect.fromLTWH(-20, -55, 6, 4), mud);
+      canvas.drawOval(const Rect.fromLTWH(15, -38, 5, 3.5), mud);
+      canvas.drawCircle(const Offset(-13, -35), 1.6, mud);
+    }
+    if (_careAngry) {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-11, -53)
+          ..lineTo(-4, -50)
+          ..moveTo(8, -50)
+          ..lineTo(15, -53),
+        color: const Color(0xFF6C3F4A),
+        width: 1.8,
+      );
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(21, -62)
+          ..lineTo(24, -58)
+          ..moveTo(24, -62)
+          ..lineTo(21, -58),
+        color: const Color(0xFFE98C88).withValues(alpha: 0.9),
+        width: 1.2,
+      );
+    }
+    if (_careCrying) {
+      final tear = Paint()..color = const Color(0xFF73BCE5).withValues(alpha: 0.9);
+      for (final eyeX in const [-7.5, 10.5]) {
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset(eyeX, -44), width: 2.8, height: 6.8),
+          tear,
+        );
+        canvas.drawCircle(Offset(eyeX, -39.8), 1.45, tear);
+      }
+    }
+    if (_careHungry || _careCrying || _careAngry) {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(-3, -37.5)
+          ..quadraticBezierTo(1.5, -34.5, 6, -37.5),
+        color: _careAngry ? const Color(0xFF8E4854) : const Color(0xFF9D6670),
+        width: 1.25,
+      );
+    }
   }
 
   /// Mũ và tai thuộc nhận diện nhân vật, không mất khi thay áo/phụ kiện.

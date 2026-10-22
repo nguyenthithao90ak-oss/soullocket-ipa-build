@@ -46,8 +46,8 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
       _error = null;
     });
     Object? lastError;
-    // Lần đầu (chưa biết trạng thái): thử lại 1 lần rồi mở khóa (fail-open),
-    // vì server vẫn chặn ghi dữ liệu cho tài khoản đang chờ xóa.
+    // Lần đầu (chưa biết trạng thái): thử lại 1 lần. Không được mở khóa khi
+    // chưa xác nhận được server, vì client có thể tiếp tục vào luồng tạo nhà.
     final attempts = (!cancel && _status == null) ? 2 : 1;
     for (var attempt = 0; attempt < attempts; attempt++) {
       try {
@@ -77,16 +77,13 @@ class _AccountDeletionGateState extends State<AccountDeletionGate> {
     final error = lastError;
     setState(() {
       _busy = false;
-      if (!cancel && _status == null) {
-        // Không xác nhận được có lệnh xóa: cho đi tiếp thay vì kẹt màn hình.
-        _checked = true;
-        _error = null;
-      } else {
-        _error = AppErrorMapper.resolve(
-          error ?? 'account_deletion_status_unavailable',
-          fallbackMessage: context.tr('account_deletion_status_unavailable'),
-        ).message;
-      }
+      // Fail-closed: giữ _checked=false khi chưa có câu trả lời chắc chắn.
+      // Người dùng vẫn có nút tải lại hoặc đăng xuất ở màn hình này.
+      _checked = false;
+      _error = AppErrorMapper.resolve(
+        error ?? 'account_deletion_status_unavailable',
+        fallbackMessage: context.tr('account_deletion_status_unavailable'),
+      ).message;
     });
   }
 

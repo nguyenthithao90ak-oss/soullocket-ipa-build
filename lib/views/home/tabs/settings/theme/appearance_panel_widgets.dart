@@ -359,6 +359,207 @@ class AppearanceCountdownPreview extends StatelessWidget {
   }
 }
 
+/// Bộ chọn chủ đề hiển thị trực tiếp để người dùng dễ nhận ra chế độ sáng,
+/// tối và tự động trên màn hình điện thoại.
+class AppearanceThemeGrid extends StatelessWidget {
+  const AppearanceThemeGrid({
+    super.key,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    this.isDark,
+  });
+
+  final List<(String, String)> options;
+  final String value;
+  final ValueChanged<String> onChanged;
+  final bool? isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SLSettingsPalette.resolve(
+      isDark ?? SLSettingsPalette.isNightTheme,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final largeText = MediaQuery.textScalerOf(context).scale(14) > 22;
+        final columns = largeText ? 1 : (constraints.maxWidth < 330 ? 2 : 3);
+        final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options
+              .map((option) {
+                final selected = option.$2 == value;
+                return SizedBox(
+                  width: width,
+                  child: Semantics(
+                    key: ValueKey('appearance-theme-${option.$2}'),
+                    button: true,
+                    selected: selected,
+                    inMutuallyExclusiveGroup: true,
+                    label: option.$1,
+                    onTap: () => onChanged(option.$2),
+                    child: ExcludeSemantics(
+                      child: Material(
+                        color: selected
+                            ? palette.accentSoft
+                            : palette.surfaceMuted,
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => onChanged(option.$2),
+                          child: Container(
+                            constraints: const BoxConstraints(minHeight: 96),
+                            padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: selected
+                                    ? palette.accent
+                                    : palette.border,
+                                width: selected ? 1.4 : 1,
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _ThemeSwatch(themeKey: option.$2),
+                                      const SizedBox(height: 7),
+                                      Text(
+                                        option.$1,
+                                        textAlign: TextAlign.center,
+                                        style: SLSettingsText.caption(
+                                          selected
+                                              ? palette.accent
+                                              : palette.ink,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (selected)
+                                  PositionedDirectional(
+                                    top: 0,
+                                    end: 0,
+                                    child: Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 18,
+                                      color: palette.accent,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              })
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _ThemeSwatch extends StatelessWidget {
+  const _ThemeSwatch({required this.themeKey});
+
+  final String themeKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = _themeSwatchIsDark(themeKey);
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: _themeSwatchColors(themeKey),
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: dark ? 0.34 : 0.82),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _themeSwatchColors(themeKey).last.withValues(alpha: 0.24),
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Icon(
+        _themeSwatchIcon(themeKey),
+        size: 19,
+        color: dark ? Colors.white : const Color(0xFF5B3A50),
+      ),
+    );
+  }
+}
+
+List<Color> _themeSwatchColors(String themeKey) {
+  switch (themeKey) {
+    case 'theme-auto':
+      return const [Color(0xFFFFC857), Color(0xFF6A8DFF)];
+    case 'theme-pink-glow':
+      return const [Color(0xFFFFB6CF), Color(0xFFE65C9C)];
+    case 'theme-default':
+      return const [Color(0xFFFFE2EC), Color(0xFFFF8FB3)];
+    case 'theme-sunset':
+      return const [Color(0xFFFFC371), Color(0xFFFF5F6D)];
+    case 'theme-ocean':
+      return const [Color(0xFF8DEBFF), Color(0xFF2487C7)];
+    case 'theme-night':
+      return const [Color(0xFF5367B7), Color(0xFF1B274A)];
+    case 'theme-dark':
+      return const [Color(0xFF5D6470), Color(0xFF17191D)];
+    case 'theme-mystic-dark':
+      return const [Color(0xFF9C6BFF), Color(0xFF201044)];
+    case 'off':
+      return const [Color(0xFFF9F4F7), Color(0xFFD9CBD3)];
+    default:
+      return const [Color(0xFFFFC5D8), Color(0xFFD94C86)];
+  }
+}
+
+bool _themeSwatchIsDark(String themeKey) {
+  return themeKey == 'theme-night' ||
+      themeKey == 'theme-dark' ||
+      themeKey == 'theme-mystic-dark';
+}
+
+IconData _themeSwatchIcon(String themeKey) {
+  switch (themeKey) {
+    case 'theme-auto':
+      return Icons.brightness_auto_rounded;
+    case 'theme-default':
+      return Icons.light_mode_rounded;
+    case 'theme-night':
+      return Icons.nightlight_round;
+    case 'theme-dark':
+      return Icons.dark_mode_rounded;
+    case 'theme-mystic-dark':
+      return Icons.auto_awesome_rounded;
+    case 'theme-ocean':
+      return Icons.water_drop_rounded;
+    case 'theme-sunset':
+      return Icons.wb_twilight_rounded;
+    case 'off':
+      return Icons.layers_clear_rounded;
+    default:
+      return Icons.palette_rounded;
+  }
+}
+
 class AppearanceEffectGrid extends StatelessWidget {
   const AppearanceEffectGrid({
     super.key,

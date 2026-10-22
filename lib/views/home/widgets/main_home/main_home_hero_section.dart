@@ -93,29 +93,37 @@ class _ModernHomeBody extends StatelessWidget {
     }
 
     final partnerName = isSingle ? '' : state._resolvePartnerName();
-    return HomePartnerLetterHost(
-      houseId: isSingle ? null : state._houseId,
-      uid: state._auth.currentUser?.uid,
-      partnerName: partnerName,
-      builder: (context, letter, openLetter) => _buildCompanionScene(
-        context,
-        uiState: uiState,
-        effectProfile: effectProfile,
+    final petUid = state._auth.currentUser?.uid;
+    final petHouseId = state._houseId;
+    return PetCareHomeScope(
+      uid: petUid,
+      houseId: petHouseId,
+      builder: (context, care) => HomePartnerLetterHost(
+        houseId: isSingle ? null : state._houseId,
+        uid: state._auth.currentUser?.uid,
         partnerName: partnerName,
-        hasLetter: letter != null,
-        openLetter: openLetter,
+        builder: (context, letter, openLetter) => _buildCompanionScene(
+          context,
+          uiState: uiState,
+          effectProfile: effectProfile,
+          partnerName: partnerName,
+          hasLetter: letter != null,
+          openLetter: openLetter,
+          petCare: care,
+        ),
       ),
     );
   }
 
-  /// Thỏ = người ấy, gấu = mình. Offline quá 30 phút thì thỏ ngủ gật.
+  /// Bé đại diện người ấy ngủ gật khi offline quá 30 phút.
   HomeCompanionPartnerStatus _companionPartnerStatus() {
     if (isSingle) return HomeCompanionPartnerStatus.unknown;
     final role = state._partnerRole;
     final data = state._presenceForRole(role);
     if (data == null) return HomeCompanionPartnerStatus.unknown;
-    if (PresenceService.isSleeping(data))
+    if (PresenceService.isSleeping(data)) {
       return HomeCompanionPartnerStatus.away;
+    }
     if (state._isRoleOnline(role)) return HomeCompanionPartnerStatus.online;
     final lastSeen = state._readEpochMs(data['lastSeen']);
     if (lastSeen == null) return HomeCompanionPartnerStatus.away;
@@ -132,6 +140,7 @@ class _ModernHomeBody extends StatelessWidget {
     required String partnerName,
     required bool hasLetter,
     required VoidCallback openLetter,
+    required ValueListenable<Map<PetCarePet, PetCareVitals>> petCare,
   }) {
     final sidePadding = _homeSidePadding(MediaQuery.sizeOf(context).width);
     final companionLane = _homeCompanionLane(sidePadding);
@@ -139,11 +148,16 @@ class _ModernHomeBody extends StatelessWidget {
       followScroll: true,
       calm: true,
       guestVisits: true,
+      petCare: petCare,
       partnerStatusListenable: _PartnerStatusListenable(
         state._presenceDataNotifier,
         _companionPartnerStatus,
       ),
       partnerName: partnerName,
+      partnerIsBunny: RoleUtils.isFemaleRole(
+        state._partnerRole,
+        genderSwapped: RoleUtils.readGenderSwapped(state._houseSettings),
+      ),
       partnerHasLetter: hasLetter,
       onOpenPartnerLetter: openLetter,
       enabled: uiState.homeCompanionEnabled,
@@ -320,6 +334,41 @@ class _ModernHomeBody extends StatelessWidget {
                               isSingle: isSingle,
                             ),
                           ),
+                          const SizedBox(height: 14),
+                          // Trạm Mây đang ở giai đoạn thử nghiệm: chỉ hiện ở
+                          // debug để tiếp tục nâng cấp, không đưa vào bản chính
+                          // thức/release trên Home.
+                          if (kDebugMode) ...[
+                            PetCareEntryCard(
+                              pet:
+                                  petCareOwnedPetForRole(
+                                    state._currentRole,
+                                    genderSwapped: RoleUtils.readGenderSwapped(
+                                      state._houseSettings,
+                                    ),
+                                  ) ??
+                                  PetCarePet.bear,
+                              onTap: () => slPushRoute<void>(
+                                context,
+                                SLRoute<void>(
+                                  builder: (_) => PetCareGameScreen(
+                                    ownedPet: petCareOwnedPetForRole(
+                                      state._currentRole,
+                                      genderSwapped:
+                                          RoleUtils.readGenderSwapped(
+                                            state._houseSettings,
+                                          ),
+                                    ),
+                                  ),
+                                  settings: const RouteSettings(
+                                    name: 'pet_care_game',
+                                  ),
+                                ),
+                                identity: const ValueKey('pet_care_game'),
+                                rootNavigator: true,
+                              ),
+                            ),
+                          ],
                           // Hàng nút nhanh (Nhật ký, Nhắn ngay, Lịch chung,
                           // Chơi cùng, Ghim thêm) đã gỡ khỏi Home theo yêu cầu
                           // chủ dự án 12/10/2026 cho đỡ chật.
