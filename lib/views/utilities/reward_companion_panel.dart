@@ -103,8 +103,9 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
     final balance = widget.balance ?? state?.points ?? 0;
     final price = state?.prices[character];
     final affordable = price != null && balance >= price;
+    // Chuột Phô Mai (ô melody) sữa nâu, Mèo Mây (ô kuromi) tím khói.
     final tint = character == HomeCompanionCharacter.melody
-        ? const Color(0xFFE887AE) : const Color(0xFF9D7BCD);
+        ? const Color(0xFFCBA98E) : const Color(0xFF9D92D6);
     final label = owned
         ? context.tr('reward_companion_owned')
         : price == null
@@ -149,7 +150,7 @@ class _RewardCompanionPanelState extends State<RewardCompanionPanel> {
           style: FilledButton.styleFrom(
             minimumSize: const Size(48, 48),
             backgroundColor: character == HomeCompanionCharacter.melody
-                ? const Color(0xFFAE426A) : const Color(0xFF7553A2),
+                ? const Color(0xFF7E5B42) : const Color(0xFF6B5596),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
           icon: Icon(owned ? Icons.check_circle_outline_rounded : Icons.redeem_rounded, size: 20),

@@ -96,6 +96,7 @@ class WebRTCService {
   StreamSubscription<DatabaseEvent>? _calleeCandidatesSub;
   StreamSubscription<DatabaseEvent>? _callerCandidatesSub;
   StreamSubscription<DatabaseEvent>? _incomingCallChangeSub;
+  int _incomingCallGeneration = 0;
 
   final Map<String, dynamic> _fallbackConfiguration = {
     'iceServers': [
@@ -469,13 +470,28 @@ class WebRTCService {
     final pendingHangUp = _hangUpOperation;
     if (pendingHangUp != null) await pendingHangUp;
     final session = _session;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      throw const CallSetupFailure('room_read', 'unauthenticated');
+    }
+    final offsetFuture = _readServerTimeOffset();
     final roomRef = _db.ref('calls/$roomId');
     final roomSnap = await roomRef.get().timeout(const Duration(seconds: 8));
+    final offset = await offsetFuture;
+    _checkSession(session);
+    if (_auth.currentUser?.uid != uid) {
+      throw const CallSetupFailure('room_read', 'unauthenticated');
+    }
     if (!roomSnap.exists) throw const UiCopyException('copy_9ee77d4b3d6f');
     final data = Map<String, dynamic>.from(roomSnap.value as Map);
-    if (data['status'] != 'ringing' ||
-        data['callerId'] == _auth.currentUser?.uid) {
+    if (data['status'] != 'ringing' || data['callerId'] == uid) {
       throw StateError(UiCopy.text('copy_af1996becb05'));
+    }
+    if (!isFreshCallTimestamp(
+      data['timestamp'],
+      now: DateTime.now().millisecondsSinceEpoch + offset,
+    )) {
+      throw const CallSetupFailure('room_read', 'expired');
     }
     if (session != _session) throw StateError(UiCopy.text('copy_f68819406a61'));
     _roomId = roomId;
@@ -558,10 +574,17 @@ class WebRTCService {
     // Bắt máy chỉ khi phòng vẫn đang đổ chuông; không mở lại phòng đã hủy.
     final accepted = await roomRef
         .runTransaction((current) {
-          if (session != _session) return Transaction.abort();
+          if (session != _session || _auth.currentUser?.uid != uid) {
+            return Transaction.abort();
+          }
           // Lần đầu cache có thể chưa có dữ liệu; để Firebase lấy lại từ server.
           if (current == null) return Transaction.success(null);
-          if (current is! Map || current['status'] != 'ringing') {
+          if (current is! Map ||
+              current['status'] != 'ringing' ||
+              !isFreshCallTimestamp(
+                current['timestamp'],
+                now: DateTime.now().millisecondsSinceEpoch + offset,
+              )) {
             return Transaction.abort();
           }
           return Transaction.success({
@@ -721,6 +744,24 @@ class WebRTCService {
     'WebRTC signaling: ${CallSetupFailure.from(error, 'signaling')}',
   );
 
+  Future<int> _readServerTimeOffset() async {
+    try {
+      final event = await _db
+          .ref('.info/serverTimeOffset')
+          .onValue
+          .where((event) {
+            final value = event.snapshot.value;
+            return value is num && value.isFinite;
+          })
+          .timeout(const Duration(seconds: 2))
+          .first;
+      return (event.snapshot.value as num).round();
+    } catch (_) {
+      // Khi offline/chưa có offset, vẫn chặn lời mời cũ bằng giờ thiết bị.
+      return 0;
+    }
+  }
+
   Stream<Map<String, dynamic>> watchIncomingCoupleCalls(String houseId) {
     final uid = _auth.currentUser?.uid ?? '';
     return _db
@@ -728,17 +769,7 @@ class WebRTCService {
         .onValue
         .asyncMap((event) async {
           if (event.snapshot.value == null) return null;
-          var serverOffset = 0;
-          try {
-            final offset = await _db
-                .ref('.info/serverTimeOffset')
-                .onValue
-                .firstWhere((event) => event.snapshot.value is num)
-                .timeout(const Duration(seconds: 2));
-            serverOffset = (offset.snapshot.value as num).round();
-          } catch (_) {
-            // Khi chưa có offset, vẫn kiểm tra độ mới bằng đồng hồ hiện tại.
-          }
+          final serverOffset = await _readServerTimeOffset();
           final invite = CoupleCallInvite.incoming(
             event.snapshot.value,
             houseId: houseId,
@@ -804,6 +835,8 @@ class WebRTCService {
     Function(String roomId, String callerId, Map data) onIncomingCall,
   ) {
     final normalizedHouseId = myHouseId.trim();
+    final uid = _auth.currentUser?.uid;
+    final generation = ++_incomingCallGeneration;
     final callsRef = _db
         .ref('calls')
         .orderByChild('calleeId')
@@ -814,35 +847,66 @@ class WebRTCService {
     // Chỉ giữ một subscription foreground; tránh listener childChanged bị rò
     // và tạo cảm giác giật/lag khi Home khởi tạo lại.
     _incomingCallChangeSub?.cancel();
-    final incomingSub = callsRef.onChildAdded.listen(
-      (event) {
-        final raw = event.snapshot.value;
-        if (raw is! Map) {
-          return;
-        }
-        final val = Map<String, dynamic>.from(raw);
-        if (val['status'] != 'ringing') {
-          return;
-        }
-        final roomId = event.snapshot.key?.trim() ?? '';
-        if (roomId.isEmpty) {
-          return;
-        }
-        final callerId = val['houseId']?.toString().trim().isNotEmpty == true
-            ? val['houseId'].toString().trim()
-            : val['callerId']?.toString().trim() ??
-                  UiCopy.text('copy_0a3126b85a42');
-        onIncomingCall(roomId, callerId, val);
-      },
-      onError: (error) {
-        final msg = AppErrorMapper.resolve(error).message;
-        // Rules có thể chặn listener trong thời gian chuyển tiếp; không spam
-        // log và không làm UI dựng lại liên tục.
-        if (!msg.contains('permission to access')) {
-          debugPrint('Error listening for incoming calls: $msg');
-        }
-      },
-    );
+    final incomingSub = callsRef.onChildAdded
+        // Đưa phần chờ vào stream để cancel cũng loại kết quả đang xử lý.
+        .asyncMap<DatabaseEvent?>((event) async {
+          if (uid == null ||
+              _auth.currentUser?.uid != uid ||
+              generation != _incomingCallGeneration ||
+              isBusy) {
+            return null;
+          }
+          final raw = event.snapshot.value;
+          if (raw is! Map) {
+            return null;
+          }
+          final val = Map<String, dynamic>.from(raw);
+          final callerUid = val['callerId']?.toString().trim() ?? '';
+          if (val['status'] != 'ringing' ||
+              val['calleeId'] != normalizedHouseId ||
+              callerUid.isEmpty ||
+              callerUid == uid) {
+            return null;
+          }
+          final roomId = event.snapshot.key?.trim() ?? '';
+          if (roomId.isEmpty || RegExp(r'[.#$\[\]/]').hasMatch(roomId)) {
+            return null;
+          }
+          final offset = await _readServerTimeOffset();
+          // Callback có thể đang chờ giờ server khi đổi tài khoản/House hoặc gọi khác.
+          if (_auth.currentUser?.uid != uid ||
+              generation != _incomingCallGeneration ||
+              isBusy ||
+              !isFreshCallTimestamp(
+                val['timestamp'],
+                now: DateTime.now().millisecondsSinceEpoch + offset,
+              )) {
+            return null;
+          }
+          return event;
+        })
+        .where((event) => event != null)
+        .cast<DatabaseEvent>()
+        .listen(
+          (event) {
+            final val = Map<String, dynamic>.from(event.snapshot.value as Map);
+            final roomId = event.snapshot.key!.trim();
+            final callerId =
+                val['houseId']?.toString().trim().isNotEmpty == true
+                ? val['houseId'].toString().trim()
+                : val['callerId']?.toString().trim() ??
+                      UiCopy.text('copy_0a3126b85a42');
+            onIncomingCall(roomId, callerId, val);
+          },
+          onError: (error) {
+            final msg = AppErrorMapper.resolve(error).message;
+            // Rules có thể chặn listener trong thời gian chuyển tiếp; không spam
+            // log và không làm UI dựng lại liên tục.
+            if (!msg.contains('permission to access')) {
+              debugPrint('Error listening for incoming calls: $msg');
+            }
+          },
+        );
     _incomingCallChangeSub = incomingSub;
     return incomingSub;
   }

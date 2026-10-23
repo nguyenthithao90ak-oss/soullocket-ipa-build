@@ -25,8 +25,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _weatherRefreshTimer = null;
     _loveWidgetSyncDebounce?.cancel();
     _loveWidgetSyncDebounce = null;
-    _incomingInteractionDialogTimer?.cancel();
-    _incomingInteractionDialogTimer = null;
     _fallbackTimeoutTimer?.cancel();
     _fallbackTimeoutTimer = null;
     _delayedListenersTimer?.cancel();

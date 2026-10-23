@@ -35,9 +35,7 @@ class CoupleCallInvite {
         raw['houseId'] != houseId ||
         callerUid.isEmpty ||
         callerUid == uid ||
-        timestamp is! num ||
-        now - timestamp > ringingSeconds * 1000 ||
-        timestamp - now > 30000) {
+        !isFreshCallTimestamp(timestamp, now: now)) {
       return null;
     }
     return CoupleCallInvite(
@@ -46,7 +44,7 @@ class CoupleCallInvite {
       callerUid: callerUid,
       callerName: raw['callerName']?.toString() ?? '',
       isVideo: raw['isVideo'] == true,
-      timestamp: timestamp.toInt(),
+      timestamp: (timestamp as num).toInt(),
     );
   }
 
@@ -58,6 +56,14 @@ class CoupleCallInvite {
       raw['callerId'] == callerUid &&
       (raw['isVideo'] == true) == isVideo;
 }
+
+/// Dùng giờ server để không phát lại phòng đổ chuông cũ khi mở lại ứng dụng.
+bool isFreshCallTimestamp(Object? timestamp, {required int now}) =>
+    timestamp is num &&
+    timestamp.isFinite &&
+    timestamp > 0 &&
+    now - timestamp <= CoupleCallInvite.ringingSeconds * 1000 &&
+    timestamp - now <= 30000;
 
 /// ICE tới sớm phải đợi remote description và được áp dụng theo thứ tự.
 class RtcCandidateQueue<T> {

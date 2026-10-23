@@ -77,6 +77,12 @@ class SingleMatchService {
     required String currentHouseId,
   }) async* {
     yield const <SingleMatchCandidate>[];
+    yield await fetchCandidates(currentHouseId: currentHouseId);
+  }
+
+  Future<List<SingleMatchCandidate>> fetchCandidates({
+    required String currentHouseId,
+  }) async {
     final profiles = await _fetchVisibleProfiles();
     final candidates = <SingleMatchCandidate>[];
     for (final entry in profiles.entries) {
@@ -87,7 +93,62 @@ class SingleMatchService {
       );
       if (candidate != null) candidates.add(candidate);
     }
-    yield _sortCandidates(candidates);
+    return _sortCandidates(candidates);
+  }
+
+  /// Vị trí được làm thô ngay trên máy; không dùng luồng GPS riêng của cặp đôi.
+  Future<SingleMatchNearbyResult> nearby({
+    required String houseId,
+    required String action,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final requestUid = _houseService.currentUser?.uid;
+    if (requestUid == null) {
+      throw StateError(L10nService().translate('core_err_general'));
+    }
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'singleMatchNearby',
+      payload: <String, dynamic>{
+        'houseId': houseId,
+        'action': action,
+        if (action == 'enable') ...{
+          'consentVersion': 'nearby-coarse-v1',
+          'latitude': latitude == null ? null : (latitude * 4).round() / 4,
+          'longitude': longitude == null ? null : (longitude * 4).round() / 4,
+        },
+      },
+      fallbackErrorMessage: L10nService().translate('sm_nearby_unavailable'),
+    );
+    if (_houseService.currentUser?.uid != requestUid ||
+        response.data is! Map ||
+        response.data['houseId'] != houseId) {
+      throw StateError(L10nService().translate('core_err_general'));
+    }
+    final raw = Map<dynamic, dynamic>.from(response.data as Map);
+    final candidates = <SingleMatchCandidate>[];
+    final bands = <String, String>{};
+    for (final value
+        in raw['candidates'] is List ? raw['candidates'] as List : const []) {
+      if (value is! Map) continue;
+      final id = value['houseId']?.toString() ?? '';
+      final candidate = _candidateFromProfile(id, {
+        ...value,
+        'singleMatch': value,
+      }, currentHouseId: houseId);
+      final band = value['distanceBand'];
+      if (candidate != null &&
+          const ['under25', '25to50', '50to100'].contains(band)) {
+        candidates.add(candidate);
+        bands[id] = band as String;
+      }
+    }
+    return SingleMatchNearbyResult(
+      enabled: raw['enabled'] == true,
+      expiresAt: _readInt(raw['expiresAt']),
+      candidates: candidates,
+      distanceBands: bands,
+    );
   }
 
   Future<Set<String>> fetchBlockedHouseIds(String houseId) async {
@@ -485,6 +546,29 @@ class SingleMatchService {
   }
 
   // ===== Chat Room =====
+
+  /// Đọc mapping đã được server tạo cho một cặp nhà.
+  ///
+  /// Luồng ghép bằng mã đã tạo mapping trước khi trả kết quả. Không gọi lại
+  /// callable tạo mapping trong trường hợp này vì người kia có thể vừa tắt
+  /// chế độ khám phá sau khi ghép thành công.
+  Future<Map<String, dynamic>?> readMatchChatMapping({
+    required String myHouseId,
+    required String peerHouseId,
+  }) async {
+    final owner = myHouseId.trim();
+    final peer = peerHouseId.trim();
+    if (owner.isEmpty || peer.isEmpty || owner == peer) return null;
+    final snapshot = await _db
+        .child('single_match_secure/chat_mappings/$owner/$peer')
+        .get();
+    if (!snapshot.exists || snapshot.value is! Map) return null;
+    final mapping = Map<String, dynamic>.from(
+      Map<dynamic, dynamic>.from(snapshot.value as Map),
+    );
+    mapping['peerHouseId'] = peer;
+    return mapping;
+  }
 
   Future<String> getOrCreateMatchChatRoom({
     required String myHouseId,

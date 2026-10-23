@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -223,10 +224,21 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
     return SettingsQuickTile(
       title: title,
       leading: leading,
+      backgroundColor: _snapshot.ready && _paired
+          ? (widget.isDark ? const Color(0xFF432B3B) : const Color(0xFFFFE2EB))
+          : null,
+      borderColor: _snapshot.ready && _paired
+          ? (widget.isDark ? const Color(0xFF70465D) : const Color(0xFFF5B8CD))
+          : null,
+      background: _snapshot.ready && _paired
+          ? PairingShortcutHearts(isDark: widget.isDark)
+          : null,
       caption: !_snapshot.ready
           ? null
           : (_paired ? status : context.tr('home_chaghpni_70d9cc')),
-      captionTone: _paired ? SLSettingsTone.success : SLSettingsTone.accent,
+      captionTone: _paired
+          ? (widget.isDark ? SLSettingsTone.neutral : SLSettingsTone.success)
+          : SLSettingsTone.accent,
       semanticLabel: !_snapshot.ready
           ? '$title. ${context.tr('settings_loading_data')}'
           : _paired
@@ -236,4 +248,117 @@ class _PairingSettingsShortcutState extends State<PairingSettingsShortcut> {
       onTap: widget.onTap,
     );
   }
+}
+
+/// Tim trang trí trong ô đã ghép nối; dừng khi ẩn hoặc giảm chuyển động.
+class PairingShortcutHearts extends StatefulWidget {
+  const PairingShortcutHearts({super.key, required this.isDark});
+
+  final bool isDark;
+
+  @override
+  State<PairingShortcutHearts> createState() => _PairingShortcutHeartsState();
+}
+
+class _PairingShortcutHeartsState extends State<PairingShortcutHearts>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  late final AnimationController _controller;
+  bool _foreground = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    );
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    if (_foreground &&
+        TickerMode.valuesOf(context).enabled &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: _PairingShortcutHeartsPainter(
+          animation: _controller,
+          color: widget.isDark
+              ? const Color(0xFFFFA7C6)
+              : const Color(0xFFE8759A),
+        ),
+      ),
+    );
+  }
+}
+
+class _PairingShortcutHeartsPainter extends CustomPainter {
+  _PairingShortcutHeartsPainter({required this.animation, required this.color})
+    : super(repaint: animation);
+
+  final Animation<double> animation;
+  final Color color;
+
+  static final Path _heart = Path()
+    ..moveTo(0, 0.9)
+    ..cubicTo(-0.3, 0.6, -1, 0.1, -1, -0.4)
+    ..cubicTo(-1, -1, -0.3, -1.1, 0, -0.5)
+    ..cubicTo(0.3, -1.1, 1, -1, 1, -0.4)
+    ..cubicTo(1, 0.1, 0.3, 0.6, 0, 0.9)
+    ..close();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    for (var i = 0; i < 7; i++) {
+      final progress = (animation.value + i / 7) % 1;
+      final sway = math.sin(progress * math.pi * 2 + i) * 5;
+      final x = size.width * (0.12 + (i * 0.19) % 0.8) + sway;
+      final y = size.height * (1.12 - progress * 1.3);
+      final radius = 3.5 + (i % 3) * 1.4;
+      final opacity = math.sin(progress * math.pi) * 0.32;
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(math.sin(progress * math.pi + i) * 0.2);
+      canvas.scale(radius);
+      canvas.drawPath(
+        _heart,
+        Paint()..color = color.withValues(alpha: opacity),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PairingShortcutHeartsPainter oldDelegate) =>
+      oldDelegate.animation != animation || oldDelegate.color != color;
 }

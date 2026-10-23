@@ -175,8 +175,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   Future<void> _initializeRenderers() async {
     // Chuẩn bị renderer cả khi gọi thoại để nhận video mà không mở lại phòng.
+    // Chưa gắn stream thì native renderer không có audio track để mute; gọi
+    // setter ở đây làm Android/iOS ném lỗi trước khi cuộc gọi được tạo.
     await runCallSetupStep('renderer', _localRenderer.initialize);
-    _localRenderer.muted = true;
     await runCallSetupStep('renderer', _remoteRenderer.initialize);
   }
 
@@ -225,6 +226,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       }
       if (widget.isVideo || kIsWeb) {
         await _localRenderer.setSrcObject(stream: stream);
+        // Chỉ tắt tiếng preview sau khi đã gắn stream. Với cuộc gọi thoại
+        // native, renderer không cần giữ stream local nên không đụng vào nó.
+        _localRenderer.muted = true;
       }
       if (!mounted || _ending) return;
       _webrtcService.toggleSpeaker(_isSpeakerOn);

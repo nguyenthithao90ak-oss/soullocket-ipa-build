@@ -13,6 +13,7 @@ class WallpaperLuminanceService {
   WallpaperLuminanceService._internal();
 
   final Map<String, bool> _cache = <String, bool>{};
+  final Set<String> _inFlight = <String>{};
   final ValueNotifier<int> changeNotifier = ValueNotifier<int>(0);
 
   bool? getCachedIsLight(String url) {
@@ -23,26 +24,37 @@ class WallpaperLuminanceService {
 
   void analyzeWallpaper(String url) {
     final normalized = url.trim();
-    if (normalized.isEmpty || _cache.containsKey(normalized)) {
-      return;
+    if (normalized.isEmpty || _cache.containsKey(normalized)) return;
+
+    final ImageProvider provider;
+    if (normalized.startsWith('http://') ||
+        normalized.startsWith('https://')) {
+      provider = CachedNetworkImageProvider(
+        normalized,
+        cacheManager: AppCacheManager.instance,
+      );
+    } else if (kIsWeb) {
+      provider = NetworkImage(normalized);
+    } else {
+      provider = FileImage(File(normalized));
     }
-    unawaited(_analyze(normalized));
+    analyzeProvider(normalized, provider);
   }
 
-  Future<bool> _analyze(String url) async {
-    try {
-      final ImageProvider provider;
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        provider = CachedNetworkImageProvider(
-          url,
-          cacheManager: AppCacheManager.instance,
-        );
-      } else if (kIsWeb) {
-        provider = NetworkImage(url);
-      } else {
-        provider = FileImage(File(url));
-      }
+  /// Phân tích chính provider đang dùng để render nền, tránh tải lại ảnh R2
+  /// bằng URL gốc chưa ký. [key] là URL nền ổn định dùng để tra cache.
+  void analyzeProvider(String key, ImageProvider provider) {
+    final normalized = key.trim();
+    if (normalized.isEmpty ||
+        _cache.containsKey(normalized) ||
+        !_inFlight.add(normalized)) {
+      return;
+    }
+    unawaited(_analyze(normalized, provider));
+  }
 
+  Future<bool> _analyze(String url, ImageProvider provider) async {
+    try {
       final ImageStream stream = provider.resolve(ImageConfiguration.empty);
       final Completer<ui.Image> completer = Completer<ui.Image>();
       late ImageStreamListener listener;
@@ -58,8 +70,14 @@ class WallpaperLuminanceService {
       );
       stream.addListener(listener);
 
-      final ui.Image image =
-          await completer.future.timeout(const Duration(seconds: 4));
+      final ui.Image image;
+      try {
+        image = await completer.future.timeout(const Duration(seconds: 4));
+      } finally {
+        // Timeout/error không được để listener giữ stream sống lâu hơn cần
+        // thiết; callback thành công cũng có thể đã tự remove trước đó.
+        stream.removeListener(listener);
+      }
 
       // Thu nhỏ về 16x16 để tính toán độ sáng cực nhanh
       final recorder = ui.PictureRecorder();
@@ -72,8 +90,10 @@ class WallpaperLuminanceService {
       );
       final picture = recorder.endRecording();
       final smallImg = await picture.toImage(16, 16);
-      final byteData =
-          await smallImg.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final byteData = await smallImg.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      smallImg.dispose();
 
       if (byteData == null) {
         _cache[url] = true;
@@ -108,6 +128,8 @@ class WallpaperLuminanceService {
       _cache[url] = true;
       changeNotifier.value++;
       return true;
+    } finally {
+      _inFlight.remove(url);
     }
   }
 }

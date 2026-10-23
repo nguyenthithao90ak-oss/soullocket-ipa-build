@@ -94,6 +94,7 @@ import 'package:soullocket_app/models/utilities/shared_note.dart';
 import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
     show SettingsTab;
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/utils/services/wallpaper_luminance_service.dart';
 import 'package:soullocket_app/views/home/tabs/settings/theme/theme_preview_builder.dart';
 // import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
 import 'package:soullocket_app/views/utilities/block_blast_game.dart';
@@ -147,6 +148,7 @@ import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 import 'package:soullocket_app/utils/home_image_policy.dart';
 import 'package:soullocket_app/utils/home_interaction_cooldown.dart';
+import 'package:soullocket_app/utils/route_auto_close.dart';
 import 'package:soullocket_app/utils/screen_activity_mixin.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/balanced_countdown_style.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/relationship_duration_card.dart';
@@ -484,7 +486,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Timer? _weatherRefreshTimer;
   Timer? _loveWidgetSyncDebounce;
 
-  Timer? _incomingInteractionDialogTimer;
   Timer? _fallbackTimeoutTimer;
   Timer? _delayedListenersTimer;
   Timer? _delayedMapWeatherTimer;

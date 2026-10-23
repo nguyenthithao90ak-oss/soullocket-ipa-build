@@ -47,7 +47,7 @@ class HomeCompanionPainter extends CustomPainter {
   final HomeCompanionPlay? socialPlay;
   final HomeCompanionMood? mood;
 
-  /// Chỉ dùng cho hai bé chính trên Home. Khách Kuromi/Melody luôn bỏ qua.
+  /// Chỉ dùng cho hai bé chính trên Home. Khách Mèo Mây/Chuột Phô Mai luôn bỏ qua.
   /// Trạng thái null giữ nguyên artwork Home cũ.
   final pet_care.PetCareVitals? care;
   final ValueListenable<
@@ -92,34 +92,72 @@ class HomeCompanionPainter extends CustomPainter {
       (mood?.dozing ?? false) &&
       motion.phase == HomeCompanionPhase.idle &&
       !(_activePlay?.active ?? false);
-  bool get _isKuromi => character == HomeCompanionCharacter.kuromi;
-  bool get _isMelody => character == HomeCompanionCharacter.melody;
-  bool get _hasHood => _isKuromi || _isMelody;
-  Color get _hood =>
-      _isKuromi ? const Color(0xFF9D7BCD) : const Color(0xFFED91B6);
-  Color get _hoodEdge => const Color(0xFF49404E);
+  // Hai bé riêng của SoulLocket dùng lại ô ID cũ (xem HomeCompanionCharacter):
+  // Mèo Mây lông tím khói, sao vàng trên trán; Chuột Phô Mai lông sữa nâu,
+  // tai tròn to lòng hồng, răng cửa và đuôi hồng dài.
+  bool get _isCat => character == HomeCompanionCharacter.kuromi;
+  bool get _isMouse => character == HomeCompanionCharacter.melody;
 
-  /// Kuromi là chuẩn; từng bộ nét vẽ có tỷ lệ riêng để cùng chiều cao thực.
-  static const double spriteScale = HomeCompanionMetrics.kuromiScale;
+  /// Cỡ chuẩn chung; từng bộ nét vẽ có tỷ lệ riêng để cùng chiều cao thực.
+  static const double spriteScale = HomeCompanionMetrics.referenceScale;
   static const double bearSpriteScale = HomeCompanionMetrics.bearScale;
   static const double horizontalClearance = 32;
   static const double topClearance = 104;
-  static const _outline = Color(0xFF956E69);
-  Color get _cream => _hasHood
-      ? const Color(0xFFFFFEFC)
-      : _isBear
+  Color get _outline => _isCat
+      ? const Color(0xFF7A6E9C)
+      : _isMouse
+      ? const Color(0xFF8D6C5A)
+      : const Color(0xFF956E69);
+  Color get _cream => _isBear
       ? const Color(0xFFD6A171)
+      : _isMouse
+      ? const Color(0xFFE6D0BC)
+      : _isCat
+      ? const Color(0xFFC9C2EA)
       : const Color(0xFFFFFAEF);
-  Color get _creamShade => _hasHood
-      ? const Color(0xFFF4F0F5)
-      : _isBear
+  Color get _creamShade => _isBear
       ? const Color(0xFFBD8159)
+      : _isMouse
+      ? const Color(0xFFCBB09A)
+      : _isCat
+      ? const Color(0xFFA79ED3)
       : const Color(0xFFF3DDC8);
+  Color get _belly => _isBear
+      ? const Color(0xFFF3D7B2)
+      : _isMouse
+      ? const Color(0xFFFFF8F0)
+      : _isCat
+      ? const Color(0xFFF8F5FF)
+      : const Color(0xFFFFFDF7);
   static const _pink = Color(0xFFF2B4BE);
-  Color get _rose =>
-      _isBear ? const Color(0xFF6B9FAC) : const Color(0xFFCF718B);
-  Color get _roseShade =>
-      _isBear ? const Color(0xFF497482) : const Color(0xFFAC526F);
+  Color get _rose => _isBear
+      ? const Color(0xFF6B9FAC)
+      : _isMouse
+      ? const Color(0xFF74BE96)
+      : _isCat
+      ? const Color(0xFFEDB94A)
+      : const Color(0xFFCF718B);
+  Color get _roseShade => _isBear
+      ? const Color(0xFF497482)
+      : _isMouse
+      ? const Color(0xFF4E9270)
+      : _isCat
+      ? const Color(0xFFBE8E2A)
+      : const Color(0xFFAC526F);
+  Color get _scarfDot => _isBear
+      ? const Color(0xFFB7D9DF)
+      : _isMouse
+      ? const Color(0xFFC5EBD5)
+      : _isCat
+      ? const Color(0xFFFFE6A2)
+      : const Color(0xFFE99AAF);
+  Color get _scarfShine => _isBear
+      ? const Color(0xFFD8EEF1)
+      : _isMouse
+      ? const Color(0xFFE0F5E9)
+      : _isCat
+      ? const Color(0xFFFFF1C9)
+      : const Color(0xFFF6C9D3);
   static const _eye = Color(0xFF634B4B);
 
   @override
@@ -242,13 +280,10 @@ class HomeCompanionPainter extends CustomPainter {
       _cream,
       shade: _creamShade,
     );
-    if (!_hasHood) {
-      canvas.drawOval(
-        const Rect.fromLTWH(-7, -23, 18, 16),
-        Paint()
-          ..color = _isBear ? const Color(0xFFF3D7B2) : const Color(0xFFFFFDF7),
-      );
-    }
+    canvas.drawOval(
+      const Rect.fromLTWH(-7, -23, 18, 16),
+      Paint()..color = _belly,
+    );
     if (_outfit.clothes == CompanionClothes.overalls) {
       _paintBearOveralls(canvas);
     } else if (_outfit.clothes != CompanionClothes.classic) {
@@ -447,25 +482,48 @@ class HomeCompanionPainter extends CustomPainter {
   }
 
   void _paintTail(Canvas canvas, double bodyBob, double step) {
-    if (_isKuromi) {
-      _stroke(
-        canvas,
-        Path()
-          ..moveTo(-13, -12 + bodyBob)
-          ..quadraticBezierTo(-29, -3, -25 - step, -24),
-        color: _hood,
-        width: 2.8,
-      );
-      _shape(
-        canvas,
-        Path()
-          ..moveTo(-25 - step, -29)
-          ..lineTo(-31 - step, -21)
-          ..lineTo(-21 - step, -22)
-          ..close(),
-        _hood,
-        outline: _hoodEdge,
-      );
+    if (_isMouse) {
+      // Đuôi hồng mảnh, dài, cuộn một vòng nhỏ ở chóp; lắc theo bước chân.
+      final sway = step * 1.8;
+      final tail = Path()
+        ..moveTo(-11, -8 + bodyBob)
+        ..cubicTo(-24, -4 + bodyBob, -33 - sway, -10, -31 - sway, -21)
+        ..cubicTo(-30 - sway, -28, -22 - sway, -28, -23 - sway, -22)
+        ..quadraticBezierTo(-24 - sway, -18, -27 - sway, -20);
+      _stroke(canvas, tail, color: _outline, width: 3.4);
+      _stroke(canvas, tail, color: const Color(0xFFF4B3C0), width: 1.9);
+      return;
+    }
+    if (_isCat) {
+      // Đuôi dài cong chữ S có ba khoanh sọc tím đậm.
+      final sway = step * 1.6;
+      final tail = Path()
+        ..moveTo(-11, -9 + bodyBob)
+        ..cubicTo(-25, -8 + bodyBob, -32 - sway, -18, -26 - sway, -30)
+        ..quadraticBezierTo(-23 - sway, -36, -27 - sway, -40);
+      _stroke(canvas, tail, color: _outline, width: 6.6);
+      _stroke(canvas, tail, color: _cream, width: 4.4);
+      for (final metric in tail.computeMetrics()) {
+        for (final t in const [0.42, 0.62, 0.82]) {
+          final tangent = metric.getTangentForOffset(metric.length * t);
+          if (tangent == null) continue;
+          final normal = Offset(-tangent.vector.dy, tangent.vector.dx) * 2.2;
+          _stroke(
+            canvas,
+            Path()
+              ..moveTo(
+                tangent.position.dx - normal.dx,
+                tangent.position.dy - normal.dy,
+              )
+              ..lineTo(
+                tangent.position.dx + normal.dx,
+                tangent.position.dy + normal.dy,
+              ),
+            color: _creamShade,
+            width: 1.6,
+          );
+        }
+      }
       return;
     }
     _shape(
@@ -595,8 +653,8 @@ class HomeCompanionPainter extends CustomPainter {
     final lift = hopping ? 4.0 : math.max(0.0, -step) * 0.47;
     final rect = Rect.fromCenter(
       center: Offset(x + step, -2.7 - lift),
-      width: _hasHood ? 15 : 13,
-      height: _hasHood ? 9 : 6.8,
+      width: 13,
+      height: 6.8,
     );
     _shape(
       canvas,
@@ -620,7 +678,6 @@ class HomeCompanionPainter extends CustomPainter {
     required double step,
     required double breathe,
   }) {
-    if (_hasHood) return;
     final flutter = moving ? step * 3 : breathe;
     _shape(
       canvas,
@@ -638,50 +695,6 @@ class HomeCompanionPainter extends CustomPainter {
   }
 
   void _paintScarfCollar(Canvas canvas) {
-    if (_hasHood) {
-      _shape(
-        canvas,
-        _isKuromi
-            ? (Path()
-                ..moveTo(-16, -34)
-                ..quadraticBezierTo(-22, -27, -28, -28)
-                ..quadraticBezierTo(-18, -20, -9, -26)
-                ..lineTo(-15, -18)
-                ..quadraticBezierTo(0, -21, 2, -28)
-                ..quadraticBezierTo(12, -19, 20, -23)
-                ..lineTo(28, -28)
-                ..quadraticBezierTo(20, -27, 15, -34)
-                ..close())
-            : (Path()
-                ..moveTo(-17, -33)
-                ..lineTo(-21, -26)
-                ..quadraticBezierTo(-13, -20, -7, -24)
-                ..lineTo(-4, -31)
-                ..lineTo(5, -31)
-                ..lineTo(9, -23)
-                ..quadraticBezierTo(16, -23, 20, -27)
-                ..lineTo(16, -33)
-                ..close()),
-        _hood,
-        outline: _hoodEdge,
-      );
-      if (_isKuromi) {
-        for (final point in const [
-          Offset(-28, -28),
-          Offset(28, -28),
-          Offset(-15, -18),
-        ]) {
-          _shape(
-            canvas,
-            Path()..addOval(Rect.fromCircle(center: point, radius: 3.1)),
-            const Color(0xFFF1A3C6),
-            outline: _hoodEdge,
-            lineWidth: 1.3,
-          );
-        }
-      }
-      return;
-    }
     _shape(
       canvas,
       Path()
@@ -697,7 +710,7 @@ class HomeCompanionPainter extends CustomPainter {
     _shape(
       canvas,
       Path()..addOval(const Rect.fromLTWH(6, -31, 7, 6)),
-      _isBear ? const Color(0xFFB7D9DF) : const Color(0xFFE99AAF),
+      _scarfDot,
       outline: _roseShade,
       lineWidth: 1,
     );
@@ -706,7 +719,7 @@ class HomeCompanionPainter extends CustomPainter {
       Path()
         ..moveTo(-10, -32)
         ..quadraticBezierTo(-2, -29, 5, -31),
-      color: _isBear ? const Color(0xFFD8EEF1) : const Color(0xFFF6C9D3),
+      color: _scarfShine,
       width: 1.1,
     );
   }
@@ -724,26 +737,15 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.translate(0, -38);
     canvas.rotate(tilt);
     canvas.translate(0, 38);
-    if (_hasHood) {
-      _paintHoodHead(
-        canvas,
-        earSway: earSway,
-        happy: happy,
-        affection: affection,
-      );
-      canvas.save();
-      // Mắt hai bé mới rộng hơn và thấp hơn; kính vẫn phải ôm đúng mặt.
-      canvas.translate(-1.8, 2.3);
-      canvas.scale(1.22, 1);
-      _paintGlasses(canvas);
-      canvas.restore();
-      _paintHat(canvas);
-      canvas.restore();
-      return;
-    }
     if (_isBear) {
       _paintBearEar(canvas, Offset(-18, -63 + earSway * 3));
       _paintBearEar(canvas, Offset(19, -63 - earSway * 3));
+    } else if (_isMouse) {
+      _paintMouseEar(canvas, Offset(-20, -60 + earSway * 3));
+      _paintMouseEar(canvas, Offset(21, -60 - earSway * 3));
+    } else if (_isCat) {
+      _paintCatEar(canvas, -1, earSway);
+      _paintCatEar(canvas, 1, earSway);
     } else {
       _paintEar(canvas, const Offset(-10, -64), -0.16 - earSway, 28);
       _paintEar(canvas, const Offset(11, -64), 0.12 + earSway * 0.75, 30);
@@ -775,6 +777,17 @@ class HomeCompanionPainter extends CustomPainter {
         color: const Color(0xFF9F6D4C),
       );
     }
+    if (_isCat) {
+      // Dấu sao trên trán là nhận diện riêng của Mèo Mây.
+      _star(canvas, const Offset(1.6, -60.5), 3.8, const Color(0xFFFFD66B));
+      _star(
+        canvas,
+        const Offset(1.6, -60.5),
+        3.8,
+        const Color(0xFFD9A23B),
+        outlineOnly: true,
+      );
+    }
     final cheekPaint = Paint()
       ..color = _pink.withValues(alpha: 0.74 + affection * 0.16);
     canvas.drawOval(const Rect.fromLTWH(-22, -44.5, 12, 7), cheekPaint);
@@ -791,9 +804,19 @@ class HomeCompanionPainter extends CustomPainter {
         width: 0.65,
       );
     }
+    if (_isCat) _paintWhiskers(canvas, const [-2.0, 0.6, 3.2]);
+    if (_isMouse) _paintWhiskers(canvas, const [-1.2, 1.8]);
 
     final blinkPhase = showEffects
-        ? (motion.elapsedSeconds + (_isBear ? 1.3 : 0)) % 5.4
+        ? (motion.elapsedSeconds +
+                  (_isBear
+                      ? 1.3
+                      : _isMouse
+                      ? 2.2
+                      : _isCat
+                      ? 3.7
+                      : 0)) %
+              5.4
         : 0.0;
     final blink = blinkPhase > 4.97 && blinkPhase < 5.11;
     final eyeY = sweeping ? -48.0 : -49.0;
@@ -836,8 +859,8 @@ class HomeCompanionPainter extends CustomPainter {
         ..quadraticBezierTo(1.7, -45.2, 4, -43.6)
         ..quadraticBezierTo(2.8, -40.4, 1.7, -40.9)
         ..quadraticBezierTo(0.3, -41.4, -0.6, -43.6),
-      _isBear ? _eye : _rose,
-      outline: _isBear ? _eye : _rose,
+      _noseColor,
+      outline: _noseColor,
       lineWidth: 0.75,
     );
     _stroke(
@@ -850,6 +873,7 @@ class HomeCompanionPainter extends CustomPainter {
       width: 1.05,
       color: _eye,
     );
+    if (_isMouse) _paintMouseTeeth(canvas);
     _paintGlasses(canvas);
     _paintHat(canvas);
     _paintCareFace(canvas);
@@ -908,244 +932,96 @@ class HomeCompanionPainter extends CustomPainter {
     }
   }
 
-  /// Mũ và tai thuộc nhận diện nhân vật, không mất khi thay áo/phụ kiện.
-  void _paintHoodHead(
-    Canvas canvas, {
-    required double earSway,
-    required bool happy,
-    required double affection,
-  }) {
-    if (_isKuromi) {
-      // Tai mũ hề xòe ngang, không dùng đôi tai thỏ nhọn dựng sát nhau.
-      for (final side in [-1.0, 1.0]) {
-        canvas.save();
-        canvas.scale(side, 1);
-        canvas.translate(20, -72);
-        canvas.rotate(earSway * 0.45);
-        _shape(
-          canvas,
-          Path()
-            ..moveTo(-7, -2)
-            ..lineTo(-6, -12)
-            ..lineTo(19, -29)
-            ..lineTo(16, 1)
-            ..lineTo(7, 5)
-            ..close(),
-          _hood,
-          outline: _hoodEdge,
-          lineWidth: 2.1,
-        );
-        _shape(
-          canvas,
-          Path()..addOval(const Rect.fromLTWH(15, -33, 8, 8)),
-          _hood,
-          outline: _hoodEdge,
-          lineWidth: 2,
-        );
-        canvas.restore();
-      }
-    }
-    final sway = earSway * 12;
+  Color get _noseColor => _isBear
+      ? _eye
+      : _isMouse
+      ? const Color(0xFFEF97AE)
+      : _isCat
+      ? const Color(0xFFEF97AE)
+      : _rose;
+
+  /// Tai chuột tròn to hơn tai gấu, viền mảnh và lòng hồng gần kín tai.
+  void _paintMouseEar(Canvas canvas, Offset center) {
     _shape(
       canvas,
-      _isMelody
-          ? (Path()
-              ..moveTo(-31, -58)
-              ..quadraticBezierTo(-31, -70, -24, -76)
-              ..cubicTo(-20 + sway, -95, -16 + sway, -106, -8 + sway, -106)
-              ..cubicTo(2 + sway, -107, 2, -94, 1, -90)
-              ..cubicTo(8, -102, 25, -103, 30, -93)
-              ..quadraticBezierTo(35, -85, 28, -72)
-              ..cubicTo(41, -53, 40, -42, 28, -34)
-              ..cubicTo(14, -24, -27, -26, -33, -41)
-              ..quadraticBezierTo(-37, -48, -31, -58)
-              ..close())
-          : (Path()
-              ..moveTo(-31, -58)
-              ..cubicTo(-29, -87, 25, -88, 32, -61)
-              ..cubicTo(43, -35, 22, -27, 1, -28)
-              ..cubicTo(-23, -27, -41, -36, -31, -58)
-              ..close()),
-      _hood,
-      outline: _hoodEdge,
-      lineWidth: 2.2,
-    );
-    if (_isMelody) {
-      // Nếp tai gập liền mũ, không lộ đường ráp khi nghiêng hoặc nhảy.
-      _stroke(
-        canvas,
-        Path()
-          ..moveTo(1, -90)
-          ..cubicTo(-12, -75, 4 + sway * 0.2, -67, 18, -84),
-        color: _hoodEdge,
-        width: 1.8,
-      );
-    }
-    // Viền mũ ôm mặt; phần đỉnh chừa chỗ cho đầu lâu/hoa đặc trưng.
-    _shape(
-      canvas,
-      _isKuromi
-          ? (Path()
-              ..moveTo(-28, -46)
-              ..quadraticBezierTo(-26, -54, -17, -56)
-              ..lineTo(0, -50)
-              ..lineTo(17, -56)
-              ..quadraticBezierTo(28, -54, 29, -43)
-              ..cubicTo(31, -25, -29, -25, -28, -46)
-              ..close())
-          : (Path()..addOval(const Rect.fromLTWH(-28, -57, 56, 28))),
+      Path()..addOval(Rect.fromCircle(center: center, radius: 12)),
       _cream,
-      outline: _hoodEdge,
-      lineWidth: 1.8,
+      shade: _creamShade,
+      lineWidth: 1.45,
     );
-    if (_isKuromi) {
-      const skull = Color(0xFFF2A3C7);
-      canvas.drawOval(
-        const Rect.fromLTWH(-10, -73, 20, 16),
-        Paint()..color = skull,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          const Rect.fromLTWH(-5, -61, 10, 7),
-          const Radius.circular(0.6),
-        ),
-        Paint()..color = skull,
-      );
-      for (final x in [-4.4, 4.4]) {
-        canvas.drawOval(
-          Rect.fromCenter(center: Offset(x, -64), width: 3.8, height: 5),
-          Paint()..color = _hoodEdge,
-        );
-      }
-      _stroke(
-        canvas,
-        Path()
-          ..moveTo(-1.8, -58)
-          ..lineTo(-1.8, -54)
-          ..moveTo(1.8, -58)
-          ..lineTo(1.8, -54),
-        color: _hood,
-        width: 0.8,
-      );
-    } else {
-      var flower = Path();
-      for (var i = 0; i < 5; i++) {
-        final angle = i * math.pi * 2 / 5;
-        final petal = Path()
-          ..addOval(
-            Rect.fromCircle(
-              center: Offset(
-                -25 + math.cos(angle) * 4.7,
-                -73 + math.sin(angle) * 4.7,
-              ),
-              radius: 4.1,
-            ),
-          );
-        flower = i == 0
-            ? petal
-            : Path.combine(PathOperation.union, flower, petal);
-      }
-      _shape(canvas, flower, _cream, outline: _hoodEdge, lineWidth: 1.4);
-      _shape(
-        canvas,
-        Path()..addOval(const Rect.fromLTWH(-28, -76, 6, 6)),
-        const Color(0xFFF5D769),
-        outline: _hoodEdge,
-        lineWidth: 1,
-      );
-    }
-    final blink =
-        showEffects &&
-        (motion.elapsedSeconds + (_isKuromi ? 2.2 : 3.7)) % 5.4 > 5.2;
-    const ink = Color(0xFF302B34);
-    for (final x in [-15.0, 15.0]) {
-      if (blink || happy || _dozing) {
-        _stroke(
-          canvas,
-          Path()
-            ..moveTo(x - 3.2, -44)
-            ..quadraticBezierTo(x, -47, x + 3.2, -44),
-          color: ink,
-          width: 1.6,
-        );
-      } else {
-        if (_isKuromi) {
-          final side = x.sign;
-          canvas.save();
-          canvas.translate(x, -44);
-          canvas.scale(side, 1);
-          canvas.drawPath(
-            Path()
-              ..moveTo(-4, -2)
-              ..lineTo(4, -6)
-              ..quadraticBezierTo(5, 5, 0, 5)
-              ..quadraticBezierTo(-5, 5, -4, -2)
-              ..close(),
-            Paint()..color = ink,
-          );
-          canvas.restore();
-        } else {
-          canvas.drawOval(
-            Rect.fromCenter(center: Offset(x, -46), width: 5.7, height: 8.5),
-            Paint()..color = ink,
-          );
-        }
-      }
-      if (_isKuromi) {
-        final side = x < 0 ? -1.0 : 1.0;
-        _stroke(
-          canvas,
-          Path()
-            ..moveTo(x + side * 3, -48)
-            ..lineTo(x + side * 6, -51)
-            ..moveTo(x + side * 1.5, -47)
-            ..lineTo(x + side * 5, -49.5),
-          color: ink,
-          width: 1.2,
-        );
-      }
-    }
-    for (final x in [-22.0, 22.0]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset(x, -38), width: 6, height: 3),
-        Paint()
-          ..color = const Color(
-            0xFFF4B6C7,
-          ).withValues(alpha: 0.15 + affection * 0.5),
-      );
-    }
+    canvas.drawCircle(
+      center + const Offset(0, 0.8),
+      8.2,
+      Paint()..color = const Color(0xFFF6BFCB),
+    );
+  }
+
+  /// Tai mèo tam giác bo tròn, lòng tai hồng, đứng hơi chếch ra hai bên.
+  void _paintCatEar(Canvas canvas, double side, double earSway) {
+    canvas.save();
+    canvas.translate(side * 15.5, -60.5);
+    canvas.rotate(side * 0.34 + earSway * 0.3);
     _shape(
       canvas,
-      Path()..addOval(
-        _isKuromi
-            ? const Rect.fromLTWH(-2.8, -40, 5.6, 4.8)
-            : const Rect.fromLTWH(-2.8, -42, 5.6, 3.7),
-      ),
-      _isKuromi ? const Color(0xFFF0A1C4) : const Color(0xFFF2D763),
-      outline: ink,
-      lineWidth: 1.1,
+      Path()
+        ..moveTo(-8, 3)
+        ..quadraticBezierTo(-7.4, -8.5, -1.4, -14.6)
+        ..quadraticBezierTo(0.3, -16, 1.8, -14.4)
+        ..quadraticBezierTo(7.2, -7, 8, 3)
+        ..close(),
+      _cream,
+      shade: _creamShade,
+      lineWidth: 1.55,
     );
-    if (_isKuromi) {
-      _shape(
-        canvas,
-        Path()
-          ..moveTo(-3.8, -33.5)
-          ..quadraticBezierTo(0, -31.5, 4.5, -35)
-          ..quadraticBezierTo(2, -28, -3.8, -33.5)
-          ..close(),
-        const Color(0xFFF0A1C4),
-        outline: ink,
-        lineWidth: 0.9,
-      );
-    } else {
-      _stroke(
-        canvas,
-        Path()
-          ..moveTo(0, -35.5)
-          ..lineTo(0, -34),
-        color: ink,
-        width: 1,
-      );
+    canvas.drawPath(
+      Path()
+        ..moveTo(-4.4, 1.2)
+        ..quadraticBezierTo(-4, -5.6, -0.7, -9.6)
+        ..quadraticBezierTo(3.6, -4.4, 4.4, 1.2)
+        ..close(),
+      Paint()..color = const Color(0xFFF6B7C8),
+    );
+    canvas.restore();
+  }
+
+  /// Hai răng cửa trắng nhỏ dưới miệng, dấu hiệu nhận ra chuột ở cỡ nhỏ.
+  void _paintMouseTeeth(Canvas canvas) {
+    final teeth = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(-0.6, -38.6, 4.6, 3.4),
+      const Radius.circular(0.9),
+    );
+    canvas.drawRRect(teeth, Paint()..color = Colors.white);
+    _stroke(canvas, Path()..addRRect(teeth), color: _eye, width: 0.7);
+    _stroke(
+      canvas,
+      Path()
+        ..moveTo(1.7, -38.4)
+        ..lineTo(1.7, -35.4),
+      color: _eye,
+      width: 0.6,
+    );
+  }
+
+  /// Ria mỗi bên, mảnh và nhạt để không làm rối mặt khi thu nhỏ.
+  void _paintWhiskers(Canvas canvas, List<double> offsets) {
+    final paintColor = _outline.withValues(alpha: 0.7);
+    for (final side in const [-1.0, 1.0]) {
+      final x0 = side < 0 ? -19.0 : 22.4;
+      for (final dy in offsets) {
+        _stroke(
+          canvas,
+          Path()
+            ..moveTo(x0, -41.6 + dy * 0.4)
+            ..quadraticBezierTo(
+              x0 + side * 5,
+              -42.4 + dy * 0.7,
+              x0 + side * 9.5,
+              -43 + dy,
+            ),
+          color: paintColor,
+          width: 0.8,
+        );
+      }
     }
   }
 
@@ -1901,7 +1777,7 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = color ?? (_hasHood ? _hoodEdge : _outline)
+        ..color = color ?? _outline
         ..style = PaintingStyle.stroke
         ..strokeWidth = width
         ..strokeCap = StrokeCap.round

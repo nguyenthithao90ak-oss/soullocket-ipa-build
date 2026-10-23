@@ -6,7 +6,6 @@ import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../core/sl_theme.dart';
@@ -16,6 +15,7 @@ import '../../utils/services/single_match_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/single_match_age_policy.dart';
 import 'single_match_settings_screen.dart';
+import 'single_match_messenger_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../visitors/visitor_profile_screen.dart';
 import 'tabs/single_match_chats_tab.dart';
@@ -719,6 +719,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     }
 
     final startedAt = DateTime.now().millisecondsSinceEpoch;
+    var invitationCreated = false;
     setState(() => _callingHouseId = candidate.houseId);
     try {
       await slPush(
@@ -728,22 +729,27 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           targetHouseId: candidate.houseId,
           targetName: candidate.displayName,
           targetAvatarUrl: candidate.avatarUrl,
+          callerName: _displayName,
           isVideo: isVideo,
-          onRoomCreated: (roomId) => _service.attachOutgoingCallMetadata(
-            roomId: roomId,
-            callerHouseId: widget.houseId,
-            targetHouseId: candidate.houseId,
-            callerName: _displayName,
-            callerAvatar: _avatarUrl,
-            isVideo: isVideo,
-            source: 'single_match',
-          ),
+          onRoomCreated: (roomId) async {
+            await _service.attachOutgoingCallMetadata(
+              roomId: roomId,
+              callerHouseId: widget.houseId,
+              targetHouseId: candidate.houseId,
+              callerName: _displayName,
+              callerAvatar: _avatarUrl,
+              isVideo: isVideo,
+              source: 'single_match',
+            );
+            invitationCreated = true;
+          },
         ),
       );
     } finally {
       final endedAt = DateTime.now().millisecondsSinceEpoch;
       try {
-        await _service
+        if (invitationCreated) {
+          await _service
             .logHistory(
               houseId: widget.houseId,
               action: isVideo ? 'video_call' : 'audio_call',
@@ -753,11 +759,13 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               goal: candidate.goal,
               startedAt: startedAt,
               endedAt: endedAt,
-              durationSeconds: ((endedAt - startedAt) / 1000).round(),
+              // Thời gian ở trong route không chứng minh đã bắt máy.
+              durationSeconds: 0,
               compatibilityScore: scored.score,
-              note: L10nService().translate('match_khitottabg_083000'),
+              note: L10nService().translate(isVideo ? 'sm_video_invite' : 'sm_audio_invite'),
             )
             .timeout(const Duration(seconds: 8));
+        }
       } catch (error) {
         debugPrint(
           '[SingleMatch] log call history failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('match_khngthghil_443f52')).message}',
@@ -773,38 +781,37 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   Widget build(BuildContext context) {
     final palette = SingleMatchHubPalette.of(context);
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    if (!_isLoading && _loadError == null && SingleMatchAgePolicy.isAdult(_savedDob)) {
+      return SingleMatchMessengerScreen(
+        houseId: widget.houseId,
+        displayName: _displayName,
+        avatarUrl: _avatarUrl,
+        preferences: _savedPreferences,
+        myAge: _ageFromDob(_savedDob),
+        onSettings: _openSettings,
+        onCall: (candidate, isVideo) => _launchCall(
+          _ScoredCandidate(
+            candidate: candidate,
+            score: 0,
+            reasons: const [],
+            sharedTags: const [],
+            canAudioCall: _savedPreferences.allowAudioCalls && candidate.allowAudioCalls,
+            canVideoCall: _savedPreferences.allowVideoCalls && candidate.allowVideoCalls,
+            previewText: candidate.intro,
+          ),
+          isVideo: isVideo,
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: palette.canvas,
+      appBar: AppBar(
+        title: Text(context.tr('chat_title')),
+        actions: [IconButton(onPressed: _openSettings,
+          tooltip: context.tr('settings'), icon: const Icon(Icons.settings_rounded))],
+      ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final compactHeight =
-                constraints.maxHeight < 680 ||
-                MediaQuery.textScalerOf(context).scale(14) > 20;
-            final compactWidth = constraints.maxWidth < 380;
-
-            return Column(
-              children: <Widget>[
-                _buildTopBar(),
-                if (!compactHeight) _buildHeaderCard(),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    compactWidth ? 12 : 18,
-                    compactHeight ? 8 : 12,
-                    compactWidth ? 12 : 18,
-                    0,
-                  ),
-                  child: SingleMatchHubTabs(
-                    controller: _tabController,
-                    labels: [
-                      context.tr('match_ghpngunhin_1ee82f'),
-                      context.tr('chat_tab'),
-                      context.tr('ui_single_call_b25622'),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: _isLoading
+        child: _isLoading
                       ? Center(
                           child: Semantics(
                             label: context.tr('loading'),
@@ -822,31 +829,18 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                         )
                       : _loadError != null
                       ? _buildLoadError()
-                      : !SingleMatchAgePolicy.isAdult(_savedDob)
-                      ? SingleMatchAgeGate(
+                      : SingleMatchAgeGate(
                           dob: _myDob,
                           saving: _isSaving,
                           onPickDob: _pickDob,
                           onSave: _myDob != _savedDob ? _savePreferences : null,
-                        )
-                      : TabBarView(
-                          physics: const SLPagePhysics(),
-                          controller: _tabController,
-                          children: <Widget>[
-                            _buildDiscoveryTab(),
-                            _buildChatsTab(),
-                            _buildCallsTab(),
-                          ],
                         ),
-                ),
-              ],
-            );
-          },
-        ),
       ),
     );
   }
 
+  // Giữ helper legacy để không xóa phần sửa đang có; màn mới không dùng các khối này.
+  // ignore: unused_element
   Widget _buildTopBar() {
     return _SingleMatchTopBar(
       onBack: () => Navigator.pop(context),
@@ -855,6 +849,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildHeaderCard() {
     final ageText = _myAge == null
         ? L10nService().translate('match_chactui_a686b2')
@@ -879,6 +874,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildDiscoveryTab() {
     return StreamBuilder<_SingleMatchDiscoverySnapshot>(
       stream: _discoveryStream,
@@ -1094,10 +1090,12 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildChatsTab() {
     return SingleMatchChatsTab(houseId: widget.houseId);
   }
 
+  // ignore: unused_element
   Widget _buildCallsTab() {
     return SingleMatchCallsTab(houseId: widget.houseId);
   }

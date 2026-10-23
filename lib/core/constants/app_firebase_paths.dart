@@ -37,6 +37,10 @@ class AppFirebasePaths {
       '${houseDoc(houseId)}/presence';
   static String houseMembers(String houseId) => '${houseDoc(houseId)}/members';
   static String housePet(String houseId) => '${houseDoc(houseId)}/pet';
+
+  /// Trạm Mây chung của hai bạn (Thỏ/Gấu, hũ Hạt, đồ trang trí).
+  static String housePetCare(String houseId) =>
+      '${houseDoc(houseId)}/pet_care';
   static String houseBlockedUsers(String houseId) =>
       '${houseDoc(houseId)}/blocked_users';
   static String houseLoginHistory(String houseId) =>

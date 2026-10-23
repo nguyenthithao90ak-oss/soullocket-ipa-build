@@ -5,7 +5,6 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -245,8 +244,9 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       }
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted || _isLoading) return;
+        final lookupUser = FirebaseAuth.instance.currentUser;
         try {
-          final user = FirebaseAuth.instance.currentUser;
+          final user = lookupUser;
           final existingHouseId = user != null
               ? await _recoverExistingHouseId(user)
               : await _houseService.getCurrentHouseId(preferFresh: true);
@@ -283,8 +283,12 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           debugPrint('[HouseOnboarding] Auto-recovery failed: $error');
         }
 
+        if (!mounted ||
+            FirebaseAuth.instance.currentUser?.uid != lookupUser?.uid) {
+          return;
+        }
         debugPrint('[HouseOnboarding] autoCreateOnly -> _createHouse queued');
-        _createHouse();
+        _createHouse(existingHouseAlreadyChecked: true);
       });
       return;
     }
@@ -792,6 +796,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
   Future<void> _createHouse({
     String? customHouseId,
+    bool existingHouseAlreadyChecked = false,
   }) async {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -876,9 +881,10 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
     var handedOffToParent = false;
     try {
-      final existingHouseId = await _houseService.getCurrentHouseId(
-        preferFresh: true,
-      );
+      // Tự tạo đã dò nhà khi nạp bản nháp; không lặp lại cả lượt đọc mạng.
+      final existingHouseId = existingHouseAlreadyChecked
+          ? null
+          : await _houseService.getCurrentHouseId(preferFresh: true);
       if (existingHouseId != null && existingHouseId.isNotEmpty) {
         debugPrint(
           '[HouseOnboarding] _createHouse found existing house: $existingHouseId',
@@ -1122,85 +1128,16 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
   Future<String?> _recoverExistingHouseId(User user) async {
     final uid = user.uid;
-
+    if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
     try {
-      final h1 = await _houseService.getCurrentHouseId(preferFresh: true);
-      if (h1 != null && h1.isNotEmpty) return h1;
+      // Service đã kiểm tra mapping chính, legacy và cache cùng UID. Không
+      // dò lại cả user/houses hay email: vừa trùng việc vừa bị rules chặn.
+      final houseId = await _houseService.getCurrentHouseId(preferFresh: true);
+      if (FirebaseAuth.instance.currentUser?.uid != uid) return null;
+      return houseId;
     } catch (error) {
       debugPrint('[HouseOnboarding] Fresh house lookup failed: $error');
     }
-
-    try {
-      final h2 = await _houseService.getCurrentHouseId(preferFresh: false);
-      if (h2 != null && h2.isNotEmpty) return h2;
-    } catch (error) {
-      debugPrint('[HouseOnboarding] Cached house lookup failed: $error');
-    }
-
-    try {
-      final snap = await FirebaseDatabase.instance
-          .ref('users/$uid')
-          .get()
-          .timeout(const Duration(seconds: 5));
-      if (snap.exists && snap.value is Map) {
-        final val = snap.value as Map;
-        final h3 = (val['houseId'] ?? val['house_id'])?.toString().trim();
-        if (h3 != null && h3.isNotEmpty) return h3;
-      }
-    } catch (error) {
-      debugPrint('[HouseOnboarding] RTDB user lookup failed: $error');
-    }
-
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get()
-          .timeout(const Duration(seconds: 4));
-      if (doc.exists && doc.data() != null) {
-        final data = doc.data()!;
-        final h4 = (data['houseId'] ?? data['house_id'])?.toString().trim();
-        if (h4 != null && h4.isNotEmpty) return h4;
-      }
-    } catch (error) {
-      debugPrint('[HouseOnboarding] Firestore user lookup failed: $error');
-    }
-
-    try {
-      final ownerSnap = await FirebaseDatabase.instance
-          .ref('houses')
-          .orderByChild('owner_uid')
-          .equalTo(uid)
-          .limitToFirst(1)
-          .get()
-          .timeout(const Duration(seconds: 5));
-      if (ownerSnap.exists && ownerSnap.children.isNotEmpty) {
-        final h5 = ownerSnap.children.first.key?.trim();
-        if (h5 != null && h5.isNotEmpty) return h5;
-      }
-    } catch (error) {
-      debugPrint('[HouseOnboarding] Owner house lookup failed: $error');
-    }
-
-    try {
-      final userEmail = user.email?.trim().toLowerCase();
-      if (userEmail != null && userEmail.isNotEmpty) {
-        final emailQuery = await FirebaseDatabase.instance
-            .ref('houses')
-            .orderByChild('security/email')
-            .equalTo(userEmail)
-            .limitToFirst(1)
-            .get()
-            .timeout(const Duration(seconds: 5));
-        if (emailQuery.exists && emailQuery.children.isNotEmpty) {
-          final h6 = emailQuery.children.first.key?.trim();
-          if (h6 != null && h6.isNotEmpty) return h6;
-        }
-      }
-    } catch (error) {
-      debugPrint('[HouseOnboarding] Recovery email lookup failed: $error');
-    }
-
     return null;
   }
 

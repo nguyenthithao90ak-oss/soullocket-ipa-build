@@ -799,28 +799,8 @@ class HouseService {
         debugPrint('[HouseService] Firestore houseId lookup error: $e');
       }
 
-      try {
-        final ownerQuerySnap = await _dbRef
-            .child('houses')
-            .orderByChild('owner_uid')
-            .equalTo(uid)
-            .limitToFirst(1)
-            .get()
-            .timeout(const Duration(seconds: 4));
-        if (_auth.currentUser?.uid != uid) return null;
-        if (ownerQuerySnap.exists && ownerQuerySnap.children.isNotEmpty) {
-          final foundHouseId = ownerQuerySnap.children.first.key?.trim() ?? '';
-          if (foundHouseId.isNotEmpty) {
-            await _dbRef.child('users/$uid').update({'houseId': foundHouseId});
-            if (!await _cacheHouseIdForSession(uid, foundHouseId, prefs)) {
-              return null;
-            }
-            return foundHouseId;
-          }
-        }
-      } catch (error) {
-        debugPrint('[HouseService] Fallback house query failed: $error');
-      }
+      // Rules chỉ cho admin truy vấn cả houses. Tài khoản chưa có mapping
+      // chuyển sang tạo nhà; server sẽ kiểm tra lại nhà đã có theo UID.
     } on TimeoutException {
       // Fallback cache below handles slow network without spamming logs.
     } catch (e) {

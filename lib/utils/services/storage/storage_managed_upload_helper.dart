@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'storage_upload_result.dart';
+import 'storage_image_optimizer.dart';
 
 typedef StorageCurrentUidProvider = String Function();
 typedef StorageContentTypeDetector =
@@ -67,37 +68,17 @@ class StorageManagedUploadHelper {
         fallback: 'image/webp',
       );
 
-      if (!kIsWeb && request.file.path.isNotEmpty && fileExtension != '.gif') {
-        try {
-          final tempDir = await getTemporaryDirectory();
-          tempCompressedPath = p.join(
-            tempDir.path,
-            'sl_upload_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
-          );
-
-          final compressedFile = await FlutterImageCompress.compressAndGetFile(
-            request.file.path,
-            tempCompressedPath,
-            minWidth: request.minWidth,
-            minHeight: request.minHeight,
-            quality: request.quality,
-            format: CompressFormat.webp,
-          );
-
-          if (compressedFile != null) {
-            uploadFile = compressedFile;
-            fileExtension = '.webp';
-            finalContentType = 'image/webp';
-          } else {
-            tempCompressedPath = null;
-          }
-        } catch (compressError) {
-          debugPrint(
-            'Lỗi khi nén ảnh WebP: ${AppErrorMapper.resolve(compressError, fallbackMessage: 'Không thể nén ảnh WebP.').message}',
-          );
-          tempCompressedPath = null;
-        }
-      }
+      final prepared = await const StorageImageOptimizer().prepare(
+        request.file,
+        contentType: finalContentType,
+        minWidth: request.minWidth,
+        minHeight: request.minHeight,
+        quality: request.quality,
+      );
+      uploadFile = prepared.file;
+      finalContentType = prepared.contentType;
+      tempCompressedPath = prepared.temporaryPath;
+      if (tempCompressedPath != null) fileExtension = '.webp';
 
       if (fileExtension.isEmpty) {
         fileExtension = p.extension(uploadFile.name).toLowerCase();

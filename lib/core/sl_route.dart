@@ -38,12 +38,13 @@ Future<T?> slPush<T>(
   BuildContext context,
   Widget screen, {
   bool fullscreenDialog = false,
+  String? localGuideScreenType,
 }) {
   return slPushRoute<T>(
     context,
     SLRoute<T>(builder: (_) => screen, fullscreenDialog: fullscreenDialog),
     identity: _SlRouteIdentity(screen.runtimeType, screen.key),
-    localGuideScreenType: screen.runtimeType.toString(),
+    localGuideScreenType: localGuideScreenType ?? screen.runtimeType.toString(),
   );
 }
 
@@ -80,16 +81,17 @@ Future<T?> slPushRoute<T>(
   }
   final gate = gates.putIfAbsent(identity, SingleOpenGate.new);
   final entryGate = openingGate;
+  // Màn xem trước/route tùy chỉnh chưa có catalog vẫn phải che ngữ cảnh
+  // tiện ích bên dưới, không để trợ lý dùng nhầm hướng dẫn của màn cha.
+  final guideScreenType = localGuideScreenType ?? route.runtimeType.toString();
   var didTrackLocalGuideRoute = false;
   return gate
       .runValue<T>(() async {
         late Future<T?> result;
         await entryGate.run(() async {
           result = navigator.push<T>(route);
-          if (localGuideScreenType != null) {
-            LocalGuideRouteTracker.instance.didPushScreen(localGuideScreenType);
-            didTrackLocalGuideRoute = true;
-          }
+          LocalGuideRouteTracker.instance.didPushScreen(guideScreenType);
+          didTrackLocalGuideRoute = true;
           await _waitForRouteEntry(route);
         });
         final value = await result;
@@ -100,7 +102,7 @@ Future<T?> slPushRoute<T>(
       })
       .whenComplete(() {
         if (didTrackLocalGuideRoute) {
-          LocalGuideRouteTracker.instance.didPopScreen(localGuideScreenType!);
+          LocalGuideRouteTracker.instance.didPopScreen(guideScreenType);
         }
         if (!gate.isBusy && identical(gates![identity], gate)) {
           gates.remove(identity);

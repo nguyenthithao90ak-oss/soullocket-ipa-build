@@ -127,6 +127,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   _RecommendedMove? _recommendedMove;
   _PreparedSoulRun? _preparedMenuRun;
   _SoulPieceOption? _draggingPiece;
+  int? _dragPointerId;
   _SoulBlockPerformanceProfile _performanceProfile =
       _SoulBlockPerformanceProfile.mid;
   BannerAd? _bannerAd;
@@ -336,6 +337,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
+      _cancelDrag();
       _appActive = false;
       _pausedAtMs = DateTime.now().millisecondsSinceEpoch;
       _autoTrayShuffleTimer?.cancel();
@@ -606,11 +608,31 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _draggedPieceOverlay = null;
     _dragOverlayWidth = 0;
     _dragOverlayHeight = 0;
+    _dragPointerId = null;
     if (notify && hadDragVisualState) {
       _markDragVisualDirty();
       _markTrayVisualDirty();
       _markDragOverlayDirty();
     }
+  }
+
+  void _trackDragPointerDown(PointerDownEvent event) {
+    _dragPointerId ??= event.pointer;
+  }
+
+  void _trackDragPointerUp(PointerUpEvent event) {
+    if (_dragPointerId != event.pointer) return;
+    _dragPointerId = null;
+    if (_draggingPiece != null) {
+      // Chỉ PointerUp của ngón bắt đầu kéo mới được chốt nước đi.
+      unawaited(_endDrag());
+    }
+  }
+
+  void _trackDragPointerCancel(PointerCancelEvent event) {
+    if (_dragPointerId != event.pointer) return;
+    _dragPointerId = null;
+    _cancelDrag();
   }
 
   void _returnToMenuFromSettings() {
@@ -850,232 +872,20 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   List<List<_SoulTile?>> _createOpeningBoard() {
-    final List<List<_SoulTile?>> board = _createEmptyBoard();
-
-    void placeCells(List<Point<int>> cells, int toneIndex, int pieceId) {
-      for (final Point<int> cell in cells) {
-        if (cell.y >= 0 &&
-            cell.y < _boardSize &&
-            cell.x >= 0 &&
-            cell.x < _boardSize) {
-          board[cell.y][cell.x] = _SoulTile(
-            toneIndex: toneIndex,
-            pieceId: pieceId,
-            placedTurn: 0,
-          );
-        }
-      }
-    }
-
-    // Smart opening: Row/col gần đầy để người dùng nổ nhanh
-    // Mỗi pattern có 4 nhóm khối, tổng ~20-24 ô được lấp
-    final List<List<List<Point<int>>>>
-    smartOpeningPatterns = <List<List<Point<int>>>>[
-      // Pattern A: Row 7 (6/8) + Col 7 (6/8) + row 0 (6/8) → user đặt 3 ô là nổ
-      <List<Point<int>>>[
-        <Point<int>>[
-          const Point<int>(0, 7),
-          const Point<int>(1, 7),
-          const Point<int>(2, 7),
-          const Point<int>(3, 7),
-          const Point<int>(4, 7),
-          const Point<int>(5, 7),
-        ],
-        <Point<int>>[
-          const Point<int>(7, 0),
-          const Point<int>(7, 1),
-          const Point<int>(7, 2),
-          const Point<int>(7, 3),
-          const Point<int>(7, 4),
-          const Point<int>(7, 5),
-        ],
-        <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(1, 0),
-          const Point<int>(2, 0),
-          const Point<int>(3, 0),
-          const Point<int>(4, 0),
-          const Point<int>(5, 0),
-        ],
-        <Point<int>>[
-          const Point<int>(2, 3),
-          const Point<int>(3, 3),
-          const Point<int>(2, 4),
-          const Point<int>(3, 4),
-        ],
-      ],
-      // Pattern B: 2 rows gần đầy + cluster trung tâm
-      <List<Point<int>>>[
-        <Point<int>>[
-          const Point<int>(0, 6),
-          const Point<int>(1, 6),
-          const Point<int>(2, 6),
-          const Point<int>(4, 6),
-          const Point<int>(5, 6),
-          const Point<int>(6, 6),
-        ],
-        <Point<int>>[
-          const Point<int>(0, 7),
-          const Point<int>(1, 7),
-          const Point<int>(2, 7),
-          const Point<int>(3, 7),
-          const Point<int>(5, 7),
-          const Point<int>(6, 7),
-        ],
-        <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(0, 1),
-          const Point<int>(0, 2),
-          const Point<int>(0, 3),
-          const Point<int>(0, 5),
-          const Point<int>(0, 6),
-        ],
-        <Point<int>>[
-          const Point<int>(3, 3),
-          const Point<int>(4, 3),
-          const Point<int>(3, 4),
-          const Point<int>(4, 4),
-        ],
-      ],
-      // Pattern C: Col 0 (6/8) + Col 7 (5/8) + row 7 gần đầy
-      <List<Point<int>>>[
-        <Point<int>>[
-          const Point<int>(7, 0),
-          const Point<int>(7, 1),
-          const Point<int>(7, 2),
-          const Point<int>(7, 5),
-          const Point<int>(7, 6),
-        ],
-        <Point<int>>[
-          const Point<int>(0, 7),
-          const Point<int>(0, 6),
-          const Point<int>(0, 5),
-          const Point<int>(0, 2),
-          const Point<int>(0, 1),
-          const Point<int>(0, 0),
-        ],
-        <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(1, 0),
-          const Point<int>(2, 0),
-          const Point<int>(3, 0),
-          const Point<int>(5, 0),
-          const Point<int>(6, 0),
-        ],
-        <Point<int>>[
-          const Point<int>(4, 3),
-          const Point<int>(5, 3),
-          const Point<int>(4, 4),
-          const Point<int>(5, 4),
-        ],
-      ],
-      // Pattern D: Diagonal clusters + 2 near-full rows
-      <List<Point<int>>>[
-        <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(1, 0),
-          const Point<int>(2, 0),
-          const Point<int>(3, 0),
-          const Point<int>(4, 0),
-          const Point<int>(6, 0),
-        ],
-        <Point<int>>[
-          const Point<int>(1, 7),
-          const Point<int>(2, 7),
-          const Point<int>(3, 7),
-          const Point<int>(4, 7),
-          const Point<int>(5, 7),
-          const Point<int>(6, 7),
-        ],
-        <Point<int>>[
-          const Point<int>(2, 2),
-          const Point<int>(3, 2),
-          const Point<int>(2, 3),
-        ],
-        <Point<int>>[
-          const Point<int>(5, 5),
-          const Point<int>(6, 5),
-          const Point<int>(6, 4),
-          const Point<int>(5, 4),
-        ],
-      ],
-      // Pattern E: 3 near-full cols spread
-      <List<Point<int>>>[
-        <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(0, 1),
-          const Point<int>(0, 2),
-          const Point<int>(0, 4),
-          const Point<int>(0, 5),
-          const Point<int>(0, 6),
-        ],
-        <Point<int>>[
-          const Point<int>(4, 0),
-          const Point<int>(4, 1),
-          const Point<int>(4, 2),
-          const Point<int>(4, 4),
-          const Point<int>(4, 5),
-          const Point<int>(4, 6),
-        ],
-        <Point<int>>[
-          const Point<int>(7, 0),
-          const Point<int>(7, 1),
-          const Point<int>(7, 2),
-          const Point<int>(7, 4),
-          const Point<int>(7, 5),
-          const Point<int>(7, 6),
-        ],
-        <Point<int>>[
-          const Point<int>(2, 3),
-          const Point<int>(3, 3),
-          const Point<int>(5, 3),
-          const Point<int>(6, 3),
-        ],
-      ],
-    ];
-
-    final List<List<Point<int>>> selectedPattern =
-        smartOpeningPatterns[_random.nextInt(smartOpeningPatterns.length)];
-    for (int index = 0; index < selectedPattern.length; index++) {
-      placeCells(
-        selectedPattern[index],
-        index % _kSoulTones.length,
-        -(index + 1),
-      );
-    }
-
-    final targetOpeningCells = 40 + _random.nextInt(5);
-    var filledCells = 0;
-    for (var row = 0; row < _boardSize; row++) {
-      for (var col = 0; col < _boardSize; col++) {
-        if (board[row][col] != null) filledCells++;
-      }
-    }
-
-    var guard = 0;
-    while (filledCells < targetOpeningCells && guard < 240) {
-      guard++;
-      final row = _random.nextInt(_boardSize);
-      final col = _random.nextInt(_boardSize);
-      if (board[row][col] != null) continue;
-
-      var rowCount = 0;
-      var colCount = 0;
-      for (var i = 0; i < _boardSize; i++) {
-        if (board[row][i] != null) rowCount++;
-        if (board[i][col] != null) colCount++;
-      }
-      if (rowCount >= _boardSize - 1 || colCount >= _boardSize - 1) continue;
-
-      board[row][col] = _SoulTile(
-        toneIndex: (row + col) % _kSoulTones.length,
-        pieceId: -100 - filledCells,
-        placedTurn: 0,
-      );
-      filledCells++;
-    }
-
-    return board;
+    final mask = _createOpeningMask();
+    return List.generate(
+      _boardSize,
+      (row) => List.generate(
+        _boardSize,
+        (col) => mask[row][col]
+            ? _SoulTile(
+                toneIndex: (row + col) % _kSoulTones.length,
+                pieceId: -1 - row * _boardSize - col,
+                placedTurn: 0,
+              )
+            : null,
+      ),
+    );
   }
 
   List<List<_SoulTile?>> _cloneBoard(List<List<_SoulTile?>> board) {
@@ -1218,6 +1028,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     if (_isGameOver ||
         _isBusy ||
         _isShowingFullscreenAd ||
+        _draggingPiece != null ||
         _view != _SoulGameView.gameplay) {
       return;
     }
@@ -1435,22 +1246,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     // Giữ ảnh ô trước khi bom xóa dữ liệu để mảnh vỡ khớp với bàn.
     final burstSource = _cloneBoard(placedBoard);
-    final bombClearedCells = <Point<int>>[];
-    if (piece.isBomb) {
-      final int centerRow = row + piece.template.height ~/ 2;
-      final int centerCol = col + piece.template.width ~/ 2;
-      for (int r = centerRow - 1; r <= centerRow + 1; r++) {
-        for (int c = centerCol - 1; c <= centerCol + 1; c++) {
-          if (r >= 0 && r < _boardSize && c >= 0 && c < _boardSize) {
-            if (placedBoard[r][c] != null) {
-              placedBoard[r][c] = null;
-              bombClearedCells.add(Point<int>(c, r));
-            }
-          }
-        }
-      }
-    }
-
     final clearedRows = <int>[];
     final clearedCols = <int>[];
     for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
@@ -1468,6 +1263,24 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
       if (full) {
         clearedCols.add(boardCol);
+      }
+    }
+
+    // Ghi nhận hàng/cột đầy trước khi bom nổ để mảnh bom lấp ô cuối
+    // vẫn tạo chuỗi và thưởng nhiều hàng như người chơi nhìn thấy.
+    final bombClearedCells = <Point<int>>[];
+    if (piece.isBomb) {
+      final int centerRow = row + piece.template.height ~/ 2;
+      final int centerCol = col + piece.template.width ~/ 2;
+      for (int r = centerRow - 1; r <= centerRow + 1; r++) {
+        for (int c = centerCol - 1; c <= centerCol + 1; c++) {
+          if (r >= 0 && r < _boardSize && c >= 0 && c < _boardSize) {
+            if (placedBoard[r][c] != null) {
+              placedBoard[r][c] = null;
+              bombClearedCells.add(Point<int>(c, r));
+            }
+          }
+        }
       }
     }
 

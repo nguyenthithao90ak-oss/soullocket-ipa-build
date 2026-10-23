@@ -392,12 +392,19 @@ class _MainHomeHeroCountdownCircleState
   bool _isProUser = false;
   int _dailyExplosionCount = 0;
   bool _showFirstTimeHint = false;
+  String _wallpaperUrl = '';
+  bool? _wallpaperIsLight;
   Timer? _hintDismissTimer;
   DateTime? _lastExplosionAt;
 
   @override
   void initState() {
     super.initState();
+    UiPrefs.notifier.addListener(_syncWallpaperTone);
+    WallpaperLuminanceService.instance.changeNotifier.addListener(
+      _syncWallpaperTone,
+    );
+    _syncWallpaperTone();
     unawaited(_ensurePhotosLoaded());
 
     PurchaseService().isVip().then((isVip) {
@@ -455,8 +462,23 @@ class _MainHomeHeroCountdownCircleState
 
   @override
   void dispose() {
+    UiPrefs.notifier.removeListener(_syncWallpaperTone);
+    WallpaperLuminanceService.instance.changeNotifier.removeListener(
+      _syncWallpaperTone,
+    );
     _hintDismissTimer?.cancel();
     super.dispose();
+  }
+
+  void _syncWallpaperTone() {
+    final url = UiPrefs.notifier.value.customBackgroundUrl.trim();
+    final isLight = url.isEmpty
+        ? null
+        : WallpaperLuminanceService.instance.getCachedIsLight(url);
+    if (url == _wallpaperUrl && isLight == _wallpaperIsLight) return;
+    _wallpaperUrl = url;
+    _wallpaperIsLight = isLight;
+    if (mounted) setState(() {});
   }
 
   // Danh sách ảnh cho hiệu ứng nổ ảnh được nhớ trên máy 12 giờ theo từng nhà. Trước đây mỗi lần mở
@@ -746,8 +768,24 @@ class _MainHomeHeroCountdownCircleState
       Color(0xFF00C6FF),
     ];
 
+    // Nền ảnh riêng có thể tối hơn nhiều so với artwork mặc định. Khi đang
+    // dùng nền trong suốt, ưu tiên đen/trắng theo luminance của chính ảnh;
+    // màu người dùng chọn và gradient nhiều màu vẫn được giữ nguyên.
+    final useAutoContrast =
+        transparentMode &&
+        _wallpaperUrl.isNotEmpty &&
+        customTextColor == null &&
+        !isMultiColor;
+    final autoTextColor =
+        _wallpaperIsLight == true ? Colors.black : Colors.white;
+    final effectiveAutoTextColor = useAutoContrast ? autoTextColor : null;
+    final contrastShadowColor = autoTextColor == Colors.white
+        ? Colors.black.withValues(alpha: .72)
+        : Colors.white.withValues(alpha: .78);
     final labelShadows = [
       ...countdownVisual.labelShadows,
+      if (useAutoContrast)
+        Shadow(color: contrastShadowColor, blurRadius: 3.2),
       if (widget.isMilestone)
         Shadow(color: Colors.white.withValues(alpha: .6), blurRadius: 12),
     ];
@@ -837,21 +875,24 @@ class _MainHomeHeroCountdownCircleState
                             ? multiColorGradient
                             : customTextColor != null
                             ? [customTextColor, customTextColor]
+                            : effectiveAutoTextColor != null
+                            ? [effectiveAutoTextColor, effectiveAutoTextColor]
                             : countdownVisual.numberGradient,
                         topLabelStyle: SLTheme.textStyleForKey(
                           labelFont,
                           fontSize: topLabelFontSize,
                           fontWeight: FontWeight.w900,
-                          color:
-                              customTextColor ?? countdownVisual.topLabelColor,
+                          color: customTextColor ??
+                              effectiveAutoTextColor ??
+                              countdownVisual.topLabelColor,
                           letterSpacing: topLabelLength > 10 ? .4 : .8,
                         ).copyWith(shadows: labelShadows),
                         bottomLabelStyle: SLTheme.textStyleForKey(
                           labelFont,
                           fontSize: bottomLabelFontSize,
                           fontWeight: FontWeight.w900,
-                          color:
-                              customTextColor ??
+                          color: customTextColor ??
+                              effectiveAutoTextColor ??
                               countdownVisual.bottomLabelColor,
                           letterSpacing: bottomLabelLength > 10 ? .4 : .8,
                         ).copyWith(shadows: labelShadows),
@@ -862,13 +903,20 @@ class _MainHomeHeroCountdownCircleState
                                 180.0,
                               ),
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: customTextColor ??
+                                  effectiveAutoTextColor ??
+                                  Colors.white,
                               height: .96,
                               letterSpacing: -2,
                             )
                             .copyWith(
                               shadows: [
                                 ...countdownVisual.numberShadows,
+                                if (useAutoContrast)
+                                  Shadow(
+                                    color: contrastShadowColor,
+                                    blurRadius: 3.2,
+                                  ),
                                 if (widget.isMilestone)
                                   Shadow(
                                     color: Colors.white.withValues(alpha: .7),

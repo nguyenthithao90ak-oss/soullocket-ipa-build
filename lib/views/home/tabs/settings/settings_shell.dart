@@ -659,7 +659,7 @@ extension _SettingsTabShell on _SettingsTabState {
 
   void _openCoupleShowcase() {
     final houseId = (_houseId ?? '').trim();
-    if (!kDebugMode || houseId.isEmpty) return;
+    if (houseId.isEmpty) return;
     unawaited(slPush<void>(context, CoupleShowcaseScreen(houseId: houseId)));
   }
 
@@ -836,7 +836,7 @@ extension _SettingsTabShell on _SettingsTabState {
       ),
       _buildSectionTitle(context.tr('settings_categories_title')),
       _buildSettingsQuickActions(isDark),
-      if (kDebugMode && _relationshipMode != 'single')
+      if (_relationshipMode != 'single')
         _buildCoupleShowcaseShortcut(isDark),
       _buildSectionTitle(context.tr('settings_menu_preferences')),
       _buildiOSSectionCard([

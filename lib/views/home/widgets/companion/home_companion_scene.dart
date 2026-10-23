@@ -603,7 +603,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   void _setActiveCharacters(Set<HomeCompanionCharacter> next) {
-    _characters = _limitCharacters(next);
+    // Giới hạn số bé chỉ áp cho bé chính; bé khách đang ghé luôn được thêm,
+    // nếu không Home (tối đa 2 bé) sẽ cắt mất khách ngay khi vừa tới.
+    final guest = _guest;
+    _characters = {
+      ..._limitCharacters(next.where((character) => character != guest)),
+      if (guest != null && next.contains(guest) && guest.isAvailable) guest,
+    };
     _traffic.dispose();
     _traffic = HomeCompanionTraffic({
       for (final character in _characters) character: _motionFor(character),
@@ -617,6 +623,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       if (!_characters.contains(character)) {
         _motionFor(character).setSurfaces(const [], Rect.zero);
       }
+    }
+    // Khách tới/về từ ticker: dựng lại để thêm/bỏ lớp vẽ khách ngay. Trong lúc
+    // build (didUpdateWidget) framework tự dựng lại nên không gọi setState.
+    if (mounted &&
+        SchedulerBinding.instance.schedulerPhase !=
+            SchedulerPhase.persistentCallbacks) {
+      setState(() {});
     }
     _scheduleMeasure();
   }

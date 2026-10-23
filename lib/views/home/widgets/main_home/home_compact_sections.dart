@@ -610,15 +610,17 @@ class _UpcomingEmpty extends StatelessWidget {
             ),
           ),
           if (onRetry != null)
-            TextButton(
-              onPressed: onRetry,
-              style: TextButton.styleFrom(
-                foregroundColor: (dark
-                    ? SLSettingsPalette.dark.accent
-                    : const Color(0xFFA82E48)),
-                minimumSize: const Size(48, 44),
+            Flexible(
+              child: TextButton(
+                onPressed: onRetry,
+                style: TextButton.styleFrom(
+                  foregroundColor: (dark
+                      ? SLSettingsPalette.dark.accent
+                      : const Color(0xFFA82E48)),
+                  minimumSize: const Size(48, 48),
+                ),
+                child: Text(context.tr('core_retry')),
               ),
-              child: Text(context.tr('core_retry')),
             ),
         ],
       ),
@@ -651,15 +653,17 @@ class _UpcomingRetry extends StatelessWidget {
               ),
             ),
           ),
-          TextButton(
-            onPressed: onRetry,
-            style: TextButton.styleFrom(
-              foregroundColor: (dark
-                  ? SLSettingsPalette.dark.accent
-                  : const Color(0xFFA82E48)),
-              minimumSize: const Size(48, 44),
+          Flexible(
+            child: TextButton(
+              onPressed: onRetry,
+              style: TextButton.styleFrom(
+                foregroundColor: (dark
+                    ? SLSettingsPalette.dark.accent
+                    : const Color(0xFFA82E48)),
+                minimumSize: const Size(48, 48),
+              ),
+              child: Text(context.tr('core_retry')),
             ),
-            child: Text(context.tr('core_retry')),
           ),
         ],
       ),

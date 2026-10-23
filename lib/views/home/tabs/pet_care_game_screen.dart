@@ -1,27 +1,48 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../utils/local_guide_route_tracker.dart';
 import '../../../utils/services/auth/auth_house_context_service.dart';
+import '../../../utils/services/infrastructure/admob_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/offline_cache_service.dart';
 import '../../../utils/services/role_utils.dart';
-import 'pet_care/pet_care_item_art.dart';
+import '../../../utils/services/audio/ui_sound_controller.dart';
+import '../../../utils/services/sound_service.dart';
+import '../../ui_prefs.dart';
+import 'pet_care/pet_care_catch_game.dart';
+import 'pet_care/pet_care_food_art.dart';
+import 'pet_care/pet_care_play_tools.dart';
+import 'pet_care/pet_care_room_theme.dart';
+import 'pet_care/pet_care_tool_art.dart';
 import 'pet_care/pet_care_identity.dart';
 import 'pet_care/pet_care_progress.dart';
 import 'pet_care/pet_care_scene.dart';
+import 'pet_care/pet_care_sync.dart';
 
 part 'pet_care/pet_care_game_content.dart';
 
 class PetCareGameScreen extends StatefulWidget {
-  const PetCareGameScreen({this.store, this.ownedPet, super.key});
+  const PetCareGameScreen({
+    this.store,
+    this.ownedPet,
+    this.rewardedAd,
+    super.key,
+  });
   final PetCareStore? store;
 
   /// Chỉ truyền khi đã xác định giới tính, hoặc để inject trong test.
   final PetCarePet? ownedPet;
+
+  /// Quảng cáo có thưởng; mặc định dùng luồng quảng cáo game của AdMob
+  /// (PRO được nhận thưởng không cần xem). Test truyền hàm giả.
+  final Future<SoulGameRewardedAdResult> Function()? rewardedAd;
   @override
   State<PetCareGameScreen> createState() => _PetCareGameScreenState();
 }
@@ -118,13 +139,39 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
   int _bathStage = 0;
   bool _playing = false;
   bool _careBusy = false;
+  bool _bubbleVisible = false;
+  bool _muted = false;
+  bool _audioReady = false;
+  bool _tickerEnabled = true;
+  int _toolEpoch = 0;
+  int _danceSerial = 0;
+  int _friendSerial = 0;
+  bool _adBusy = false;
+  Timer? _bubbleTimer;
+
+  /// Nghe bản chung của nhà chỉ trong lúc màn chơi đang mở và ở foreground.
+  StreamSubscription<PetCareRemoteDoc?>? _remoteSub;
+  DateTime? _partnerHintAt;
+  final _audio = UiSoundController();
+  final _drag = ValueNotifier<PetCareDrag?>(null);
   late final ValueNotifier<Map<PetCarePet, PetCareVitals>> _petVitals =
       ValueNotifier(const {});
+
+  /// Trợ thủ robot nổi không hiện trong màn chơi: báo màn hiện tại cho bộ
+  /// theo dõi (không có mục trợ thủ cho màn này nên robot tự ẩn).
+  static const _guideScreen = 'PetCareGameScreen';
 
   @override
   void initState() {
     super.initState();
+    scheduleMicrotask(
+      () => LocalGuideRouteTracker.instance.didPushScreen(_guideScreen),
+    );
     WidgetsBinding.instance.addObserver(this);
+    UiPrefs.notifier.addListener(_syncAudio);
+    SoundService().companionSuppressed.addListener(_syncAudio);
+    PetCareStore.changes.addListener(_storeChanged);
+    unawaited(SoundService().init());
     _load();
     _clock = Timer.periodic(const Duration(seconds: 30), (_) {
       if (_foreground && !_saving && !_loading && _error == null) _refresh();
@@ -132,15 +179,82 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _audioReady = true;
+    final enabled = TickerMode.valuesOf(context).enabled;
+    if (_tickerEnabled && !enabled) {
+      _toolEpoch++;
+      _drag.value = null;
+    }
+    _tickerEnabled = enabled;
+    _syncAudio();
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _foreground = state == AppLifecycleState.resumed;
+    if (!_foreground) {
+      _toolEpoch++;
+      _drag.value = null;
+      _stopRemote();
+    } else if (_progress != null) {
+      _startRemote();
+    }
+    _syncAudio();
     if (_foreground && !_saving && !_loading) _refresh();
+  }
+
+  void _startRemote() {
+    if (_remoteSub != null || !_foreground) return;
+    _remoteSub = _store?.watch(onError: (_) {});
+  }
+
+  void _stopRemote() {
+    unawaited(_remoteSub?.cancel());
+    _remoteSub = null;
+  }
+
+  /// Bản chung vừa đổi (người ấy chăm/mua, hoặc vừa gộp lần đầu).
+  void _storeChanged() {
+    final event = PetCareStore.changes.value;
+    final store = _store;
+    if (event == null ||
+        store == null ||
+        event.key != store.key ||
+        !mounted ||
+        _loading ||
+        identical(event.progress, _progress)) {
+      return;
+    }
+    setState(() => _progress = event.progress);
+    _petVitals.value = event.progress.petVitals;
+    if (event.merged) {
+      _hint('pet_care_sync_merged');
+    } else if (event.fromPartner) {
+      final now = DateTime.now();
+      final last = _partnerHintAt;
+      if (last == null || now.difference(last) > const Duration(seconds: 30)) {
+        _partnerHintAt = now;
+        _hint('pet_care_partner_synced');
+      }
+    }
   }
 
   @override
   void dispose() {
+    scheduleMicrotask(
+      () => LocalGuideRouteTracker.instance.didPopScreen(_guideScreen),
+    );
     _loadSerial++;
+    _stopRemote();
+    PetCareStore.changes.removeListener(_storeChanged);
     _clock?.cancel();
+    _bubbleTimer?.cancel();
+    UiPrefs.notifier.removeListener(_syncAudio);
+    SoundService().companionSuppressed.removeListener(_syncAudio);
+    _audio.dispose();
+    _drag.dispose();
     _authSubscription?.cancel();
     _petVitals.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -195,6 +309,7 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
             uid: uid,
             houseId: resolvedHouseId,
             ownedPet: _ownedPet,
+            remote: PetCareFirebaseRemote(houseId: resolvedHouseId),
             isCurrent: () =>
                 auth.currentUser?.uid == uid &&
                 prefs.getString('il_auth_uid') == uid &&
@@ -209,12 +324,18 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
       }
       final progress = await _store!.load();
       if (!mounted || serial != _loadSerial) return;
+      final firstLoad = _progress == null;
       setState(() {
         _progress = progress;
         _pet = _ownedPet!;
         _petVitals.value = progress.petVitals;
         _loading = false;
+        // Bé đang ngủ thì mở thẳng phòng ngủ, đúng chỗ bé nằm.
+        if (firstLoad && progress.vitalsFor(_ownedPet!).sleeping) {
+          _room = PetCareRoom.bedroom;
+        }
       });
+      _startRemote();
     } catch (error) {
       if (!mounted || serial != _loadSerial) return;
       setState(() {
@@ -230,6 +351,10 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
 
   void _invalidateScope() {
     _loadSerial++;
+    _stopRemote();
+    _toolEpoch++;
+    _drag.value = null;
+    _audio.setEnabled(false);
     setState(() {
       _progress = null;
       _careBusy = false;
@@ -260,14 +385,20 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
     String? message,
     bool playing = false,
     bool resting = false,
+    bool anyPet = false,
   }) async {
-    if (!_canCare || _loading || _error != null || _store == null) return false;
+    // [anyPet]: việc không đổi chỉ số bé (tìm hạt, quảng cáo, trang trí)
+    // được làm cả khi đang xem bé của người ấy hoặc bé đang bận.
+    final allowed = anyPet ? _progress != null && _foreground : _canCare;
+    if (!allowed || _saving || _loading || _error != null || _store == null) {
+      return false;
+    }
     setState(() => _saving = true);
     final serial = _loadSerial;
     try {
       var changed = false;
       final progress = await _store!.update((state) {
-        final next = change(state.copyWith(selectedPet: _ownedPet));
+        final next = change(state.copyWith(selectedPet: _pet));
         changed = next.encode() != state.encode();
         return next;
       });
@@ -282,6 +413,7 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
           _serial++;
         }
         if (message != null) {
+          _bubbleVisible = true;
           _bubble = changed
               ? message
               : progress.claimed
@@ -289,6 +421,7 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
               : 'pet_care_intro_bubble';
         }
       });
+      if (message != null) _armBubbleTimer();
       return true;
     } catch (error) {
       if (!mounted || serial != _loadSerial) return false;
@@ -297,7 +430,11 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
       } else if (mounted) {
         // Hiện lỗi trong bong bóng của màn chơi để thanh thử lại ở đáy luôn
         // nhận được thao tác, không bị SnackBar che mất.
-        setState(() => _bubble = 'pet_care_save_error');
+        setState(() {
+          _bubble = 'pet_care_save_error';
+          _bubbleVisible = true;
+        });
+        _bubbleTimer?.cancel();
       }
       return false;
     } finally {
@@ -307,15 +444,16 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
 
   void _selectPet(PetCarePet pet) {
     if (_saving || _progress == null || pet == _pet) return;
+    _toolEpoch++;
+    _drag.value = null;
+    _audio.stop();
     setState(() {
       _pet = pet;
       _bathStage = 0;
       _action = null;
       _playing = false;
       _careBusy = false;
-      _bubble = pet == _ownedPet
-          ? 'pet_care_intro_bubble'
-          : 'pet_care_partner_locked';
+      _bubble = 'pet_care_intro_bubble';
     });
   }
 
@@ -355,7 +493,9 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
     );
   }
 
-  bool get _sceneEnabled => _pet == _ownedPet && _progress != null && !_saving;
+  // Hai bạn chăm được cả Thỏ lẫn Gấu; bản chung đồng bộ giữa hai máy.
+  bool get _sceneEnabled =>
+      _foreground && _tickerEnabled && _progress != null && !_saving;
   bool get _canCare => _sceneEnabled && !_careBusy;
 
   void _finishCare() {
@@ -376,16 +516,128 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
 
   void _changeRoom(PetCareRoom room) {
     if (_saving || _room == room) return;
+    _toolEpoch++;
+    _drag.value = null;
+    _audio.stop();
     setState(() {
+      _bubbleVisible = false;
       _room = room;
       _careBusy = false;
       _action = null;
       _bathStage = 0;
       _playing = false;
     });
+    // Bé đang ngủ thì nằm yên ở phòng ngủ: phòng khác hiện dấu khò khò
+    // "đang ngủ ở phòng ngủ" và khay có nút đánh thức, không tự gọi bé dậy.
+  }
+
+  Future<void> _wakeUp() async {
+    final pet = _pet;
+    final progress = _progress;
+    if (progress == null || !progress.vitalsFor(pet).sleeping) return;
+    final saved = await _save(
+      (state) => state.wake(pet),
+      message: 'pet_care_woke_bubble',
+    );
+    // Bé vươn vai nhún nhảy một nhịp cho thấy đã thức (kèm âm hoàn thành).
+    if (saved && mounted) setState(() => _danceSerial++);
   }
 
   void _chooseFood(PetCareFood food) => setState(() => _food = food);
+
+  /// Mua món mới bằng Hạt Ấm hoặc đổi sang món đã có; chỉ đổi hình/hiệu ứng.
+  Future<void> _useStyle(PetCareStyle style) async {
+    final progress = _progress;
+    if (progress == null || !_canCare) return;
+    final buying = !progress.ownsStyle(style);
+    if (buying && progress.seeds < style.cost) return;
+    final saved = await _save(
+      (state) => state.useStyle(style),
+      message: buying ? 'pet_care_style_bought' : null,
+    );
+    if (!saved || !mounted) return;
+    if (buying) _cue(PetCareCue.purchase);
+    // Đóng tiệm xong bé nhảy thử điệu vừa chọn.
+    if (style.slot == PetCareStyleSlot.dance) setState(() => _danceSerial++);
+  }
+
+  void _armBubbleTimer() {
+    _bubbleTimer?.cancel();
+    _bubbleTimer = Timer(const Duration(milliseconds: 2800), () {
+      if (mounted) setState(() => _bubbleVisible = false);
+    });
+  }
+
+  void _syncAudio() {
+    if (!_audioReady || !mounted) return;
+    _audio.setEnabled(
+      !_muted &&
+          _error == null &&
+          _foreground &&
+          TickerMode.valuesOf(context).enabled &&
+          UiPrefs.notifier.value.touchSound &&
+          !SoundService().companionSuppressed.value,
+    );
+  }
+
+  void _unlockAudio() {
+    _syncAudio();
+    _audio.unlockFromGesture();
+  }
+
+  void _cue(PetCareCue cue) {
+    if (!mounted || !_foreground || _error != null) return;
+    _syncAudio();
+    unawaited(
+      _audio.play(switch (cue) {
+        PetCareCue.pickup => UiSoundCue.petPickup,
+        PetCareCue.bite => UiSoundCue.petBite,
+        PetCareCue.scrub => UiSoundCue.petBubble,
+        PetCareCue.rinse => UiSoundCue.petRinse,
+        PetCareCue.dry => UiSoundCue.petDry,
+        PetCareCue.hug => UiSoundCue.petCuddle,
+        PetCareCue.bounce => UiSoundCue.petPickup,
+        PetCareCue.sleep => UiSoundCue.saved,
+        PetCareCue.complete => UiSoundCue.success,
+        PetCareCue.purchase => UiSoundCue.reward,
+        PetCareCue.tap => UiSoundCue.click,
+        PetCareCue.water => UiSoundCue.petRinse,
+        PetCareCue.squeak => UiSoundCue.petPickup,
+        PetCareCue.music => UiSoundCue.saved,
+        PetCareCue.seed => UiSoundCue.reward,
+        PetCareCue.spicy => UiSoundCue.petBite,
+      }),
+    );
+  }
+
+  void _toggleSound() {
+    setState(() => _muted = !_muted);
+    _syncAudio();
+    if (!_muted) _audio.unlockFromGesture();
+  }
+
+  void _useTool(PetCareDrag drag) {
+    // Đồ thả xong: xóa món đang cầm ngay, kể cả khi đồ trong phòng vừa đổi
+    // sang bước sau (đồ cũ biến mất nên không còn báo kết thúc kéo).
+    _drag.value = null;
+    if (!_canCare ||
+        drag.pet != _pet ||
+        drag.epoch != _toolEpoch ||
+        drag.tool.roomIndex != _room.index) {
+      return;
+    }
+    final food = drag.food;
+    if (food != null) {
+      _feed(food);
+    } else if (drag.tool.bathStep != null) {
+      final step = _bathStage == 3 ? 0 : _bathStage;
+      if (drag.tool.bathStep == step) _bathe();
+    } else if (drag.tool == PetCareTool.ball) {
+      _play();
+    } else {
+      _hug();
+    }
+  }
 
   Future<void> _bathe() async {
     if (!_canCare) return;
@@ -407,7 +659,7 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
     }
     final pet = _pet;
     final saved = await _save(
-      (state) => state.care(PetCareAction.bath, pet: _ownedPet),
+      (state) => state.care(PetCareAction.bath, pet: _pet),
       action: PetCareAction.bath,
       message: 'pet_care_bath_bubble',
     );
@@ -424,7 +676,7 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
       return;
     }
     await _save(
-      (state) => state.play(_ownedPet!),
+      (state) => state.play(_pet),
       action: PetCareAction.hug,
       message: 'pet_care_play_bubble',
       playing: true,
@@ -434,7 +686,7 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
   void _rest() {
     if (!_canCare) return;
     _save(
-      (state) => state.rest(_ownedPet!),
+      (state) => state.rest(_pet),
       message: 'pet_care_sleep_bubble',
       resting: true,
     );
@@ -443,10 +695,205 @@ class _PetCareGameScreenState extends State<PetCareGameScreen>
   void _hug() {
     if (!_canCare || _progress!.vitalsFor(_pet).sleeping) return;
     _save(
-      (state) => state.care(PetCareAction.hug, pet: _ownedPet),
+      (state) => state.care(PetCareAction.hug, pet: _pet),
       action: PetCareAction.hug,
       message: 'pet_care_hug_bubble',
     );
+  }
+
+  /// Chạm đồ vật trong phòng: tìm hạt giấu, đèn ngủ bật/tắt giấc ngủ.
+  void _onProp(PetCareProp prop) {
+    final progress = _progress;
+    if (progress == null) return;
+    if (progress.seedPropsLeft.contains(prop)) unawaited(_findSeed(prop));
+    if (prop == PetCareProp.lamp && _room == PetCareRoom.bedroom && _canCare) {
+      _rest();
+    }
+  }
+
+  Future<void> _findSeed(PetCareProp prop) async {
+    final saved = await _save(
+      (state) => state.findSeed(prop),
+      anyPet: true,
+      message: 'pet_care_seed_found',
+    );
+    if (saved) _cue(PetCareCue.seed);
+  }
+
+  /// Chạm bé kia: hai bé ôm nhau (cả hai cùng vui), quà Hạt một lần/ngày.
+  Future<void> _hugFriend() async {
+    final progress = _progress;
+    if (progress == null) return;
+    final pet = _pet;
+    final partner = pet == PetCarePet.rabbit
+        ? PetCarePet.bear
+        : PetCarePet.rabbit;
+    if (progress.vitalsFor(pet).sleeping ||
+        progress.vitalsFor(partner).sleeping) {
+      _hint('pet_care_sleeping_hint');
+      return;
+    }
+    final saved = await _save(
+      (state) => state.hugFriend(pet).hugFriend(partner),
+      anyPet: true,
+      message: 'pet_care_friend_hug',
+    );
+    if (!saved || !mounted) return;
+    _cue(PetCareCue.hug);
+    setState(() => _friendSerial++);
+  }
+
+  /// Chạy một quảng cáo có thưởng (PRO được nhận thưởng không cần xem).
+  /// Trả về true khi được thưởng; không được thì báo lý do.
+  Future<bool> _showRewarded() async {
+    if (_adBusy) return false;
+    setState(() => _adBusy = true);
+    _audio.stop();
+    var result = SoulGameRewardedAdResult.unavailable;
+    try {
+      result =
+          await (widget.rewardedAd ??
+              AdMobService().showSoulGameRewardedAdResult)();
+    } catch (_) {
+      result = SoulGameRewardedAdResult.unavailable;
+    } finally {
+      if (mounted) setState(() => _adBusy = false);
+    }
+    if (!mounted) return false;
+    if (result == SoulGameRewardedAdResult.rewarded ||
+        result == SoulGameRewardedAdResult.pro) {
+      // Quảng cáo toàn màn hình vừa đóng: chờ app quay lại foreground rồi mới
+      // lưu, vì lúc màn chơi còn ở nền thì lượt lưu bị chặn và mất thưởng.
+      for (var i = 0; i < 30 && mounted && !_foreground; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      return mounted;
+    }
+    _hint(switch (result) {
+      SoulGameRewardedAdResult.privacyDisabled => 'privacy_ads_disabled',
+      SoulGameRewardedAdResult.cooldown => 'pet_care_ad_cooldown',
+      SoulGameRewardedAdResult.dismissed => 'pet_care_ad_dismissed',
+      _ => 'pet_care_ad_unavailable',
+    });
+    return false;
+  }
+
+  /// Xem quảng cáo có thưởng để nhận Hạt Ấm (tối đa mỗi ngày).
+  Future<void> _watchAd() async {
+    final progress = _progress;
+    if (progress == null || _adBusy) return;
+    if (!progress.canWatchAd) {
+      _hint('pet_care_ad_limit');
+      return;
+    }
+    if (!await _showRewarded()) return;
+    final saved = await _save(
+      (state) => state.rewardAd(),
+      anyPet: true,
+      message: 'pet_care_ad_reward',
+    );
+    if (saved) _cue(PetCareCue.purchase);
+  }
+
+  /// Xem quảng cáo nhân đôi Hạt vừa nhận từ một ván Hứng sao.
+  Future<bool> _doubleGame(int earned) async {
+    final progress = _progress;
+    if (progress == null || !progress.canDoubleGame || earned <= 0) {
+      return false;
+    }
+    if (!await _showRewarded()) return false;
+    final saved = await _save(
+      (state) => state.doubleGame(earned),
+      anyPet: true,
+      message: 'pet_care_ad_double_reward',
+    );
+    if (saved) _cue(PetCareCue.purchase);
+    return saved;
+  }
+
+  /// Nhận quà chăm bé, rồi mời xem quảng cáo nhận thêm một phần quà nữa.
+  Future<void> _claimGift() async {
+    final saved = await _save(
+      (state) => state.claim(),
+      message: 'pet_care_reward_bubble',
+    );
+    if (!saved || !mounted || !(_progress?.canDoubleGift ?? false)) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          L10nScope.of(context).format('pet_care_gift_double_offer', {
+            'seeds': PetCareEarn.giftSeeds,
+          }),
+        ),
+        duration: const Duration(seconds: 6),
+        action: SnackBarAction(
+          key: const ValueKey('pet-care-gift-double'),
+          label: context.tr('pet_care_ad_double_short'),
+          onPressed: () => unawaited(_doubleGift()),
+        ),
+      ),
+    );
+  }
+
+  /// Xem quảng cáo nhân đôi quà chăm bé hôm nay (một lần cho cả nhà).
+  Future<void> _doubleGift() async {
+    if (!(_progress?.canDoubleGift ?? false) || _adBusy) return;
+    if (!await _showRewarded()) return;
+    final saved = await _save(
+      (state) => state.doubleGift(),
+      anyPet: true,
+      message: 'pet_care_ad_double_reward',
+    );
+    if (saved) _cue(PetCareCue.purchase);
+  }
+
+  /// Xem quảng cáo hồi sức cho bé đang xem: bé dậy, đầy năng lượng.
+  Future<bool> _revive() async {
+    final pet = _pet;
+    if (!(_progress?.canRevive(pet) ?? false)) return false;
+    if (!await _showRewarded()) return false;
+    final saved = await _save(
+      (state) => state.revive(pet),
+      anyPet: true,
+      message: 'pet_care_revive_bubble',
+    );
+    if (!saved || !mounted) return false;
+    setState(() => _danceSerial++);
+    return true;
+  }
+
+  /// Bé còn sức chơi mini game không.
+  bool get _canPlayGame {
+    final progress = _progress;
+    if (progress == null) return false;
+    final vitals = progress.vitalsFor(_pet);
+    return !vitals.sleeping && vitals.energy >= PetCareEarn.gameEnergy;
+  }
+
+  Future<void> _finishGame(int score) async {
+    final pet = _pet;
+    final saved = await _save(
+      (state) => state.rewardGame(pet, score),
+      anyPet: true,
+      message: 'pet_care_game_reward',
+    );
+    if (saved) _cue(PetCareCue.complete);
+  }
+
+  /// Mua/đặt giấy tường, sàn, cửa sổ hoặc màu nội thất cho phòng đang xem.
+  Future<bool> _useRoomItem(PetCareRoomItem item) async {
+    final progress = _progress;
+    if (progress == null) return false;
+    final buying = !progress.ownsRoomItem(item);
+    if (buying && progress.seeds < item.cost) return false;
+    final room = _room;
+    final saved = await _save(
+      (state) => state.useRoomItem(room, item),
+      anyPet: true,
+      message: buying ? 'pet_care_style_bought' : null,
+    );
+    if (saved && buying) _cue(PetCareCue.purchase);
+    return saved;
   }
 
   @override

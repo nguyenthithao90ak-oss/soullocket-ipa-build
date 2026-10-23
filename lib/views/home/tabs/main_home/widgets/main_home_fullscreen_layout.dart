@@ -159,6 +159,7 @@ class _FullscreenHomeBody extends StatelessWidget {
                                       shape: HomeCompanionSurfaceShape.outline,
                                       pathBuilder: _NeonHeartPainter.outlineFor,
                                       child: SizedBox(
+                                        key: state.widget.firstGuideHeroKey,
                                         width: heartWidth,
                                         height: heartHeight,
                                         child: Stack(

@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_compress/video_compress.dart';
 
+import 'storage_native_video_encoder.dart';
 import 'storage_upload_queue.dart';
 
 typedef StorageVideoCompressor = Future<String?> Function(String path);
@@ -42,8 +42,7 @@ class StorageVideoOptimizer {
   /// Giới hạn tối đa cứng cho video tải lên (50 MB)
   static const double maxHardVideoSizeMb = 50.0;
 
-  static const int targetFrameRate = 30;
-  static const VideoQuality livePhotoQuality = VideoQuality.Res1280x720Quality;
+  static const int targetFrameRate = StorageVideoEncodingProfile.maxFrameRate;
   static const Duration compressionTimeout = Duration(minutes: 5);
 
   /// Kiểm tra và kiểm soát an toàn dung lượng video trước khi tải lên kho R2/Storage
@@ -63,9 +62,12 @@ class StorageVideoOptimizer {
     String? outputPath;
     try {
       outputPath = await _compressionQueue.run(
-        () => (compressor ?? (path) => _compressNative(path, isLivePhoto: isLivePhoto))(
-          file.path,
-        ).timeout(compressionTimeout),
+        () => compressor != null
+            ? compressor!(file.path).timeout(compressionTimeout)
+            : const StorageNativeVideoEncoder().compress(
+                file.path,
+                isLivePhoto: isLivePhoto,
+              ),
       );
       if (outputPath != null) {
         final output = File(outputPath);
@@ -95,30 +97,9 @@ class StorageVideoOptimizer {
       } catch (_) {}
     }
 
-    // Live Photo luôn đi qua preset 720p; không âm thầm tải bản gốc khi nén lỗi.
+    // Live Photo luôn qua bộ nén 720p; không âm thầm tải bản gốc khi nén lỗi.
     if (isLivePhoto) throw StateError('Live Photo 720p compression failed');
     return _result(file, originalBytes);
-  }
-
-  Future<String?> _compressNative(String path, {required bool isLivePhoto}) async {
-    try {
-      final info = await VideoCompress.compressVideo(
-        path,
-        quality: isLivePhoto ? livePhotoQuality : VideoQuality.Res1920x1080Quality,
-        deleteOrigin: false,
-        includeAudio: true,
-        frameRate: targetFrameRate,
-      ).timeout(compressionTimeout);
-      return info?.file?.path;
-    } catch (_) {
-      try {
-        await VideoCompress.cancelCompression();
-      } finally {
-        // ignore: invalid_use_of_protected_member
-        VideoCompress.setProcessingStatus(false);
-      }
-      return null;
-    }
   }
 
   StorageVideoOptimizationResult _result(

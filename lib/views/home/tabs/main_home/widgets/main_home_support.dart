@@ -1197,6 +1197,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  Timer? _autoCloseTimer;
 
   @override
   void initState() {
@@ -1210,16 +1211,20 @@ class __MissYouScreenState extends State<_MissYouScreen>
       end: 1.2,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    // Auto close after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    });
+    // Hộp tự đóng sau 5 giây và là nơi duy nhất hẹn giờ đóng hộp này.
+    _autoCloseTimer = Timer(const Duration(seconds: 5), _close);
+  }
+
+  // Chỉ đóng đúng hộp này khi nó còn trên cùng; không pop nhầm Trang chủ
+  // (màn trắng) khi hộp đã đóng và đang chạy hiệu ứng thoát.
+  void _close() {
+    if (!mounted) return;
+    closeRouteIfCurrent(context);
   }
 
   @override
   void dispose() {
+    _autoCloseTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -1349,7 +1354,7 @@ class __MissYouScreenState extends State<_MissYouScreen>
     return Material(
       color: Colors.transparent,
       child: GestureDetector(
-        onTap: () => Navigator.of(context).pop(),
+        onTap: _close,
         child: Container(
           width: double.infinity,
           height: double.infinity,

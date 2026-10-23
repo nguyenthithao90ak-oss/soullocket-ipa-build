@@ -319,6 +319,11 @@ class _ModernHomeBody extends StatelessWidget {
                           ),
                           SLSpacing.h12,
                           RepaintBoundary(
+                            // Chế độ độc thân không dựng vòng đếm; hướng dẫn
+                            // cần khoanh thẻ đại diện đang hiển thị thay thế.
+                            key: showDayCounter
+                                ? null
+                                : state.widget.firstGuideHeroKey,
                             child: state._buildModernAvatarSection(
                               isSingle: isSingle,
                               nameU1: nameU1,
@@ -335,40 +340,36 @@ class _ModernHomeBody extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          // Trạm Mây đang ở giai đoạn thử nghiệm: chỉ hiện ở
-                          // debug để tiếp tục nâng cấp, không đưa vào bản chính
-                          // thức/release trên Home.
-                          if (kDebugMode) ...[
-                            PetCareEntryCard(
-                              pet:
-                                  petCareOwnedPetForRole(
+                          // Trạm Mây mở cho bản chính thức theo yêu cầu chủ dự
+                          // án 23/10/2026 (trước đó chỉ hiện ở debug).
+                          PetCareEntryCard(
+                            pet:
+                                petCareOwnedPetForRole(
+                                  state._currentRole,
+                                  genderSwapped: RoleUtils.readGenderSwapped(
+                                    state._houseSettings,
+                                  ),
+                                ) ??
+                                PetCarePet.bear,
+                            onTap: () => slPushRoute<void>(
+                              context,
+                              SLRoute<void>(
+                                builder: (_) => PetCareGameScreen(
+                                  ownedPet: petCareOwnedPetForRole(
                                     state._currentRole,
                                     genderSwapped: RoleUtils.readGenderSwapped(
                                       state._houseSettings,
                                     ),
-                                  ) ??
-                                  PetCarePet.bear,
-                              onTap: () => slPushRoute<void>(
-                                context,
-                                SLRoute<void>(
-                                  builder: (_) => PetCareGameScreen(
-                                    ownedPet: petCareOwnedPetForRole(
-                                      state._currentRole,
-                                      genderSwapped:
-                                          RoleUtils.readGenderSwapped(
-                                            state._houseSettings,
-                                          ),
-                                    ),
-                                  ),
-                                  settings: const RouteSettings(
-                                    name: 'pet_care_game',
                                   ),
                                 ),
-                                identity: const ValueKey('pet_care_game'),
-                                rootNavigator: true,
+                                settings: const RouteSettings(
+                                  name: 'pet_care_game',
+                                ),
                               ),
+                              identity: const ValueKey('pet_care_game'),
+                              rootNavigator: true,
                             ),
-                          ],
+                          ),
                           // Hàng nút nhanh (Nhật ký, Nhắn ngay, Lịch chung,
                           // Chơi cùng, Ghim thêm) đã gỡ khỏi Home theo yêu cầu
                           // chủ dự án 12/10/2026 cho đỡ chật.

@@ -8,7 +8,7 @@ import '../../companion/home_companion_motion.dart';
 import '../../companion/home_companion_scene.dart';
 import 'balanced_countdown_style.dart';
 
-/// Dải giấy nhỏ gọn cho bộ đếm thời gian yêu nhau trên Home.
+/// Bề mặt Editorial gọn nhẹ cho bộ đếm thời gian yêu nhau trên Home.
 ///
 /// Phần tính ngày nằm ở [RelationshipDuration]. Widget này chỉ quyết định
 /// cách trình bày: trước mốc một năm là tháng + ngày; từ mốc một năm trở đi
@@ -117,115 +117,132 @@ class RelationshipDurationCard extends StatelessWidget {
             : 360.0;
         if (availableWidth <= 0) return const SizedBox.shrink();
 
-        // Mảnh giấy thứ ba là dải ngang, không chiếm hết chiều rộng Home trên
-        // máy lớn. Trên máy 320dp vẫn dùng toàn bộ cột trừ lề an toàn.
-        final width = math.min(availableWidth, 360.0);
+        // Bề mặt phải thẳng hàng với các khối Home khác, kể cả điện thoại có
+        // chiều rộng logical lớn do DPI nhỏ. Lề an toàn đã được caller quản lý.
+        final width = availableWidth;
         final compact = width < 340;
         final metrics = _metrics(context);
         final metricFontSize = metrics.length == 3
-            ? (compact ? 24.0 : 27.0)
-            : (compact ? 28.0 : 31.0);
+            ? (compact ? 30.0 : 38.0)
+            : (compact ? 38.0 : 50.0);
         final metricLabelSize = metrics.length == 3
-            ? (compact ? 9.5 : 10.5)
-            : (compact ? 11.0 : 12.0);
-        const path = _TornPaperClipper.pathFor;
+            ? (compact ? 10.0 : 12.0)
+            : (compact ? 12.0 : 15.0);
+        const path = _EditorialSurfaceClipper.pathFor;
 
         return RepaintBoundary(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Align(
-              alignment: AlignmentDirectional.center,
-              child: SizedBox(
-                width: width,
-                child: CustomPaint(
-                  painter: _TornPaperPainter(
-                    palette: palette,
-                    doodleSeed: metrics.length,
-                  ),
-                  child: ClipPath(
-                    clipper: const _TornPaperClipper(),
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(
-                        compact ? 15 : 19,
-                        compact ? 11 : 12,
-                        compact ? 15 : 19,
-                        compact ? 10 : 11,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Semantics(
-                                  header: true,
+            child: SizedBox(
+              width: width,
+              child: CustomPaint(
+                painter: _EditorialSurfacePainter(
+                  palette: palette,
+                  doodleSeed: metrics.length,
+                ),
+                child: ClipPath(
+                  clipper: const _EditorialSurfaceClipper(),
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                      compact ? 16 : 20,
+                      compact ? 16 : 18,
+                      compact ? 16 : 20,
+                      compact ? 14 : 16,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Semantics(
+                                header: true,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: AlignmentDirectional.centerStart,
                                   child: Text(
                                     context.tr('home_together_title'),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.clip,
                                     style: SLTheme.quicksand(
-                                      fontSize: compact ? 13 : 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: palette.ink,
-                                      height: 1.05,
+                                      fontSize: compact ? 12 : 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: palette.muted,
+                                      letterSpacing: 1.2,
+                                      height: 1.1,
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              ExcludeSemantics(
-                                child: CustomPaint(
-                                  size: Size.square(compact ? 18 : 20),
-                                  painter: _TinyHeartPainter(
-                                    color: palette.rose,
-                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            ExcludeSemantics(
+                              child: CustomPaint(
+                                size: Size.square(compact ? 18 : 20),
+                                painter: _TinyHeartPainter(
+                                  color: palette.rose,
                                 ),
                               ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: compact ? 13 : 16),
+                        SizedBox(
+                          height: compact ? 52 : 62,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              for (
+                                var index = 0;
+                                index < metrics.length;
+                                index++
+                              ) ...[
+                                if (index > 0)
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: compact ? 2 : 5,
+                                    ),
+                                    child: ExcludeSemantics(
+                                      child: _MetricDivider(
+                                        color: palette.border,
+                                        compact: compact,
+                                      ),
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: _anchor(
+                                    metrics[index],
+                                    _DurationMetricView(
+                                      value: metrics[index].value,
+                                      label: metrics[index].label,
+                                      palette: palette,
+                                      valueFontSize: metricFontSize,
+                                      labelFontSize: metricLabelSize,
+                                    ),
+                                    path,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
-                          SizedBox(height: compact ? 3 : 4),
-                          SizedBox(
-                            height: 48,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                for (
-                                  var index = 0;
-                                  index < metrics.length;
-                                  index++
-                                ) ...[
-                                  if (index > 0)
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: compact ? 2 : 4,
-                                      ),
-                                      child: ExcludeSemantics(
-                                        child: _MetricDivider(
-                                          color: palette.border,
-                                          compact: compact,
-                                        ),
-                                      ),
-                                    ),
-                                  Expanded(
-                                    child: _anchor(
-                                      metrics[index],
-                                      _DurationMetricView(
-                                        value: metrics[index].value,
-                                        label: metrics[index].label,
-                                        palette: palette,
-                                        valueFontSize: metricFontSize,
-                                        labelFontSize: metricLabelSize,
-                                      ),
-                                      path,
-                                    ),
-                                  ),
-                                ],
-                              ],
+                        ),
+                        SizedBox(height: compact ? 11 : 14),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              context.tr('home_together_subtitle'),
+                              style: SLTheme.quicksand(
+                                fontSize: compact ? 11 : 12,
+                                fontWeight: FontWeight.w600,
+                                color: palette.muted,
+                                height: 1.2,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -325,7 +342,7 @@ class _MetricDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: compact ? 6 : 8,
-      height: 42,
+      height: 18,
       child: Center(
         child: Container(
           width: 3,
@@ -340,65 +357,29 @@ class _MetricDivider extends StatelessWidget {
   }
 }
 
-class _TornPaperClipper extends CustomClipper<Path> {
-  const _TornPaperClipper();
+class _EditorialSurfaceClipper extends CustomClipper<Path> {
+  const _EditorialSurfaceClipper();
 
   static Path pathFor(Rect rect) {
-    final safe = rect.deflate(1.0);
-    final path = Path();
-    final width = safe.width;
-    final height = safe.height;
-    final left = safe.left;
-    final top = safe.top;
-    final right = safe.right;
-    final bottom = safe.bottom;
-
-    double topEdge(double x) =>
-        top + 3.0 + math.sin(x * .23) * 1.35 + math.sin(x * .57) * .65;
-    double bottomEdge(double x) =>
-        bottom - 3.0 + math.sin(x * .19 + 1.2) * 1.2 + math.sin(x * .49) * .7;
-
-    path.moveTo(left + 6, topEdge(6));
-    for (var x = 14.0; x < width - 8; x += 12) {
-      path.lineTo(left + x, topEdge(x));
-    }
-    path.lineTo(right - 5, topEdge(width - 5));
-    path.quadraticBezierTo(
-      right - 2,
-      top + height * .28,
-      right - 4,
-      top + height * .52,
+    final safe = rect.deflate(1);
+    final radius = math.min(28.0, math.max(18.0, safe.shortestSide * .08));
+    return Path()..addRRect(
+      RRect.fromRectAndRadius(safe, Radius.circular(radius)),
     );
-    path.quadraticBezierTo(
-      right - 2,
-      top + height * .76,
-      right - 7,
-      bottomEdge(width - 7),
-    );
-    for (var x = width - 18.0; x > 8; x -= 12) {
-      path.lineTo(left + x, bottomEdge(x));
-    }
-    path.lineTo(left + 6, bottomEdge(6));
-    path.quadraticBezierTo(
-      left + 2,
-      top + height * .75,
-      left + 5,
-      top + height * .48,
-    );
-    path.quadraticBezierTo(left + 2, top + height * .22, left + 6, topEdge(6));
-    path.close();
-    return path;
   }
 
   @override
   Path getClip(Size size) => pathFor(Offset.zero & size);
 
   @override
-  bool shouldReclip(covariant _TornPaperClipper oldClipper) => false;
+  bool shouldReclip(covariant _EditorialSurfaceClipper oldClipper) => false;
 }
 
-class _TornPaperPainter extends CustomPainter {
-  const _TornPaperPainter({required this.palette, required this.doodleSeed});
+class _EditorialSurfacePainter extends CustomPainter {
+  const _EditorialSurfacePainter({
+    required this.palette,
+    required this.doodleSeed,
+  });
 
   final BalancedCountdownPalette palette;
   final int doodleSeed;
@@ -406,16 +387,16 @@ class _TornPaperPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final paperPath = _TornPaperClipper.pathFor(rect);
+    final surfacePath = _EditorialSurfaceClipper.pathFor(rect);
 
     canvas.drawShadow(
-      paperPath,
+      surfacePath,
       Colors.black.withValues(alpha: palette.dark ? .22 : .14),
-      5,
+      8,
       true,
     );
     canvas.drawPath(
-      paperPath,
+      surfacePath,
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
@@ -423,78 +404,83 @@ class _TornPaperPainter extends CustomPainter {
           colors: [
             palette.paper,
             palette.paper,
-            palette.blush.withValues(alpha: palette.dark ? .72 : .52),
+            palette.blush.withValues(alpha: palette.dark ? .82 : .68),
           ],
         ).createShader(rect),
     );
 
     final edgePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
+      ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round
       ..color = palette.border.withValues(alpha: palette.dark ? .72 : .6);
-    canvas.drawPath(paperPath, edgePaint);
+    canvas.drawPath(surfacePath, edgePaint);
 
-    // Một nét chì mảnh và vài chấm nhỏ tạo cảm giác giấy thủ công mà không
-    // làm rối phần số. Tất cả đều là vector nên không thêm asset bitmap.
-    final stitch = Paint()
+    canvas.save();
+    canvas.clipPath(surfacePath);
+    final wash = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(.95, -.95),
+        radius: 1.1,
+        colors: [
+          palette.rose.withValues(alpha: palette.dark ? .16 : .09),
+          Colors.transparent,
+        ],
+      ).createShader(rect);
+    canvas.drawRect(rect, wash);
+
+    final line = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = .8
+      ..strokeWidth = 1
       ..strokeCap = StrokeCap.round
-      ..color = palette.border.withValues(alpha: .28);
-    final stitchPath = Path()
-      ..moveTo(size.width * .16, size.height - 12)
+      ..color = palette.border.withValues(alpha: .42);
+    final accentPath = Path()
+      ..moveTo(size.width * .06, size.height * .82)
       ..cubicTo(
-        size.width * .31,
-        size.height - 15,
-        size.width * .44,
-        size.height - 9,
-        size.width * .58,
-        size.height - 12,
+        size.width * .23,
+        size.height * .76,
+        size.width * .34,
+        size.height * .86,
+        size.width * .51,
+        size.height * .81,
       )
       ..cubicTo(
-        size.width * .68,
-        size.height - 14,
+        size.width * .64,
+        size.height * .77,
         size.width * .76,
-        size.height - 10,
-        size.width * .84,
-        size.height - 12,
+        size.height * .84,
+        size.width * .94,
+        size.height * .78,
       );
-    canvas.drawPath(stitchPath, stitch);
+    canvas.drawPath(accentPath, line);
 
     _drawTinyHeart(
       canvas,
-      Offset(size.width - 25, size.height - 17),
-      .55,
+      Offset(size.width - 29, size.height - 24),
+      .48,
       palette.rose.withValues(alpha: .35),
     );
     _drawTinyHeart(
       canvas,
-      Offset(size.width * .12, size.height * .30),
-      .36,
+      Offset(size.width * .10, size.height * .70),
+      .30,
       palette.rose.withValues(alpha: .28),
     );
     _drawSparkle(
       canvas,
-      Offset(size.width * .86, size.height * .26),
-      4.5,
+      Offset(size.width * .90, size.height * .25),
+      4.2,
       palette.gold.withValues(alpha: .7),
-    );
-    _drawDaisy(
-      canvas,
-      Offset(size.width * .08, size.height - 17),
-      4.3,
-      palette.gold.withValues(alpha: .64),
-      palette.rose.withValues(alpha: .38),
     );
     if (doodleSeed == 3) {
       _drawSparkle(
         canvas,
-        Offset(size.width * .22, size.height * .24),
+        Offset(size.width * .20, size.height * .24),
         3.2,
         palette.gold.withValues(alpha: .52),
       );
     }
+    canvas.restore();
   }
 
   static void _drawTinyHeart(
@@ -561,27 +547,8 @@ class _TornPaperPainter extends CustomPainter {
     canvas.drawPath(path, Paint()..color = color);
   }
 
-  static void _drawDaisy(
-    Canvas canvas,
-    Offset center,
-    double size,
-    Color petal,
-    Color centerColor,
-  ) {
-    final petalPaint = Paint()..color = petal;
-    for (var i = 0; i < 5; i++) {
-      final angle = math.pi * 2 * i / 5;
-      canvas.drawCircle(
-        center + Offset(math.cos(angle), math.sin(angle)) * size * .72,
-        size * .38,
-        petalPaint,
-      );
-    }
-    canvas.drawCircle(center, size * .30, Paint()..color = centerColor);
-  }
-
   @override
-  bool shouldRepaint(covariant _TornPaperPainter oldDelegate) =>
+  bool shouldRepaint(covariant _EditorialSurfacePainter oldDelegate) =>
       oldDelegate.palette.dark != palette.dark ||
       oldDelegate.palette.transparent != palette.transparent ||
       oldDelegate.doodleSeed != doodleSeed;
@@ -594,7 +561,7 @@ class _TinyHeartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _TornPaperPainter._drawTinyHeart(
+    _EditorialSurfacePainter._drawTinyHeart(
       canvas,
       Offset(size.width / 2, size.height / 2),
       size.shortestSide / 22,

@@ -81,6 +81,7 @@ class MyApp extends StatelessWidget {
                   },
                    child: LocalGuideCompanionOverlay(
                      navigatorKey: NotificationService.navigatorKey,
+                     showOnBaseSurfaces: false,
                      child: SoundEffectsScope(
                        child: SLFeedbackTheme(
                          child: child ?? const SizedBox.shrink(),

@@ -261,7 +261,10 @@ class _CounterGradient extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gradientColors = colors;
-    if (gradientColors == null) return child;
+    if (gradientColors == null || gradientColors.isEmpty) return child;
+    if (gradientColors.every((color) => color == gradientColors.first)) {
+      return child;
+    }
     return ShaderMask(
       shaderCallback: (bounds) => LinearGradient(
         colors: gradientColors,

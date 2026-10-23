@@ -3,7 +3,6 @@ import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'dart:async' show StreamSubscription, unawaited;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -324,11 +323,8 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       ),
       secondaryLabel: context.tr('memory_puzzle_open'),
       secondaryAction: () => unawaited(_openMemoryPuzzle(context)),
-      // Trạm Mây và luồng chăm bé liên quan chỉ mở trong debug để thử
-      // nghiệm; bản chính thức/release tạm thời không quảng bá luồng này.
-      onOpenPetCare: kDebugMode
-          ? () => unawaited(_openPetCareGame(context))
-          : null,
+      // Trạm Mây mở cho bản chính thức theo yêu cầu chủ dự án 23/10/2026.
+      onOpenPetCare: () => unawaited(_openPetCareGame(context)),
       onDelete: downloaded
           ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block')
           : null,

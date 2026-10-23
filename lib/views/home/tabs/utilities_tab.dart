@@ -18,6 +18,7 @@ import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/utility_service.dart';
 import '../../../utils/services/offline_cache_service.dart';
+import '../../../utils/services/role_utils.dart';
 import '../../../core/sl_theme.dart';
 import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 // import '../../utils/sl_notice.dart';
@@ -93,27 +94,34 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final user = _auth.currentUser;
     if (user == null) return;
     try {
-      _houseId = await _houseService.getCurrentHouseId();
+      final houseId = await _houseService.getCurrentHouseId();
       if (!mounted || _auth.currentUser?.uid != user.uid) return;
-      if (_houseId != null) {
+      final role = await RoleUtils.currentRole();
+      if (!mounted || _auth.currentUser?.uid != user.uid) return;
+      _houseId = houseId;
+      if (houseId != null && houseId.isNotEmpty) {
         // Tải từ cache trước
         final cachedData = OfflineCacheService.loadCacheSync(
-          'utilities_settings_$_houseId',
+          'utilities_settings_$houseId',
         );
         if (!_layoutReady && cachedData is Map) {
-          _applySettings(cachedData);
+          _applySettings(cachedData, role: role);
         }
 
         final settingsSnap = await _dbRef
-            .child('houses/$_houseId/settings')
+            .child('houses/$houseId/settings')
             .get()
             .timeout(const Duration(seconds: 3));
         if (settingsSnap.exists && settingsSnap.value is Map) {
           final map = Map<dynamic, dynamic>.from(settingsSnap.value as Map);
-          if (!mounted || _auth.currentUser?.uid != user.uid) return;
-          _applySettings(map);
+          if (!mounted ||
+              _auth.currentUser?.uid != user.uid ||
+              _houseId != houseId) {
+            return;
+          }
+          _applySettings(map, role: role);
           await OfflineCacheService.saveCache(
-            'utilities_settings_$_houseId',
+            'utilities_settings_$houseId',
             map,
           );
         }
@@ -125,10 +133,11 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     }
   }
 
-  void _applySettings(Map<dynamic, dynamic> map) {
+  void _applySettings(Map<dynamic, dynamic> map, {required String role}) {
     if (!mounted) return;
     final mode = HouseSettings.inferRelationshipModeFromSettingsMap(map);
-    final name = map['nameU1']?.toString() ?? context.tr('home_bn_1fd75b');
+    final name =
+        UtilityService.nameForRole(map, role) ?? context.tr('home_bn_1fd75b');
     if (_layoutReady && mode == _relationshipMode && name == _myName) return;
     setState(() {
       _relationshipMode = mode;

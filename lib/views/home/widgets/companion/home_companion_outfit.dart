@@ -3,11 +3,13 @@ import 'package:flutter/foundation.dart';
 enum HomeCompanionCharacter {
   bunny,
   bear,
+  // Hai ID nội bộ giữ tên cũ để khớp quyền đã đổi và app cũ (máy chủ, prefs,
+  // trang phục). Từ 22/10/2026 hai ô này là nhân vật riêng của SoulLocket:
+  // `kuromi` = Mèo Mây, `melody` = Chuột Phô Mai. Không hiển thị tên/hình cũ.
   kuromi,
   melody;
 
-  // Giữ ID và quyền cũ để đối soát, nhưng chưa cung cấp nhân vật thiếu giấy phép.
-  bool get isAvailable => this == bunny || this == bear;
+  bool get isAvailable => true;
 }
 
 enum CompanionHat { none, bow, cap, crown, beret, beanie }

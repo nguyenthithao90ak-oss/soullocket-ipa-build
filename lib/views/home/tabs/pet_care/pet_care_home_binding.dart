@@ -6,22 +6,41 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pet_care_progress.dart';
+import 'pet_care_sync.dart';
 
 /// Cầu nối nhẹ giữa Trạm Mây và hai bé trên Home.
 ///
 /// Binding chỉ đọc snapshot local theo UID/House hiện hành. Nó lọc event của
 /// [PetCareStore.changes] theo storage key, vì vậy một route chăm bé khác có
 /// thể lưu xong và Home đổi biểu cảm ngay mà không dựng lại toàn bộ Home.
+/// Bản chung của nhà chỉ được đọc một lần khi mở/quay lại app (tối đa 10 phút
+/// một lần), không giữ kết nối nghe để tiết kiệm băng thông máy chủ.
 class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
   PetCareHomeBinding({
     FirebaseAuth? auth,
     this.expectedUid,
     this.expectedHouseId,
     DateTime Function()? now,
+    PetCareRemote? Function(String houseId)? remoteFor,
   }) : _auth = auth ?? FirebaseAuth.instance,
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       _remoteFor = remoteFor ?? _firebaseRemote;
+
+  static const pullEvery = Duration(minutes: 10);
+
+  static PetCareRemote? _firebaseRemote(String houseId) {
+    try {
+      return PetCareFirebaseRemote(houseId: houseId);
+    } on Object {
+      // Chưa khởi tạo Firebase (test/preview): chỉ dùng bản trên máy.
+      return null;
+    }
+  }
 
   final FirebaseAuth _auth;
+  final PetCareRemote? Function(String houseId) _remoteFor;
+  DateTime? _pulledAt;
+  String? _pulledKey;
   final String? expectedUid;
   final String? expectedHouseId;
   final DateTime Function() _now;
@@ -87,10 +106,34 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
         uid: uid,
         houseId: houseId,
         isCurrent: () => _isCurrent(uid, houseId),
+        remote: _remoteFor(houseId),
         now: _now,
       );
     }
     await refresh();
+    unawaited(_pull());
+  }
+
+  /// Đọc bản chung một lần; lỗi mạng thì giữ bản trên máy.
+  Future<void> _pull() async {
+    final store = _store;
+    final last = _pulledAt;
+    final moment = _now();
+    // Quay lại app nhiều lần liên tiếp vẫn chỉ đọc tối đa 10 phút một lần.
+    if (store == null ||
+        !_foreground ||
+        (store.key == _pulledKey &&
+            last != null &&
+            moment.difference(last) < pullEvery)) {
+      return;
+    }
+    _pulledKey = store.key;
+    _pulledAt = moment;
+    try {
+      await store.pull();
+    } on Object {
+      // Ngoại tuyến hoặc chưa có quyền: Home vẫn hiện bản trên máy.
+    }
   }
 
   bool _isCurrent(String uid, String houseId) =>

@@ -1,12 +1,17 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../utils/calendar/relationship_duration.dart';
+import '../../../utils/services/offline_cache_service.dart';
 
 /// Night-sky palette lifted from the app icon (rose ↔ violet heart) so the
 /// loading screen continues straight on from the black native splash.
@@ -134,7 +139,12 @@ const List<_LoadingMessage> _kLoadingMessages = [
 ];
 
 class LoadingScaffold extends StatefulWidget {
-  const LoadingScaffold({super.key});
+  const LoadingScaffold({super.key, this.daysTogether});
+
+  /// Allows a caller that already has a trusted value to avoid another read.
+  /// When omitted, the loading surface only reads the current House's cached
+  /// start date in the background and keeps the generic animation otherwise.
+  final int? daysTogether;
 
   @override
   State<LoadingScaffold> createState() => _LoadingScaffoldState();
@@ -170,6 +180,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
   final _SkyCache _skyCache = _SkyCache();
   double _lastTipProgress = 0;
   bool? _reduceMotion;
+  int? _daysTogether;
 
   static double _phase(int elapsedMs, Duration period) =>
       (elapsedMs % period.inMilliseconds) / period.inMilliseconds;
@@ -177,6 +188,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
   @override
   void initState() {
     super.initState();
+    _daysTogether = widget.daysTogether;
     _liveInstances++;
     if (!_clock.isRunning) {
       _clock.start();
@@ -231,6 +243,42 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
       parent: _entrance,
       curve: const Interval(0.4, 1, curve: Curves.easeOutCubic),
     );
+    if (_daysTogether == null) {
+      unawaited(_loadCachedDaysTogether());
+    }
+  }
+
+  Future<void> _loadCachedDaysTogether() async {
+    try {
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
+          await OfflineCacheService.getPrefs().timeout(
+            const Duration(milliseconds: 900),
+          );
+      final userId = FirebaseAuth.instance.currentUser?.uid.trim();
+      final cachedUid = prefs.getString('il_auth_uid')?.trim();
+      final houseId = prefs.getString('il_house_id')?.trim();
+      if (userId == null || userId.isEmpty || cachedUid != userId) return;
+      if (houseId == null || houseId.isEmpty) return;
+
+      final snapshot = await FirebaseDatabase.instance
+          .ref('houses/$houseId/settings/startDate')
+          .get()
+          .timeout(const Duration(milliseconds: 900));
+      if (!mounted || FirebaseAuth.instance.currentUser?.uid != userId) {
+        return;
+      }
+      final rawStartDate = snapshot.value?.toString().trim() ?? '';
+      if (rawStartDate.isEmpty) return;
+      final days = RelationshipDuration.at(
+        rawStartDate,
+        instant: DateTime.now(),
+      ).totalDays;
+      if (!mounted) return;
+      setState(() => _daysTogether = days < 0 ? 0 : days);
+    } catch (_) {
+      // The loading screen must never wait for this optional decoration.
+    }
   }
 
   @override
@@ -325,7 +373,12 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                   child: _Rise(
                     animation: _captionIn,
                     distance: 14,
-                    child: _Caption(ambient: _ambient, beat: _beat),
+                    child: _Caption(
+                      ambient: _ambient,
+                      beat: _beat,
+                      daysTogether: _daysTogether,
+                      reduceMotion: _reduceMotion ?? false,
+                    ),
                   ),
                 ),
                 LayoutId(
@@ -1122,10 +1175,17 @@ class _StardustPainter extends CustomPainter {
 // ─── Caption ────────────────────────────────────────────────────────
 
 class _Caption extends StatelessWidget {
-  const _Caption({required this.ambient, required this.beat});
+  const _Caption({
+    required this.ambient,
+    required this.beat,
+    required this.daysTogether,
+    required this.reduceMotion,
+  });
 
   final Animation<double> ambient;
   final Animation<double> beat;
+  final int? daysTogether;
+  final bool reduceMotion;
 
   @override
   Widget build(BuildContext context) {
@@ -1157,6 +1217,25 @@ class _Caption extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.72),
           ),
         ),
+        if (daysTogether != null) ...[
+          const SizedBox(height: 12),
+          _DayCounterReveal(
+            daysTogether: daysTogether!,
+            reduceMotion: reduceMotion,
+          ),
+          const SizedBox(height: 7),
+          Text(
+            context.tr('home_together_subtitle'),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.66),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         RepaintBoundary(
           child: ShaderMask(
@@ -1178,6 +1257,69 @@ class _Caption extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DayCounterReveal extends StatelessWidget {
+  const _DayCounterReveal({
+    required this.daysTogether,
+    required this.reduceMotion,
+  });
+
+  final int daysTogether;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.tr('loading_countdown_badge');
+    return Semantics(
+      container: true,
+      label: '$label: $daysTogether',
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.favorite_rounded, size: 15, color: _Night.blush),
+              const SizedBox(width: 6),
+              TweenAnimationBuilder<int>(
+                tween: IntTween(begin: 0, end: daysTogether),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 1100),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => Text(
+                  '$value',
+                  style: SLTheme.quicksand(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    height: 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _Night.blush,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -36,6 +36,7 @@ import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/home_startup_media_cache.dart';
+import '../../utils/services/wallpaper_luminance_service.dart';
 import '../../utils/services/storage/storage_service.dart';
 import '../../utils/services/infrastructure/cloudflare_r2_service.dart';
 import '../../widgets/home_background_image.dart';

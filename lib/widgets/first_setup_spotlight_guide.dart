@@ -260,6 +260,85 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
     return ScrollPositionAlignmentPolicy.explicit;
   }
 
+  /// ensureVisible chỉ biết viewport cuộn, không biết phần bị bàn phím hoặc
+  /// thanh hệ thống che. Bù đúng khoảng thiếu theo từng viewport, từ trong ra
+  /// ngoài; không kéo lại những mục đã thấy và không đổi chiều cuộn đảo ngược.
+  Future<void> _revealTargetInSafeArea(
+    BuildContext targetContext,
+    int generation,
+  ) async {
+    final scrollables = <ScrollableState>[];
+    targetContext.visitAncestorElements((element) {
+      if (element is StatefulElement && element.state is ScrollableState) {
+        scrollables.add(element.state as ScrollableState);
+      }
+      return true;
+    });
+    for (final scrollable in scrollables) {
+      if (!mounted ||
+          _closing ||
+          generation != _generation ||
+          !targetContext.mounted ||
+          !(widget.isStillValid?.call() ?? true)) {
+        return;
+      }
+      if (!scrollable.mounted) continue;
+      final position = scrollable.position;
+      final render = targetContext.findRenderObject();
+      final viewport = scrollable.context.findRenderObject();
+      final overlay = _overlayKey.currentContext?.findRenderObject();
+      if (!position.hasContentDimensions ||
+          render is! RenderBox ||
+          viewport is! RenderBox ||
+          overlay is! RenderBox ||
+          !render.attached ||
+          !render.hasSize ||
+          !viewport.hasSize ||
+          !overlay.hasSize) {
+        continue;
+      }
+      final media = MediaQuery.of(context);
+      final safeRect = Rect.fromLTRB(
+        media.padding.left,
+        media.padding.top,
+        overlay.size.width - media.padding.right,
+        math.max(
+          media.padding.top,
+          overlay.size.height - media.padding.bottom - media.viewInsets.bottom,
+        ),
+      );
+      // Đổi về hệ tọa độ của Scrollable để cả Navigator lệch vị trí hoặc
+      // viewport được scale vẫn bù theo đúng đơn vị của scroll offset.
+      final visible = MatrixUtils.transformRect(
+        overlay.getTransformTo(viewport),
+        safeRect,
+      ).intersect(Offset.zero & viewport.size);
+      if (visible.isEmpty) continue;
+      final target = MatrixUtils.transformRect(
+        render.getTransformTo(viewport),
+        Offset.zero & render.size,
+      );
+      final vertical = position.axis == Axis.vertical;
+      final start = vertical ? target.top : target.left;
+      final end = vertical ? target.bottom : target.right;
+      final visibleStart = vertical ? visible.top : visible.left;
+      final visibleEnd = vertical ? visible.bottom : visible.right;
+      final delta =
+          start < visibleStart || end - start > visibleEnd - visibleStart
+          ? start - visibleStart
+          : math.max(0.0, end - visibleEnd);
+      final reversed =
+          position.axisDirection == AxisDirection.up ||
+          position.axisDirection == AxisDirection.left;
+      final offset = (position.pixels + (reversed ? -delta : delta))
+          .clamp(position.minScrollExtent, position.maxScrollExtent)
+          .toDouble();
+      if ((offset - position.pixels).abs() < .5) continue;
+      position.jumpTo(offset);
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
   FirstSetupSpotlightStep? get _step {
     if (widget.steps.isEmpty || _index >= widget.steps.length) return null;
     return widget.steps[_index];
@@ -303,6 +382,9 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide>
           );
         }
         await WidgetsBinding.instance.endOfFrame;
+        if (mounted && targetContext.mounted) {
+          await _revealTargetInSafeArea(targetContext, generation);
+        }
       }
       if (!mounted || _closing || generation != _generation) return;
       if (!(widget.isStillValid?.call() ?? true)) {

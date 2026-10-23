@@ -362,6 +362,9 @@ class SettingsQuickTile extends StatelessWidget {
     this.semanticLabel,
     this.isDark = false,
     this.badge,
+    this.backgroundColor,
+    this.borderColor,
+    this.background,
   });
 
   final String title;
@@ -376,6 +379,9 @@ class SettingsQuickTile extends StatelessWidget {
   final String? semanticLabel;
   final bool isDark;
   final Widget? badge;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Widget? background;
 
   @override
   Widget build(BuildContext context) {
@@ -397,73 +403,83 @@ class SettingsQuickTile extends StatelessWidget {
           boxShadow: palette.shadow,
         ),
         child: Material(
-          color: palette.surface,
+          color: backgroundColor ?? palette.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(SLSettingsRadius.card),
-            side: BorderSide(color: palette.border),
+            side: BorderSide(color: borderColor ?? palette.border),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
             highlightColor: palette.ink.withValues(alpha: 0.03),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 116),
-              padding: const EdgeInsets.fromLTRB(12, 13, 10, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 40,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child:
-                              leading ??
-                              SLSettingsIconTile(
-                                icon: icon ?? Icons.circle_outlined,
-                                color: color,
-                                size: 40,
-                                isDark: isDark,
+            child: Stack(
+              children: [
+                if (background != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ExcludeSemantics(child: background!),
+                    ),
+                  ),
+                Container(
+                  constraints: const BoxConstraints(minHeight: 116),
+                  padding: const EdgeInsets.fromLTRB(12, 13, 10, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: 40,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child:
+                                  leading ??
+                                  SLSettingsIconTile(
+                                    icon: icon ?? Icons.circle_outlined,
+                                    color: color,
+                                    size: 40,
+                                    isDark: isDark,
+                                  ),
+                            ),
+                            // Lấn vào lề phải của thẻ để ô hẹp (ba ô một hàng
+                            // trên màn 360dp) không đè nhãn lên icon.
+                            if (badge != null)
+                              PositionedDirectional(
+                                top: 0,
+                                end: -4,
+                                child: badge!,
                               ),
+                          ],
                         ),
-                        // Lấn vào lề phải của thẻ để ô hẹp (ba ô một hàng
-                        // trên màn 360dp) không đè nhãn lên icon.
-                        if (badge != null)
-                          PositionedDirectional(
-                            top: 0,
-                            end: -4,
-                            child: badge!,
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                      color: palette.ink,
-                    ),
-                  ),
-                  if (caption?.trim().isNotEmpty ?? false) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      caption!,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                        color: captionColor,
                       ),
-                    ),
-                  ],
-                ],
-              ),
+                      const SizedBox(height: 12),
+                      Text(
+                        title,
+                        style: SLTheme.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                          color: palette.ink,
+                        ),
+                      ),
+                      if (caption?.trim().isNotEmpty ?? false) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          caption!,
+                          style: SLTheme.quicksand(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
+                            color: captionColor,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),

@@ -72,11 +72,13 @@ extension _HomeScreenShellBackground on _HomeScreenState {
         final isR2 = CloudflareR2Service.instance.isR2Url(url);
         if (!isR2) {
           final file = HomeStartupMediaCache.getFile(url);
-          return HomeImagePolicy.resized(
+          final provider = HomeImagePolicy.resized(
             file == null ? CachedNetworkImageProvider(url) : FileImage(file),
             width: size.width,
             height: size.height,
           );
+          WallpaperLuminanceService.instance.analyzeProvider(url, provider);
+          return provider;
         }
         final resolvedHouse = await AuthHouseContextService.quickHouseId();
         bool isCurrentScope() =>
@@ -92,19 +94,23 @@ extension _HomeScreenShellBackground on _HomeScreenState {
         final cached = await AppCacheManager.instance.getFileFromCache(cacheKey);
         if (!isCurrentScope()) throw StateError('Home background session changed');
         if (cached != null && await cached.file.exists()) {
-          return HomeImagePolicy.resized(FileImage(cached.file),
+          final provider = HomeImagePolicy.resized(FileImage(cached.file),
             width: size.width, height: size.height);
+          WallpaperLuminanceService.instance.analyzeProvider(url, provider);
+          return provider;
         }
         final signedUrl = await StorageService().resolveHomeBackgroundReadUrl(resolvedHouse, url);
         if (!isCurrentScope() ||
             await AuthHouseContextService.quickHouseId() != resolvedHouse) {
           throw StateError('Home background session changed');
         }
-        return HomeImagePolicy.resized(
+        final provider = HomeImagePolicy.resized(
           CachedNetworkImageProvider(signedUrl,
             cacheKey: cacheKey, cacheManager: AppCacheManager.instance),
           width: size.width, height: size.height,
         );
+        WallpaperLuminanceService.instance.analyzeProvider(url, provider);
+        return provider;
       },
     );
   }

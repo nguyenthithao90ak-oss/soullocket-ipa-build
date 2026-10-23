@@ -335,32 +335,51 @@ extension _SoulBlockBoard on _SoulBlockGameState {
         },
       ),
     );
-    return GestureDetector(
+    return Listener(
       behavior: HitTestBehavior.opaque,
-      onPanStart: (details) => _startDrag(piece, details.globalPosition),
-      onPanUpdate: (details) => _updateDrag(details.globalPosition),
-      onPanEnd: (_) => unawaited(_endDrag()),
-      onPanCancel: _cancelDrag,
-      child: AnimatedScale(
-        duration: Duration(
-          milliseconds: MediaQuery.disableAnimationsOf(context)
-              ? 0
-              : isSnapBack
-              ? 170
-              : 120,
-        ),
-        curve: isSnapBack ? Curves.easeOutBack : Curves.easeOut,
-        scale: isDragging
-            ? .96
-            : isSnapBack
-            ? 1.04
-            : 1,
-        child: AnimatedOpacity(
+      onPointerDown: _trackDragPointerDown,
+      onPointerUp: _trackDragPointerUp,
+      onPointerCancel: _trackDragPointerCancel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onPanStart: (details) => _startDrag(piece, details.globalPosition),
+        onPanUpdate: (details) => _updateDrag(details.globalPosition),
+        onPanEnd: (_) {
+          // Nước đi đã được chốt bởi PointerUp đúng pointer. PanEnd có thể
+          // xuất hiện sau cancel hoặc do pointer khác nên không đặt mảnh ở đây.
+          if (_dragPointerId == null && _draggingPiece != null) {
+            _cancelDrag();
+          }
+        },
+        onPanCancel: () {
+          // PointerCancel được xử lý ở Listener. PanCancel cũng có thể do
+          // pointer thứ hai làm gesture arena đổi trạng thái; không hủy
+          // lượt kéo đang thuộc pointer đầu tiên trong trường hợp đó.
+          if (_dragPointerId == null) {
+            _cancelDrag();
+          }
+        },
+        child: AnimatedScale(
           duration: Duration(
-            milliseconds: MediaQuery.disableAnimationsOf(context) ? 0 : 120,
+            milliseconds: MediaQuery.disableAnimationsOf(context)
+                ? 0
+                : isSnapBack
+                ? 170
+                : 120,
           ),
-          opacity: isDragging ? .12 : 1,
-          child: IgnorePointer(ignoring: isDragging, child: pieceCardChild),
+          curve: isSnapBack ? Curves.easeOutBack : Curves.easeOut,
+          scale: isDragging
+              ? .96
+              : isSnapBack
+              ? 1.04
+              : 1,
+          child: AnimatedOpacity(
+            duration: Duration(
+              milliseconds: MediaQuery.disableAnimationsOf(context) ? 0 : 120,
+            ),
+            opacity: isDragging ? .12 : 1,
+            child: IgnorePointer(ignoring: isDragging, child: pieceCardChild),
+          ),
         ),
       ),
     );

@@ -129,7 +129,9 @@ class _HomeCompanionWardrobeState extends State<HomeCompanionWardrobe> {
   Widget build(BuildContext context) {
     final bear = widget.character == HomeCompanionCharacter.bear;
     final accent = widget.character == HomeCompanionCharacter.kuromi
-        ? const Color(0xFF75608C)
+        ? const Color(0xFF6B5596)
+        : widget.character == HomeCompanionCharacter.melody
+        ? const Color(0xFF7E5B42)
         : bear
         ? const Color(0xFF507E93)
         : const Color(0xFFAF5F7D);

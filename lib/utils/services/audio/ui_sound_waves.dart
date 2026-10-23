@@ -12,6 +12,12 @@ enum UiSoundCue {
   result,
   flip,
   uploadComplete,
+  petPickup,
+  petBite,
+  petBubble,
+  petRinse,
+  petDry,
+  petCuddle,
 }
 
 /// Âm tổng hợp cục bộ: không tải asset, không dùng mạng hoặc ghi âm người dùng.
@@ -30,6 +36,12 @@ abstract final class UiSoundWaves {
     UiSoundCue.result => const Duration(milliseconds: 360),
     UiSoundCue.flip => const Duration(milliseconds: 105),
     UiSoundCue.uploadComplete => const Duration(milliseconds: 330),
+    UiSoundCue.petPickup => const Duration(milliseconds: 120),
+    UiSoundCue.petBite => const Duration(milliseconds: 210),
+    UiSoundCue.petBubble => const Duration(milliseconds: 350),
+    UiSoundCue.petRinse => const Duration(milliseconds: 420),
+    UiSoundCue.petDry => const Duration(milliseconds: 300),
+    UiSoundCue.petCuddle => const Duration(milliseconds: 390),
   };
 
   /// Số biến thể của cue. Biến thể được đổi luân phiên khi cùng một sự kiện
@@ -56,10 +68,23 @@ abstract final class UiSoundWaves {
     final wave = _header(count);
     final data = ByteData.sublistView(wave);
     var phase = 0.0;
+    var noiseSeed = 73 + variant * 97;
+    var softNoise = 0.0;
     for (var i = 0; i < count; i++) {
       final t = i / sampleRate;
       final p = i / (count - 1);
+      noiseSeed = (noiseSeed * 1664525 + 1013904223) & 0xffffffff;
+      softNoise = softNoise * .78 + ((noiseSeed / 0xffffffff) * 2 - 1) * .22;
       final frequency = switch (cue) {
+        UiSoundCue.petPickup => 440 + 460 * p + variant * 45,
+        UiSoundCue.petBite =>
+          190 + 100 * math.sin(p * math.pi * 4) + variant * 30,
+        UiSoundCue.petBubble =>
+          350 + 390 * math.pow(1 - (p * 3 % 1), 2) + variant * 60,
+        UiSoundCue.petRinse => 950 - p * 360 + variant * 40,
+        UiSoundCue.petDry =>
+          380 + math.sin(p * math.pi * 2) * 180 + variant * 30,
+        UiSoundCue.petCuddle => p < .4 ? 523.25 + variant * 30 : 783.99,
         UiSoundCue.click => 420 - 150 * p,
         UiSoundCue.success => p < 0.46 ? 523.25 : 659.25,
         UiSoundCue.saved =>
@@ -105,7 +130,17 @@ abstract final class UiSoundWaves {
         UiSoundCue.flip => math.sin(phase * 3) * 0.05,
         _ => math.sin(phase * 2) * 0.09,
       };
-      final signal = math.sin(phase) * 0.68 + harmonic;
+      // Tiếng cắn, bọt và nước tự tổng hợp; noise được lọc êm, không dùng sample bên ngoài.
+      final signal = switch (cue) {
+        UiSoundCue.petBite =>
+          (softNoise * 1.4 + math.sin(phase) * .18) *
+              math.pow(math.sin(p * math.pi * 3), 2),
+        UiSoundCue.petRinse => softNoise * 1.35 + math.sin(phase) * .09,
+        UiSoundCue.petDry => softNoise * 1.3 + math.sin(phase) * .16,
+        UiSoundCue.petBubble =>
+          math.sin(phase) * .55 * math.pow(math.sin(p * math.pi * 3), 2),
+        _ => math.sin(phase) * 0.68 + harmonic,
+      };
       final sample = (signal * envelope * 0.30 * 32767).round();
       data.setInt16(44 + i * 2, sample.clamp(-32767, 32767), Endian.little);
     }

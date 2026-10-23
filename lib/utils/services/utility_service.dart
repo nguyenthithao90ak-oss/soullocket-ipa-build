@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n_service.dart';
 import 'offline_cache_service.dart';
+import 'role_utils.dart';
 import '../../models/house_settings.dart';
 
 class UtilityLayoutSnapshot {
@@ -86,8 +87,7 @@ class UtilityService {
       final cached = OfflineCacheService.loadCacheSync(key);
       if (cached is Map) {
         mode ??= HouseSettings.inferRelationshipModeFromSettingsMap(cached);
-        final cachedName = cached['nameU1']?.toString().trim();
-        if (cachedName != null && cachedName.isNotEmpty) name ??= cachedName;
+        name ??= nameForRole(cached, prefs.getString('il_role'));
       }
     }
     final storedMode = prefs.getString('il_rel_mode');
@@ -100,6 +100,13 @@ class UtilityService {
               : null),
       name: name,
     );
+  }
+
+  /// Tên tác giả phải theo vai của mình, không mượn tên người ấy khi còn trống.
+  static String? nameForRole(Map settings, String? role) {
+    final nameKey = RoleUtils.normalize(role) == 'user2' ? 'nameU2' : 'nameU1';
+    final name = settings[nameKey]?.toString().trim();
+    return name == null || name.isEmpty ? null : name;
   }
 
   static const String _pinnedAppsPrefKey = 'il_pinned_utility_ids';

@@ -41,15 +41,11 @@ class LocalGuideSurface {
   final String? howToKey;
 
   bool get isUtility => type == LocalGuideSurfaceType.utility;
-}
 
-const LocalGuideSurface _localGuideUnknownSurface = LocalGuideSurface(
-  type: LocalGuideSurfaceType.update,
-  id: 'local_guide_help',
-  titleKey: 'auth_help_center_guide',
-  summaryKey: 'help_empty',
-  icon: Icons.help_outline_rounded,
-);
+  /// Chỉ các màn tiện ích có hướng dẫn ngay theo nội dung đang mở mới dùng
+  /// bong bóng trợ lý trong app thật.
+  bool get isAssistantEligible => isUtility;
+}
 
 class LocalGuideSession {
   const LocalGuideSession({required this.uid, required this.houseId});
@@ -214,6 +210,11 @@ class LocalGuideContextNotifier extends ChangeNotifier {
   }
 
   LocalGuideSurface? surfaceForRouteType(String routeType) {
+    // Launcher truyền ID cố định để bản release làm rối tên class vẫn
+    // chọn đúng hướng dẫn. Route lạ không kế thừa tiện ích bên dưới.
+    if (routeType.startsWith('utility:')) {
+      return _utilitySurfaces[routeType.substring('utility:'.length)];
+    }
     final surfaceId = _routeSurfaceIds[routeType];
     if (surfaceId == 'settings') return _settingsSurface;
     if (surfaceId == 'couple_connect') {
@@ -285,11 +286,11 @@ class LocalGuideContextNotifier extends ChangeNotifier {
     'creative_diary': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
       id: 'creative_diary',
-      titleKey: 'utility_title_creative_diary',
-      summaryKey: 'creative_diary_memory_question',
+      titleKey: 'util_stayknim_601a40',
+      summaryKey: 'util_lulinhngdn_f942d3',
       icon: Icons.auto_stories_rounded,
-      detailKey: 'update_hub_memories_note',
-      howToKey: 'creative_diary_memory_question',
+      detailKey: 'util_mitrangshi_ed5c88',
+      howToKey: 'local_guide_creative_steps',
     ),
     'surprise_maker': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
@@ -307,7 +308,7 @@ class LocalGuideContextNotifier extends ChangeNotifier {
       summaryKey: 'p3_capsule_help_features',
       icon: Icons.mark_email_unread_rounded,
       detailKey: 'p3_capsule_help_features',
-      howToKey: 'p3_capsule_help_how_to',
+      howToKey: 'local_guide_capsule_steps',
     ),
     'calendar': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
@@ -322,10 +323,10 @@ class LocalGuideContextNotifier extends ChangeNotifier {
       type: LocalGuideSurfaceType.utility,
       id: 'note',
       titleKey: 'utility_title_note',
-      summaryKey: 'search_utility_subtitle_note',
+      summaryKey: 'notes_workspace_description',
       icon: Icons.description_rounded,
-      detailKey: 'home_note_edit_rule',
-      howToKey: 'home_note_tap_to_write',
+      detailKey: 'local_guide_notes_features',
+      howToKey: 'local_guide_notes_steps',
     ),
     'finance': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
@@ -348,11 +349,11 @@ class LocalGuideContextNotifier extends ChangeNotifier {
     'couple_connect': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
       id: 'couple_connect',
-      titleKey: 'starter_pairing_title',
-      summaryKey: 'starter_pairing_body',
+      titleKey: 'home_qunllinkt_df5d77',
+      summaryKey: 'home_xemdanhsch_640b35',
       icon: Icons.link_rounded,
-      detailKey: 'pairing_ui_dashboard_subtitle',
-      howToKey: 'starter_pairing_body',
+      detailKey: 'home_xemdanhsch_640b35',
+      howToKey: 'local_guide_links_steps',
     ),
     'habit': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
@@ -369,8 +370,8 @@ class LocalGuideContextNotifier extends ChangeNotifier {
       titleKey: 'utility_title_health',
       summaryKey: 'utilities_desc_health',
       icon: Icons.favorite_border_rounded,
-      detailKey: 'p3_health_consent_body',
-      howToKey: 'p3_health_mark_today_subtitle',
+      detailKey: 'p3_health_medical_disclaimer',
+      howToKey: 'local_guide_health_steps',
     ),
     'sleep_tracker': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
@@ -378,7 +379,7 @@ class LocalGuideContextNotifier extends ChangeNotifier {
       titleKey: 'utility_title_sleep',
       summaryKey: 'utilities_desc_sleep',
       icon: Icons.bedtime_outlined,
-      detailKey: 'sleep_tracking_consent',
+      detailKey: 'sleep_tracking_manual_title',
       howToKey: 'sleep_tracking_manual_hint',
     ),
     'tarot': LocalGuideSurface(
@@ -423,8 +424,8 @@ class LocalGuideContextNotifier extends ChangeNotifier {
       titleKey: 'utility_title_vault',
       summaryKey: 'utilities_desc_vault',
       icon: Icons.lock_outline_rounded,
-      detailKey: 'help_security_body',
-      howToKey: 'support_guide_privacy_vault_steps',
+      detailKey: 'local_guide_vault_features',
+      howToKey: 'local_guide_vault_steps',
     ),
     'diary_export': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
@@ -447,11 +448,11 @@ class LocalGuideContextNotifier extends ChangeNotifier {
     'soul_events': LocalGuideSurface(
       type: LocalGuideSurfaceType.utility,
       id: 'soul_events',
-      titleKey: 'copy_fc725e371ce1',
-      summaryKey: 'theme_event_anniversary_section_desc',
+      titleKey: 'p8_events_title',
+      summaryKey: 'p8_events_overview_subtitle',
       icon: Icons.event_note_rounded,
-      detailKey: 'theme_event_anniversary_section_desc',
-      howToKey: 'theme_event_calendar_section_desc',
+      detailKey: 'p8_events_empty_subtitle',
+      howToKey: 'local_guide_events_steps',
     ),
   };
 }
@@ -583,12 +584,17 @@ class LocalGuideCompanionOverlay extends StatefulWidget {
     super.key,
     required this.child,
     this.authenticatedOnly = true,
+    this.showOnBaseSurfaces = false,
     this.now = DateTime.now,
     this.navigatorKey,
   });
 
   final Widget child;
   final bool authenticatedOnly;
+
+  /// Chỉ dùng cho preview/test muốn hiện trợ lý trên Home hoặc tab nền. App
+  /// thật để false để trợ lý chỉ xuất hiện trên route có catalog riêng.
+  final bool showOnBaseSurfaces;
   final DateTime Function() now;
   final GlobalKey<NavigatorState>? navigatorKey;
 
@@ -922,7 +928,8 @@ class _LocalGuideCompanionOverlayState extends State<LocalGuideCompanionOverlay>
     _tipTimer?.cancel();
     _hideTimer?.cancel();
     setState(() => _tipVisible = false);
-    final navigator = widget.navigatorKey?.currentState ??
+    final navigator =
+        widget.navigatorKey?.currentState ??
         Navigator.maybeOf(context, rootNavigator: true);
     final sheetContext = navigator?.overlay?.context;
     if (navigator == null || sheetContext == null || !sheetContext.mounted) {
@@ -946,8 +953,12 @@ class _LocalGuideCompanionOverlayState extends State<LocalGuideCompanionOverlay>
   LocalGuideSurface? get _visibleSurface {
     final routeType = LocalGuideRouteTracker.instance.activeScreenType;
     if (routeType != null) {
-      return _contextNotifier.surfaceForRouteType(routeType);
+      // Route đã được theo dõi nhưng chưa có catalog riêng thì ẩn trợ lý.
+      // Không rơi về surface của tab trước (ví dụ Trạm Mây mở từ Trò chơi).
+      final surface = _contextNotifier.surfaceForRouteType(routeType);
+      return surface?.isAssistantEligible == true ? surface : null;
     }
+    if (!widget.showOnBaseSurfaces) return null;
     return _contextNotifier.surface;
   }
 
@@ -1468,12 +1479,9 @@ class LocalGuideChatSheet extends StatefulWidget {
 }
 
 class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
-  final _controller = TextEditingController();
   Timer? _countdownTimer;
   DateTime _now = DateTime.now();
-  String? _answerKey;
-  LocalGuideSurface? _answerSurface;
-  String? _lastQuestion;
+
   _GuideAnswerFocus _answerFocus = _GuideAnswerFocus.overview;
   bool _hiding = false;
   bool _hideFailed = false;
@@ -1491,7 +1499,7 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
-    _controller.dispose();
+
     super.dispose();
   }
 
@@ -1519,140 +1527,8 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
     }
   }
 
-  void _ask([String? value, _GuideAnswerFocus? requestedFocus]) {
-    final query = (value ?? _controller.text).trim();
-    final matchedSurface = _findSurface(query);
-    final focus = requestedFocus ?? _focusForQuery(query);
-    final isUnknown =
-        matchedSurface == null &&
-        query.isNotEmpty &&
-        requestedFocus == null &&
-        focus == _GuideAnswerFocus.overview;
-    final surface = isUnknown
-        ? _localGuideUnknownSurface
-        : (matchedSurface ?? widget.surface);
-    final answerKey = switch (focus) {
-      _GuideAnswerFocus.features => surface.detailKey ?? surface.summaryKey,
-      _GuideAnswerFocus.howTo => surface.howToKey ?? surface.summaryKey,
-      _GuideAnswerFocus.overview => surface.summaryKey,
-    };
-    setState(() {
-      _answerSurface = surface;
-      _answerKey = isUnknown ? 'help_empty' : answerKey;
-      _answerFocus = isUnknown ? _GuideAnswerFocus.overview : focus;
-      _lastQuestion = query.isEmpty ? null : query;
-    });
-    _controller.clear();
-  }
-
-  LocalGuideSurface? _findSurface(String query) {
-    final normalized = _normalize(query);
-    if (normalized.isEmpty) return widget.surface;
-    final surfaces = <String, LocalGuideSurface>{
-      widget.surface.id: widget.surface,
-      LocalGuideContextNotifier.instance.surface.id:
-          LocalGuideContextNotifier.instance.surface,
-      ...LocalGuideContextNotifier._utilitySurfaces,
-    }.values;
-    LocalGuideSurface? bestSurface;
-    var bestScore = 0;
-    for (final surface in surfaces) {
-      final title = _normalize(context.tr(surface.titleKey));
-      final id = _normalize(surface.id.replaceAll('_', ' '));
-      final aliases = <String>[id, title];
-      final score = aliases.fold<int>(0, (current, alias) {
-        if (alias.isEmpty) return current;
-        if (normalized.contains(alias) || alias.contains(normalized)) {
-          return current + 10;
-        }
-        return current +
-            normalized
-                .split(' ')
-                .where((word) => word.length > 2 && alias.contains(word))
-                .length;
-      });
-      if (score > bestScore) {
-        bestScore = score;
-        bestSurface = surface;
-      }
-    }
-    if (bestSurface != null) return bestSurface;
-    if (_isGenericQuestion(normalized)) return widget.surface;
-    return null;
-  }
-
-  bool _isGenericQuestion(String normalized) {
-    const markers = [
-      'man hinh',
-      'dang o dau',
-      'o dau',
-      'lam gi',
-      'chuc nang',
-      'trang nay',
-      'nut',
-      'icon',
-      'tinh nang',
-      'cach',
-      'su dung',
-      'bam',
-      'cham',
-      'mo',
-      'tao',
-      'them',
-      'luu',
-      'chon',
-    ];
-    return markers.any(normalized.contains);
-  }
-
-  _GuideAnswerFocus _focusForQuery(String query) {
-    final normalized = _normalize(query);
-    const featureMarkers = [
-      'lam gi',
-      'chuc nang',
-      'tinh nang',
-      'icon',
-      'tac dung',
-      'co gi',
-    ];
-    const howToMarkers = [
-      'cach',
-      'su dung',
-      'bam',
-      'cham',
-      'tao',
-      'them',
-      'luu',
-      'chon',
-      'mo',
-      'dung nhu nao',
-    ];
-    if (featureMarkers.any(normalized.contains)) {
-      return _GuideAnswerFocus.features;
-    }
-    if (howToMarkers.any(normalized.contains)) {
-      return _GuideAnswerFocus.howTo;
-    }
-    return _GuideAnswerFocus.overview;
-  }
-
-  String _normalize(String value) {
-    var result = value.toLowerCase().trim();
-    const groups = {
-      'a': 'àáạảãâầấậẩẫăằắặẳẵäå',
-      'e': 'èéẹẻẽêềếệểễë',
-      'i': 'ìíịỉĩîï',
-      'o': 'òóọỏõôồốộổỗơờớợởỡö',
-      'u': 'ùúụủũưừứựửữûü',
-      'y': 'ỳýỵỷỹ',
-      'd': 'đ',
-    };
-    for (final entry in groups.entries) {
-      for (final rune in entry.value.runes) {
-        result = result.replaceAll(String.fromCharCode(rune), entry.key);
-      }
-    }
-    return result.replaceAll(RegExp(r'\s+'), ' ');
+  void _showSection(_GuideAnswerFocus focus) {
+    setState(() => _answerFocus = focus);
   }
 
   Future<void> _openGuide() async {
@@ -1667,8 +1543,7 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final surface = _answerSurface ?? widget.surface;
-    final answerKey = _answerKey;
+    final surface = widget.surface;
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
@@ -1724,9 +1599,9 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
                                     ),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
-                                'Mình ở đây để chỉ đường thật dễ hiểu ✨',
-                                style: TextStyle(
+                              Text(
+                                context.tr(widget.surface.titleKey),
+                                style: const TextStyle(
                                   color: Color(0xFF8E6476),
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
@@ -1743,13 +1618,45 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
                       ],
                     ),
                     Text(
-                      context.tr('help_intro'),
+                      context.tr('local_guide_screen_hint'),
                       style: const TextStyle(
                         color: Color(0xFF684957),
                         height: 1.45,
                       ),
                     ),
                     const SizedBox(height: 12),
+
+                    _GuideAnswerCard(surface: surface, focus: _answerFocus),
+                    const SizedBox(height: 12),
+                    Text(
+                      context.tr('support_ui_welcome'),
+                      style: const TextStyle(
+                        color: Color(0xFF4A263A),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _GuideChoiceButton(
+                      key: const ValueKey('local-guide-overview'),
+                      icon: surface.icon,
+                      label: context.tr('local_guide_overview'),
+                      selected: _answerFocus == _GuideAnswerFocus.overview,
+                      onPressed: () => _showSection(_GuideAnswerFocus.overview),
+                    ),
+                    _GuideChoiceButton(
+                      key: const ValueKey('local-guide-features'),
+                      icon: Icons.auto_awesome_rounded,
+                      label: context.tr('p3_help_features_label'),
+                      selected: _answerFocus == _GuideAnswerFocus.features,
+                      onPressed: () => _showSection(_GuideAnswerFocus.features),
+                    ),
+                    _GuideChoiceButton(
+                      key: const ValueKey('local-guide-how-to'),
+                      icon: Icons.lightbulb_outline_rounded,
+                      label: context.tr('p8_finance_info_how_to_title'),
+                      selected: _answerFocus == _GuideAnswerFocus.howTo,
+                      onPressed: () => _showSection(_GuideAnswerFocus.howTo),
+                    ),
                     if (widget.trialEndsAt != null) ...[
                       _GuideCountdownCard(
                         endsAt: widget.trialEndsAt!,
@@ -1801,127 +1708,12 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
                         ),
                       const SizedBox(height: 12),
                     ],
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .72),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFF1D6E1)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.touch_app_rounded,
-                            size: 20,
-                            color: Color(0xFFE85A82),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text: 'Bạn đang xem: ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: context.tr(widget.surface.titleKey),
-                                    style: const TextStyle(
-                                      color: Color(0xFFE04B76),
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_lastQuestion != null) ...[
-                      Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 290),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 9,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.secondaryContainer,
-                            borderRadius: const BorderRadiusDirectional.only(
-                              topStart: Radius.circular(16),
-                              topEnd: Radius.circular(16),
-                              bottomStart: Radius.circular(16),
-                            ),
-                          ),
-                          child: Text(_lastQuestion!),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    _GuideAnswerCard(
-                      surface: surface,
-                      answerKey: answerKey,
-                      focus: _answerFocus,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.tr('update_hub_features_hint'),
-                      style: const TextStyle(
-                        color: Color(0xFF4A263A),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _GuideChoiceButton(
-                      icon: surface.icon,
-                      label: context.tr(surface.titleKey),
-                      selected: _answerFocus == _GuideAnswerFocus.overview,
-                      onPressed: () => _ask(context.tr(surface.titleKey)),
-                    ),
-                    _GuideChoiceButton(
-                      icon: Icons.auto_awesome_rounded,
-                      label: context.tr('update_hub_features'),
-                      selected: _answerFocus == _GuideAnswerFocus.features,
-                      onPressed: () => _ask(
-                        context.tr('update_hub_features'),
-                        _GuideAnswerFocus.features,
-                      ),
-                    ),
-                    _GuideChoiceButton(
-                      icon: Icons.lightbulb_outline_rounded,
-                      label: context.tr('auth_guide_short'),
-                      selected: _answerFocus == _GuideAnswerFocus.howTo,
-                      onPressed: () => _ask(
-                        context.tr('auth_guide_short'),
-                        _GuideAnswerFocus.howTo,
-                      ),
-                    ),
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
                       child: TextButton.icon(
                         onPressed: _openGuide,
                         icon: const Icon(Icons.menu_book_rounded, size: 18),
                         label: Text(context.tr('update_hub_guide')),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.tr('core_done'),
-                      style: const TextStyle(
-                        color: Color(0xFF9C7585),
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -1937,6 +1729,7 @@ class _LocalGuideChatSheetState extends State<LocalGuideChatSheet> {
 
 class _GuideChoiceButton extends StatelessWidget {
   const _GuideChoiceButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.selected,
@@ -2011,14 +1804,9 @@ class _GuideChoiceButton extends StatelessWidget {
 }
 
 class _GuideAnswerCard extends StatelessWidget {
-  const _GuideAnswerCard({
-    required this.surface,
-    required this.answerKey,
-    required this.focus,
-  });
+  const _GuideAnswerCard({required this.surface, required this.focus});
 
   final LocalGuideSurface surface;
-  final String? answerKey;
   final _GuideAnswerFocus focus;
 
   Widget _section(
@@ -2059,7 +1847,7 @@ class _GuideAnswerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final summaryKey = answerKey ?? surface.summaryKey;
+    final summaryKey = surface.summaryKey;
     final detailKey = surface.detailKey;
     final howToKey = surface.howToKey;
     return Container(

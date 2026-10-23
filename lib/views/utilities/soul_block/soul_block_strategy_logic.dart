@@ -11,6 +11,169 @@ mixin _SoulBlockStrategyLogic {
   int get _clearedLines;
   int get _strategyBoardSize;
 
+  List<List<bool>> _createOpeningMask() {
+    final size = _strategyBoardSize;
+    var board = List.generate(size, (_) => List.filled(size, false));
+    // Ba đường ở mép, mỗi đường thiếu hai ô liền nhau. Giữ phần giữa
+    // thoáng thay vì rải 40–44 ô ngẫu nhiên và tạo nhiều hốc ngay đầu ván.
+    for (final row in [0, size - 1]) {
+      final gap = 2 + _random.nextInt(size - 4);
+      for (var col = 0; col < size; col++) {
+        if (col != gap && col != gap + 1) board[row][col] = true;
+      }
+    }
+    final gap = 2 + _random.nextInt(size - 4);
+    for (var row = 0; row < size; row++) {
+      if (row != gap && row != gap + 1) board[row][0] = true;
+    }
+    for (var row = size - 3; row < size - 1; row++) {
+      for (var col = size - 3; col < size - 1; col++) {
+        board[row][col] = true;
+      }
+    }
+    if (_random.nextBool()) {
+      board = board.map((row) => row.reversed.toList()).toList();
+    }
+    final turns = _random.nextInt(4);
+    for (var turn = 0; turn < turns; turn++) {
+      final previous = board;
+      board = List.generate(
+        size,
+        (row) => List.generate(size, (col) => previous[size - 1 - col][row]),
+      );
+    }
+    return board;
+  }
+
+  // Mỗi hình học chỉ xuất hiện một lần trong pool, kể cả khi hai ID là
+  // phiên bản ngang/dọc của nhau. Hướng đã chọn vẫn lưu bằng quarterTurns.
+  static final List<_SoulPieceTemplate> _generationTemplates = () {
+    final shapes = <String>{};
+    final result = <_SoulPieceTemplate>[];
+    for (final original in _kSoulBlockTemplates) {
+      var template = original;
+      for (var turn = 0; turn < 4; turn++) {
+        final cells = template.cells.map((p) => p.y * 8 + p.x).toList()..sort();
+        if (shapes.add(cells.join(','))) result.add(template);
+        template = template.rotate();
+      }
+    }
+    return result;
+  }();
+
+  int get _clearDrought {
+    var count = 0;
+    for (final cleared in _recentClearOutcomes.reversed) {
+      if (cleared) break;
+      count++;
+    }
+    return count;
+  }
+
+  // Nhắm vào các hàng/cột còn thiếu ít ô và thử lấp chúng trong tối đa
+  // ba nước. Đặt theo ô thiếu giúp tìm được cả các khe rời nhau mà beam
+  // tổng quát dễ bỏ qua. Mỗi mục tiêu chỉ giữ ba nhánh, tối đa bốn mục tiêu.
+  List<_SoulBatchPlan> _lineCompletionPlans(List<List<bool>> boardMask) {
+    final targets = <List<Point<int>>>[];
+    for (var axis = 0; axis < 2; axis++) {
+      for (var line = 0; line < _strategyBoardSize; line++) {
+        final gaps = <Point<int>>[];
+        for (var offset = 0; offset < _strategyBoardSize; offset++) {
+          final row = axis == 0 ? line : offset;
+          final col = axis == 0 ? offset : line;
+          if (!boardMask[row][col]) gaps.add(Point<int>(col, row));
+        }
+        if (gaps.isNotEmpty && gaps.length <= 5) targets.add(gaps);
+      }
+    }
+    targets.sort((a, b) => a.length.compareTo(b.length));
+    final results = <_SoulBatchPlan>[];
+    final positionMemo = <String, double>{};
+    for (final target in targets.take(4)) {
+      var beam = <_SoulBatchPlan>[
+        _SoulBatchPlan(
+          board: boardMask,
+          templates: const [],
+          comboLevel: _combo,
+          comboMisses: _comboMisses,
+        ),
+      ];
+      for (var depth = 0; depth < 3; depth++) {
+        final next = <_SoulBatchPlan>[];
+        final clears = <_SoulBatchPlan>[];
+        for (final plan in beam) {
+          final gaps = target.where((p) => !plan.board[p.y][p.x]).toSet();
+          for (final template in _generationTemplates) {
+            // Mảnh đơn dùng để vá khe thật, tránh ba mảnh đơn ở bàn thoáng.
+            if (template.cellCount == 1 && gaps.length > 3) continue;
+            final origins = <(int, int)>{};
+            for (final gap in gaps) {
+              for (final cell in template.cells) {
+                origins.add((gap.y - cell.y, gap.x - cell.x));
+              }
+            }
+            for (final (row, col) in origins) {
+              if (!_canPlace(plan.board, template, row, col)) continue;
+              final placement = _simulatePlacement(
+                plan.board,
+                template,
+                row,
+                col,
+                positionMemo: positionMemo,
+              );
+              final combo = _nextComboState(
+                level: plan.comboLevel,
+                misses: plan.comboMisses,
+                clearedLines: placement.clearedLines,
+              );
+              final candidate = _SoulBatchPlan(
+                board: placement.boardAfter,
+                templates: [...plan.templates, template],
+                score:
+                    plan.score +
+                    placement.heuristic +
+                    placement.clearedLines * 76 +
+                    _comboTimingValue(
+                      plan.comboLevel,
+                      plan.comboMisses,
+                      placement.clearedLines,
+                    ),
+                clearedLines: plan.clearedLines + placement.clearedLines,
+                comboLevel: combo.level,
+                comboMisses: combo.misses,
+                comboBreaks: plan.comboBreaks + (combo.broken ? 1 : 0),
+              );
+              (placement.clearedLines > 0 ? clears : next).add(candidate);
+            }
+          }
+        }
+        if (clears.isNotEmpty) {
+          clears.sort((a, b) {
+            final breaks = a.comboBreaks.compareTo(b.comboBreaks);
+            if (breaks != 0) return breaks;
+            final lines = b.clearedLines.compareTo(a.clearedLines);
+            return lines != 0 ? lines : b.score.compareTo(a.score);
+          });
+          results.add(clears.first);
+          break;
+        }
+        if (next.isEmpty) break;
+        int remaining(_SoulBatchPlan plan) =>
+            target.where((p) => !plan.board[p.y][p.x]).length;
+        next.sort((a, b) {
+          final gaps = remaining(a).compareTo(remaining(b));
+          return gaps != 0 ? gaps : b.score.compareTo(a.score);
+        });
+        final seen = <String>{};
+        beam = next
+            .where((plan) => seen.add(_serializeBoard(plan.board)))
+            .take(3)
+            .toList(growable: false);
+      }
+    }
+    return results;
+  }
+
   double get _batchDifficultyProgress {
     final double turnProgress = (_turn / 18).clamp(0.0, 1.0).toDouble();
     final double clearProgress = (_clearedLines / 28)
@@ -270,6 +433,13 @@ mixin _SoulBlockStrategyLogic {
 
   List<_SoulPieceOption> _buildSmartBatch(List<List<_SoulTile?>> boardTiles) {
     final boardMask = _boardMask(boardTiles);
+    final guidedPlans = _lineCompletionPlans(boardMask);
+    final guidedKeys = guidedPlans
+        .expand((plan) => plan.templates)
+        .map((template) => (template.id, template.quarterTurns))
+        .toSet();
+    final boardStress = _boardStressLevel(boardMask);
+    final needsRecovery = _clearDrought >= 4 || boardStress >= 0.58;
     // Mỗi trạng thái bàn + mẫu chỉ tính placements một lần trong lượt refill.
     // Beam search dùng lại cache này để tránh quét lặp khi ba mảnh có đường đi chung.
     final placementMemo = <(String, String, int, bool), List<_PlacementEval>>{};
@@ -303,10 +473,12 @@ mixin _SoulBlockStrategyLogic {
     }
 
     final fittingCandidates = <_TemplateScore>[];
-    for (final template in _kSoulBlockTemplates) {
+    for (final template in _generationTemplates) {
       if (template.id == 'single') {
-        final stress = _boardStressLevel(boardMask);
-        final allowSingle = stress >= 0.82 || _random.nextDouble() < 0.02;
+        final allowSingle =
+            guidedKeys.contains((template.id, template.quarterTurns)) ||
+            needsRecovery ||
+            _random.nextDouble() < 0.02;
         if (!allowSingle) {
           continue;
         }
@@ -348,16 +520,28 @@ mixin _SoulBlockStrategyLogic {
     });
 
     final progress = _batchDifficultyProgress;
-    final boardStress = _boardStressLevel(boardMask);
     final pool = <_SoulPieceTemplate>[];
-    final pooledTemplateIds = <String>{};
+    final pooledTemplateIds = <(String, int)>{};
+    // Dành chỗ cho đường lấp khe trước khi bổ sung khối ngẫu nhiên.
+    for (final plan in guidedPlans) {
+      for (final template in plan.templates) {
+        if (pool.length < 6 &&
+            pooledTemplateIds.add((template.id, template.quarterTurns))) {
+          pool.add(template);
+        }
+      }
+    }
     final rankedTake = progress < 0.30
         ? 8
         : progress < 0.70
         ? 7
         : 6;
     for (final candidate in fittingCandidates.take(rankedTake)) {
-      if (pooledTemplateIds.add(candidate.template.id)) {
+      if (pool.length >= 10) break;
+      if (pooledTemplateIds.add((
+        candidate.template.id,
+        candidate.template.quarterTurns,
+      ))) {
         pool.add(candidate.template);
       }
     }
@@ -366,7 +550,7 @@ mixin _SoulBlockStrategyLogic {
     if (progress >= 0.32) {
       final openingBoards = <List<List<bool>>>[];
       final initialIds = fittingCandidates
-          .map((item) => item.template.id)
+          .map((item) => (item.template.id, item.template.quarterTurns))
           .toSet();
       for (final candidate in fittingCandidates.take(4)) {
         for (final placement in _topPlacements(
@@ -379,15 +563,16 @@ mixin _SoulBlockStrategyLogic {
         }
       }
       var unlockedCount = 0;
-      for (final template in _kSoulBlockTemplates) {
+      for (final template in _generationTemplates) {
         if (unlockedCount >= 2 || pool.length >= 10) break;
-        if (initialIds.contains(template.id) || template.cellCount < 4) {
+        if (initialIds.contains((template.id, template.quarterTurns)) ||
+            template.cellCount < 4) {
           continue;
         }
         if (openingBoards.any(
           (mask) => placementsFor(mask, template).isNotEmpty,
         )) {
-          pooledTemplateIds.add(template.id);
+          pooledTemplateIds.add((template.id, template.quarterTurns));
           pool.add(template);
           unlockedCount++;
         }
@@ -401,7 +586,7 @@ mixin _SoulBlockStrategyLogic {
       if (pool.length >= 10) {
         break;
       }
-      if (pooledTemplateIds.add(template.id)) {
+      if (pooledTemplateIds.add((template.id, template.quarterTurns))) {
         pool.add(template);
       }
     }
@@ -420,7 +605,7 @@ mixin _SoulBlockStrategyLogic {
       if (pool.length >= 10) {
         break;
       }
-      if (pooledTemplateIds.add(template.id)) {
+      if (pooledTemplateIds.add((template.id, template.quarterTurns))) {
         pool.add(template);
       }
     }
@@ -428,7 +613,10 @@ mixin _SoulBlockStrategyLogic {
       if (pool.length >= 10) {
         break;
       }
-      if (pooledTemplateIds.add(candidate.template.id)) {
+      if (pooledTemplateIds.add((
+        candidate.template.id,
+        candidate.template.quarterTurns,
+      ))) {
         pool.add(candidate.template);
       }
     }
@@ -440,13 +628,15 @@ mixin _SoulBlockStrategyLogic {
       _serializeBoard(mask),
       () => _countPlayableTemplates(mask, shortlist),
     );
-    final beamWidth = boardStress >= 0.62 || (_combo > 0 && _comboMisses >= 2)
-        ? 4
+    final beamWidth = needsRecovery || (_combo > 0 && _comboMisses >= 2)
+        ? 5
         : 3;
     // Chốt bom trước khi tìm đường đi. Gắn bom ngẫu nhiên sau khi chọn bộ
     // có thể phá mất hàng dự kiến xóa và làm mảnh tiếp theo không còn vừa.
+    // Ưu tiên nổ hàng thật khi đã tìm được đường. Bom là trợ giúp khi bàn
+    // khó hồi phục, không chiếm mảnh lấp khe của một kế hoạch đã tìm thấy.
     final firstPieceIsBomb =
-        _random.nextInt(100) < (boardStress >= 0.65 ? 85 : 22);
+        guidedPlans.isEmpty && _random.nextInt(100) < (needsRecovery ? 65 : 8);
     var beam = <_SoulBatchPlan>[
       _SoulBatchPlan(
         board: boardMask,
@@ -533,6 +723,11 @@ mixin _SoulBlockStrategyLogic {
           }
         }
       }
+      // Giữ lại các bước chuẩn bị đã tìm bằng ô thiếu, kể cả khi chúng
+      // tạm ít điểm hơn nước đặt khối lớn của beam tổng quát.
+      next.addAll(
+        guidedPlans.where((plan) => plan.templates.length == depth + 1),
+      );
       if (next.isEmpty) {
         break;
       }
@@ -543,21 +738,30 @@ mixin _SoulBlockStrategyLogic {
         final clearCompare = b.clearedLines.compareTo(a.clearedLines);
         if (depth == 2 &&
             clearCompare != 0 &&
-            (progress < 0.60 || boardStress >= 0.48)) {
+            (progress < 0.60 || boardStress >= 0.48 || needsRecovery)) {
           return clearCompare;
         }
         return b.score.compareTo(a.score);
       });
       final signatures = <(String, String, int, int)>{};
+      final sequenceCounts = <String, int>{};
       beam = next
-          .where(
-            (plan) => signatures.add((
-              plan.templates.map((template) => template.id).join('|'),
+          .where((plan) {
+            final sequence = plan.templates
+                .map((t) => '${t.id}:${t.quarterTurns}')
+                .join('|');
+            if ((sequenceCounts[sequence] ?? 0) >= 2) return false;
+            if (!signatures.add((
+              sequence,
               _serializeBoard(plan.board),
               plan.comboLevel,
               plan.comboMisses,
-            )),
-          )
+            ))) {
+              return false;
+            }
+            sequenceCounts[sequence] = (sequenceCounts[sequence] ?? 0) + 1;
+            return true;
+          })
           .take(beamWidth)
           .toList(growable: false);
     }
@@ -571,7 +775,11 @@ mixin _SoulBlockStrategyLogic {
       // toàn bộ mẫu đang hợp lệ theo từng trạng thái, luôn giữ chuỗi khả thi.
       final sequencePool = <_SoulPieceTemplate>[...pool];
       for (final candidate in fittingCandidates) {
-        if (!sequencePool.any((item) => item.id == candidate.template.id)) {
+        if (!sequencePool.any(
+          (item) =>
+              item.id == candidate.template.id &&
+              item.quarterTurns == candidate.template.quarterTurns,
+        )) {
           sequencePool.add(candidate.template);
         }
       }
@@ -1018,25 +1226,6 @@ mixin _SoulBlockStrategyLogic {
       nextBoard[startRow + cell.y][startCol + cell.x] = true;
     }
 
-    var bombCells = 0;
-    if (bomb) {
-      final centerRow = startRow + template.height ~/ 2;
-      final centerCol = startCol + template.width ~/ 2;
-      for (
-        var row = max(0, centerRow - 1);
-        row <= min(_strategyBoardSize - 1, centerRow + 1);
-        row++
-      ) {
-        for (
-          var col = max(0, centerCol - 1);
-          col <= min(_strategyBoardSize - 1, centerCol + 1);
-          col++
-        ) {
-          if (nextBoard[row][col]) bombCells++;
-          nextBoard[row][col] = false;
-        }
-      }
-    }
     final clearedRows = <int>[];
     final clearedCols = <int>[];
 
@@ -1056,6 +1245,28 @@ mixin _SoulBlockStrategyLogic {
       }
       if (full) {
         clearedCols.add(col);
+      }
+    }
+
+    // Chốt hàng/cột vừa hoàn thành trước khi bom dọn vùng, giống ván thật.
+    // Bom lấp ô cuối vẫn được tính combo và có thể nổ giao hàng + cột.
+    var bombCells = 0;
+    if (bomb) {
+      final centerRow = startRow + template.height ~/ 2;
+      final centerCol = startCol + template.width ~/ 2;
+      for (
+        var row = max(0, centerRow - 1);
+        row <= min(_strategyBoardSize - 1, centerRow + 1);
+        row++
+      ) {
+        for (
+          var col = max(0, centerCol - 1);
+          col <= min(_strategyBoardSize - 1, centerCol + 1);
+          col++
+        ) {
+          if (nextBoard[row][col]) bombCells++;
+          nextBoard[row][col] = false;
+        }
       }
     }
 

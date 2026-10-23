@@ -203,6 +203,20 @@ class SingleMatchCandidate {
   bool get isPublic => privacy == 'public';
 }
 
+class SingleMatchNearbyResult {
+  const SingleMatchNearbyResult({
+    required this.enabled,
+    this.expiresAt = 0,
+    this.candidates = const [],
+    this.distanceBands = const {},
+  });
+
+  final bool enabled;
+  final int expiresAt;
+  final List<SingleMatchCandidate> candidates;
+  final Map<String, String> distanceBands;
+}
+
 class SingleMatchHistoryEntry {
   final String id;
   final String action;

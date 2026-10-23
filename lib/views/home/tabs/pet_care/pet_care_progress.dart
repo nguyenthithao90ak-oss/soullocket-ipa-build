@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,15 +20,329 @@ enum PetCareMood {
   sleeping,
 }
 
-enum PetCareFood {
-  carrot(cost: 0, nutrition: 22),
-  apple(cost: 2, nutrition: 30),
-  soup(cost: 4, nutrition: 45),
-  cake(cost: 6, nutrition: 18);
+enum PetCareRoom { living, kitchen, bathroom, bedroom }
 
-  const PetCareFood({required this.cost, required this.nutrition});
+/// Nhóm món trong tủ lạnh, chỉ để xếp kệ và lọc.
+enum PetCareFoodKind { fruit, meal, sweet, drink }
+
+/// Thực đơn mua bằng Hạt Ấm theo từng phần ăn. Bốn món đầu dùng ảnh vẽ sẵn
+/// trong atlas; các món sau dùng emoji hệ thống (không cần thêm ảnh vào gói).
+enum PetCareFood {
+  carrot(
+    cost: 0,
+    nutrition: 22,
+    kind: PetCareFoodKind.fruit,
+    favorite: PetCarePet.rabbit,
+  ),
+  apple(cost: 2, nutrition: 30, kind: PetCareFoodKind.fruit),
+  soup(cost: 4, nutrition: 45, kind: PetCareFoodKind.meal),
+  cake(cost: 6, nutrition: 18, kind: PetCareFoodKind.sweet, joy: 14),
+  milk(
+    cost: 0,
+    nutrition: 14,
+    kind: PetCareFoodKind.drink,
+    emoji: '🥛',
+    energy: 6,
+  ),
+  banana(cost: 2, nutrition: 26, kind: PetCareFoodKind.fruit, emoji: '🍌'),
+  strawberry(
+    cost: 3,
+    nutrition: 22,
+    kind: PetCareFoodKind.fruit,
+    emoji: '🍓',
+    joy: 8,
+    favorite: PetCarePet.rabbit,
+  ),
+  watermelon(
+    cost: 3,
+    nutrition: 26,
+    kind: PetCareFoodKind.fruit,
+    emoji: '🍉',
+    joy: 6,
+  ),
+  grapes(
+    cost: 3,
+    nutrition: 24,
+    kind: PetCareFoodKind.fruit,
+    emoji: '🍇',
+    joy: 6,
+  ),
+  corn(cost: 2, nutrition: 30, kind: PetCareFoodKind.fruit, emoji: '🌽'),
+  chili(
+    cost: 1,
+    nutrition: 8,
+    kind: PetCareFoodKind.fruit,
+    emoji: '🌶️',
+    joy: 2,
+  ),
+  bread(cost: 2, nutrition: 32, kind: PetCareFoodKind.meal, emoji: '🍞'),
+  riceBall(cost: 4, nutrition: 40, kind: PetCareFoodKind.meal, emoji: '🍙'),
+  dumpling(cost: 4, nutrition: 38, kind: PetCareFoodKind.meal, emoji: '🥟'),
+  pancake(
+    cost: 5,
+    nutrition: 40,
+    kind: PetCareFoodKind.meal,
+    emoji: '🥞',
+    joy: 6,
+  ),
+  noodles(cost: 5, nutrition: 50, kind: PetCareFoodKind.meal, emoji: '🍜'),
+  shrimp(cost: 5, nutrition: 42, kind: PetCareFoodKind.meal, emoji: '🍤'),
+  sushi(
+    cost: 6,
+    nutrition: 44,
+    kind: PetCareFoodKind.meal,
+    emoji: '🍣',
+    favorite: PetCarePet.bear,
+  ),
+  pizza(
+    cost: 6,
+    nutrition: 52,
+    kind: PetCareFoodKind.meal,
+    emoji: '🍕',
+    joy: 6,
+  ),
+  cookie(
+    cost: 2,
+    nutrition: 12,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍪',
+    joy: 8,
+  ),
+  chocolate(
+    cost: 3,
+    nutrition: 12,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍫',
+    joy: 10,
+  ),
+  lollipop(
+    cost: 3,
+    nutrition: 8,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍭',
+    joy: 12,
+  ),
+  donut(
+    cost: 4,
+    nutrition: 16,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍩',
+    joy: 12,
+  ),
+  iceCream(
+    cost: 4,
+    nutrition: 14,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍦',
+    joy: 12,
+  ),
+  honey(
+    cost: 5,
+    nutrition: 24,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍯',
+    joy: 10,
+    favorite: PetCarePet.bear,
+  ),
+  pudding(
+    cost: 5,
+    nutrition: 18,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🍮',
+    joy: 12,
+  ),
+  birthdayCake(
+    cost: 12,
+    nutrition: 30,
+    kind: PetCareFoodKind.sweet,
+    emoji: '🎂',
+    joy: 30,
+  ),
+  juice(
+    cost: 3,
+    nutrition: 12,
+    kind: PetCareFoodKind.drink,
+    emoji: '🥤',
+    joy: 8,
+    energy: 4,
+  ),
+  tea(
+    cost: 2,
+    nutrition: 8,
+    kind: PetCareFoodKind.drink,
+    emoji: '🍵',
+    energy: 10,
+  );
+
+  const PetCareFood({
+    required this.cost,
+    required this.nutrition,
+    required this.kind,
+    this.emoji,
+    this.joy = 4,
+    this.energy = 2,
+    this.favorite,
+  });
   final int cost;
   final int nutrition;
+  final PetCareFoodKind kind;
+
+  /// Null với bốn món có ảnh vẽ sẵn (atlas).
+  final String? emoji;
+  final int joy;
+  final int energy;
+
+  /// Món ruột: bé được thêm niềm vui và mắt tim khi ăn.
+  final PetCarePet? favorite;
+  bool get isFree => cost == 0;
+  bool get spicy => this == chili;
+  bool lovedBy(PetCarePet pet) => favorite == pet;
+}
+
+/// Đồ vật trong phòng chạm được. Thứ tự cố định vì dùng làm bit đánh dấu hạt
+/// đã tìm trong ngày; chỉ thêm món mới ở cuối.
+enum PetCareProp {
+  livingWindow(PetCareRoom.living),
+  clock(PetCareRoom.living),
+  plant(PetCareRoom.living),
+  radio(PetCareRoom.living),
+  basket(PetCareRoom.living),
+  cushion(PetCareRoom.living),
+  fridge(PetCareRoom.kitchen),
+  stove(PetCareRoom.kitchen),
+  sink(PetCareRoom.kitchen),
+  utensils(PetCareRoom.kitchen),
+  kitchenWindow(PetCareRoom.kitchen),
+  jars(PetCareRoom.kitchen),
+  bathSink(PetCareRoom.bathroom),
+  mirror(PetCareRoom.bathroom),
+  duck(PetCareRoom.bathroom),
+  towel(PetCareRoom.bathroom),
+  bathWindow(PetCareRoom.bathroom),
+  cabinet(PetCareRoom.bathroom),
+  lamp(PetCareRoom.bedroom),
+  curtains(PetCareRoom.bedroom),
+  mobile(PetCareRoom.bedroom),
+  drawer(PetCareRoom.bedroom),
+  books(PetCareRoom.bedroom),
+  slippers(PetCareRoom.bedroom);
+
+  const PetCareProp(this.room);
+  final PetCareRoom room;
+
+  /// Đèn ngủ là công tắc ngủ/thức; gối sofa nằm sau lưng hai bé nên khó
+  /// chạm. Hai món này không giấu hạt.
+  bool get canHideSeed => this != lamp && this != cushion;
+  static List<PetCareProp> inRoom(PetCareRoom room) =>
+      values.where((prop) => prop.room == room).toList(growable: false);
+}
+
+/// Phần phòng đổi được như My Talking Tom.
+enum PetCareRoomSlot { wall, floor, window, furniture }
+
+/// Giấy dán tường, sàn, cửa sổ và màu nội thất; mỗi ô có một món miễn phí
+/// giữ đúng diện mạo cũ của từng phòng. Mua một lần dùng được mọi phòng.
+enum PetCareRoomItem {
+  wallClassic(PetCareRoomSlot.wall, 0),
+  wallPolka(PetCareRoomSlot.wall, 10),
+  wallStripe(PetCareRoomSlot.wall, 10),
+  wallHearts(PetCareRoomSlot.wall, 14),
+  wallClouds(PetCareRoomSlot.wall, 16),
+  wallLeaves(PetCareRoomSlot.wall, 18),
+  wallCheck(PetCareRoomSlot.wall, 18),
+  wallStars(PetCareRoomSlot.wall, 22),
+  floorClassic(PetCareRoomSlot.floor, 0),
+  floorOak(PetCareRoomSlot.floor, 10),
+  floorChecker(PetCareRoomSlot.floor, 14),
+  floorCarpet(PetCareRoomSlot.floor, 14),
+  floorMarble(PetCareRoomSlot.floor, 18),
+  floorGrass(PetCareRoomSlot.floor, 20),
+  floorNight(PetCareRoomSlot.floor, 22),
+  windowClassic(PetCareRoomSlot.window, 0),
+  windowRound(PetCareRoomSlot.window, 10),
+  windowBay(PetCareRoomSlot.window, 14),
+  windowHeart(PetCareRoomSlot.window, 16),
+  windowStar(PetCareRoomSlot.window, 18),
+  furnitureClassic(PetCareRoomSlot.furniture, 0),
+  furniturePeach(PetCareRoomSlot.furniture, 12),
+  furnitureMint(PetCareRoomSlot.furniture, 12),
+  furnitureLilac(PetCareRoomSlot.furniture, 12),
+  furnitureSky(PetCareRoomSlot.furniture, 14),
+  furnitureHoney(PetCareRoomSlot.furniture, 16),
+  furnitureCocoa(PetCareRoomSlot.furniture, 18);
+
+  const PetCareRoomItem(this.slot, this.cost);
+  final PetCareRoomSlot slot;
+  final int cost;
+  bool get isFree => cost == 0;
+
+  static PetCareRoomItem defaultFor(PetCareRoomSlot slot) =>
+      values.firstWhere((item) => item.slot == slot && item.isFree);
+  static List<PetCareRoomItem> forSlot(PetCareRoomSlot slot) =>
+      values.where((item) => item.slot == slot).toList(growable: false);
+}
+
+/// Diện mạo một phòng truyền xuống cảnh vẽ.
+@immutable
+class PetCareRoomLook {
+  const PetCareRoomLook({
+    this.wall = PetCareRoomItem.wallClassic,
+    this.floor = PetCareRoomItem.floorClassic,
+    this.window = PetCareRoomItem.windowClassic,
+    this.furniture = PetCareRoomItem.furnitureClassic,
+  });
+
+  final PetCareRoomItem wall;
+  final PetCareRoomItem floor;
+  final PetCareRoomItem window;
+  final PetCareRoomItem furniture;
+
+  PetCareRoomItem operator [](PetCareRoomSlot slot) => switch (slot) {
+    PetCareRoomSlot.wall => wall,
+    PetCareRoomSlot.floor => floor,
+    PetCareRoomSlot.window => window,
+    PetCareRoomSlot.furniture => furniture,
+  };
+
+  /// Bản xem thử khi đang chọn món trong chế độ trang trí.
+  PetCareRoomLook withItem(PetCareRoomItem item) => PetCareRoomLook(
+    wall: item.slot == PetCareRoomSlot.wall ? item : wall,
+    floor: item.slot == PetCareRoomSlot.floor ? item : floor,
+    window: item.slot == PetCareRoomSlot.window ? item : window,
+    furniture: item.slot == PetCareRoomSlot.furniture ? item : furniture,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is PetCareRoomLook &&
+      other.wall == wall &&
+      other.floor == floor &&
+      other.window == window &&
+      other.furniture == furniture;
+
+  @override
+  int get hashCode => Object.hash(wall, floor, window, furniture);
+}
+
+/// Giới hạn kiếm Hạt Ấm mỗi ngày từ quảng cáo, mini game, đồ vật và ôm nhau.
+abstract final class PetCareEarn {
+  static const adSeeds = 5;
+  static const adsPerDay = 10;
+  static const giftSeeds = 5;
+
+  /// Quảng cáo nhân đôi Hạt sau một ván mini game (mỗi người, mỗi ngày).
+  static const doublesPerDay = 5;
+
+  /// Quảng cáo hồi sức cho bé đang mệt (mỗi người, mỗi ngày).
+  static const revivesPerDay = 3;
+
+  /// Năng lượng dưới mức này (hoặc bé đang ngủ) mới cần hồi sức.
+  static const reviveBelow = 60;
+  static const gameSeedsPerDay = 15;
+  static const gameEnergy = 8;
+  static const pointsPerSeed = 4;
+  static const friendSeeds = 2;
+  static const hiddenSeedsPerDay = 6;
 }
 
 enum PetCareDecor {
@@ -39,6 +355,71 @@ enum PetCareDecor {
 }
 
 enum PetCareUpgrade { kitchen, bathroom, bedroom }
+
+/// Ô đồ dùng/hoạt ảnh có thể đổi kiểu; mỗi ô luôn có một món miễn phí.
+enum PetCareStyleSlot { soap, shower, towel, dance }
+
+/// Món mua bằng Hạt Ấm chỉ đổi hình và hiệu ứng, không đổi chỉ số chăm.
+enum PetCareStyle {
+  soapLavender(PetCareStyleSlot.soap, 0),
+  soapStrawberry(PetCareStyleSlot.soap, 10),
+  soapMint(PetCareStyleSlot.soap, 14),
+  soapRainbow(PetCareStyleSlot.soap, 24),
+  showerClassic(PetCareStyleSlot.shower, 0),
+  showerPetal(PetCareStyleSlot.shower, 12),
+  showerRainbow(PetCareStyleSlot.shower, 20),
+  towelCream(PetCareStyleSlot.towel, 0),
+  towelCloud(PetCareStyleSlot.towel, 8),
+  towelStar(PetCareStyleSlot.towel, 16),
+  danceHop(PetCareStyleSlot.dance, 0),
+  danceSpin(PetCareStyleSlot.dance, 12),
+  danceHeart(PetCareStyleSlot.dance, 16),
+  danceConfetti(PetCareStyleSlot.dance, 22);
+
+  const PetCareStyle(this.slot, this.cost);
+  final PetCareStyleSlot slot;
+  final int cost;
+  bool get isFree => cost == 0;
+
+  static PetCareStyle defaultFor(PetCareStyleSlot slot) =>
+      values.firstWhere((style) => style.slot == slot && style.isFree);
+  static List<PetCareStyle> forSlot(PetCareStyleSlot slot) =>
+      values.where((style) => style.slot == slot).toList(growable: false);
+}
+
+/// Bộ đồ đang dùng truyền xuống cảnh; mặc định là các món miễn phí.
+@immutable
+class PetCareLook {
+  const PetCareLook({
+    this.soap = PetCareStyle.soapLavender,
+    this.shower = PetCareStyle.showerClassic,
+    this.towel = PetCareStyle.towelCream,
+    this.dance = PetCareStyle.danceHop,
+  });
+
+  final PetCareStyle soap;
+  final PetCareStyle shower;
+  final PetCareStyle towel;
+  final PetCareStyle dance;
+
+  PetCareStyle operator [](PetCareStyleSlot slot) => switch (slot) {
+    PetCareStyleSlot.soap => soap,
+    PetCareStyleSlot.shower => shower,
+    PetCareStyleSlot.towel => towel,
+    PetCareStyleSlot.dance => dance,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is PetCareLook &&
+      other.soap == soap &&
+      other.shower == shower &&
+      other.towel == towel &&
+      other.dance == dance;
+
+  @override
+  int get hashCode => Object.hash(soap, shower, towel, dance);
+}
 
 String petCareDay(DateTime now) =>
     '${now.year.toString().padLeft(4, '0')}-'
@@ -172,6 +553,22 @@ class PetCareProgress {
     this.dailyPlayDay,
     this.upgradeLevels = const {},
     this.dailyBondPoints = 0,
+    this.ownedStyles = const {},
+    this.equippedStyles = const {},
+    this.roomItems = const {},
+    this.roomLooks = const {},
+    this.adDay,
+    this.adCount = 0,
+    this.foundDay,
+    this.foundMask = 0,
+    this.gameDay,
+    this.gameSeeds = 0,
+    this.friendDay,
+    this.doubleDay,
+    this.doubleCount = 0,
+    this.reviveDay,
+    this.reviveCount = 0,
+    this.giftDoubleDay,
   });
 
   factory PetCareProgress.forPet(PetCarePet pet, {String? day, DateTime? now}) {
@@ -205,6 +602,127 @@ class PetCareProgress {
   final String? dailyPlayDay;
   final Map<PetCareUpgrade, int> upgradeLevels;
   final int dailyBondPoints;
+
+  /// Món trả phí đã mua; món miễn phí luôn thuộc về người chơi.
+  final Set<PetCareStyle> ownedStyles;
+  final Map<PetCareStyleSlot, PetCareStyle> equippedStyles;
+
+  /// Đồ trang trí phòng đã mua (món miễn phí luôn có) và lựa chọn từng phòng.
+  final Set<PetCareRoomItem> roomItems;
+  final Map<PetCareRoom, Map<PetCareRoomSlot, PetCareRoomItem>> roomLooks;
+
+  /// Lượt xem quảng cáo nhận Hạt trong ngày [adDay].
+  final String? adDay;
+  final int adCount;
+
+  /// Bit theo [PetCareProp.index]: hạt giấu đã tìm trong ngày [foundDay].
+  final String? foundDay;
+  final int foundMask;
+
+  /// Hạt đã nhận từ mini game trong ngày [gameDay].
+  final String? gameDay;
+  final int gameSeeds;
+
+  /// Ngày hai bé đã ôm nhau nhận quà.
+  final String? friendDay;
+
+  /// Lượt quảng cáo nhân đôi Hạt mini game trong ngày [doubleDay].
+  final String? doubleDay;
+  final int doubleCount;
+
+  /// Lượt quảng cáo hồi sức cho bé trong ngày [reviveDay].
+  final String? reviveDay;
+  final int reviveCount;
+
+  /// Ngày quà chăm bé đã được nhân đôi bằng quảng cáo (chung cả nhà).
+  final String? giftDoubleDay;
+
+  int get adsToday => adDay == day ? adCount : 0;
+  bool get canWatchAd => adsToday < PetCareEarn.adsPerDay;
+  int get doublesToday => doubleDay == day ? doubleCount : 0;
+  bool get canDoubleGame => doublesToday < PetCareEarn.doublesPerDay;
+  int get revivesToday => reviveDay == day ? reviveCount : 0;
+  bool get giftDoubledToday => giftDoubleDay == day;
+  bool get canDoubleGift => claimed && !giftDoubledToday;
+
+  /// Bé đang ngủ hoặc mệt, còn lượt hồi sức hôm nay.
+  bool canRevive(PetCarePet pet) {
+    final vitals = vitalsFor(pet);
+    return revivesToday < PetCareEarn.revivesPerDay &&
+        (vitals.sleeping || vitals.energy < PetCareEarn.reviveBelow);
+  }
+
+  int get gameSeedsToday => gameDay == day ? gameSeeds : 0;
+  int get foundToday => foundDay == day ? foundMask : 0;
+  bool get huggedFriendToday => friendDay == day;
+
+  bool ownsRoomItem(PetCareRoomItem item) =>
+      item.isFree || roomItems.contains(item);
+  PetCareRoomItem roomItemFor(PetCareRoom room, PetCareRoomSlot slot) {
+    final chosen = roomLooks[room]?[slot];
+    return chosen != null && chosen.slot == slot && ownsRoomItem(chosen)
+        ? chosen
+        : PetCareRoomItem.defaultFor(slot);
+  }
+
+  PetCareRoomLook roomLook(PetCareRoom room) => PetCareRoomLook(
+    wall: roomItemFor(room, PetCareRoomSlot.wall),
+    floor: roomItemFor(room, PetCareRoomSlot.floor),
+    window: roomItemFor(room, PetCareRoomSlot.window),
+    furniture: roomItemFor(room, PetCareRoomSlot.furniture),
+  );
+
+  /// Đồ vật giấu hạt hôm nay: mỗi phòng một món, phòng khách và bếp thêm
+  /// một món nữa. Chọn theo ngày nên mở lại app trong ngày vẫn giống nhau.
+  static Set<PetCareProp> hiddenProps(String day) {
+    var hash = 17;
+    for (final unit in day.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    final result = <PetCareProp>{};
+    for (final room in PetCareRoom.values) {
+      final choices = PetCareProp.inRoom(
+        room,
+      ).where((prop) => prop.canHideSeed).toList(growable: false);
+      final count = room == PetCareRoom.living || room == PetCareRoom.kitchen
+          ? 2
+          : 1;
+      var seed = hash + room.index * 7919;
+      for (var i = 0; i < count; i++) {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        var pick = choices[seed % choices.length];
+        while (result.contains(pick)) {
+          pick = choices[(choices.indexOf(pick) + 1) % choices.length];
+        }
+        result.add(pick);
+      }
+    }
+    return result;
+  }
+
+  Set<PetCareProp> get seedPropsLeft => {
+    for (final prop in hiddenProps(day))
+      if (foundToday & (1 << prop.index) == 0) prop,
+  };
+  int get seedsFoundToday => hiddenProps(
+    day,
+  ).where((prop) => foundToday & (1 << prop.index) != 0).length;
+
+  bool ownsStyle(PetCareStyle style) =>
+      style.isFree || ownedStyles.contains(style);
+  PetCareStyle styleFor(PetCareStyleSlot slot) {
+    final chosen = equippedStyles[slot];
+    return chosen != null && chosen.slot == slot && ownsStyle(chosen)
+        ? chosen
+        : PetCareStyle.defaultFor(slot);
+  }
+
+  PetCareLook get look => PetCareLook(
+    soap: styleFor(PetCareStyleSlot.soap),
+    shower: styleFor(PetCareStyleSlot.shower),
+    towel: styleFor(PetCareStyleSlot.towel),
+    dance: styleFor(PetCareStyleSlot.dance),
+  );
 
   PetCareVitals get _legacyVitals =>
       PetCareVitals(joy: joy, food: food, clean: clean, energy: energy);
@@ -266,6 +784,22 @@ class PetCareProgress {
     String? dailyPlayDay,
     Map<PetCareUpgrade, int>? upgradeLevels,
     int? dailyBondPoints,
+    Set<PetCareStyle>? ownedStyles,
+    Map<PetCareStyleSlot, PetCareStyle>? equippedStyles,
+    Set<PetCareRoomItem>? roomItems,
+    Map<PetCareRoom, Map<PetCareRoomSlot, PetCareRoomItem>>? roomLooks,
+    String? adDay,
+    int? adCount,
+    String? foundDay,
+    int? foundMask,
+    String? gameDay,
+    int? gameSeeds,
+    String? friendDay,
+    String? doubleDay,
+    int? doubleCount,
+    String? reviveDay,
+    int? reviveCount,
+    String? giftDoubleDay,
   }) {
     final nextPet = selectedPet ?? this.selectedPet;
     final nextRabbit = rabbitState ?? this.rabbitState;
@@ -291,6 +825,22 @@ class PetCareProgress {
       dailyPlayDay: dailyPlayDay ?? this.dailyPlayDay,
       upgradeLevels: upgradeLevels ?? this.upgradeLevels,
       dailyBondPoints: dailyBondPoints ?? this.dailyBondPoints,
+      ownedStyles: ownedStyles ?? this.ownedStyles,
+      equippedStyles: equippedStyles ?? this.equippedStyles,
+      roomItems: roomItems ?? this.roomItems,
+      roomLooks: roomLooks ?? this.roomLooks,
+      adDay: adDay ?? this.adDay,
+      adCount: adCount ?? this.adCount,
+      foundDay: foundDay ?? this.foundDay,
+      foundMask: foundMask ?? this.foundMask,
+      gameDay: gameDay ?? this.gameDay,
+      gameSeeds: gameSeeds ?? this.gameSeeds,
+      friendDay: friendDay ?? this.friendDay,
+      doubleDay: doubleDay ?? this.doubleDay,
+      doubleCount: doubleCount ?? this.doubleCount,
+      reviveDay: reviveDay ?? this.reviveDay,
+      reviveCount: reviveCount ?? this.reviveCount,
+      giftDoubleDay: giftDoubleDay ?? this.giftDoubleDay,
     );
   }
 
@@ -340,8 +890,8 @@ class PetCareProgress {
         if (before.food >= 100) return before;
         return before.copyWith(
           food: before.food + foodChoice.nutrition + kitchenBonus,
-          joy: before.joy + 4,
-          energy: before.energy + 2,
+          joy: before.joy + foodChoice.joy + (foodChoice.lovedBy(pet) ? 6 : 0),
+          energy: before.energy + foodChoice.energy,
         );
       case PetCareAction.hug:
         if (before.joy >= 100 && before.energy >= 100) return before;
@@ -422,8 +972,21 @@ class PetCareProgress {
     return _withPet(pet, before.copyWith(sleeping: !before.sleeping));
   }
 
-  PetCareProgress claim() =>
-      canClaim ? copyWith(seeds: seeds + 5, claimedDay: day) : this;
+  /// Rời phòng ngủ thì bé dậy theo, không để đồ ở phòng khác bị khóa.
+  PetCareProgress wake(PetCarePet pet) {
+    final before = vitalsFor(pet);
+    if (!before.sleeping) return this;
+    return _withPet(pet, before.copyWith(sleeping: false));
+  }
+
+  PetCareProgress claim() => canClaim
+      ? copyWith(seeds: seeds + PetCareEarn.giftSeeds, claimedDay: day)
+      : this;
+
+  /// Xem quảng cáo nhân đôi quà chăm bé hôm nay: một lần mỗi ngày cho cả nhà.
+  PetCareProgress doubleGift() => canDoubleGift
+      ? copyWith(seeds: seeds + PetCareEarn.giftSeeds, giftDoubleDay: day)
+      : this;
 
   PetCareProgress decorate(PetCareDecor decor) {
     if (unlocked.contains(decor)) return copyWith(decoration: decor);
@@ -447,6 +1010,201 @@ class PetCareProgress {
         upgrade: oldLevel + 1,
       }),
     );
+  }
+
+  /// Mua món chưa có (trừ Hạt Ấm) rồi dùng ngay; món đã có thì chỉ đổi sang.
+  PetCareProgress useStyle(PetCareStyle style) {
+    if (ownsStyle(style)) {
+      if (styleFor(style.slot) == style) return this;
+      return copyWith(
+        equippedStyles: Map.unmodifiable({
+          ...equippedStyles,
+          style.slot: style,
+        }),
+      );
+    }
+    if (seeds < style.cost) return this;
+    return copyWith(
+      seeds: seeds - style.cost,
+      ownedStyles: Set.unmodifiable({...ownedStyles, style}),
+      equippedStyles: Map.unmodifiable({...equippedStyles, style.slot: style}),
+    );
+  }
+
+  /// Mua đồ trang trí chưa có rồi đặt vào [room]; món đã có thì chỉ đổi.
+  PetCareProgress useRoomItem(PetCareRoom room, PetCareRoomItem item) {
+    Map<PetCareRoom, Map<PetCareRoomSlot, PetCareRoomItem>> placed() =>
+        Map.unmodifiable({
+          ...roomLooks,
+          room: Map<PetCareRoomSlot, PetCareRoomItem>.unmodifiable({
+            ...?roomLooks[room],
+            item.slot: item,
+          }),
+        });
+    if (ownsRoomItem(item)) {
+      if (roomItemFor(room, item.slot) == item) return this;
+      return copyWith(roomLooks: placed());
+    }
+    if (seeds < item.cost) return this;
+    return copyWith(
+      seeds: seeds - item.cost,
+      roomItems: Set.unmodifiable({...roomItems, item}),
+      roomLooks: placed(),
+    );
+  }
+
+  /// Chạm đúng đồ vật giấu hạt hôm nay: +1 Hạt, mỗi món một lần/ngày.
+  PetCareProgress findSeed(PetCareProp prop) {
+    if (!hiddenProps(day).contains(prop)) return this;
+    final mask = foundToday;
+    if (mask & (1 << prop.index) != 0) return this;
+    return copyWith(
+      seeds: seeds + 1,
+      foundDay: day,
+      foundMask: mask | (1 << prop.index),
+    );
+  }
+
+  /// Xem hết quảng cáo có thưởng (hoặc PRO được bỏ qua quảng cáo).
+  PetCareProgress rewardAd() {
+    if (!canWatchAd) return this;
+    return copyWith(
+      seeds: seeds + PetCareEarn.adSeeds,
+      adDay: day,
+      adCount: adsToday + 1,
+    );
+  }
+
+  /// Xem quảng cáo nhân đôi Hạt vừa nhận từ một ván mini game.
+  PetCareProgress doubleGame(int earned) {
+    final bonus = _clampInt(earned, 0, PetCareEarn.gameSeedsPerDay);
+    if (!canDoubleGame || bonus == 0) return this;
+    return copyWith(
+      seeds: seeds + bonus,
+      doubleDay: day,
+      doubleCount: doublesToday + 1,
+    );
+  }
+
+  /// Xem quảng cáo hồi sức: bé thức dậy, đầy năng lượng để chơi tiếp ngay.
+  PetCareProgress revive(PetCarePet pet) {
+    if (!canRevive(pet)) return this;
+    final before = vitalsFor(pet);
+    return _withPet(
+      pet,
+      before.copyWith(energy: 100, sleeping: false),
+    ).copyWith(reviveDay: day, reviveCount: revivesToday + 1);
+  }
+
+  /// Một ván mini game: tốn năng lượng, bé vui hơn, đổi điểm ra Hạt theo trần ngày.
+  PetCareProgress rewardGame(PetCarePet pet, int score) {
+    final before = vitalsFor(pet);
+    if (before.sleeping || before.energy < PetCareEarn.gameEnergy) return this;
+    final earned = _clampInt(
+      score ~/ PetCareEarn.pointsPerSeed,
+      0,
+      PetCareEarn.gameSeedsPerDay - gameSeedsToday,
+    );
+    final earnedBond = _clampInt(30 - dailyBondPoints, 0, 2);
+    final next = _withPet(
+      pet,
+      before.copyWith(
+        joy: before.joy + 10,
+        energy: before.energy - PetCareEarn.gameEnergy,
+      ),
+    );
+    return next.copyWith(
+      seeds: seeds + earned,
+      gameDay: day,
+      gameSeeds: gameSeedsToday + earned,
+      bondPoints: bondPoints + earnedBond,
+      dailyBondPoints: dailyBondPoints + earnedBond,
+    );
+  }
+
+  /// Hai bé ôm nhau: chỉ bé của mình đổi chỉ số; quà Hạt một lần mỗi ngày.
+  PetCareProgress hugFriend(PetCarePet pet) {
+    final before = vitalsFor(pet);
+    if (before.sleeping) return this;
+    final gift = huggedFriendToday ? 0 : PetCareEarn.friendSeeds;
+    final next = _withPet(pet, before.copyWith(joy: before.joy + 8));
+    return next.copyWith(seeds: seeds + gift, friendDay: day);
+  }
+
+  /// Các mục riêng của từng người khi hai máy dùng chung một bản: bé đang
+  /// xem, lượt quảng cáo (nhận Hạt, nhân đôi, hồi sức) và Hạt mini game
+  /// trong ngày (mỗi người một trần).
+  PetCareProgress withPersonal(PetCareProgress mine) => PetCareProgress(
+    day: day,
+    seeds: seeds,
+    careMask: careMask,
+    claimedDay: claimedDay,
+    unlocked: unlocked,
+    decoration: decoration,
+    selectedPet: mine.selectedPet,
+    rabbitState: rabbitVitals,
+    bearState: bearVitals,
+    lastEvaluatedAt: lastEvaluatedAt,
+    bondPoints: bondPoints,
+    dailyPlayCount: dailyPlayCount,
+    dailyPlayDay: dailyPlayDay,
+    upgradeLevels: upgradeLevels,
+    dailyBondPoints: dailyBondPoints,
+    ownedStyles: ownedStyles,
+    equippedStyles: equippedStyles,
+    roomItems: roomItems,
+    roomLooks: roomLooks,
+    adDay: mine.adDay,
+    adCount: mine.adCount,
+    foundDay: foundDay,
+    foundMask: foundMask,
+    gameDay: mine.gameDay,
+    gameSeeds: mine.gameSeeds,
+    friendDay: friendDay,
+    doubleDay: mine.doubleDay,
+    doubleCount: mine.doubleCount,
+    reviveDay: mine.reviveDay,
+    reviveCount: mine.reviveCount,
+    giftDoubleDay: giftDoubleDay,
+  ).copyWith(selectedPet: mine.selectedPet);
+
+  /// Lần đầu một máy nối vào bản chung của nhà: bé của người này lấy theo
+  /// máy họ (trước đây chỉ họ chăm được), Hạt cộng chung, đồ đã mua gộp lại,
+  /// lựa chọn trang trí giữ theo bản chung nếu đã có.
+  static PetCareProgress joinHouse({
+    required PetCareProgress shared,
+    required PetCareProgress mine,
+    required PetCarePet owned,
+  }) {
+    final rabbit = owned == PetCarePet.rabbit
+        ? mine.rabbitVitals
+        : shared.rabbitVitals;
+    final bear = owned == PetCarePet.bear ? mine.bearVitals : shared.bearVitals;
+    final levels = <PetCareUpgrade, int>{
+      for (final upgrade in PetCareUpgrade.values)
+        if (math.max(shared.upgradeLevel(upgrade), mine.upgradeLevel(upgrade))
+            case final level when level > 0)
+          upgrade: level,
+    };
+    final looks = <PetCareRoom, Map<PetCareRoomSlot, PetCareRoomItem>>{
+      ...mine.roomLooks,
+      for (final entry in shared.roomLooks.entries)
+        if (entry.value.isNotEmpty) entry.key: entry.value,
+    };
+    return shared
+        ._withBoth(rabbit, bear)
+        .copyWith(
+          seeds: shared.seeds + mine.seeds,
+          unlocked: {...shared.unlocked, ...mine.unlocked},
+          decoration: shared.decoration ?? mine.decoration,
+          bondPoints: math.max(shared.bondPoints, mine.bondPoints),
+          upgradeLevels: levels,
+          ownedStyles: {...shared.ownedStyles, ...mine.ownedStyles},
+          equippedStyles: {...mine.equippedStyles, ...shared.equippedStyles},
+          roomItems: {...shared.roomItems, ...mine.roomItems},
+          roomLooks: looks,
+        )
+        .withPersonal(mine);
   }
 
   PetCareProgress elapsed(DateTime now) {
@@ -537,6 +1295,42 @@ class PetCareProgress {
     'upgrades': {
       for (final entry in upgradeLevels.entries) entry.key.name: entry.value,
     },
+    // Thứ tự cố định để so sánh snapshot không lệch theo thứ tự mua.
+    'styles': [
+      for (final style in PetCareStyle.values)
+        if (!style.isFree && ownedStyles.contains(style)) style.name,
+    ],
+    'equipped': {
+      for (final slot in PetCareStyleSlot.values)
+        if (equippedStyles[slot] case final style?)
+          if (style.slot == slot && ownsStyle(style)) slot.name: style.name,
+    },
+    'roomItems': [
+      for (final item in PetCareRoomItem.values)
+        if (!item.isFree && roomItems.contains(item)) item.name,
+    ],
+    'roomLooks': {
+      for (final room in PetCareRoom.values)
+        if (roomLooks[room] case final look? when look.isNotEmpty)
+          room.name: {
+            for (final slot in PetCareRoomSlot.values)
+              if (look[slot] case final item?)
+                if (item.slot == slot && ownsRoomItem(item))
+                  slot.name: item.name,
+          },
+    },
+    'adDay': adDay,
+    'adCount': adCount,
+    'foundDay': foundDay,
+    'foundMask': foundMask,
+    'gameDay': gameDay,
+    'gameSeeds': gameSeeds,
+    'friendDay': friendDay,
+    'doubleDay': doubleDay,
+    'doubleCount': doubleCount,
+    'reviveDay': reviveDay,
+    'reviveCount': reviveCount,
+    'giftDoubleDay': giftDoubleDay,
   });
 
   factory PetCareProgress.decode(String raw, {DateTime? now}) {
@@ -606,6 +1400,63 @@ class PetCareProgress {
         }
       }
     }
+    final rawStyles = value['styles'];
+    final owned = <PetCareStyle>{
+      for (final style in PetCareStyle.values)
+        if (!style.isFree &&
+            rawStyles is List &&
+            rawStyles.contains(style.name))
+          style,
+    };
+    final rawEquipped = value['equipped'];
+    final equipped = <PetCareStyleSlot, PetCareStyle>{};
+    if (rawEquipped is Map) {
+      for (final slot in PetCareStyleSlot.values) {
+        for (final style in PetCareStyle.forSlot(slot)) {
+          if (rawEquipped[slot.name] == style.name &&
+              (style.isFree || owned.contains(style))) {
+            equipped[slot] = style;
+          }
+        }
+      }
+    }
+    final rawRoomItems = value['roomItems'];
+    final ownedRoomItems = <PetCareRoomItem>{
+      for (final item in PetCareRoomItem.values)
+        if (!item.isFree &&
+            rawRoomItems is List &&
+            rawRoomItems.contains(item.name))
+          item,
+    };
+    final rawLooks = value['roomLooks'];
+    final looks = <PetCareRoom, Map<PetCareRoomSlot, PetCareRoomItem>>{};
+    if (rawLooks is Map) {
+      for (final room in PetCareRoom.values) {
+        final rawLook = rawLooks[room.name];
+        if (rawLook is! Map) continue;
+        final look = <PetCareRoomSlot, PetCareRoomItem>{};
+        for (final slot in PetCareRoomSlot.values) {
+          for (final item in PetCareRoomItem.forSlot(slot)) {
+            if (rawLook[slot.name] == item.name &&
+                (item.isFree || ownedRoomItems.contains(item))) {
+              look[slot] = item;
+            }
+          }
+        }
+        if (look.isNotEmpty) looks[room] = Map.unmodifiable(look);
+      }
+    }
+    String? optionalDay(String key) {
+      final raw = value[key];
+      if (raw is! String) return null;
+      try {
+        return checkedDay(raw);
+      } on FormatException {
+        return null;
+      }
+    }
+
+    final propMask = (1 << PetCareProp.values.length) - 1;
     DateTime? evaluated = version == 2 && value['lastEvaluatedAt'] is String
         ? DateTime.tryParse(value['lastEvaluatedAt'] as String)
         : null;
@@ -634,6 +1485,22 @@ class PetCareProgress {
           ? null
           : checkedDay(value['dailyPlayDay']),
       upgradeLevels: Map.unmodifiable(levels),
+      ownedStyles: Set.unmodifiable(owned),
+      equippedStyles: Map.unmodifiable(equipped),
+      roomItems: Set.unmodifiable(ownedRoomItems),
+      roomLooks: Map.unmodifiable(looks),
+      adDay: optionalDay('adDay'),
+      adCount: number('adCount', 0, PetCareEarn.adsPerDay),
+      foundDay: optionalDay('foundDay'),
+      foundMask: number('foundMask', 0, propMask),
+      gameDay: optionalDay('gameDay'),
+      gameSeeds: number('gameSeeds', 0, PetCareEarn.gameSeedsPerDay),
+      friendDay: optionalDay('friendDay'),
+      doubleDay: optionalDay('doubleDay'),
+      doubleCount: number('doubleCount', 0, PetCareEarn.doublesPerDay),
+      reviveDay: optionalDay('reviveDay'),
+      reviveCount: number('reviveCount', 0, PetCareEarn.revivesPerDay),
+      giftDoubleDay: optionalDay('giftDoubleDay'),
     );
   }
 }
@@ -651,10 +1518,102 @@ class PetCareStoreEvent {
     required this.key,
     required this.progress,
     required this.revision,
+    this.fromPartner = false,
+    this.merged = false,
   });
   final String key;
   final PetCareProgress progress;
   final int revision;
+
+  /// Bản vừa nhận từ máy người ấy (họ vừa chăm/mua/trang trí).
+  final bool fromPartner;
+
+  /// Máy này vừa gộp tiến trình riêng vào bản chung lần đầu.
+  final bool merged;
+}
+
+/// Bản Trạm Mây chung của một nhà trên máy chủ (`houses/{houseId}/pet_care`).
+/// [rev] tăng đúng 1 mỗi lần ghi (luật máy chủ bắt buộc) để không ai ghi đè
+/// bản cũ; [joined] là UID đã gộp tiến trình riêng vào bản chung.
+@immutable
+class PetCareRemoteDoc {
+  const PetCareRemoteDoc({
+    required this.state,
+    required this.rev,
+    required this.by,
+    this.joined = const {},
+  });
+  final String state;
+  final int rev;
+  final String by;
+  final Set<String> joined;
+
+  static PetCareRemoteDoc? fromValue(Object? value) {
+    if (value is! Map) return null;
+    final state = value['state'];
+    final rev = value['rev'];
+    final by = value['by'];
+    if (state is! String || rev is! num || by is! String) return null;
+    final joined = value['joined'];
+    return PetCareRemoteDoc(
+      state: state,
+      rev: rev.toInt(),
+      by: by,
+      joined: {
+        if (joined is Map)
+          for (final entry in joined.entries)
+            if (entry.value == true) '${entry.key}',
+      },
+    );
+  }
+
+  Map<String, Object> toValue() => {
+    'state': state,
+    'rev': rev,
+    'by': by,
+    if (joined.isNotEmpty) 'joined': {for (final uid in joined) uid: true},
+  };
+}
+
+/// Kho chung của nhà; tách giao diện để test dùng bản giả trong bộ nhớ.
+abstract interface class PetCareRemote {
+  Future<PetCareRemoteDoc?> fetch();
+  Stream<PetCareRemoteDoc?> watch();
+
+  /// So-và-đổi (transaction): [apply] nhận bản đang có trên máy chủ (null nếu
+  /// chưa có) và trả bản mới, hoặc null để giữ nguyên. Trả bản sau cùng.
+  Future<PetCareRemoteDoc?> commit(
+    PetCareRemoteDoc? Function(PetCareRemoteDoc? current) apply,
+  );
+}
+
+/// Trạng thái đồng bộ lưu trên máy: bản chung đã thấy và thao tác chờ đẩy
+/// (lúc mất mạng) dựa trên bản chung nào.
+@immutable
+class _PetCareSyncMeta {
+  const _PetCareSyncMeta({this.rev = 0, this.dirty = false, this.base = 0});
+  final int rev;
+  final bool dirty;
+  final int base;
+
+  static _PetCareSyncMeta decode(String? raw) {
+    if (raw == null) return const _PetCareSyncMeta();
+    try {
+      final value = jsonDecode(raw);
+      if (value is! Map) return const _PetCareSyncMeta();
+      int read(String key) =>
+          value[key] is num ? (value[key] as num).toInt() : 0;
+      return _PetCareSyncMeta(
+        rev: read('rev'),
+        dirty: value['dirty'] == true,
+        base: read('base'),
+      );
+    } on Object {
+      return const _PetCareSyncMeta();
+    }
+  }
+
+  String encode() => jsonEncode({'rev': rev, 'dirty': dirty, 'base': base});
 }
 
 class PetCareStore {
@@ -664,6 +1623,10 @@ class PetCareStore {
     required this.write,
     required this.isCurrent,
     this.ownedPet,
+    this.remote,
+    this.uid,
+    this.readMeta,
+    this.writeMeta,
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
 
@@ -673,9 +1636,11 @@ class PetCareStore {
     required String houseId,
     required bool Function() isCurrent,
     PetCarePet? ownedPet,
+    PetCareRemote? remote,
     DateTime Function()? now,
   }) {
     final key = storageKey(uid, houseId);
+    final metaKey = '${key}_sync';
     return PetCareStore(
       key: key,
       read: () => prefs.getString(key),
@@ -691,6 +1656,10 @@ class PetCareStore {
       },
       isCurrent: isCurrent,
       ownedPet: ownedPet,
+      remote: remote,
+      uid: uid,
+      readMeta: () => prefs.getString(metaKey),
+      writeMeta: (value) => prefs.setString(metaKey, value),
       now: now,
     );
   }
@@ -700,11 +1669,22 @@ class PetCareStore {
     return 'pet_care_v1_${base64Url.encode(utf8.encode(jsonEncode([uid, houseId])))}';
   }
 
+  /// Chờ máy chủ tối đa chừng này; quá thì lưu trên máy và đẩy lên sau.
+  static const remoteTimeout = Duration(seconds: 6);
+
   final String key;
   final String? Function() read;
   final Future<bool> Function(String value) write;
   final bool Function() isCurrent;
+
+  /// Bé thuộc vai người này: dùng khi gộp tiến trình lần đầu nối máy.
   final PetCarePet? ownedPet;
+
+  /// Bản chung của nhà; null thì chỉ lưu trên máy (test, chưa đăng nhập).
+  final PetCareRemote? remote;
+  final String? uid;
+  final String? Function()? readMeta;
+  final Future<bool> Function(String value)? writeMeta;
   final DateTime Function() now;
   static final Map<String, Future<void>> _pending = {};
   static final Map<String, int> _revisions = {};
@@ -724,14 +1704,41 @@ class PetCareStore {
     return loaded.elapsed(moment);
   }
 
-  void _publish(PetCareProgress progress) {
+  void _publish(
+    PetCareProgress progress, {
+    bool fromPartner = false,
+    bool merged = false,
+  }) {
     final revision = (_revisions[key] ?? 0) + 1;
     _revisions[key] = revision;
     changes.value = PetCareStoreEvent(
       key: key,
       progress: progress,
       revision: revision,
+      fromPartner: fromPartner,
+      merged: merged,
     );
+  }
+
+  _PetCareSyncMeta _meta() => _PetCareSyncMeta.decode(readMeta?.call());
+
+  Future<void> _saveMeta(_PetCareSyncMeta meta) async {
+    await writeMeta?.call(meta.encode());
+  }
+
+  /// Xếp hàng thao tác theo khóa để lưu/đồng bộ không chen nhau.
+  Future<T> _enqueue<T>(Future<T> Function() task) {
+    final previous = _pending[key] ?? Future<void>.value();
+    final operation = previous.then((_) => task());
+    final tail = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    _pending[key] = tail;
+    tail.then((_) {
+      if (identical(_pending[key], tail)) _pending.remove(key);
+    });
+    return operation;
   }
 
   Future<PetCareProgress> load() async {
@@ -743,41 +1750,161 @@ class PetCareStore {
     return progress;
   }
 
+  /// Bản chung → bản trên máy: giữ mục riêng (bé đang xem, lượt quảng cáo,
+  /// Hạt mini game) của người này.
+  PetCareProgress _adopt(PetCareRemoteDoc doc, PetCareProgress mine) {
+    final moment = now();
+    return PetCareProgress.decode(
+      doc.state,
+      now: moment,
+    ).elapsed(moment).withPersonal(mine);
+  }
+
+  /// Bản làm nền cho thao tác: bản chung mới nhất; lần đầu nối máy thì gộp;
+  /// đang có thao tác chờ đẩy mà bản chung chưa đổi thì giữ bản trên máy.
+  (PetCareProgress, bool) _baseFor(
+    PetCareRemoteDoc? current,
+    PetCareProgress local,
+    bool hadLocal,
+    _PetCareSyncMeta meta,
+  ) {
+    if (current == null) return (local, true);
+    final shared = _adopt(current, local);
+    final owner = ownedPet;
+    if (!current.joined.contains(uid)) {
+      if (!hadLocal || owner == null) return (shared, true);
+      return (
+        PetCareProgress.joinHouse(shared: shared, mine: local, owned: owner),
+        true,
+      );
+    }
+    if (meta.dirty && current.rev == meta.base) return (local, true);
+    return (shared, false);
+  }
+
   Future<PetCareProgress> update(
     PetCareProgress Function(PetCareProgress state) change,
-  ) {
-    final previous = _pending[key] ?? Future<void>.value();
-    final operation = previous.then((_) async {
-      final current = _read();
-      final next = change(current);
+  ) => _enqueue(() async {
+    final local = _read();
+    final hadLocal = read() != null;
+    final remote = this.remote;
+    final writer = uid;
+    if (remote == null || writer == null) {
+      final next = change(local);
       _checkScope();
-      final owner = ownedPet;
-      if (owner != null) {
-        final partner = owner == PetCarePet.rabbit
-            ? PetCarePet.bear
-            : PetCarePet.rabbit;
-        // So sau elapsed: nhịp thời gian được phép đổi cả hai bé, còn thao tác
-        // người dùng chỉ được thay đổi bé thuộc vai của mình.
-        if (jsonEncode(next.vitalsFor(partner).toJson()) !=
-            jsonEncode(current.vitalsFor(partner).toJson())) {
-          throw const PetCareOwnershipDenied();
-        }
-      }
-      if (next.encode() != current.encode() && !await write(next.encode())) {
+      if (next.encode() != local.encode() && !await write(next.encode())) {
         throw StateError('Pet care save failed');
       }
       _checkScope();
       _publish(next);
       return next;
-    });
-    final tail = operation.then<void>(
-      (_) {},
-      onError: (Object _, StackTrace _) {},
-    );
-    _pending[key] = tail;
-    tail.then((_) {
-      if (identical(_pending[key], tail)) _pending.remove(key);
-    });
-    return operation;
+    }
+    final meta = _meta();
+    PetCareProgress? result;
+    PetCareRemoteDoc? settled;
+    var merged = false;
+    try {
+      settled = await remote
+          .commit((current) {
+            final (base, mustWrite) = _baseFor(current, local, hadLocal, meta);
+            merged =
+                current != null &&
+                hadLocal &&
+                ownedPet != null &&
+                !current.joined.contains(writer);
+            final next = change(base);
+            result = next;
+            if (!mustWrite && next.encode() == base.encode()) return null;
+            return PetCareRemoteDoc(
+              state: next.encode(),
+              rev: (current?.rev ?? 0) + 1,
+              by: writer,
+              joined: {...?current?.joined, writer},
+            );
+          })
+          .timeout(remoteTimeout);
+    } on PetCareScopeChanged {
+      rethrow;
+    } catch (_) {
+      settled = null;
+      result = null;
+    }
+    _checkScope();
+    if (settled == null) {
+      // Mất mạng/máy chủ chưa sẵn sàng: lưu trên máy, lần sau có mạng đẩy lên
+      // nếu bản chung chưa bị người ấy đổi trong lúc đó.
+      final next = change(local);
+      if (next.encode() != local.encode()) {
+        if (!await write(next.encode())) {
+          throw StateError('Pet care save failed');
+        }
+        await _saveMeta(
+          _PetCareSyncMeta(
+            rev: meta.rev,
+            dirty: true,
+            base: meta.dirty ? meta.base : meta.rev,
+          ),
+        );
+      }
+      _checkScope();
+      _publish(next);
+      return next;
+    }
+    final next = _adopt(settled, result ?? local);
+    if (!await write(next.encode())) throw StateError('Pet care save failed');
+    await _saveMeta(_PetCareSyncMeta(rev: settled.rev));
+    _checkScope();
+    _publish(next, merged: merged && settled.joined.contains(writer));
+    return next;
+  });
+
+  /// Nối/đẩy bản chung: lần đầu gộp tiến trình, có thao tác chờ thì đẩy lên,
+  /// còn lại chỉ nhận bản mới nhất. Không ghi gì nếu không cần.
+  Future<PetCareProgress> sync() => update((state) => state);
+
+  /// Nhận bản chung vừa đổi (đang mở Trạm Mây hoặc Home vừa đọc một lần).
+  /// Chưa nối máy hoặc còn thao tác chờ đẩy thì để [sync] xử lý.
+  Future<PetCareProgress?> receive(PetCareRemoteDoc? doc) => _enqueue(() async {
+    final writer = uid;
+    if (doc == null || writer == null) return null;
+    final meta = _meta();
+    if (!doc.joined.contains(writer) || meta.dirty) return null;
+    if (doc.rev == meta.rev) return null;
+    final local = _read();
+    final next = _adopt(doc, local);
+    if (!await write(next.encode())) throw StateError('Pet care save failed');
+    await _saveMeta(_PetCareSyncMeta(rev: doc.rev));
+    _checkScope();
+    _publish(next, fromPartner: doc.by != writer && doc.rev > meta.rev);
+    return next;
+  });
+
+  /// Lắng nghe bản chung trong lúc màn chơi mở (chỉ tải khi có thay đổi).
+  StreamSubscription<PetCareRemoteDoc?>? watch({
+    void Function(Object error)? onError,
+  }) {
+    final remote = this.remote;
+    if (remote == null || uid == null) return null;
+    return remote.watch().listen((doc) async {
+      final needsSync =
+          doc == null || !doc.joined.contains(uid) || _meta().dirty;
+      try {
+        if (needsSync) {
+          await sync();
+        } else {
+          await receive(doc);
+        }
+      } on Object catch (error) {
+        onError?.call(error);
+      }
+    }, onError: (Object error) => onError?.call(error));
+  }
+
+  /// Home: đọc bản chung một lần (không giữ kết nối nghe) khi mở app/quay lại.
+  Future<void> pull() async {
+    final remote = this.remote;
+    if (remote == null || uid == null) return;
+    final doc = await remote.fetch().timeout(remoteTimeout);
+    await receive(doc);
   }
 }

@@ -91,7 +91,11 @@ abstract final class UtilityLauncher {
       return;
     }
     if (id == 'local_album') {
-      await slPush<void>(context, const LocalAlbumScreen());
+      await slPush<void>(
+        context,
+        const LocalAlbumScreen(),
+        localGuideScreenType: 'utility:local_album',
+      );
       return;
     }
     if (id == 'understand_me') {
@@ -113,6 +117,7 @@ abstract final class UtilityLauncher {
       await slPush<void>(
         context,
         SettingsLinksManagerScreen(houseId: resolvedHouseId),
+        localGuideScreenType: 'utility:couple_connect',
       );
       return;
     }
@@ -232,7 +237,7 @@ abstract final class UtilityLauncher {
     final previousSurface = LocalGuideContextNotifier.instance.surface;
     LocalGuideContextNotifier.instance.setUtility(id);
     try {
-      await slPush(context, screen);
+      await slPush(context, screen, localGuideScreenType: 'utility:$id');
     } finally {
       switch (previousSurface.type) {
         case LocalGuideSurfaceType.settings:

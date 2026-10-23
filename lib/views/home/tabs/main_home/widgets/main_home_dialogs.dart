@@ -753,16 +753,16 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   }
 
   void _presentMissYouScreen(_MissYouAlertPayload payload) {
-    _incomingInteractionDialogTimer?.cancel();
     _incomingInteractionDialogVisible = true;
+    // Hộp tự hẹn giờ đóng chính nó (`_MissYouScreen`). Không thêm hẹn giờ
+    // pop mù ở đây: hai lệnh pop cùng lúc từng đóng nhầm Trang chủ, để lại
+    // màn trắng chỉ còn nền giấy.
     showDialog(
       context: context,
       useRootNavigator: true,
       barrierColor: Colors.black87,
       builder: (context) => _MissYouScreen(payload: payload),
     ).whenComplete(() {
-      _incomingInteractionDialogTimer?.cancel();
-      _incomingInteractionDialogTimer = null;
       _incomingInteractionDialogVisible = false;
       if (!mounted || !_isTabActive) {
         _incomingInteractionQueue.clear();
@@ -774,13 +774,6 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         if (!mounted || !_isTabActive) return;
         _presentMissYouScreen(nextPayload);
       });
-    });
-    _incomingInteractionDialogTimer = Timer(const Duration(seconds: 5), () {
-      if (!mounted || !_incomingInteractionDialogVisible) return;
-      final navigator = Navigator.of(context, rootNavigator: true);
-      if (navigator.canPop()) {
-        navigator.pop();
-      }
     });
   }
 

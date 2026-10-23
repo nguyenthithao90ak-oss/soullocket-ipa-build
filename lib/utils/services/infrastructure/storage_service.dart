@@ -29,6 +29,7 @@ import 'package:soullocket_app/utils/services/storage/storage_delete_helper.dart
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_finalize_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_image_upload_input.dart';
+import 'package:soullocket_app/utils/services/storage/storage_image_optimizer.dart';
 import 'package:soullocket_app/utils/services/storage/storage_managed_upload_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_media_constants.dart';
 import 'package:soullocket_app/utils/services/storage/storage_path_policy.dart';
@@ -1362,31 +1363,15 @@ class StorageService {
               contentType: optimized.temporaryPath != null ? 'video/mp4' : contentType,
             );
           }
-          if (!kIsWeb &&
-              file.path.isNotEmpty &&
-              contentType.startsWith('image/') &&
-              contentType != 'image/gif') {
-            try {
-              final temp = await getTemporaryDirectory();
-              compressedPath = p.join(
-                temp.path,
-                'private_memory_${requestId}_${DateTime.now().microsecondsSinceEpoch}.webp',
-              );
-              final compressed = await FlutterImageCompress.compressAndGetFile(
-                file.path,
-                compressedPath!,
-                minWidth: minWidth,
-                minHeight: minHeight,
-                quality: quality.clamp(70, 100),
-                format: CompressFormat.webp,
-              );
-              if (compressed != null)
-                return (file: compressed, contentType: 'image/webp');
-            } catch (_) {
-              // File gốc vẫn được kiểm tra MIME/kích thước và checksum bởi server.
-            }
-          }
-          return (file: file, contentType: contentType);
+          final prepared = await const StorageImageOptimizer().prepare(
+            file,
+            contentType: contentType,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            quality: quality.clamp(70, 100),
+          );
+          compressedPath = prepared.temporaryPath;
+          return (file: prepared.file, contentType: prepared.contentType);
         },
       );
     } finally {
@@ -1597,38 +1582,17 @@ class StorageService {
       var contentType = input.contentType;
       XFile uploadFile = file;
 
-      if (!kIsWeb &&
-          file.path.isNotEmpty &&
-          contentType.startsWith('image/') &&
-          fileExtension != '.gif') {
-        try {
-          final tempDir = await getTemporaryDirectory();
-          tempCompressedPath = p.join(
-            tempDir.path,
-            '${tempPrefix}_${DateTime.now().microsecondsSinceEpoch}.webp',
-          );
-          final compressed = await FlutterImageCompress.compressAndGetFile(
-            file.path,
-            tempCompressedPath,
-            minWidth: minWidth,
-            minHeight: minHeight,
-            quality: quality,
-            format: CompressFormat.webp,
-          );
-          if (compressed != null) {
-            uploadFile = compressed;
-            fileExtension = '.webp';
-            contentType = 'image/webp';
-          } else {
-            tempCompressedPath = null;
-          }
-        } catch (error) {
-          tempCompressedPath = null;
-          debugPrint(
-            '$errorLabel compression skipped: ${AppErrorMapper.resolve(error).message}',
-          );
-        }
-      }
+      final prepared = await const StorageImageOptimizer().prepare(
+        file,
+        contentType: contentType,
+        minWidth: minWidth,
+        minHeight: minHeight,
+        quality: quality,
+      );
+      uploadFile = prepared.file;
+      contentType = prepared.contentType;
+      tempCompressedPath = prepared.temporaryPath;
+      if (tempCompressedPath != null) fileExtension = '.webp';
 
       if (fileExtension.isEmpty) {
         fileExtension = p.extension(uploadFile.name).toLowerCase();
