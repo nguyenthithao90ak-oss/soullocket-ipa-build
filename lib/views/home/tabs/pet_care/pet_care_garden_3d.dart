@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../utils/services/l10n_service.dart';
 import '../../widgets/companion/home_companion_motion.dart';
-import '../../widgets/companion/home_companion_painter.dart';
 import 'pet_care_garden_camera.dart';
 import 'pet_care_garden_map.dart';
 import 'pet_care_progress.dart';
@@ -12,6 +11,7 @@ part 'pet_care_garden_3d_art.dart';
 part 'pet_care_garden_render.dart';
 part 'pet_care_garden_bsp.dart';
 part 'pet_care_garden_forest.dart';
+part 'pet_care_garden_avatar.dart';
 
 enum PetGardenActionPhase { preparing, contact, finishing }
 
@@ -26,6 +26,8 @@ class PetCareGarden3D extends StatefulWidget {
     required this.onPlot,
     required this.onWalk,
     required this.onHome,
+    this.onSteer,
+    this.onSteerEnd,
     this.enabled = true,
     this.animate = true,
     this.wateringPlot,
@@ -42,6 +44,8 @@ class PetCareGarden3D extends StatefulWidget {
   final ValueChanged<int> onPlot;
   final ValueChanged<Offset> onWalk;
   final VoidCallback onHome;
+  final void Function(Offset stick, double seconds)? onSteer;
+  final VoidCallback? onSteerEnd;
   final bool enabled, animate;
   final int? wateringPlot;
   final int? actionPlot;
@@ -71,6 +75,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
   bool _foreground = true, _tickerMode = true;
   bool _lamp = false, _window = false, _seated = false;
   double _lastScale = 1, _followAt = 0;
+  PetGardenViewMode? _controlMode;
   bool get _active => widget.enabled && _foreground && _tickerMode;
   @override
   void initState() {
@@ -94,7 +99,9 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
   @override
   void didUpdateWidget(PetCareGarden3D old) {
     super.didUpdateWidget(old);
-    if (!_active || widget.camera.mode != PetGardenViewMode.firstPerson) {
+    if (!_active ||
+        widget.camera.mode == PetGardenViewMode.map ||
+        (_controlMode != null && _controlMode != widget.camera.mode)) {
       _stop();
     }
     _objects();
@@ -123,6 +130,8 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
   }
 
   void _stop() {
+    if (_controlMode == PetGardenViewMode.orbit) widget.onSteerEnd?.call();
+    _controlMode = null;
     _stick.value = Offset.zero;
     _move.stop();
     _last = null;
@@ -132,7 +141,20 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
     final previous = _last;
     _last = at;
     if (previous == null || !_active) return;
-    widget.camera.move(_stick.value, (at - previous).inMicroseconds / 1000000);
+    if (widget.camera.isTransitioning) {
+      _stop();
+      return;
+    }
+    final seconds = (at - previous).inMicroseconds / 1000000;
+    if (_controlMode != widget.camera.mode) {
+      _stop();
+      return;
+    }
+    if (widget.camera.mode == PetGardenViewMode.orbit) {
+      widget.onSteer?.call(_stick.value, seconds);
+      return;
+    }
+    widget.camera.move(_stick.value, seconds);
     _followAt += (at - previous).inMicroseconds / 1000000;
     if (_followAt > .7) {
       _followAt = 0;
@@ -141,7 +163,12 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
   }
 
   void _stickTo(Offset position) {
-    if (!_active || widget.camera.mode != PetGardenViewMode.firstPerson) return;
+    if (!_active ||
+        widget.camera.mode == PetGardenViewMode.map ||
+        widget.camera.isTransitioning) {
+      return;
+    }
+    _controlMode = widget.camera.mode;
     if (_seated) {
       setState(() => _seated = false);
       _sit.stop();
@@ -158,6 +185,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
   void _interact(String id) {
     if (!_active) return;
     if (id.startsWith('plot:')) {
+      widget.camera.following = widget.camera.mode == PetGardenViewMode.orbit;
       if (_seated) {
         setState(() => _seated = false);
         _sit.stop();
@@ -178,6 +206,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
         _lampLight.stop();
         _objects();
       case 'bench':
+        widget.camera.following = widget.camera.mode == PetGardenViewMode.orbit;
         widget.onWalk(const Offset(165, 465));
         setState(() => _seated = !_seated);
         _sit.stop();
@@ -226,10 +255,9 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
     final nearest = _hitNearScreen(screen, size) ?? _pick(screen, size);
     if (nearest != null) {
       if (nearest.id == 'wall') return;
-      final distance = nearest.intersection(
-        camera.eye,
-        camera.ray(screen, size),
-      )!;
+      final distance =
+          nearest.intersection(camera.eye, camera.ray(screen, size)) ??
+          (nearest.center - camera.eye).length;
       if (camera.mode == PetGardenViewMode.firstPerson && distance > 2.8) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -249,6 +277,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
         _sit.stop();
         _objects();
       }
+      camera.following = camera.mode == PetGardenViewMode.orbit;
       widget.onWalk(floor.mapPoint);
     }
   }
@@ -371,22 +400,26 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
                           child: const IgnorePointer(child: SizedBox.expand()),
                         ),
                       ),
-                if (camera.mode == PetGardenViewMode.firstPerson) ...[
-                  Center(
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .8),
-                          shape: BoxShape.circle,
-                          boxShadow: const [
-                            BoxShadow(color: Color(0x553A5145), blurRadius: 3),
-                          ],
+                if (camera.mode != PetGardenViewMode.map) ...[
+                  if (camera.mode == PetGardenViewMode.firstPerson)
+                    Center(
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .8),
+                            shape: BoxShape.circle,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x553A5145),
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   PositionedDirectional(
                     start: 16,
                     bottom: 16,
@@ -405,7 +438,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
                             width: 108,
                             height: 108,
                             decoration: BoxDecoration(
-                              color: const Color(0x99FAF7E5),
+                              color: const Color(0x88F9FFFA),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: const Color(0x66FFFFFF),
@@ -423,7 +456,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
                               children: [
                                 const Icon(
                                   Icons.open_with_rounded,
-                                  color: Color(0x55425C45),
+                                  color: Color(0x555D8E83),
                                   size: 74,
                                 ),
                                 Transform.translate(
@@ -432,7 +465,7 @@ class _PetCareGarden3DState extends State<PetCareGarden3D>
                                     width: 42,
                                     height: 42,
                                     decoration: const BoxDecoration(
-                                      color: Color(0xFF758F6B),
+                                      color: Color(0xFF37A99B),
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(

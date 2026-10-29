@@ -2,17 +2,19 @@ part of 'auth_sign_in_service.dart';
 
 extension AuthSignInServiceSocial on AuthSignInService {
   Future<bool> _isProviderLinkedCurrentUser(String providerId) async {
-    var user = _auth.currentUser;
+    final user = _auth.currentUser;
     if (user == null) return false;
+    final generation = AuthSignInService._signOutGenerations[_auth] ?? 0;
+    _requireAuthSession(generation, uid: user.uid);
 
     try {
       await user.reload();
-      user = _auth.currentUser ?? user;
     } catch (error) {
       debugPrint('[AuthSocial] Không tải lại được provider hiện tại: $error');
     }
 
-    final providerData = user?.providerData ?? <firebase_auth.UserInfo>[];
+    _requireAuthSession(generation, uid: user.uid);
+    final providerData = _auth.currentUser!.providerData;
     return providerData.any((provider) => provider.providerId == providerId);
   }
 
@@ -40,74 +42,35 @@ extension AuthSignInServiceSocial on AuthSignInService {
     return _isProviderLinkedCurrentUser('password');
   }
 
-  Future<void> linkGoogleToCurrentUser() async {
+  Future<void> linkGoogleToCurrentUser() =>
+      _runAuthOperation(_linkGoogleToCurrentUser);
+
+  Future<void> _linkGoogleToCurrentUser(int generation) async {
     var user = _auth.currentUser;
     if (user == null) {
       throw UiCopy.text('copy_ba3ce6b45be4');
     }
 
-    if (await isGoogleLinkedCurrentUser()) {
-      return;
-    }
+    _requireAuthSession(generation, uid: user.uid);
+    final linked = await isGoogleLinkedCurrentUser();
+    _requireAuthSession(generation, uid: user.uid);
+    if (linked) return;
 
     final provider = firebase_auth.GoogleAuthProvider()..addScope('email');
     provider.setCustomParameters({'prompt': 'select_account'});
 
     try {
       if (kIsWeb) {
-        await user.linkWithPopup(provider);
-      } else {
-        final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-        if (!AuthSignInService._isGoogleSignInInitialized) {
-          final initCompleter = Completer<void>();
-          googleSignIn
-              .initialize()
-              .then((_) {
-                if (!initCompleter.isCompleted) initCompleter.complete();
-              })
-              .catchError((error) {
-                if (!initCompleter.isCompleted) {
-                  initCompleter.completeError(error);
-                } else {
-                  debugPrint('Late Google init error swallowed: $error');
-                }
-              });
-          await initCompleter.future.timeout(
-            const Duration(seconds: 15),
-            onTimeout: () =>
-                throw UiCopy.text('copy_90ca8dbde435'),
-          );
-          AuthSignInService._isGoogleSignInInitialized = true;
-        }
-
-        // Sign out trước để force hiện picker, tránh cached token expired
-        try {
-          await googleSignIn.signOut();
-        } catch (error) {
-          debugPrint('[AuthSocial] Không xóa được phiên Google cũ: $error');
-        }
-
-        final authCompleter = Completer<dynamic>();
-        googleSignIn
-            .authenticate(scopeHint: const ['email'])
-            .then((user) {
-              if (!authCompleter.isCompleted) authCompleter.complete(user);
-            })
-            .catchError((error) {
-              if (!authCompleter.isCompleted) {
-                authCompleter.completeError(error);
-              } else {
-                debugPrint('Late Google auth error swallowed: $error');
-              }
-            });
-
-        final googleUser = await authCompleter.future.timeout(
-          const Duration(seconds: 20),
-          onTimeout: () =>
-              throw UiCopy.text('copy_fe32cbfef9b5'),
+        await _runNativeAuthRequest(
+          () => user!.linkWithPopup(provider),
+          signOutGeneration: generation,
         );
-        if (googleUser == null) return;
-        final googleAuth = await googleUser.authentication;
+      } else {
+        final googleUser = await _selectGoogleAccount(
+          generation,
+          uid: user.uid,
+        );
+        final googleAuth = googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
           throw UiCopy.text('copy_f82aa856e91f');
         }
@@ -115,13 +78,20 @@ extension AuthSignInServiceSocial on AuthSignInService {
         final credential = firebase_auth.GoogleAuthProvider.credential(
           idToken: googleAuth.idToken,
         );
-        await user.linkWithCredential(credential);
+        await _runNativeAuthRequest(
+          () => user!.linkWithCredential(credential),
+          signOutGeneration: generation,
+        );
       }
 
+      _requireAuthSession(generation, uid: user.uid);
       await user.reload();
-      user = _auth.currentUser ?? user;
+      _requireAuthSession(generation, uid: user.uid);
+      user = _auth.currentUser!;
       await _houseContextService.syncSecurityEmailForCurrentUser(user: user);
+      _requireAuthSession(generation, uid: user.uid);
     } on firebase_auth.FirebaseAuthException catch (error) {
+      _requireAuthSession(generation, uid: user!.uid);
       switch (error.code) {
         case 'provider-already-linked':
           return;
@@ -153,69 +123,70 @@ extension AuthSignInServiceSocial on AuthSignInService {
               errStr.contains('cancelled'))) {
         throw UiCopy.text('copy_4cccee9577ae');
       }
-      final raw = error.toString();
-      if (raw.contains('10') ||
-          raw.contains('sign_in_failed') ||
-          raw.contains('ApiException')) {
+      if (isGoogleSignInConfigMismatch(error)) {
         throw UiCopy.text('copy_d3bda4768414');
+      }
+      if (isGoogleSignInNetworkIssue(error)) {
+        throw UiCopy.text('copy_3f3929986e93');
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            L10nService().translate('auth_fallback_google_link'),
+        fallbackMessage: L10nService().translate('auth_fallback_google_link'),
       ).message;
     }
   }
 
-  Future<void> linkAppleToCurrentUser() async {
+  Future<void> linkAppleToCurrentUser() =>
+      _runAuthOperation(_linkAppleToCurrentUser);
+
+  Future<void> _linkAppleToCurrentUser(int generation) async {
     var user = _auth.currentUser;
     if (user == null) {
       throw UiCopy.text('copy_cb88670faeb1');
     }
 
-    if (await isAppleLinkedCurrentUser()) {
-      return;
-    }
+    _requireAuthSession(generation, uid: user.uid);
+    final linked = await isAppleLinkedCurrentUser();
+    _requireAuthSession(generation, uid: user.uid);
+    if (linked) return;
 
     try {
       if (kIsWeb) {
         final provider = firebase_auth.AppleAuthProvider()
           ..addScope('email')
           ..addScope('name');
-        await user.linkWithPopup(provider);
+        await _runNativeAuthRequest(
+          () => user!.linkWithPopup(provider),
+          signOutGeneration: generation,
+        );
+      } else if (!_usesNativeAppleFlow) {
+        final provider = firebase_auth.AppleAuthProvider()
+          ..addScope('email')
+          ..addScope('name');
+        await _runNativeAuthRequest(
+          () => user!.linkWithProvider(provider),
+          signOutGeneration: generation,
+        );
       } else {
-        final isAvailable = await SignInWithApple.isAvailable();
-        if (!isAvailable) {
-          throw UiCopy.text('copy_422db9a6de1d');
-        }
-
-        final rawNonce = generateNonce();
-        final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
-
-        final appleCredential = await SignInWithApple.getAppleIDCredential(
-          scopes: const [
-            AppleIDAuthorizationScopes.email,
-            AppleIDAuthorizationScopes.fullName,
-          ],
-          nonce: hashedNonce,
-          state: generateNonce(length: 12),
-          webAuthenticationOptions: _usesNativeAppleFlow
-              ? null
-              : _buildAppleWebAuthenticationOptions(),
+        final oauthCredential = await _requestNativeAppleCredential(
+          generation,
+          uid: user.uid,
         );
-
-        final oauthCredential = _buildAppleFirebaseCredential(
-          appleCredential,
-          rawNonce,
+        await _runNativeAuthRequest(
+          () => user!.linkWithCredential(oauthCredential),
+          signOutGeneration: generation,
         );
-        await user.linkWithCredential(oauthCredential);
       }
 
+      _requireAuthSession(generation, uid: user.uid);
       await user.reload();
-      user = _auth.currentUser ?? user;
+      _requireAuthSession(generation, uid: user.uid);
+      user = _auth.currentUser!;
       await _houseContextService.syncSecurityEmailForCurrentUser(user: user);
+      _requireAuthSession(generation, uid: user.uid);
     } on firebase_auth.FirebaseAuthException catch (error) {
+      _requireAuthSession(generation, uid: user!.uid);
       switch (error.code) {
         case 'provider-already-linked':
           return;
@@ -226,6 +197,8 @@ extension AuthSignInServiceSocial on AuthSignInService {
         case 'requires-recent-login':
           throw UiCopy.text('copy_83503900874c');
         case 'popup-closed-by-user':
+        case 'cancelled-popup-request':
+        case 'web-context-cancelled':
           return;
         case 'popup-blocked':
           throw UiCopy.text('copy_99a56919b762');
@@ -249,13 +222,20 @@ extension AuthSignInServiceSocial on AuthSignInService {
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            L10nService().translate('auth_fallback_apple_link'),
+        fallbackMessage: L10nService().translate('auth_fallback_apple_link'),
       ).message;
     }
   }
 
-  Future<void> createPasswordForCurrentUser(String newPassword) async {
+  Future<void> createPasswordForCurrentUser(String newPassword) =>
+      _runAuthOperation(
+        (generation) => _createPasswordForCurrentUser(newPassword, generation),
+      );
+
+  Future<void> _createPasswordForCurrentUser(
+    String newPassword,
+    int generation,
+  ) async {
     var user = _auth.currentUser;
     if (user == null) {
       throw UiCopy.text('copy_27d42e4975c0');
@@ -269,24 +249,32 @@ extension AuthSignInServiceSocial on AuthSignInService {
     if (normalizedPassword.length < 6) {
       throw UiCopy.text('copy_4a11931017d1');
     }
+    _requireAuthSession(generation, uid: user.uid);
     if (await isPasswordLinkedCurrentUser()) {
       throw UiCopy.text('copy_5a8d7b0b0484');
     }
+    _requireAuthSession(generation, uid: user.uid);
 
     Future<void> linkPasswordCredential() async {
       final credential = firebase_auth.EmailAuthProvider.credential(
         email: email,
         password: normalizedPassword,
       );
-      await user!.linkWithCredential(credential);
+      _requireAuthSession(generation, uid: user!.uid);
+      await _runNativeAuthRequest(
+        () => user!.linkWithCredential(credential),
+        signOutGeneration: generation,
+      );
+      _requireAuthSession(generation, uid: user.uid);
     }
 
     try {
       await linkPasswordCredential();
     } on firebase_auth.FirebaseAuthException catch (error) {
       if (error.code == 'requires-recent-login') {
-        await _reauthenticateCurrentUserWithLinkedProvider(user);
-        user = _auth.currentUser ?? user;
+        await _reauthenticateCurrentUserWithLinkedProvider(user, generation);
+        _requireAuthSession(generation, uid: user.uid);
+        user = _auth.currentUser!;
         await linkPasswordCredential();
       } else if (error.code == 'provider-already-linked') {
         await user.reload();
@@ -301,13 +289,16 @@ extension AuthSignInServiceSocial on AuthSignInService {
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            L10nService().translate('auth_fallback_password_create'),
+        fallbackMessage: L10nService().translate(
+          'auth_fallback_password_create',
+        ),
       ).message;
     }
 
+    _requireAuthSession(generation, uid: user.uid);
     await user.reload();
-    user = _auth.currentUser ?? user;
+    _requireAuthSession(generation, uid: user.uid);
+    user = _auth.currentUser!;
     try {
       await _houseContextService.syncSecurityEmailForCurrentUser(user: user);
     } catch (error) {
@@ -316,13 +307,26 @@ extension AuthSignInServiceSocial on AuthSignInService {
   }
 
   Future<void> _reauthenticateCurrentUserWithLinkedProvider(
-    firebase_auth.User user,
-  ) async {
+    firebase_auth.User user, [
+    int? generation,
+  ]) async {
+    if (generation == null) {
+      await _runAuthOperation(
+        (current) =>
+            _reauthenticateCurrentUserWithLinkedProvider(user, current),
+      );
+      return;
+    }
+    _requireAuthSession(generation, uid: user.uid);
     final providerIds = user.providerData
         .map((provider) => provider.providerId)
         .toSet();
     if (providerIds.contains('google.com')) {
-      await _reauthenticateCurrentUserWithGoogle(user);
+      await _reauthenticateCurrentUserWithGoogle(user, generation);
+      return;
+    }
+    if (providerIds.contains('apple.com')) {
+      await _reauthenticateCurrentUserWithApple(user, generation);
       return;
     }
     if (providerIds.contains('facebook.com')) {
@@ -333,68 +337,22 @@ extension AuthSignInServiceSocial on AuthSignInService {
 
   Future<void> _reauthenticateCurrentUserWithGoogle(
     firebase_auth.User user,
+    int generation,
   ) async {
     try {
       if (kIsWeb) {
         final provider = firebase_auth.GoogleAuthProvider()..addScope('email');
         provider.setCustomParameters({'prompt': 'select_account'});
-        await user.reauthenticateWithPopup(provider);
+        await _runNativeAuthRequest(
+          () => user.reauthenticateWithPopup(provider),
+          signOutGeneration: generation,
+        );
+        _requireAuthSession(generation, uid: user.uid);
         return;
       }
 
-      final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-      if (!AuthSignInService._isGoogleSignInInitialized) {
-        final initCompleter = Completer<void>();
-        googleSignIn
-            .initialize()
-            .then((_) {
-              if (!initCompleter.isCompleted) initCompleter.complete();
-            })
-            .catchError((error) {
-              if (!initCompleter.isCompleted) {
-                initCompleter.completeError(error);
-              } else {
-                debugPrint('Late Google init error swallowed: $error');
-              }
-            });
-        await initCompleter.future.timeout(
-          const Duration(seconds: 15),
-          onTimeout: () =>
-              throw UiCopy.text('copy_90ca8dbde435'),
-        );
-        AuthSignInService._isGoogleSignInInitialized = true;
-      }
-
-      // Sign out trước để force hiện picker, tránh cached token expired
-      try {
-        await googleSignIn.signOut();
-      } catch (error) {
-        debugPrint('[AuthSocial] Không xóa được phiên Google cũ: $error');
-      }
-
-      final authCompleter = Completer<dynamic>();
-      googleSignIn
-          .authenticate(scopeHint: const ['email'])
-          .then((user) {
-            if (!authCompleter.isCompleted) authCompleter.complete(user);
-          })
-          .catchError((error) {
-            if (!authCompleter.isCompleted) {
-              authCompleter.completeError(error);
-            } else {
-              debugPrint('Late Google auth error swallowed: $error');
-            }
-          });
-
-      final googleUser = await authCompleter.future.timeout(
-        const Duration(seconds: 20),
-        onTimeout: () =>
-            throw UiCopy.text('copy_fe32cbfef9b5'),
-      );
-      if (googleUser == null) {
-        throw UiCopy.text('copy_4cccee9577ae');
-      }
-      final googleAuth = await googleUser.authentication;
+      final googleUser = await _selectGoogleAccount(generation, uid: user.uid);
+      final googleAuth = googleUser.authentication;
       if ((googleAuth.idToken ?? '').isEmpty) {
         throw UiCopy.text('copy_8802343cdb61');
       }
@@ -402,7 +360,11 @@ extension AuthSignInServiceSocial on AuthSignInService {
       final credential = firebase_auth.GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
-      await user.reauthenticateWithCredential(credential);
+      await _runNativeAuthRequest(
+        () => user.reauthenticateWithCredential(credential),
+        signOutGeneration: generation,
+      );
+      _requireAuthSession(generation, uid: user.uid);
     } on firebase_auth.FirebaseAuthException catch (error) {
       switch (error.code) {
         case 'user-mismatch':
@@ -432,9 +394,39 @@ extension AuthSignInServiceSocial on AuthSignInService {
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            L10nService().translate('auth_fallback_google_reauthenticate'),
+        fallbackMessage: L10nService().translate(
+          'auth_fallback_google_reauthenticate',
+        ),
       ).message;
     }
+  }
+
+  Future<void> _reauthenticateCurrentUserWithApple(
+    firebase_auth.User user,
+    int generation,
+  ) async {
+    _requireAuthSession(generation, uid: user.uid);
+    if (kIsWeb) {
+      await _runNativeAuthRequest(
+        () => user.reauthenticateWithPopup(firebase_auth.AppleAuthProvider()),
+        signOutGeneration: generation,
+      );
+    } else if (!_usesNativeAppleFlow) {
+      await _runNativeAuthRequest(
+        () =>
+            user.reauthenticateWithProvider(firebase_auth.AppleAuthProvider()),
+        signOutGeneration: generation,
+      );
+    } else {
+      final credential = await _requestNativeAppleCredential(
+        generation,
+        uid: user.uid,
+      );
+      await _runNativeAuthRequest(
+        () => user.reauthenticateWithCredential(credential),
+        signOutGeneration: generation,
+      );
+    }
+    _requireAuthSession(generation, uid: user.uid);
   }
 }

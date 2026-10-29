@@ -259,6 +259,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (savedPerAccount == 'user1' || savedPerAccount == 'user2') {
         return savedPerAccount;
       }
+
+      // Không dùng `il_role` chung cho email đang đăng nhập. Khóa này chỉ là
+      // bản sao tạm của phiên trước; dùng nó ở đây sẽ mang role của tài khoản
+      // A sang tài khoản B khi người dùng đổi tài khoản trên cùng thiết bị.
+      return null;
     }
 
     final generalRole = prefs.getString('il_role')?.trim();
@@ -295,6 +300,19 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
     return null;
+  }
+
+  Future<void> _clearTransientRoleIfSignedOut() async {
+    // Khi Auth đã có phiên thì role có thể là dữ liệu vừa được server xác nhận;
+    // chỉ dọn bản sao tạm trong màn Login lúc Firebase chưa tạo phiên.
+    if (FirebaseAuth.instance.currentUser != null) return;
+    try {
+      _prefs ??= await SharedPreferences.getInstance();
+      await _prefs!.remove('il_role');
+      await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+    } catch (error) {
+      debugPrint('[LoginScreen] Cannot clear transient role: $error');
+    }
   }
 
   Future<String?> _askGender([String? accountKey]) async {
@@ -512,16 +530,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
 
-    if (sessionRole != null) {
-      _prefs ??= await SharedPreferences.getInstance();
-      final prefs = _prefs!;
-      await prefs.setString('il_role', sessionRole);
-      await SecureStorageService.instance.write(
-        SecureStorageService.keyRole,
-        sessionRole,
-      );
-    }
-
     if (!mounted) return;
 
     if (isLoginAttempt) {
@@ -588,20 +596,16 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
 
-        if (sessionRole == 'user1' || sessionRole == 'user2') {
-          await prefs.setString('il_role', sessionRole!);
-          await SecureStorageService.instance.write(
-            SecureStorageService.keyRole,
-            sessionRole,
-          );
-        }
-
+        String? resolvedHouseId;
+        var houseLookupCompleted = false;
         if (user != null) {
           try {
-            final houseId = await HouseService()
+            resolvedHouseId = await HouseService()
                 .getCurrentHouseId(preferFresh: true)
                 .timeout(const Duration(seconds: 15));
-            if (houseId != null && houseId.isNotEmpty) {
+            houseLookupCompleted = true;
+            final houseId = resolvedHouseId?.trim() ?? '';
+            if (houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
               await SecureStorageService.instance.write(
                 SecureStorageService.keyHouseId,
@@ -611,6 +615,25 @@ class _LoginScreenState extends State<LoginScreen> {
           } catch (e) {
             debugPrint('[Auth][LoginScreen] Error fetching houseId: $e');
           }
+        }
+
+        // Auth finalize đã đồng bộ role từ member server nếu tài khoản có
+        // House. Chỉ ghi role đã chọn cho tài khoản chưa có House (thường là
+        // tài khoản mới đang chờ onboarding), tránh ghi đè role của người ấy.
+        final cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
+        final cachedHouseUid = prefs.getString('il_auth_uid')?.trim() ?? '';
+        final hasHouse =
+            (resolvedHouseId?.trim().isNotEmpty ?? false) ||
+            (houseLookupCompleted &&
+                cachedHouseId.isNotEmpty &&
+                cachedHouseUid == user?.uid);
+        if (houseLookupCompleted && !hasHouse &&
+            (sessionRole == 'user1' || sessionRole == 'user2')) {
+          await prefs.setString('il_role', sessionRole!);
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyRole,
+            sessionRole,
+          );
         }
 
         if (!mounted) return;
@@ -663,6 +686,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!isLoginAttempt && shouldClearPendingHouseSetupDraft) {
         await _clearPendingHouseSetupDraft();
       }
+      await _clearTransientRoleIfSignedOut();
 
       final l10n = L10nService();
       final errorInfo = AppErrorMapper.resolve(
@@ -870,6 +894,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result == null || result.user == null) {
+        await _clearTransientRoleIfSignedOut();
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
             content: Text(SocialAuthActionHelper.cancelledMessage(provider)),
@@ -881,7 +906,16 @@ class _LoginScreenState extends State<LoginScreen> {
       final email = (result.user?.email ?? '').trim().toLowerCase();
       var storedRole = selectedRole;
       if (email.isNotEmpty) {
-        await prefs.setString('il_saved_gender_$email', storedRole);
+        final savedAccountRole = prefs
+            .getString('il_saved_gender_$email')
+            ?.trim();
+        if (savedAccountRole == 'user1' || savedAccountRole == 'user2') {
+          // Tài khoản đã có role riêng thì ưu tiên bản ghi của chính tài
+          // khoản, không dùng lựa chọn còn sót từ màn Login.
+          storedRole = savedAccountRole!;
+        } else {
+          await prefs.setString('il_saved_gender_$email', storedRole);
+        }
       }
       final user = result.user;
       if (user != null) {
@@ -908,20 +942,16 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      if (storedRole == 'user1' || storedRole == 'user2') {
-        await prefs.setString('il_role', storedRole);
-        await SecureStorageService.instance.write(
-          SecureStorageService.keyRole,
-          storedRole,
-        );
-      }
-
+      String? resolvedHouseId;
+      var houseLookupCompleted = false;
       if (user != null) {
         try {
-          final houseId = await HouseService()
+          resolvedHouseId = await HouseService()
               .getCurrentHouseId(preferFresh: true)
               .timeout(const Duration(seconds: 15));
-          if (houseId != null && houseId.isNotEmpty) {
+          houseLookupCompleted = true;
+          final houseId = resolvedHouseId?.trim() ?? '';
+          if (houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
             await SecureStorageService.instance.write(
               SecureStorageService.keyHouseId,
@@ -931,6 +961,25 @@ class _LoginScreenState extends State<LoginScreen> {
         } catch (e) {
           debugPrint('[Auth][LoginScreen] Error fetching houseId (Social): $e');
         }
+      }
+
+      // Với House hiện hữu, Auth finalize đã lấy role từ member server. Role
+      // chọn trước provider chỉ được dùng cho onboarding tài khoản chưa có
+      // House.
+      final cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
+      final cachedHouseUid = prefs.getString('il_auth_uid')?.trim() ?? '';
+      final hasHouse =
+          (resolvedHouseId?.trim().isNotEmpty ?? false) ||
+          (houseLookupCompleted &&
+              cachedHouseId.isNotEmpty &&
+              cachedHouseUid == user?.uid);
+      if (houseLookupCompleted && !hasHouse &&
+          (storedRole == 'user1' || storedRole == 'user2')) {
+        await prefs.setString('il_role', storedRole);
+        await SecureStorageService.instance.write(
+          SecureStorageService.keyRole,
+          storedRole,
+        );
       }
 
       if (!mounted) return;
@@ -961,6 +1010,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       }
+      await _clearTransientRoleIfSignedOut();
       _failedAuthAttempts++;
       final resolvedMessage = AppErrorMapper.resolve(
         e,

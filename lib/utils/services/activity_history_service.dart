@@ -260,7 +260,7 @@ class ActivityHistoryService {
     final future = _cacheSerial.then((_) => action());
     _cacheSerial = future.then<void>(
       (_) {},
-      onError: (Object _, StackTrace __) {},
+      onError: (Object _, StackTrace _) {},
     );
     return future;
   }
@@ -358,8 +358,9 @@ class ActivityHistoryService {
             }
           }
         }
-        if (_epoch != epoch || _mutations > 0)
+        if (_epoch != epoch || _mutations > 0) {
           return _loadCache(house, ownerUid: uid);
+        }
         final normalized = _normalizeEntries(entries);
         await _saveCache(
           house,
@@ -412,11 +413,7 @@ class ActivityHistoryService {
     final seq = await _nextSeq(resolvedHouseId);
     if (_currentUid != uid) return;
     final entryId =
-        now.toString() +
-        '_' +
-        seq.toString() +
-        '_' +
-        Random.secure().nextInt(1 << 32).toRadixString(16);
+        '${now}_${seq}_${Random.secure().nextInt(1 << 32).toRadixString(16)}';
     final moduleKey = module.trim().toLowerCase();
     final entityTypeKey = entityType.trim().toLowerCase();
     final isSecretVaultEntry =
@@ -663,10 +660,7 @@ class ActivityHistoryService {
     if (house == null || house.isEmpty || _currentUid != uid) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final operation =
-        'activity_clear_' +
-        now.toString() +
-        '_' +
-        Random.secure().nextInt(1 << 32).toRadixString(16);
+        'activity_clear_${now}_${Random.secure().nextInt(1 << 32).toRadixString(16)}';
     _epoch++;
     _mutations++;
     try {
@@ -787,7 +781,7 @@ class ActivityHistoryService {
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    final marker = _migratedPrefix + uid + ':' + house;
+    final marker = '$_migratedPrefix$uid:$house';
     if (prefs.getBool(marker) == true) return;
     // Không tự gán lịch sử chưa rõ chủ cho tài khoản đang đăng nhập.
     final legacy = await _loadLegacyLocalEntries();
@@ -931,8 +925,9 @@ $rows
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     if (_currentUid != uid ||
-        (expectedEpoch != null && expectedEpoch != _epoch))
+        (expectedEpoch != null && expectedEpoch != _epoch)) {
       return;
+    }
     await prefs.setString(
       _cacheKey(houseId, uid),
       jsonEncode(
@@ -1053,7 +1048,6 @@ $rows
   }
 
   String _cacheKey(String houseId, String uid) =>
-      _cachePrefix + uid.length.toString() + ':' + uid + ':' + houseId;
-  String _seqKey(String houseId) =>
-      _seqPrefix + (_currentUid ?? '') + ':' + houseId;
+      '$_cachePrefix${uid.length}:$uid:$houseId';
+  String _seqKey(String houseId) => '$_seqPrefix${_currentUid ?? ''}:$houseId';
 }

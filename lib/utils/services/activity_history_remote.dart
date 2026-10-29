@@ -45,7 +45,7 @@ class ActivityHistoryRemote {
       _writeRtdb = _writeLegacy;
 
   @visibleForTesting
-  ActivityHistoryRemote.forTesting({
+  factory ActivityHistoryRemote.forTesting({
     required CloudflareDataService transport,
     required String? Function() currentUid,
     required Future<String?> Function() currentHouse,
@@ -53,12 +53,23 @@ class ActivityHistoryRemote {
     required Future<List<Map<String, dynamic>>> Function(String) readRtdb,
     required Future<void> Function(String, String, Map<String, dynamic>?, int)
     writeRtdb,
-  }) : _transport = transport,
-       _uid = currentUid,
-       _house = currentHouse,
-       _flag = readFlag,
-       _readRtdb = readRtdb,
-       _writeRtdb = writeRtdb;
+  }) => ActivityHistoryRemote._(
+    transport,
+    currentUid,
+    currentHouse,
+    readFlag,
+    readRtdb,
+    writeRtdb,
+  );
+
+  ActivityHistoryRemote._(
+    this._transport,
+    this._uid,
+    this._house,
+    this._flag,
+    this._readRtdb,
+    this._writeRtdb,
+  );
 
   final CloudflareDataService _transport;
   final String? Function() _uid;
@@ -122,8 +133,9 @@ class ActivityHistoryRemote {
     final scope = '${FirebaseAuth.instance.currentUser?.uid}:$house';
     final now = DateTime.now();
     if (now.difference(_lastLegacyTrim[scope] ?? DateTime(1970)) <
-        const Duration(minutes: 1))
+        const Duration(minutes: 1)) {
       return;
+    }
     final snapshot = await ref.orderByChild('ts').limitToLast(21).get();
     if (snapshot.children.length > 20) {
       final oldest = snapshot.children.first;
@@ -182,8 +194,9 @@ class ActivityHistoryRemote {
       final entry = Map<String, dynamic>.from(item as Map);
       if (entry['houseId'] != house ||
           entry['id'] is! String ||
-          entry['ts'] is! int)
+          entry['ts'] is! int) {
         throw const FormatException('Invalid Activity scope');
+      }
       return entry;
     }).toList();
     return ActivityHistorySnapshot(
@@ -203,16 +216,19 @@ class ActivityHistoryRemote {
     String? expectedUid,
   }) async {
     final uid = _uid();
-    if (uid == null || (expectedUid != null && uid != expectedUid))
+    if (uid == null || (expectedUid != null && uid != expectedUid)) {
       throw const ActivityScopeChanged();
+    }
     if (!['append', 'clear'].contains(action) ||
-        (action == 'append' && entry == null))
+        (action == 'append' && entry == null)) {
       throw ArgumentError('Invalid Activity action');
+    }
     // Giới hạn tuổi lệnh giống Worker, kể cả khi rollback về RTDB.
     if (issuedAt <
         DateTime.now().millisecondsSinceEpoch -
-            const Duration(days: 7).inMilliseconds)
+            const Duration(days: 7).inMilliseconds) {
       return;
+    }
     final backend = await _backend(uid, houseId);
     final payload = entry == null
         ? null

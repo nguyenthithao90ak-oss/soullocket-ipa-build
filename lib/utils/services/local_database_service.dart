@@ -658,8 +658,9 @@ class LocalDatabaseService {
             final remote =
                 _activityRemoteForTesting?.call() ?? ActivityHistoryRemote();
             try {
-              if (!['SET', 'DELETE'].contains(action))
+              if (!['SET', 'DELETE'].contains(action)) {
                 throw StateError('Invalid Activity queue action');
+              }
               await remote.send(
                 houseId: parts[1],
                 action: action == 'DELETE' ? 'clear' : 'append',

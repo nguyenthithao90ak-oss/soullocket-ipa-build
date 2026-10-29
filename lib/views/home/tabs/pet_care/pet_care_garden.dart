@@ -52,7 +52,7 @@ class _GardenPetMotion extends HomeCompanionMotion {
   Offset feet;
   final path = Queue<Offset>();
   double seconds = 0, cycles = 0, yaw = .28, speed = 0;
-  bool right = true;
+  bool right = true, controlled = false;
   @override
   bool get hasSurfaces => true;
   @override
@@ -60,8 +60,9 @@ class _GardenPetMotion extends HomeCompanionMotion {
   @override
   bool get facingRight => right;
   @override
-  HomeCompanionPhase get phase =>
-      path.isEmpty ? HomeCompanionPhase.idle : HomeCompanionPhase.walking;
+  HomeCompanionPhase get phase => (controlled && speed > .5) || path.isNotEmpty
+      ? HomeCompanionPhase.walking
+      : HomeCompanionPhase.idle;
   @override
   double get stride => cycles;
   @override
@@ -69,6 +70,7 @@ class _GardenPetMotion extends HomeCompanionMotion {
   @override
   double get elapsedSeconds => seconds;
   void tick(double dt) {
+    if (controlled) return;
     seconds += dt;
     while (path.isNotEmpty && (path.first - feet).distance < .8) {
       feet = path.removeFirst();
@@ -101,6 +103,36 @@ class _GardenPetMotion extends HomeCompanionMotion {
   }
 }
 
+extension _GardenDirectMotion on _GardenPetMotion {
+  void drive(Offset axis, double dt, bool Function(Offset) canStand) {
+    controlled = true;
+    path.clear();
+    seconds += dt;
+    final length = axis.distance.clamp(0.0, 1.0);
+    speed += (175 * length - speed).clamp(-680 * dt, 460 * dt);
+    if (length < .06) return;
+    final direction = axis / axis.distance;
+    final delta = direction * speed * dt;
+    final previous = feet;
+    final next = feet + delta;
+    if (canStand(next)) {
+      feet = next;
+    } else {
+      final x = Offset(next.dx, feet.dy);
+      if (canStand(x)) feet = x;
+      final y = Offset(feet.dx, next.dy);
+      if (canStand(y)) feet = y;
+    }
+    final moved = (feet - previous).distance;
+    cycles += moved / 78;
+    if (moved < .001) speed = 0;
+    final desired = math.atan2(direction.dx, direction.dy);
+    final turn = math.atan2(math.sin(desired - yaw), math.cos(desired - yaw));
+    yaw += turn * (1 - math.exp(-12 * dt));
+    right = direction.dx >= 0;
+  }
+}
+
 class _PetCareGardenViewState extends State<PetCareGardenView>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _camera = TransformationController();
@@ -124,6 +156,9 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
   _GardenAction? _action;
   var _actionToken = 0;
   bool _saveError = false, _seedTrayOpen = false;
+  double _buddyFollowAt = 0;
+  int _controlledPet = 0;
+  PetGardenViewMode _shownMode = PetGardenViewMode.orbit;
   static int _orientationRevision = 0;
   void _refresh(VoidCallback action) => setState(action);
 
@@ -136,10 +171,7 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
     }
     final revision = ++_orientationRevision;
     final orientations = garden
-        ? [
-            DeviceOrientation.landscapeLeft,
-            DeviceOrientation.landscapeRight,
-          ]
+        ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
         : [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown];
     // Gửi ngay theo thứ tự lifecycle. Method channel vốn đã xếp hàng lệnh;
     // không chờ một Future cũ để lần vào vườn hiện tại bị trễ xoay màn.
@@ -170,7 +202,10 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
   void _cameraChanged() {
     // PetCareGarden3D tự repaint theo từng pose. Chỉ dựng lại HUD khi camera
     // đã tới mode đích để nút điều khiển không nhấp nháy giữa lúc tween.
-    if (mounted && !_worldCamera.isTransitioning) setState(() {});
+    if (mounted && _shownMode != _worldCamera.mode) {
+      _shownMode = _worldCamera.mode;
+      setState(() {});
+    }
   }
 
   void _preferences() {
@@ -260,6 +295,7 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
         _pets[i].tick(dt);
       }
     }
+    _worldCamera.follow(_pets[_controlledPet].feet, dt.toDouble());
     _frame.value += dt;
     final queued = _queued;
     if (queued != null && _pets.every((p) => p.path.isEmpty)) {
@@ -268,9 +304,62 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
     }
   }
 
+  void _steer(Offset stick, double seconds) {
+    if (!_active || _busy) return;
+    final awake = <int>[
+      for (var i = 0; i < _pets.length; i++)
+        if (!widget.progress.vitalsFor(PetCarePet.values[i]).sleeping) i,
+    ];
+    if (awake.isEmpty) return;
+    if (widget.progress.vitalsFor(PetCarePet.values[_controlledPet]).sleeping) {
+      _controlledPet = awake.first;
+    }
+    final dt = seconds.clamp(0.0, .05).toDouble();
+    _queued = null;
+    _worldCamera.following = true;
+    _pets[_controlledPet].drive(
+      _worldCamera.groundAxis(stick),
+      dt,
+      (point) => _worldCamera.canStand(GardenVec3.fromMap(point)),
+    );
+    _buddyFollowAt += dt;
+    for (final i in awake) {
+      if (i == _controlledPet) continue;
+      if (_buddyFollowAt > .35) {
+        _buddyFollowAt = 0;
+        _pets[i].path
+          ..clear()
+          ..addAll(
+            PetGardenMap.smoothRoute(
+              _pets[i].feet,
+              _pets[_controlledPet].feet + Offset(i == 0 ? -100 : 100, -35),
+            ),
+          );
+      }
+    }
+    if (_reduce) {
+      for (final i in awake) {
+        if (i != _controlledPet) _pets[i].tick(dt);
+      }
+    }
+    if (!_animate) _worldCamera.follow(_pets[_controlledPet].feet, dt);
+    _frame.value += .001;
+  }
+
+  void _stopSteering() {
+    if (!_pets[_controlledPet].controlled) return;
+    for (final pet in _pets) {
+      pet.path.clear();
+    }
+    _pets[_controlledPet].controlled = false;
+    _pets[_controlledPet].speed = 0;
+    _buddyFollowAt = 0;
+  }
+
   void _walk(Offset at) {
     if (!_active || _busy) return;
     _queued = null;
+    _stopSteering();
     for (var i = 0; i < _pets.length; i++) {
       final pet = _pets[i];
       pet.path.clear();
@@ -362,7 +451,8 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
         _action!.phase = PetGardenActionPhase.finishing;
       }
     });
-    if (!_reduce && await _waitAction(token, const Duration(milliseconds: 280))) {
+    if (!_reduce &&
+        await _waitAction(token, const Duration(milliseconds: 280))) {
       if (mounted && token == _actionToken) {
         setState(() => _action = null);
       }
@@ -748,17 +838,18 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
                 now: _now,
                 onPlot: _directPlot,
                 onWalk: _walk,
+                onSteer: _steer,
+                onSteerEnd: _stopSteering,
                 onHome: widget.onHome,
                 enabled: _active && !_busy,
                 animate: _animate,
-                wateringPlot:
-                    _action?.tool == _GardenTool.water
-                        ? _action!.plot
-                        : _effect != null &&
-                              _effect!.$2 == _GardenTool.water &&
-                              _frame.value - _effect!.$3 < 1.6
-                        ? _effect!.$1
-                        : null,
+                wateringPlot: _action?.tool == _GardenTool.water
+                    ? _action!.plot
+                    : _effect != null &&
+                          _effect!.$2 == _GardenTool.water &&
+                          _frame.value - _effect!.$3 < 1.6
+                    ? _effect!.$1
+                    : null,
                 actionPlot: _action?.plot,
                 actionPhase: _action?.phase,
               ),
@@ -884,21 +975,9 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
             ),
           if (_worldCamera.mode != PetGardenViewMode.firstPerson)
             PositionedDirectional(
-              top:
-                  MediaQuery.sizeOf(context).width >
-                      MediaQuery.sizeOf(context).height
-                  ? 76
-                  : 10,
-              end:
-                  MediaQuery.sizeOf(context).width >
-                      MediaQuery.sizeOf(context).height
-                  ? null
-                  : 10,
-              start:
-                  MediaQuery.sizeOf(context).width >
-                      MediaQuery.sizeOf(context).height
-                  ? 10
-                  : null,
+              top: constraints.maxWidth > constraints.maxHeight ? 76 : 10,
+              end: constraints.maxWidth > constraints.maxHeight ? null : 10,
+              start: constraints.maxWidth > constraints.maxHeight ? 10 : null,
               child: Flex(
                 direction:
                     MediaQuery.sizeOf(context).width >
@@ -935,165 +1014,172 @@ class _PetCareGardenViewState extends State<PetCareGardenView>
   );
 
   @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final paper = dark ? const Color(0xFF253E37) : const Color(0xFFFBF7EA);
-    final ink = dark ? const Color(0xFFE7F1DB) : const Color(0xFF355648);
-    if (MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height) {
-      return _wideGarden(ink, paper, dark);
-    }
-    return ColoredBox(
-      color: paper,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 12, 4),
-            child: Row(
-              children: [
-                IconButton(
-                  key: const ValueKey('pet-garden-home'),
-                  onPressed: widget.onHome,
-                  tooltip: context.tr('pet_garden_home'),
-                  style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
-                  icon: Icon(Icons.arrow_back_rounded, color: ink),
-                ),
-                Expanded(
-                  child: Text(
-                    context.tr('pet_garden_title'),
-                    style: SLTheme.quicksand(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: ink,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  key: const ValueKey('pet-garden-basket'),
-                  onPressed: _basket,
-                  style: TextButton.styleFrom(
-                    foregroundColor: ink,
-                    minimumSize: const Size(48, 48),
-                  ),
-                  child: Semantics(
-                    label: context.tr('pet_garden_basket'),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.shopping_basket_rounded, size: 24),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${widget.progress.garden.totalHarvest}',
-                          key: const ValueKey('pet-garden-stock'),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _viewModes(ink),
-          Expanded(child: _gardenScene(dark)),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: paper,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x18364E39),
-                  blurRadius: 16,
-                  offset: Offset(0, -4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final dark = Theme.of(context).brightness == Brightness.dark;
+      final paper = dark ? const Color(0xFF253E37) : const Color(0xFFFBF7EA);
+      final ink = dark ? const Color(0xFFE7F1DB) : const Color(0xFF355648);
+      if (constraints.maxWidth > constraints.maxHeight) {
+        return _wideGarden(ink, paper, dark);
+      }
+      return ColoredBox(
+        color: paper,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 12, 4),
+              child: Row(
                 children: [
-                  Semantics(
-                    liveRegion: true,
-                    child: Row(
-                      children: [
-                        if (_busy)
-                          const Padding(
-                            padding: EdgeInsetsDirectional.only(end: 8),
-                            child: SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                        Expanded(
-                          child: Text(
-                            _status(),
-                            key: const ValueKey('pet-garden-status'),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: ink,
-                            ),
-                          ),
-                        ),
-                      ],
+                  IconButton(
+                    key: const ValueKey('pet-garden-home'),
+                    onPressed: widget.onHome,
+                    tooltip: context.tr('pet_garden_home'),
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(48, 48),
                     ),
+                    icon: Icon(Icons.arrow_back_rounded, color: ink),
                   ),
-                  if (_tool == _GardenTool.plant ||
-                      (_worldCamera.mode != PetGardenViewMode.map &&
-                          _selected == null)) ...[
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height:
-                          MediaQuery.textScalerOf(context).scale(12) * 2 + 32,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: PetGardenCrop.values.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 6),
-                        itemBuilder: (context, i) {
-                          final crop = PetGardenCrop.values[i];
-                          return ChoiceChip(
-                            key: ValueKey('pet-garden-seed-${crop.name}'),
-                            selected: _crop == crop,
-                            avatar: SizedBox.square(
-                              dimension: 24,
-                              child: CustomPaint(
-                                painter: _GardenSeedIcon(crop),
-                              ),
-                            ),
-                            label: Text(_cropName(crop)),
-                            onSelected: _busy
-                                ? null
-                                : (_) => setState(() {
-                                    _crop = crop;
-                                    _queued = null;
-                                  }),
-                            materialTapTargetSize: MaterialTapTargetSize.padded,
-                            labelStyle: SLTheme.quicksand(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: _crop == crop
-                                  ? const Color(0xFF355648)
-                                  : ink,
-                            ),
-                            backgroundColor: dark
-                                ? const Color(0xFF354C40)
-                                : const Color(0xFFFFFDF7),
-                            selectedColor: const Color(0xFFDDEBC6),
-                          );
-                        },
+                  Expanded(
+                    child: Text(
+                      context.tr('pet_garden_title'),
+                      style: SLTheme.quicksand(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: ink,
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 6),
-                  if (_worldCamera.mode == PetGardenViewMode.map)
-                    _tools(ink, dark),
+                  ),
+                  TextButton(
+                    key: const ValueKey('pet-garden-basket'),
+                    onPressed: _basket,
+                    style: TextButton.styleFrom(
+                      foregroundColor: ink,
+                      minimumSize: const Size(48, 48),
+                    ),
+                    child: Semantics(
+                      label: context.tr('pet_garden_basket'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.shopping_basket_rounded, size: 24),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${widget.progress.garden.totalHarvest}',
+                            key: const ValueKey('pet-garden-stock'),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            _viewModes(ink),
+            Expanded(child: _gardenScene(dark)),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: paper,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x18364E39),
+                    blurRadius: 16,
+                    offset: Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Semantics(
+                      liveRegion: true,
+                      child: Row(
+                        children: [
+                          if (_busy)
+                            const Padding(
+                              padding: EdgeInsetsDirectional.only(end: 8),
+                              child: SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          Expanded(
+                            child: Text(
+                              _status(),
+                              key: const ValueKey('pet-garden-status'),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: ink,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_tool == _GardenTool.plant ||
+                        (_worldCamera.mode != PetGardenViewMode.map &&
+                            _selected == null)) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height:
+                            MediaQuery.textScalerOf(context).scale(12) * 2 + 32,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: PetGardenCrop.values.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 6),
+                          itemBuilder: (context, i) {
+                            final crop = PetGardenCrop.values[i];
+                            return ChoiceChip(
+                              key: ValueKey('pet-garden-seed-${crop.name}'),
+                              selected: _crop == crop,
+                              avatar: SizedBox.square(
+                                dimension: 24,
+                                child: CustomPaint(
+                                  painter: _GardenSeedIcon(crop),
+                                ),
+                              ),
+                              label: Text(_cropName(crop)),
+                              onSelected: _busy
+                                  ? null
+                                  : (_) => setState(() {
+                                      _crop = crop;
+                                      _queued = null;
+                                    }),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.padded,
+                              labelStyle: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _crop == crop
+                                    ? const Color(0xFF355648)
+                                    : ink,
+                              ),
+                              backgroundColor: dark
+                                  ? const Color(0xFF354C40)
+                                  : const Color(0xFFFFFDF7),
+                              selectedColor: const Color(0xFFDDEBC6),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 6),
+                    if (_worldCamera.mode == PetGardenViewMode.map)
+                      _tools(ink, dark),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

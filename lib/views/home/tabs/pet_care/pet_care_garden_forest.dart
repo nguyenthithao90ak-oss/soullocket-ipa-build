@@ -20,8 +20,8 @@ class _GardenForest {
         at,
         GardenVec3(11 + i % 4.0, 5 + i % 3.0, 12),
         Color.lerp(
-          const Color(0xFF94B8A1),
-          const Color(0xFFB0C9AD),
+          const Color(0xFF7DADA2),
+          const Color(0xFFA0C6AD),
           (i % 4) / 4,
         )!,
         sides: 12,
@@ -46,14 +46,14 @@ class _GardenForest {
         final m = _WorldMesh();
         final leaf = Color.lerp(
           [
-            const Color(0xFF4C845A),
-            const Color(0xFF649473),
-            const Color(0xFF83AC91),
+            const Color(0xFF398B68),
+            const Color(0xFF59A784),
+            const Color(0xFF83B79F),
           ][layer],
           [
-            const Color(0xFF94B966),
-            const Color(0xFF9DB980),
-            const Color(0xFFA5C2A1),
+            const Color(0xFF7CBB65),
+            const Color(0xFF9ACA83),
+            const Color(0xFFAACDB0),
           ][layer],
           (1 + math.sin(n * 2.71)) / 2,
         )!;
@@ -69,8 +69,8 @@ class _GardenForest {
                   ),
           ],
           Color.lerp(
-            const Color(0xFF8DA96D),
-            const Color(0xFFA5BC83),
+            const Color(0xFF6FAB62),
+            const Color(0xFF8BBF74),
             layer / 3,
           )!,
           floor: true,
@@ -96,7 +96,7 @@ class _GardenForest {
           m.ellipsoid(
             at + GardenVec3(.28 * scale, 1.86 * scale, -.08 * scale),
             GardenVec3(.74 * scale, .68 * scale, .72 * scale),
-            Color.lerp(leaf, const Color(0xFFD1E39A), .18)!,
+            Color.lerp(leaf, const Color(0xFFCAEC92), .18)!,
             sides: 10,
             rings: 4,
           );
@@ -119,7 +119,7 @@ class _GardenForest {
           m.ellipsoid(
             at + GardenVec3(.10 * scale, 2.10 * scale, -.04 * scale),
             GardenVec3(.62 * scale, .58 * scale, .62 * scale),
-            Color.lerp(leaf, const Color(0xFFC7D995), .14)!,
+            Color.lerp(leaf, const Color(0xFFB9E091), .14)!,
             sides: 9,
             rings: 3,
           );
@@ -155,7 +155,7 @@ extension _GardenForestPainting on _GardenWorldPainter {
           ..shader = const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFB3C995), Color(0xFFA7C47D)],
+            colors: [Color(0xFFAAD294), Color(0xFF8BC773)],
           ).createShader(rect),
       );
     }
@@ -222,7 +222,7 @@ extension _GardenForestPainting on _GardenWorldPainter {
 
 // Lối đi vòng quanh sân, hoa dại và góc nghỉ có hình học thật ở cùng mặt đất.
 void _gardenMeadow(_WorldMesh m) {
-  const path = Color(0xFFD4C69D);
+  const path = Color(0xFFE1CBA2);
   void ribbon(List<GardenVec3> points, double width) {
     for (var i = 0; i < points.length - 1; i++) {
       final a = points[i], b = points[i + 1], delta = b - a;
@@ -272,7 +272,7 @@ void _gardenMeadow(_WorldMesh m) {
         p + offset - const GardenVec3(.035, 0, 0),
         p + offset + GardenVec3(.02, .12 + (i % 3) * .025, -.03),
         p + offset + const GardenVec3(.03, 0, .025),
-      ], i.isEven ? const Color(0xFF8BAA66) : const Color(0xFF9AB971));
+      ], i.isEven ? const Color(0xFF68AB60) : const Color(0xFF88BD65));
     }
     if (i % 3 != 0) continue;
     final h = .16 + (i % 4) * .025;

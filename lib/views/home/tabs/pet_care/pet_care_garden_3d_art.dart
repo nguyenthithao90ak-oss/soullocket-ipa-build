@@ -24,10 +24,10 @@ class _WorldFace {
 
   // Ánh sáng thuộc hình học, chỉ tính khi cây hoặc đồ vật đổi hình.
   List<Color> _shades() {
-    final direction = const GardenVec3(-.4, .8, .4).unit;
+    final direction = const GardenVec3(-.55, .9, .65).unit;
     final fallback = normal.y < 0 ? normal * -1 : normal;
     Color shade(GardenVec3 n) {
-      final light = .78 + math.max(0.0, n.dot(direction)) * .22;
+      final light = .72 + math.max(0.0, n.dot(direction)) * .34;
       return Color.fromRGBO(
         (color.r * 255 * light).round().clamp(0, 255),
         (color.g * 255 * light).round().clamp(0, 255),
@@ -36,7 +36,9 @@ class _WorldFace {
       );
     }
 
-    if (normals == null) return List.filled(points.length, shade(fallback));
+    if (normals == null) {
+      return List.filled(points.length, shade(closed ? outward : fallback));
+    }
     return normals!.map(shade).toList(growable: false);
   }
 }
@@ -104,6 +106,72 @@ class _WorldMesh {
       Color.lerp(color, Colors.white, .13)!,
       floor: floor,
       closed: true,
+    );
+  }
+
+  void roundBox(
+    GardenVec3 at,
+    GardenVec3 size,
+    Color color, {
+    double corner = .08,
+  }) {
+    final radius = math.min(corner, math.min(size.x, size.z) * .45);
+    final bevel = math.min(size.y * .32, radius * .35);
+    final perimeter = <GardenVec3>[];
+    for (var k = 0; k < 4; k++) {
+      final cx = k == 0 || k == 3 ? at.x + size.x - radius : at.x + radius;
+      final cz = k < 2 ? at.z + size.z - radius : at.z + radius;
+      for (var j = 0; j <= 3; j++) {
+        final angle = k * math.pi / 2 + j * math.pi / 6;
+        perimeter.add(
+          GardenVec3(
+            cx + math.cos(angle) * radius,
+            at.y,
+            cz + math.sin(angle) * radius,
+          ),
+        );
+      }
+    }
+    final center = at + GardenVec3(size.x * .5, 0, size.z * .5);
+    final shoulder = perimeter
+        .map((p) => p + GardenVec3(0, size.y - bevel, 0))
+        .toList();
+    final top = perimeter.map((p) {
+      final inset = (center - p).unit * bevel;
+      return p + inset + GardenVec3(0, size.y, 0);
+    }).toList();
+    for (var i = 0; i < perimeter.length; i++) {
+      final j = (i + 1) % perimeter.length;
+      final n = (perimeter[i] - center).unit;
+      faces.add(
+        _WorldFace(
+          [perimeter[i], perimeter[j], shoulder[j], shoulder[i]],
+          color,
+          List.filled(4, n),
+          true,
+        ),
+      );
+      faces.add(
+        _WorldFace(
+          [shoulder[i], shoulder[j], top[j], top[i]],
+          Color.lerp(color, Colors.white, .12)!,
+          [
+            n,
+            n,
+            (n + const GardenVec3(0, 1, 0)).unit,
+            (n + const GardenVec3(0, 1, 0)).unit,
+          ],
+          true,
+        ),
+      );
+    }
+    faces.add(
+      _WorldFace(
+        top,
+        Color.lerp(color, Colors.white, .16)!,
+        List.filled(top.length, const GardenVec3(0, 1, 0)),
+        true,
+      ),
     );
   }
 
@@ -392,15 +460,15 @@ class _GardenWorldPainter extends CustomPainter {
   static _WorldMesh _buildEnvironment() {
     final m = _WorldMesh();
     _gardenMeadow(m);
-    const cream = Color(0xFFF0E1C0),
-        wood = Color(0xFFBE9C74),
-        roof = Color(0xFFD59486);
+    const cream = Color(0xFFFFF0D4),
+        wood = Color(0xFFBB885C),
+        roof = Color(0xFFF18470);
     // Mặt đất liền mạch, bỏ lưới ô vuông kiểu prototype. Các mảng cỏ
     // không đều tạo vật liệu mềm và chiều sâu mà không cần texture CPU.
     m.box(
       const GardenVec3(-11, -.06, -13),
       const GardenVec3(22, .045, 26),
-      const Color(0xFFA8C985),
+      const Color(0xFF83C870),
       floor: true,
     );
     for (var i = 0; i < 58; i++) {
@@ -416,7 +484,7 @@ class _GardenWorldPainter extends CustomPainter {
           p + GardenVec3(w, 0, h),
           p + GardenVec3(-w * .65, 0, h * .72),
         ],
-        i.isEven ? const Color(0xFFA1BE79) : const Color(0xFFB1CF8C),
+        i.isEven ? const Color(0xFF7FC366) : const Color(0xFF94D578),
         floor: true,
       );
     }
@@ -425,7 +493,7 @@ class _GardenWorldPainter extends CustomPainter {
     m.ellipsoid(
       const GardenVec3(-1.05, .002, -2.65),
       const GardenVec3(3.9, .012, 2.15),
-      const Color(0xFF94B276),
+      const Color(0xFF6CA95F),
       sides: 22,
       rings: 2,
       floor: true,
@@ -434,14 +502,14 @@ class _GardenWorldPainter extends CustomPainter {
     m.box(
       const GardenVec3(.66, .002, -.95),
       const GardenVec3(.65, .015, 6.1),
-      const Color(0xFFD8C9A4),
+      const Color(0xFFDEC7A3),
       floor: true,
     );
     for (final z in [1.15, 2.75, 4.35]) {
       m.box(
         GardenVec3(-3.6, .003, z - .22),
         const GardenVec3(5, .018, .45),
-        const Color(0xFFD8C9A4),
+        const Color(0xFFDEC7A3),
         floor: true,
       );
       for (var x = -3.45; x < 1.5; x += .61) {
@@ -449,7 +517,7 @@ class _GardenWorldPainter extends CustomPainter {
           GardenVec3(x, .025, z),
           .24,
           .035,
-          const Color(0xFFEFE3C2),
+          const Color(0xFFFFF0CF),
           sides: 8,
           floor: true,
         );
@@ -460,7 +528,7 @@ class _GardenWorldPainter extends CustomPainter {
         GardenVec3(.99, .022, z),
         .24,
         .04,
-        const Color(0xFFEFE3C2),
+        const Color(0xFFFFF0CF),
         sides: 8,
         floor: true,
       );
@@ -468,20 +536,20 @@ class _GardenWorldPainter extends CustomPainter {
     m.box(
       const GardenVec3(-1.72, .003, -1.15),
       const GardenVec3(2.7, .02, .62),
-      const Color(0xFFDCCFAE),
+      const Color(0xFFEEDABD),
       floor: true,
     );
     // Ao sau nhà với vành đá, lá súng.
     m.ellipsoid(
       const GardenVec3(2.9, .005, -2.05),
       const GardenVec3(1.22, .035, .92),
-      const Color(0xFFC4CAA9),
+      const Color(0xFFA2B5A1),
       floor: true,
     );
     m.ellipsoid(
       const GardenVec3(2.9, .04, -2.05),
       const GardenVec3(1.07, .03, .79),
-      const Color(0xFF91BFBC),
+      const Color(0xFF57BFCA),
       floor: true,
     );
     for (var i = 0; i < 12; i++) {
@@ -489,7 +557,7 @@ class _GardenWorldPainter extends CustomPainter {
       m.ellipsoid(
         GardenVec3(2.9 + math.cos(a) * 1.15, .08, -2.05 + math.sin(a) * .84),
         const GardenVec3(.16, .10, .12),
-        const Color(0xFFCDCDB1),
+        const Color(0xFFCED9C4),
         sides: 7,
         rings: 3,
       );
@@ -498,13 +566,13 @@ class _GardenWorldPainter extends CustomPainter {
       const GardenVec3(3.32, .09, -1.83),
       .20,
       .008,
-      const Color(0xFF7FA67B),
+      const Color(0xFF5EAE7D),
       sides: 9,
     );
     m.ellipsoid(
       const GardenVec3(3.33, .13, -1.83),
       const GardenVec3(.08, .045, .08),
-      const Color(0xFFE9BBB3),
+      const Color(0xFFF4AFB2),
       sides: 7,
       rings: 3,
     );
@@ -517,18 +585,18 @@ class _GardenWorldPainter extends CustomPainter {
     m.box(
       const GardenVec3(-3.64, 0, -4.44),
       const GardenVec3(5.08, .22, 3.38),
-      const Color(0xFFBCB99D),
+      const Color(0xFFB6C6A7),
     );
     for (var y = .4; y < 2.55; y += .31) {
       m.box(
         GardenVec3(-3.58, y, -1.088),
         const GardenVec3(4.96, .015, .02),
-        const Color(0xFFE0CFAF),
+        const Color(0xFFE9D9B9),
       );
       m.box(
         GardenVec3(1.405, y, -4.38),
         const GardenVec3(.015, .015, 3.24),
-        const Color(0xFFD5C1A0),
+        const Color(0xFFDEC5A2),
       );
     }
     m.polygon(const [
@@ -542,52 +610,61 @@ class _GardenWorldPainter extends CustomPainter {
       GardenVec3(1.6, 2.58, -.9),
       GardenVec3(1.6, 2.58, -4.6),
       GardenVec3(-1.1, 3.95, -4.6),
-    ], const Color(0xFFAC786C));
+    ], const Color(0xFFC6685D));
     m.polygon(const [
       GardenVec3(-3.6, 2.6, -1.09),
       GardenVec3(1.4, 2.6, -1.09),
       GardenVec3(-1.1, 3.87, -1.09),
-    ], const Color(0xFFEAD7B3));
+    ], const Color(0xFFFFEBCD));
     m.polygon(const [
       GardenVec3(-3.6, 2.6, -4.41),
       GardenVec3(1.4, 2.6, -4.41),
       GardenVec3(-1.1, 3.87, -4.41),
-    ], const Color(0xFFDDC7A4));
+    ], const Color(0xFFEEDBB8));
     // Viền mái, xà gỗ và hiên tạo độ dày cho ngôi nhà khi xoay camera.
     m.box(
       const GardenVec3(-3.82, 2.50, -1.24),
       const GardenVec3(5.24, .14, .16),
-      const Color(0xFF8F675B),
+      const Color(0xFFA45E51),
     );
     m.box(
       const GardenVec3(-3.80, .10, -1.30),
       const GardenVec3(5.20, .12, .18),
-      const Color(0xFF9B765C),
+      const Color(0xFFB9835F),
     );
     for (final x in [-3.45, -1.10, 1.18]) {
       m.box(
         GardenVec3(x, .22, -1.34),
         const GardenVec3(.12, 2.22, .13),
-        const Color(0xFF9C7459),
+        const Color(0xFFD1A271),
       );
     }
     // Mái hiên nhỏ trước cửa, có đầu hồi bo mềm bằng các lớp ellipsoid.
-    m.box(
-      const GardenVec3(-2.35, 2.18, -1.82),
-      const GardenVec3(2.5, .12, .76),
-      const Color(0xFFC58F78),
+    m.roundBox(
+      const GardenVec3(-2.35, 2.18, -1.02),
+      const GardenVec3(2.5, .12, .96),
+      const Color(0xFFCF7664),
     );
     m.polygon(const [
-      GardenVec3(-2.48, 2.30, -1.90),
-      GardenVec3(-1.10, 2.72, -1.90),
-      GardenVec3(.28, 2.30, -1.90),
-      GardenVec3(.28, 2.30, -1.17),
-      GardenVec3(-1.10, 2.72, -1.17),
-      GardenVec3(-2.48, 2.30, -1.17),
-    ], const Color(0xFFE0B18F));
+      GardenVec3(-2.48, 2.30, .05),
+      GardenVec3(-1.10, 2.72, .05),
+      GardenVec3(-1.10, 2.72, -1.10),
+      GardenVec3(-2.48, 2.30, -1.10),
+    ], const Color(0xFFF49C80));
+    m.polygon(const [
+      GardenVec3(-1.10, 2.72, .05),
+      GardenVec3(.28, 2.30, .05),
+      GardenVec3(.28, 2.30, -1.10),
+      GardenVec3(-1.10, 2.72, -1.10),
+    ], const Color(0xFFD87465));
+    m.polygon(const [
+      GardenVec3(-2.35, 2.30, .048),
+      GardenVec3(-1.10, 2.65, .048),
+      GardenVec3(.15, 2.30, .048),
+    ], const Color(0xFFFFE9C6));
     for (final x in [-2.12, -1.76, -1.40, -1.04, -.68, -.32]) {
       m.stringLight(
-        GardenVec3(x, 2.23, -1.48),
+        GardenVec3(x, 2.23, -.05),
         const Color(0xFFFFD58D),
         scale: .62,
       );
@@ -597,12 +674,12 @@ class _GardenWorldPainter extends CustomPainter {
       m.box(
         GardenVec3(x, h, -4.62),
         const GardenVec3(.026, .025, 3.76),
-        const Color(0xFFD29B82),
+        const Color(0xFFFFA18A),
       );
       m.box(
         GardenVec3(1.6 - t * 2.7, h, -4.62),
         const GardenVec3(.025, .025, 3.76),
-        const Color(0xFFC08C77),
+        const Color(0xFFE78A72),
       );
     }
     m.box(
@@ -624,7 +701,7 @@ class _GardenWorldPainter extends CustomPainter {
     m.box(
       const GardenVec3(-1.75, .17, -1.01),
       const GardenVec3(.94, 1.85, .045),
-      const Color(0xFF8EA78C),
+      const Color(0xFF3B9B8E),
     );
     // Cửa có nẹp, tay nắm và ô kính tròn để nhìn rõ khi ở gần.
     m.box(
@@ -650,7 +727,7 @@ class _GardenWorldPainter extends CustomPainter {
     m.box(
       const GardenVec3(-1.64, 1.15, -.96),
       const GardenVec3(.72, .65, .025),
-      const Color(0xFFBDD1B7),
+      const Color(0xFF90D5D7),
     );
     m.ellipsoid(
       const GardenVec3(-.95, 1.02, -.92),
@@ -682,7 +759,7 @@ class _GardenWorldPainter extends CustomPainter {
       m.box(
         GardenVec3(x - .43, 1.09, -.98),
         const GardenVec3(.86, .87, .025),
-        const Color(0xFF9CBEB4),
+        const Color(0xFF64B8C1),
       );
       m.box(
         GardenVec3(x - .025, 1.08, -.935),
@@ -709,14 +786,14 @@ class _GardenWorldPainter extends CustomPainter {
         m.ellipsoid(
           GardenVec3(x - .42 + j * .21, 1.05, -.90),
           const GardenVec3(.14, .13, .11),
-          const Color(0xFF8CA367),
+          const Color(0xFF62AB72),
           sides: 6,
           rings: 3,
         );
         m.ellipsoid(
           GardenVec3(x - .42 + j * .21, 1.17, -.89),
           const GardenVec3(.07, .05, .06),
-          const Color(0xFFE5B2AC),
+          const Color(0xFFF49CAA),
           sides: 6,
           rings: 3,
         );
@@ -731,7 +808,7 @@ class _GardenWorldPainter extends CustomPainter {
     m.box(
       const GardenVec3(1.47, 1.08, -3.52),
       const GardenVec3(.02, .84, .84),
-      const Color(0xFF9CBEB4),
+      const Color(0xFF64B8C1),
     );
     // Ghế gỗ có chân và tựa; đèn đứng có thân chụp.
     for (final x in [-3.7, -2.7]) {
@@ -757,20 +834,20 @@ class _GardenWorldPainter extends CustomPainter {
         wood,
       );
     }
-    m.box(
+    m.roundBox(
       const GardenVec3(-3.72, .56, -.78),
       const GardenVec3(1.15, .10, .38),
-      const Color(0xFFE8B6A7),
+      const Color(0xFFF6AC99),
     );
-    m.box(
+    m.roundBox(
       const GardenVec3(-3.68, .69, -.77),
       const GardenVec3(.42, .10, .12),
-      const Color(0xFFF1D6B4),
+      const Color(0xFFFFE7BD),
     );
-    m.box(
+    m.roundBox(
       const GardenVec3(-2.78, .69, -.77),
       const GardenVec3(.42, .10, .12),
-      const Color(0xFFF1D6B4),
+      const Color(0xFFFFE7BD),
     );
     m.cylinder(
       const GardenVec3(-4.1, 0, -.45),
@@ -820,7 +897,7 @@ class _GardenWorldPainter extends CustomPainter {
         m.box(
           GardenVec3(x, 0, z),
           const GardenVec3(.09, .65, .09),
-          const Color(0xFFE3D3AF),
+          const Color(0xFFFFF0D1),
         );
       }
     }
@@ -831,7 +908,7 @@ class _GardenWorldPainter extends CustomPainter {
         m.box(
           GardenVec3(x, 0, -5.1 + i * .48),
           const GardenVec3(.09, .65, .09),
-          const Color(0xFFE3D3AF),
+          const Color(0xFFFFF0D1),
         );
       }
     }
@@ -842,7 +919,7 @@ class _GardenWorldPainter extends CustomPainter {
           m.box(
             GardenVec3(span.$1, y, z),
             GardenVec3(span.$2, .06, .05),
-            const Color(0xFFD5C4A1),
+            const Color(0xFFE7CBA1),
           );
         }
       }
@@ -852,7 +929,7 @@ class _GardenWorldPainter extends CustomPainter {
           m.box(
             GardenVec3(x, y, span.$1),
             GardenVec3(.05, .06, span.$2),
-            const Color(0xFFD5C4A1),
+            const Color(0xFFE7CBA1),
           );
         }
       }
@@ -886,27 +963,27 @@ class _GardenWorldPainter extends CustomPainter {
       final at = GardenVec3.fromMap(PetGardenMap.plots[i]);
       final plant = progress.garden.plots[i], bed = i < 6;
       if (bed) {
-        m.box(
+        m.roundBox(
           at + const GardenVec3(-.83, 0, -.54),
           const GardenVec3(1.66, .15, 1.08),
-          const Color(0xFFB79874),
+          const Color(0xFFCF9A63),
         );
-        m.box(
+        m.roundBox(
           at + const GardenVec3(-.74, .14, -.45),
           const GardenVec3(1.48, .035, .90),
           plant?.wateredAt != null
-              ? const Color(0xFF88735A)
-              : const Color(0xFFA18A6A),
+              ? const Color(0xFF77513C)
+              : const Color(0xFFAA7950),
         );
         for (var j = 0; j < 3; j++) {
           m.box(
             at + GardenVec3(-.65, .18, -.29 + j * .28),
             const GardenVec3(1.3, .006, .015),
-            const Color(0xFF8E785B),
+            const Color(0xFF8C613F),
           );
         }
       } else {
-        m.cylinder(at, .45, .04, const Color(0xFFA3A272), sides: 12);
+        m.cylinder(at, .45, .04, const Color(0xFF7EAD63), sides: 12);
       }
       if (plant != null) {
         if (bed) {
@@ -925,7 +1002,7 @@ class _GardenWorldPainter extends CustomPainter {
         m.box(
           at + GardenVec3(bed ? .55 : .25, .12, -.35),
           const GardenVec3(.035, .38, .035),
-          const Color(0xFFAF9870),
+          const Color(0xFFB98450),
         );
         m.box(
           at + GardenVec3(bed ? .43 : .13, .37, -.36),
@@ -1107,57 +1184,51 @@ class _GardenWorldPainter extends CustomPainter {
     final base = GardenVec3.fromMap(motion.position, sitting * .48);
     final projected = camera.project(base, size);
     if (projected == null || projected.$2 < .4) return;
-    final growth = petCareGrowth(progress.bondPoints).clamp(.7, 1.15);
-    final scale = camera.lens(size) / projected.$2 * .025 * growth;
+    final growth = petCareGrowth(progress.bondPoints).clamp(.7, 1.15) * 1.16;
+    final pixels = camera.lens(size) / projected.$2 * growth;
     final feet = projected.$1;
     final bounds = Rect.fromLTRB(
-      feet.dx - 44 * scale,
-      feet.dy - 100 * scale,
-      feet.dx + 44 * scale,
-      feet.dy + 12 * scale,
+      feet.dx - .72 * pixels,
+      feet.dy - 2.05 * pixels,
+      feet.dx + .72 * pixels,
+      feet.dy + .25 * pixels,
     );
     if (!bounds.overlaps(Offset.zero & size)) return;
-    final cameraYaw = math.atan2(-camera.forward.x, -camera.forward.z);
-    final worldYaw = sitting > .5 ? 0.0 : heading(i);
-    final relativeYaw = math.atan2(
-      math.sin(worldYaw - cameraYaw),
-      math.cos(worldYaw - cameraYaw),
+    final avatar = _GardenAvatar(
+      camera: camera,
+      size: size,
+      origin: base,
+      yaw: sitting > .5 ? 0 : heading(i),
+      scale: growth,
     );
-    final occlusion = cache.petMask(i, bounds, base, camera, size);
-    // Xóa phần bị đồ vật che trên layer nhỏ; tránh boolean Path.combine
-    // cho hàng trăm tam giác chồng nhau trong mỗi bước chân.
+    avatar.build(
+      bear: i == 1,
+      motion: motion,
+      care: vitals,
+      outfit: progress.outfitFor(pet),
+      animate: animate,
+      sitting: sitting,
+      tending: actionPlot != null && i == 0
+          ? (actionPhase == PetGardenActionPhase.contact ? 1.0 : .35)
+          : 0,
+    );
     c.saveLayer(bounds, Paint());
     c.clipRect(bounds);
     c.drawOval(
       Rect.fromCenter(
-        center: feet + Offset(0, scale),
-        width: 34 * scale,
-        height: 9 * scale,
+        center: feet + Offset(0, pixels * .015),
+        width: .62 * pixels,
+        height: .17 * pixels,
       ),
       Paint()
-        ..color = const Color(0x24506D42)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2 * scale),
+        ..color = const Color(0x38466D48)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, pixels * .04),
     );
-    c.save();
-    c.translate(feet.dx, feet.dy);
-    c.scale(scale);
-    c.translate(-motion.position.dx, -motion.position.dy);
-    HomeCompanionPainter(
-      motion: motion,
-      darkMode: false,
-      showEffects: animate,
-      bodyYaw: relativeYaw,
-      sitting: sitting,
-      character: i == 0
-          ? HomeCompanionCharacter.bunny
-          : HomeCompanionCharacter.bear,
-      care: vitals,
-      petOutfit: progress.outfitFor(pet),
-      baby:
-          PetCareGrowthStage.of(progress.bondPoints) == PetCareGrowthStage.baby,
-    ).paint(c, PetGardenMap.size);
-    c.restore();
-    c.drawPath(occlusion, Paint()..blendMode = BlendMode.clear);
+    avatar.paint(c);
+    c.drawPath(
+      cache.petMask(i, bounds, base, camera, size),
+      Paint()..blendMode = BlendMode.clear,
+    );
     c.restore();
   }
 
@@ -1220,7 +1291,10 @@ class _GardenWorldPainter extends CustomPainter {
   void _actionIndicator(Canvas c, Size size) {
     final plot = actionPlot;
     final phase = actionPhase;
-    if (plot == null || phase == null || plot < 0 || plot >= PetGardenMap.plots.length) {
+    if (plot == null ||
+        phase == null ||
+        plot < 0 ||
+        plot >= PetGardenMap.plots.length) {
       return;
     }
     final projected = camera.project(
@@ -1283,9 +1357,7 @@ class _GardenWorldPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = (1.3 - t * .7).clamp(.45, 1.3).toDouble()
-            ..color = const Color(0xFFEDF5D3).withValues(
-              alpha: (1 - t) * .32,
-            ),
+            ..color = const Color(0xFFEDF5D3).withValues(alpha: (1 - t) * .32),
         );
       }
     }
@@ -1310,40 +1382,6 @@ class _GardenWorldPainter extends CustomPainter {
     }
   }
 
-  void _ambientShadows(Canvas c, Size size) {
-    void shadow(GardenVec3 at, double width, double depth, double opacity) {
-      final projected = camera.project(at, size);
-      if (projected == null) return;
-      final scale = camera.lens(size) / projected.$2;
-      final radius = (width * scale).clamp(8.0, 260.0).toDouble();
-      final height = (depth * scale).clamp(3.0, radius * .42).toDouble();
-      final rect = Rect.fromCenter(
-        center: projected.$1 + Offset(0, height * .08),
-        width: radius,
-        height: height,
-      );
-      c.drawOval(
-        rect,
-        Paint()
-          ..blendMode = BlendMode.multiply
-          ..shader = RadialGradient(
-            colors: [
-              const Color(0xFF53684D).withValues(alpha: opacity),
-              const Color(0x0053684D),
-            ],
-          ).createShader(rect),
-      );
-    }
-
-    shadow(const GardenVec3(-1.05, .01, -2.72), 5.8, 2.1, .22);
-    for (var i = 0; i < 6; i++) {
-      final at = GardenVec3.fromMap(PetGardenMap.plots[i], .02);
-      shadow(at, 1.9, 1.05, .17);
-    }
-    shadow(const GardenVec3(-3.2, .02, -.52), 1.9, .62, .18);
-    shadow(const GardenVec3(-4.1, .02, -.45), .72, .34, .16);
-  }
-
   @override
   void paint(Canvas c, Size size) {
     c.drawRect(
@@ -1352,7 +1390,7 @@ class _GardenWorldPainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF83B8D2), Color(0xFFD3E7D3), Color(0xFFF2E6BE)],
+          colors: [Color(0xFF69C6E5), Color(0xFFB3E5DD), Color(0xFFEAF1CE)],
           stops: [0, .56, 1],
         ).createShader(Offset.zero & size),
     );
@@ -1405,7 +1443,6 @@ class _GardenWorldPainter extends CustomPainter {
       background: (canvas) => _surroundings(canvas, size),
     );
     c.drawPicture(cache.picture!);
-    _ambientShadows(c, size);
     _premiumAtmosphere(c, size);
     _livingWorldAccents(c, size);
     _actionIndicator(c, size);

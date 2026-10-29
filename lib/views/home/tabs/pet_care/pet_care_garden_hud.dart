@@ -4,7 +4,7 @@ Widget _gardenHudCard(Widget child, Color paper) => Material(
   color: paper.withValues(alpha: .94),
   elevation: 3,
   shadowColor: const Color(0x38334D35),
-  borderRadius: BorderRadius.circular(22),
+  borderRadius: BorderRadius.circular(20),
   child: child,
 );
 
@@ -141,7 +141,7 @@ extension _GardenWideLayout on _PetCareGardenViewState {
           PositionedDirectional(
             end: 12,
             bottom: 12,
-            width: math.min(350, width - 230),
+            width: math.min(286, width - 230),
             child: _gardenHudCard(
               ConstrainedBox(
                 constraints: BoxConstraints(
@@ -250,7 +250,7 @@ extension _GardenWideLayout on _PetCareGardenViewState {
             style: IconButton.styleFrom(
               minimumSize: const Size(48, 48),
               backgroundColor: _worldCamera.mode == mode
-                  ? const Color(0xFFDDEBC6)
+                  ? const Color(0xFFD4F2DB)
                   : Colors.transparent,
               foregroundColor: _worldCamera.mode == mode
                   ? const Color(0xFF355648)

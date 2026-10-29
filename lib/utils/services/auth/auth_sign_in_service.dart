@@ -68,7 +68,8 @@ class AuthSignInService {
   static const String accountNotFoundMessage =
       'Tài khoản không tồn tại. Vui lòng kiểm tra lại email hoặc tạo tài khoản mới.';
   static const String wrongPasswordMessage = 'Sai mật khẩu. Vui lòng thử lại.';
-  static bool _isGoogleSignInInitialized = false;
+  static final _googleSignInClients = Expando<GoogleSignIn>();
+  static final _googleInitializations = Expando<Future<void>>();
   static final _pendingSignOuts = Expando<Future<void>>();
   static final _signOutGenerations = Expando<int>();
   static final _pendingSignInOperations = Expando<Object>();
@@ -130,7 +131,6 @@ class AuthSignInService {
   final AuthHouseContextService _houseContextService;
   final PlayIntegrityService _playIntegrityService;
 
-  GoogleSignIn? _googleSignIn;
 
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
@@ -317,6 +317,10 @@ class AuthSignInService {
 
   Future<firebase_auth.UserCredential?> _runSignIn(
     Future<firebase_auth.UserCredential?> Function(int) signIn,
+  ) => _runAuthOperation(signIn);
+
+  Future<T> _runAuthOperation<T>(
+    Future<T> Function(int) action,
   ) {
     final auth = _auth;
     if (_pendingSignInOperations[auth] != null ||
@@ -330,8 +334,8 @@ class AuthSignInService {
     // Lấy mốc đồng bộ trước await đầu tiên; logout xảy ra ngay sau cú chạm
     // vẫn phải hủy request này, kể cả khi cleanup đã kết thúc trước precheck.
     final generation = _signOutGenerations[auth] ?? 0;
-    return Future<firebase_auth.UserCredential?>.sync(
-      () => signIn(generation),
+    return Future<T>.sync(
+      () => action(generation),
     ).whenComplete(() {
       if (identical(_pendingSignInOperations[auth], operation)) {
         _pendingSignInOperations[auth] = null;
@@ -728,26 +732,26 @@ class AuthSignInService {
       (defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.macOS);
 
-  WebAuthenticationOptions _buildAppleWebAuthenticationOptions() {
-    final clientId = AppConfig.appleSignInServiceId.trim();
-    if (clientId.isEmpty) {
-      throw UiCopy.text('copy_06bad51d391c') + UiCopy.text('copy_08115ce9ee91');
-    }
+  Future<firebase_auth.OAuthCredential> _requestNativeAppleCredential(
+    int generation, {
+    String? uid,
+  }) async {
+    final isAvailable = await SignInWithApple.isAvailable();
+    _requireAuthSession(generation, uid: uid);
+    if (!isAvailable) throw UiCopy.text('copy_422db9a6de1d');
 
-    final redirectUrl = AppConfig.appleSignInRedirectUrl.trim();
-    final redirectUri = Uri.tryParse(redirectUrl);
-    if (redirectUrl.isEmpty ||
-        redirectUri == null ||
-        !redirectUri.isAbsolute ||
-        redirectUri.scheme.toLowerCase() != 'https' ||
-        redirectUri.host.trim().isEmpty) {
-      throw UiCopy.text('copy_3a48f98fe29d') + UiCopy.text('copy_1d4156a3883e');
-    }
-
-    return WebAuthenticationOptions(
-      clientId: clientId,
-      redirectUri: redirectUri,
+    final rawNonce = generateNonce();
+    final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: const [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: hashedNonce,
+      state: generateNonce(length: 12),
     );
+    _requireAuthSession(generation, uid: uid);
+    return _buildAppleFirebaseCredential(credential, rawNonce);
   }
 
   firebase_auth.OAuthCredential _buildAppleFirebaseCredential(
@@ -802,30 +806,18 @@ class AuthSignInService {
           () => _auth.signInWithPopup(provider),
           signOutGeneration: signOutGeneration,
         );
-      } else {
-        final isAvailable = await SignInWithApple.isAvailable();
-        if (!isAvailable) {
-          throw UiCopy.text('copy_422db9a6de1d');
-        }
-
-        final rawNonce = generateNonce();
-        final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
-
-        final appleCredential = await SignInWithApple.getAppleIDCredential(
-          scopes: const [
-            AppleIDAuthorizationScopes.email,
-            AppleIDAuthorizationScopes.fullName,
-          ],
-          nonce: hashedNonce,
-          state: generateNonce(length: 12),
-          webAuthenticationOptions: _usesNativeAppleFlow
-              ? null
-              : _buildAppleWebAuthenticationOptions(),
+      } else if (!_usesNativeAppleFlow) {
+        // Android dùng trọn luồng OAuth của Firebase để callback trở lại app.
+        final provider = firebase_auth.AppleAuthProvider()
+          ..addScope('email')
+          ..addScope('name');
+        userCredential = await _runNativeAuthRequest(
+          () => _auth.signInWithProvider(provider),
+          signOutGeneration: signOutGeneration,
         );
-
-        final oauthCredential = _buildAppleFirebaseCredential(
-          appleCredential,
-          rawNonce,
+      } else {
+        final oauthCredential = await _requestNativeAppleCredential(
+          signOutGeneration,
         );
         await _pendingSignOuts[_auth];
         userCredential = await _runNativeAuthRequest(
@@ -834,6 +826,7 @@ class AuthSignInService {
         );
       }
 
+      _requireAuthSession(signOutGeneration);
       await _enforceNoNewAccountOnWeb(userCredential);
 
       if (userCredential.user != null) {
@@ -879,6 +872,7 @@ class AuthSignInService {
               UiCopy.text('copy_1b0666a3e858');
         case 'popup-closed-by-user':
         case 'cancelled-popup-request':
+        case 'web-context-cancelled':
           return null;
         case 'popup-blocked':
           throw UiCopy.text('copy_926297a8f3b4');
@@ -903,6 +897,33 @@ class AuthSignInService {
   Future<firebase_auth.UserCredential?> signInWithGoogle() =>
       _runSignIn(_signInWithGoogle);
 
+  Future<GoogleSignInAccount> _selectGoogleAccount(
+    int generation, {
+    String? uid,
+  }) async {
+    final google = _googleSignInClients[_auth] ??= _googleSignInBuilder();
+    // SDK 7.x chỉ được initialize một lần trên mỗi instance. Timeout Dart
+    // không hủy native init; lần thử sau phải dùng lại chính Future đó.
+    final initialization = _googleInitializations[google] ??=
+        Future<void>.sync(google.initialize);
+    await initialization.timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw UiCopy.text('copy_90ca8dbde435'),
+    );
+    _requireAuthSession(generation, uid: uid);
+    try {
+      await google.signOut();
+    } catch (error) {
+      debugPrint('[Auth] Không xóa được phiên Google cũ: $error');
+    }
+    _requireAuthSession(generation, uid: uid);
+    // Người dùng có thể cần lâu hơn 20 giây để chọn/thêm tài khoản hoặc 2FA.
+    // Giữ khóa thao tác đến khi picker thật sự hoàn tất hay bị hủy.
+    final account = await google.authenticate(scopeHint: const ['email']);
+    _requireAuthSession(generation, uid: uid);
+    return account;
+  }
+
   Future<firebase_auth.UserCredential?> _signInWithGoogle(
     int signOutGeneration,
   ) async {
@@ -920,55 +941,8 @@ class AuthSignInService {
           signOutGeneration: signOutGeneration,
         );
       } else {
-        final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-        if (!_isGoogleSignInInitialized) {
-          final initCompleter = Completer<void>();
-          googleSignIn
-              .initialize()
-              .then((_) {
-                if (!initCompleter.isCompleted) initCompleter.complete();
-              })
-              .catchError((error) {
-                if (!initCompleter.isCompleted) {
-                  initCompleter.completeError(error);
-                } else {
-                  debugPrint('Late Google init error swallowed: $error');
-                }
-              });
-          await initCompleter.future.timeout(
-            const Duration(seconds: 15),
-            onTimeout: () => throw UiCopy.text('copy_90ca8dbde435'),
-          );
-          _isGoogleSignInInitialized = true;
-        }
-
-        // Sign out trước để xoá cache phiên cũ, tránh lỗi treo và sign_in_failed
-        try {
-          await googleSignIn.signOut();
-        } catch (error) {
-          debugPrint('[Auth] Không xóa được phiên Google cũ: $error');
-        }
-
-        final authCompleter = Completer<dynamic>();
-        googleSignIn
-            .authenticate(scopeHint: const ['email'])
-            .then((user) {
-              if (!authCompleter.isCompleted) authCompleter.complete(user);
-            })
-            .catchError((error) {
-              if (!authCompleter.isCompleted) {
-                authCompleter.completeError(error);
-              } else {
-                debugPrint('Late Google auth error swallowed: $error');
-              }
-            });
-
-        final googleUser = await authCompleter.future.timeout(
-          const Duration(seconds: 20),
-          onTimeout: () => throw UiCopy.text('copy_fe32cbfef9b5'),
-        );
-        if (googleUser == null) return null;
-        final googleAuth = await googleUser.authentication;
+        final googleUser = await _selectGoogleAccount(signOutGeneration);
+        final googleAuth = googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
           throw UiCopy.text('copy_f82aa856e91f');
         }
@@ -983,6 +957,7 @@ class AuthSignInService {
         );
       }
 
+      _requireAuthSession(signOutGeneration);
       await _enforceNoNewAccountOnWeb(userCredential);
 
       if (userCredential.user != null) {
@@ -1363,9 +1338,13 @@ class AuthSignInService {
     );
 
     try {
-      if (!kIsWeb && _googleSignIn != null) {
+      final google = _googleSignInClients[_auth];
+      if (!kIsWeb && google != null) {
         asyncCleanups.add(
-          _googleSignIn!.signOut().catchError(
+          Future<void>(() async {
+            await _googleInitializations[google];
+            await google.signOut();
+          }).catchError(
             (error) => debugPrint('[Auth] Google sign-out lỗi: $error'),
           ),
         );
@@ -2348,6 +2327,11 @@ class AuthSignInService {
         _pendingSignOuts[_auth] != null) {
       throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
     }
+  }
+
+  void _requireAuthSession(int generation, {String? uid}) {
+    _requireSignOutGeneration(generation);
+    if (uid != null) _requireCurrentSession(uid);
   }
 
   Future<firebase_auth.UserCredential> _runNativeAuthRequest(

@@ -33,6 +33,7 @@ class PetGardenCamera extends ChangeNotifier {
   PetGardenViewMode _mode = PetGardenViewMode.orbit;
   _GardenCameraBlend? _blend;
   bool _widePresentation = false;
+  bool following = false;
 
   PetGardenViewMode get mode => _mode;
   bool get isTransitioning => _blend != null;
@@ -42,24 +43,33 @@ class PetGardenCamera extends ChangeNotifier {
   void setViewport(Size size) {
     _widePresentation = size.width > size.height * 1.18;
   }
+
   // Góc mặc định thấp và gần, ưu tiên thấy mặt Thỏ/Gấu cùng các vật tương tác.
   // Nút thu phóng vẫn cho phép lùi ra để xem toàn bộ rừng và các cổng.
   // Pose chéo thấp vừa đủ để thấy mặt bé, luống phía trước và cả rừng xa;
   // giữ khoảng lùi để mọi điểm tương tác vẫn nằm trong vùng chạm an toàn.
-  double yaw = .24, elevation = .54, radius = 9.6;
-  GardenVec3 target = const GardenVec3(-.9, .74, .15);
+  double yaw = .24, elevation = .43, radius = 6.6;
+  GardenVec3 target = const GardenVec3(-.9, .80, .15);
   GardenVec3 player = const GardenVec3(1, 1.55, 3.5);
   double lookYaw = -.12, lookPitch = -.18;
-  GardenVec3 _orbitEye() =>
-      target +
-      GardenVec3(
-            math.sin(yaw) *
-                math.cos(_widePresentation ? elevation.clamp(.28, .46) : elevation),
-            math.sin(_widePresentation ? elevation.clamp(.28, .46) : elevation),
-            math.cos(yaw) *
-                math.cos(_widePresentation ? elevation.clamp(.28, .46) : elevation),
-          ) *
-          (_widePresentation ? radius * .84 : radius);
+  GardenVec3 _orbitEye() {
+    final pitch = _widePresentation ? elevation.clamp(.28, .46) : elevation;
+    // Khi quay ra sau nhà, lùi dần để mái/tường không áp sát ống kính.
+    // Hệ số liên tục theo góc quay, không đổi pose đột ngột ở một mốc góc.
+    final nearHouse = math.exp(
+      -math.pow((target.x + 1.1) / 6, 2) - math.pow((target.z + 1.5) / 7, 2),
+    );
+    final framing = 1 + .64 * nearHouse * math.max(0.0, -math.cos(yaw));
+    final distance = radius * (_widePresentation ? .94 : 1.45) * framing;
+    return target +
+        GardenVec3(
+              math.sin(yaw) * math.cos(pitch),
+              math.sin(pitch),
+              math.cos(yaw) * math.cos(pitch),
+            ) *
+            distance;
+  }
+
   GardenVec3 _firstPersonForward() => GardenVec3(
     math.sin(lookYaw) * math.cos(lookPitch),
     math.sin(lookPitch),
@@ -67,8 +77,8 @@ class PetGardenCamera extends ChangeNotifier {
   ).unit;
   GardenVec3 _eyeFor(PetGardenViewMode value) =>
       value == PetGardenViewMode.firstPerson ? player : _orbitEye();
-  GardenVec3 _forwardFor(PetGardenViewMode value) => value ==
-          PetGardenViewMode.firstPerson
+  GardenVec3 _forwardFor(PetGardenViewMode value) =>
+      value == PetGardenViewMode.firstPerson
       ? _firstPersonForward()
       : (target - _orbitEye()).unit;
   GardenVec3 get eye {
@@ -77,12 +87,14 @@ class PetGardenCamera extends ChangeNotifier {
     final t = _ease(blend.progress);
     return GardenVec3.lerp(blend.fromEye, blend.toEye, t);
   }
+
   GardenVec3 get forward {
     final blend = _blend;
     if (blend == null) return _forwardFor(_mode);
     final t = _ease(blend.progress);
     return GardenVec3.lerp(blend.fromForward, blend.toForward, t).unit;
   }
+
   GardenVec3 get right => forward.cross(const GardenVec3(0, 1, 0)).unit;
   GardenVec3 get up => right.cross(forward).unit;
   double lens(Size size) => size.height * .78;
@@ -182,20 +194,42 @@ class PetGardenCamera extends ChangeNotifier {
 
   void zoom(double factor) {
     if (mode == PetGardenViewMode.firstPerson) return;
-    radius = (radius / factor).clamp(6.5, 19);
+    radius = (radius / factor).clamp(4.2, 19);
     notifyListeners();
   }
 
   void reset() {
     _blend = null;
     yaw = .24;
-    elevation = .54;
-    radius = 9.6;
-    target = const GardenVec3(-.9, .74, .15);
+    elevation = .43;
+    radius = 6.6;
+    following = false;
+    target = const GardenVec3(-.9, .80, .15);
     player = const GardenVec3(1, 1.55, 3.5);
     lookYaw = -.12;
     lookPitch = -.18;
     notifyListeners();
+  }
+
+  /// Bám theo chân bé, giữ độ cao ngắm và chuyển tâm mềm khi bắt đầu đi.
+  void follow(Offset feet, double seconds) {
+    if (!following || mode != PetGardenViewMode.orbit || isTransitioning) {
+      return;
+    }
+    final desired = GardenVec3.fromMap(feet, .86);
+    final amount = 1 - math.exp(-5.5 * seconds.clamp(0.0, .05));
+    final next = GardenVec3.lerp(target, desired, amount);
+    if ((next - target).length < .001) return;
+    target = next;
+    notifyListeners();
+  }
+
+  /// Hướng cần điều khiển luôn theo mặt phẳng đất của camera hiện tại.
+  Offset groundAxis(Offset stick) {
+    final flat = GardenVec3(forward.x, 0, forward.z).unit;
+    final side = GardenVec3(right.x, 0, right.z).unit;
+    final direction = side * stick.dx + flat * (-stick.dy);
+    return Offset(direction.x, direction.z);
   }
 
   bool canStand(GardenVec3 at) {
