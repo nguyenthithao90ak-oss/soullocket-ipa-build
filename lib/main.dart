@@ -169,6 +169,11 @@ void main() {
 
       await Hive.initFlutter();
       setupLocator();
+      // Chuẩn bị SharedPreferences/Hive trước khi dựng MyApp. AppEntry và
+      // MainHomeTab dùng dữ liệu đệm đồng bộ để mở đúng House/Home ngay ở
+      // frame đầu; để khởi tạo này tới deferred bootstrap sẽ tạo một frame
+      // Home rỗng rồi mới thay bằng dữ liệu thật.
+      final offlineCacheWarmup = _warmUpOfflineCacheBeforeApp();
       // Web không có luồng remove splash tương ứng; defer first frame tại đây
       // sẽ khiến toàn bộ ứng dụng chỉ hiển thị màn hình trắng.
       if (!kIsWeb) {
@@ -355,24 +360,39 @@ void main() {
 
       try {
         registerSoulLocketLicenses();
-        await UiPrefs.ensureLoaded();
-        await L10nService().init();
-        // Nạp mẫu định dạng ngày của mọi ngôn ngữ (dữ liệu có sẵn trong app)
-        // để hiển thị ngày theo vùng thay vì cố định dd/MM/yyyy.
-        await initializeDateFormatting();
-        await BuildSignatureService.verifyOfficialBuildSignature();
-        // Vẽ ngay màn tải thay vì giữ màn chờ đen của hệ điều hành trong lúc
-        // khởi tạo Firebase; MyApp thay thế khi sẵn sàng.
+        // Hiển thị màn tải ngay sau khi Flutter sẵn sàng. Trước đây đoạn này
+        // nằm sau UiPrefs, bản dịch, date formatting và build signature nên
+        // máy lạnh có thể giữ splash/khung trắng trước khi người dùng thấy
+        // phản hồi đầu tiên.
         if (!kIsWeb) {
           runApp(const StartupLoadingApp());
-          FlutterNativeSplash.remove();
+          // Chờ đúng frame Flutter đầu tiên rồi mới gỡ native splash, tránh
+          // lộ một frame trắng giữa splash hệ thống và màn loading.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              FlutterNativeSplash.remove();
+            } catch (error) {
+              debugPrint('Native splash first-frame removal skipped: $error');
+            }
+          });
         }
-        // Firebase có retry native dài hơn 3 giây. Chờ khởi tạo thành công
-        // trước MyApp để các service Auth/Database không truy cập app chưa có.
-        // Nếu thất bại, catch bên ngoài hiển thị màn lỗi có hướng dẫn.
-        await initializeFirebaseBootstrap().timeout(
+
+        // Các dữ liệu cục bộ độc lập nhau, không cần chờ tuần tự. Màn tải đã
+        // hiện nên người dùng không bị giữ ở splash trong lúc các gói này đọc
+        // SharedPreferences/asset. Firebase cũng khởi tạo song song với các
+        // warmup này; MyApp chỉ dựng sau khi tất cả gate bắt buộc hoàn tất.
+        final firebaseWarmup = initializeFirebaseBootstrap().timeout(
           const Duration(seconds: 20),
         );
+        await Future.wait<void>([
+          UiPrefs.ensureLoaded(),
+          L10nService().init(),
+          // Nạp mẫu định dạng ngày của mọi ngôn ngữ (dữ liệu có sẵn trong app)
+          // để hiển thị ngày theo vùng thay vì cố định dd/MM/yyyy.
+          initializeDateFormatting(),
+          BuildSignatureService.verifyOfficialBuildSignature(),
+          firebaseWarmup,
+        ]);
 
         if (!kIsWeb) {
           try {
@@ -385,7 +405,11 @@ void main() {
         }
 
         // Đọc lựa chọn vùng từ bộ nhớ đã nạp, chưa gắn listener cloud.
-        await MarketService.instance.init(synchronize: false);
+        // Cache local đã chạy song song với Firebase bootstrap nên chờ ở đây
+        // gần như không thêm thời gian, nhưng loại bỏ nháy Home khi cache chưa
+        // mở xong.
+        final marketWarmup = MarketService.instance.init(synchronize: false);
+        await Future.wait<void>([offlineCacheWarmup, marketWarmup]);
         runApp(const MyApp());
         _scheduleDeferredBootstrap();
 
@@ -618,6 +642,18 @@ Future<void> _warmUpOfflineCache() async {
   } catch (e) {
     debugPrint(
       'Prefs init error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_init_prefs_failed')).message}',
+    );
+  }
+}
+
+Future<void> _warmUpOfflineCacheBeforeApp() async {
+  try {
+    await OfflineCacheService.initialize().timeout(const Duration(seconds: 2));
+  } catch (error) {
+    // Cache chỉ là lớp tăng tốc; nếu thiết bị lưu trữ chậm/lỗi, app vẫn mở
+    // bằng dữ liệu mạng và các lớp fallback hiện có.
+    debugPrint(
+      'Startup offline cache warm-up skipped: ${AppErrorMapper.resolve(error).message}',
     );
   }
 }

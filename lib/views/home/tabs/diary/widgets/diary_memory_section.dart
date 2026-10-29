@@ -6,7 +6,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../core/constants/app_config.dart';
@@ -15,6 +14,7 @@ import '../../../../../utils/services/cloudflare_r2_service.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/network_reachability.dart';
 import 'diary_image_loading.dart';
+import 'diary_memory_hero.dart';
 import '../../../../../widgets/skeleton_container.dart';
 
 import '../controllers/diary_memory_controller.dart';
@@ -24,7 +24,7 @@ import 'diary_album_style.dart';
 import 'diary_scrapbook_sticker.dart';
 import 'private_diary_image.dart';
 import 'private_diary_image_scope.dart';
-import 'diary_memory_video_player.dart';
+import 'diary_video_thumbnail.dart';
 import '../utils/private_memory_link_policy.dart';
 
 typedef DiaryPrepareMemoryFeedCallback =
@@ -58,6 +58,7 @@ class DiaryMemorySection extends StatefulWidget {
   final void Function(
     Map<String, dynamic> photo,
     List<Map<String, dynamic>> allPhotos,
+    BuildContext sourceContext,
   )
   onOpenMemory;
   final bool isLoadingMoreMemories;
@@ -731,7 +732,6 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 child: Text(
                                   L10nService().format(
                                     'diary_load_data_error',
-                                    {'error': error},
                                   ),
                                   style: const TextStyle(
                                     color: Colors.redAccent,
@@ -1155,6 +1155,7 @@ class _DiaryMemoryPhotoCell extends StatefulWidget {
   final void Function(
     Map<String, dynamic> photo,
     List<Map<String, dynamic>> allPhotos,
+    BuildContext sourceContext,
   )
   onOpenMemory;
   final List<Map<String, dynamic>> allPhotos;
@@ -1364,15 +1365,9 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
   ) {
     if (PrivateMemoryLinkPolicy.isPrivate(photo)) {
       return IgnorePointer(
-        child: DiaryMemoryVideoPlayer(
-          url: '',
-          houseId:
-              photo['houseId']?.toString() ?? photo['house_id']?.toString(),
-          memoryId: photo['id']?.toString(),
-          requireFreshAuthorization: true,
-          previewOnly: true,
-          isActive: false,
-        ),
+        child: DiaryVideoThumbnail(url: '', private: true,
+          houseId: photo['houseId']?.toString() ?? photo['house_id']?.toString(),
+          memoryId: photo['id']?.toString(), cacheWidth: imageCacheWidth),
       );
     }
     return _DiaryMemoryVideoPreview(
@@ -1434,8 +1429,9 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final imageCacheWidth = _imageCacheWidth(context, constraints);
-                return Hero(
+                return DiaryMemoryHero(
                   tag: 'memory_image_${photo['id']}',
+                  fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
                   child: isVideo
                       ? _buildVideoThumbnail(photo, photoUrl, imageCacheWidth)
                       : PrivateMemoryLinkPolicy.isPrivate(photo)
@@ -1501,7 +1497,8 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
                   _needsSignedRefresh(photo)) {
                 await _refreshPhotoUrl(photo);
               }
-              widget.onOpenMemory(photo, widget.allPhotos);
+              if (!context.mounted) return;
+              widget.onOpenMemory(photo, widget.allPhotos, context);
             }
           },
           child: Stack(
@@ -1619,222 +1616,35 @@ class _DiaryMemoryPhotoDecor extends StatelessWidget {
   }
 }
 
-/// Dùng ảnh thumbnail khi có. Với video cũ chưa có thumbnail, lấy frame đầu
-/// bằng [VideoPlayer] để mọi máy vẫn có ảnh xem trước thay vì khung trắng.
+/// Ảnh nhỏ có sẵn được ưu tiên; video cũ trích một JPEG qua hàng đợi chung.
 class _DiaryMemoryVideoPreview extends StatefulWidget {
   final String videoUrl;
   final String thumbnailUrl;
   final int thumbnailCacheWidth;
-
-  const _DiaryMemoryVideoPreview({
-    required this.videoUrl,
-    required this.thumbnailUrl,
-    required this.thumbnailCacheWidth,
-  });
-
+  const _DiaryMemoryVideoPreview({required this.videoUrl, required this.thumbnailUrl,
+    required this.thumbnailCacheWidth});
   @override
-  State<_DiaryMemoryVideoPreview> createState() =>
-      _DiaryMemoryVideoPreviewState();
+  State<_DiaryMemoryVideoPreview> createState() => _DiaryMemoryVideoPreviewState();
 }
-
 class _DiaryMemoryVideoPreviewState extends State<_DiaryMemoryVideoPreview> {
-  VideoPlayerController? _controller;
-  bool _thumbnailFailed = false;
-  bool _isLoadingPreview = false;
-  bool _previewFailed = false;
-  int _previewGeneration = 0;
-
-  bool get _usesVideoPreview =>
-      widget.thumbnailUrl.trim().isEmpty || _thumbnailFailed;
-
-  @override
-  void initState() {
-    super.initState();
-    if (_usesVideoPreview) {
-      _initializeVideoPreview();
-    }
-  }
-
+  bool _failed = false;
   @override
   void didUpdateWidget(covariant _DiaryMemoryVideoPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.videoUrl == widget.videoUrl &&
-        oldWidget.thumbnailUrl == widget.thumbnailUrl) {
-      return;
-    }
-
-    _resetPreview();
-    if (_usesVideoPreview) {
-      _initializeVideoPreview();
-    }
+    if (oldWidget.videoUrl != widget.videoUrl || oldWidget.thumbnailUrl != widget.thumbnailUrl) _failed = false;
   }
-
-  void _resetPreview() {
-    _previewGeneration++;
-    final controller = _controller;
-    _controller = null;
-    _thumbnailFailed = false;
-    _isLoadingPreview = false;
-    _previewFailed = false;
-    if (controller != null) {
-      unawaited(controller.dispose());
-    }
-  }
-
-  void _handleThumbnailFailure() {
-    if (_thumbnailFailed) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _thumbnailFailed) {
-        return;
-      }
-      setState(() => _thumbnailFailed = true);
-      _initializeVideoPreview();
-    });
-  }
-
-  Future<void> _initializeVideoPreview() async {
-    if (!_usesVideoPreview || _isLoadingPreview || _previewFailed) {
-      return;
-    }
-
-    final rawUrl = widget.videoUrl.trim();
-    if (rawUrl.isEmpty) {
-      if (mounted) {
-        setState(() => _previewFailed = true);
-      }
-      return;
-    }
-
-    final generation = ++_previewGeneration;
-    if (mounted) {
-      setState(() => _isLoadingPreview = true);
-    }
-
-    VideoPlayerController? controller;
-    try {
-      final playableUrl = CloudflareR2Service.resolveVideoUrl(rawUrl);
-      final uri = Uri.tryParse(playableUrl);
-      if (uri == null || !uri.hasScheme) {
-        throw const FormatException('Invalid diary video URL');
-      }
-
-      controller = VideoPlayerController.networkUrl(uri);
-      await controller.initialize().timeout(const Duration(seconds: 20));
-      await controller.setVolume(0);
-      await controller.pause();
-
-      if (!mounted || generation != _previewGeneration) {
-        await controller.dispose();
-        return;
-      }
-
-      final previousController = _controller;
-      setState(() {
-        _controller = controller;
-        _isLoadingPreview = false;
-      });
-      if (previousController != null) {
-        unawaited(previousController.dispose());
-      }
-    } catch (error) {
-      if (controller != null) {
-        await controller.dispose();
-      }
-      debugPrint('[DiaryMemory] video preview failed: $error');
-      if (mounted && generation == _previewGeneration) {
-        setState(() {
-          _isLoadingPreview = false;
-          _previewFailed = true;
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _previewGeneration++;
-    _controller?.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final thumbnailUrl = widget.thumbnailUrl.trim();
-    Widget media;
-    if (!_usesVideoPreview && thumbnailUrl.isNotEmpty) {
-      media = CachedNetworkImage(
-        imageUrl: thumbnailUrl,
-        memCacheWidth: widget.thumbnailCacheWidth,
-        fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
-        placeholder: (context, url) => _buildFallbackSurface(isLoading: true),
-        errorWidget: (context, url, error) {
-          _handleThumbnailFailure();
-          return _buildFallbackSurface(isLoading: true);
-        },
-      );
-    } else {
-      final controller = _controller;
-      if (controller != null && controller.value.isInitialized) {
-        final size = controller.value.size;
-        media = SizedBox.expand(
-          child: FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: VideoPlayer(controller),
-            ),
-          ),
-        );
-      } else {
-        media = _buildFallbackSurface(isLoading: _isLoadingPreview);
-      }
+    if (_failed || widget.thumbnailUrl.trim().isEmpty) {
+      return DiaryVideoThumbnail(url: CloudflareR2Service.resolveVideoUrl(widget.videoUrl),
+        cacheWidth: widget.thumbnailCacheWidth);
     }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        media,
-        Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.42),
-              shape: BoxShape.circle,
-            ),
-            padding: const EdgeInsets.all(8),
-            child: const Icon(
-              Icons.play_arrow_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFallbackSurface({required bool isLoading}) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFECF4FF), Color(0xFFDCE8FB)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: isLoading
-            ? const DiaryImageLoading()
-            : const Icon(
-                Icons.movie_creation_outlined,
-                color: Color(0xFF6E88B0),
-                size: 38,
-              ),
-      ),
-    );
+    return CachedNetworkImage(imageUrl: widget.thumbnailUrl, memCacheWidth: widget.thumbnailCacheWidth,
+      fit: BoxFit.cover, placeholder: (_, _) => const DiaryImageLoading(),
+      errorWidget: (_, _, _) {
+        WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted && !_failed) setState(() => _failed = true); });
+        return const DiaryImageLoading();
+      });
   }
 }
 

@@ -213,7 +213,7 @@ class SupportChatView extends StatelessWidget {
                       ),
                       if (onAiPrivacy != null) IconButton(
                         onPressed: onAiPrivacy,
-                        tooltip: context.tr('ai_data_consent_title'),
+                        tooltip: context.tr('ai_data_consent_manage'),
                         icon: const Icon(Icons.privacy_tip_outlined),
                       ),
                       IconButton(

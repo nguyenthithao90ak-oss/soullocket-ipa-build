@@ -13,12 +13,14 @@ extension _MapLocationLogicExt on _MapScreenState {
       _myLastKnownGps = state.lastKnown;
       _myIsLive = state.isLive;
       _myHasLocationHistory = state.hasHistory;
+      _armGpsFreshnessDeadline();
       return;
     }
     _partnerCurrentGps = state.current;
     _partnerLastKnownGps = state.lastKnown;
     _partnerIsLive = state.isLive;
     _partnerHasLocationHistory = state.hasHistory;
+    _armGpsFreshnessDeadline();
   }
 
   Map<String, dynamic> _toStringDynamicMap(dynamic value) {
@@ -255,18 +257,18 @@ extension _MapLocationLogicExt on _MapScreenState {
 
   _GpsPoint? _effectiveGpsForRole(String role) {
     if (role == widget.myRole) {
-      if (_myIsLive && _myCurrentGps != null) return _myCurrentGps;
+      if (_isRoleLive(role) && _myCurrentGps != null) return _myCurrentGps;
       return _myLastKnownGps ?? _myCurrentGps;
     }
-    if (_partnerIsLive && _partnerCurrentGps != null) return _partnerCurrentGps;
+    if (_isRoleLive(role) && _partnerCurrentGps != null) return _partnerCurrentGps;
     return _partnerLastKnownGps ?? _partnerCurrentGps;
   }
 
   _GpsPoint? _effectiveLiveGpsForRole(String role) {
     if (role == widget.myRole) {
-      return _myIsLive ? _myCurrentGps : null;
+      return _isRoleLive(role) ? _myCurrentGps : null;
     }
-    return _partnerIsLive ? _partnerCurrentGps : null;
+    return _isRoleLive(role) ? _partnerCurrentGps : null;
   }
 
   bool _hasRoleLocationHistory(String role) {
@@ -278,9 +280,9 @@ extension _MapLocationLogicExt on _MapScreenState {
 
   bool _isRoleLive(String role) {
     if (role == widget.myRole) {
-      return _myIsLive;
+      return _myIsLive && _isGpsFresh(_myCurrentGps?.ts);
     }
-    return _partnerIsLive;
+    return _partnerIsLive && _isGpsFresh(_partnerCurrentGps?.ts);
   }
 
   String _locationLabel({
@@ -313,7 +315,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     required _GpsPoint? partnerLivePoint,
     required double? partnerDistanceMeters,
   }) {
-    final bothLive = myLivePoint != null && partnerLivePoint != null;
+    final bothLive = _isPreciseLivePoint(myLivePoint) &&
+        _isPreciseLivePoint(partnerLivePoint);
     _handlePartnerNearbyNotification(
       bothLive: bothLive,
       partnerDistanceMeters: partnerDistanceMeters,
@@ -322,7 +325,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     _handlePinnedPlaceNearbyNotification(
       role: widget.myRole,
       actorLabel: context.tr('map_bn_1fd75b'),
-      livePoint: myLivePoint,
+      livePoint: _isPreciseLivePoint(myLivePoint) ? myLivePoint : null,
     );
 
     if (_isSingleRelationship) {
@@ -333,7 +336,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     _handlePinnedPlaceNearbyNotification(
       role: widget.partnerRole,
       actorLabel: widget.partnerName,
-      livePoint: partnerLivePoint,
+      livePoint: _isPreciseLivePoint(partnerLivePoint) ? partnerLivePoint : null,
     );
   }
 
@@ -574,6 +577,9 @@ extension _MapLocationLogicExt on _MapScreenState {
 
     Timer? myGpsDebounce;
     Timer? partnerGpsDebounce;
+    final generation = ++_gpsListenerGeneration;
+    bool isCurrent() => mounted && _realtimePipelinesActive &&
+        generation == _gpsListenerGeneration;
 
     final msgMyGpsListenFail = context.tr('map_khngththeo_b5b716');
     final msgPartnerGpsListenFail = context.tr('map_khngththeo_cd61b1');
@@ -584,7 +590,7 @@ extension _MapLocationLogicExt on _MapScreenState {
           (event) {
             myGpsDebounce?.cancel();
             myGpsDebounce = Timer(const Duration(milliseconds: 140), () {
-              if (!mounted) return;
+              if (!isCurrent()) return;
               _setGpsSyncError(mine: false);
               _setRoleLocationState(
                 widget.myRole,
@@ -594,6 +600,7 @@ extension _MapLocationLogicExt on _MapScreenState {
             });
           },
           onError: (Object error) {
+            if (!isCurrent()) return;
             final message = AppErrorMapper.resolve(
               error,
               fallbackMessage: msgMyGpsListenFail,
@@ -610,7 +617,7 @@ extension _MapLocationLogicExt on _MapScreenState {
           (event) {
             partnerGpsDebounce?.cancel();
             partnerGpsDebounce = Timer(const Duration(milliseconds: 140), () {
-              if (!mounted) return;
+              if (!isCurrent()) return;
               _setGpsSyncError(partner: false);
               _setRoleLocationState(
                 widget.partnerRole,
@@ -620,6 +627,7 @@ extension _MapLocationLogicExt on _MapScreenState {
             });
           },
           onError: (Object error) {
+            if (!isCurrent()) return;
             final message = AppErrorMapper.resolve(
               error,
               fallbackMessage: msgPartnerGpsListenFail,
@@ -1416,9 +1424,11 @@ extension _MapLocationLogicExt on _MapScreenState {
         mapAlert = context.tr('map_gpscabnang_a6da92');
       }
 
-      if (directMeters <= 120) {
+      final preciseLive = _isPreciseLivePoint(myLivePoint) &&
+          _isPreciseLivePoint(partnerLivePoint);
+      if (preciseLive && directMeters <= 120) {
         mapAlert = context.tr('map_haibnangrt_0b7f41');
-      } else if (directMeters <= 1500) {
+      } else if (preciseLive && directMeters <= 1500) {
         mapAlert =
             L10nService().format('ui_map_the_two_of_you_are_only_value1_b37896', {'value1': _formatDistanceMeters(directMeters)});
       } else {
@@ -1472,7 +1482,8 @@ extension _MapLocationLogicExt on _MapScreenState {
     // không gửi thêm request OSRM cho dữ liệu đã cũ.
     final myPoint = _effectiveLiveGpsForRole(widget.myRole);
     final partnerPoint = _effectiveLiveGpsForRole(widget.partnerRole);
-    if (myPoint == null || partnerPoint == null) {
+    if (myPoint == null || partnerPoint == null ||
+        !_isPreciseLivePoint(myPoint) || !_isPreciseLivePoint(partnerPoint)) {
       _routeDebounce?.cancel();
       _routeRequestToken++;
       if (_routeSnapshot != null || _isFetchingRoute) {
@@ -1539,6 +1550,7 @@ extension _MapLocationLogicExt on _MapScreenState {
     if (myPoint != null &&
         partnerPoint != null &&
         partnerLatLng != null &&
+        _isPreciseLivePoint(myPoint) && _isPreciseLivePoint(partnerPoint) &&
         distanceMeters <= _kPartnerNearbyEnterMeters) {
       final accent = myLive ? _kMapBlue : const Color(0xFF64748B);
       final centerPoint = ll.LatLng(

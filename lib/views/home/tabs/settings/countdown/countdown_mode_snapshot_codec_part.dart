@@ -79,12 +79,16 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     final parsedAnchorDate = rawAnchorDate.isEmpty
         ? null
         : DateInputUtils.parse(rawAnchorDate);
+    final hasAnchorDate =
+        data.containsKey('anchorDate') || data.containsKey('anchor_date');
 
     return _CountdownSpaceSnapshot(
       singleMode:
           _readSerializedBool(data['singleMode'] ?? data['single_mode']) ??
           fallback.singleMode,
-      anchorDate: parsedAnchorDate ?? fallback.anchorDate,
+      anchorDate: rawAnchorDate.isEmpty
+          ? (hasAnchorDate ? null : fallback.anchorDate)
+          : (parsedAnchorDate ?? fallback.anchorDate),
       themeKey: (data['themeKey'] ?? data['theme_key'] ?? fallback.themeKey)
           .toString()
           .trim(),
@@ -214,6 +218,13 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _centerIconType = snapshot.centerIconType;
   }
 
+  void _rememberRemoteSpaceSnapshot(String scope, _CountdownSpaceSnapshot snapshot) {
+    final previous = _latestRemoteSpaceSnapshots[scope];
+    if (previous == null || snapshot.updatedAtMs >= previous.updatedAtMs) {
+      _latestRemoteSpaceSnapshots[scope] = snapshot;
+    }
+  }
+
   bool _isIncomingSnapshotNewer(
     String scope,
     _CountdownSpaceSnapshot incoming,
@@ -261,15 +272,17 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     final defaultFrameKey = ui.avatarFrameKey.trim().isEmpty
         ? 'circle'
         : ui.avatarFrameKey.trim();
-    final rawDate =
-        _readCountdownPrefString(
-          prefs,
-          _prefKey('anchor_date', scope: scope),
-        ) ??
-        '';
-    final parsedDate =
-        DateInputUtils.parse(rawDate) ??
-        _resolveInitialAnchorDate(defaultSingleMode);
+    final anchorDateKey = _prefKey('anchor_date', scope: scope);
+    final hasStoredAnchorDate = prefs.containsKey(anchorDateKey);
+    final rawDate = _readCountdownPrefString(prefs, anchorDateKey) ?? '';
+    // Chuỗi rỗng là giá trị đã lưu có chủ đích để biểu thị "chưa chọn ngày".
+    // Chỉ dùng ngày mặc định khi bản cài cũ chưa từng lưu khóa này.
+    final parsedDate = rawDate.trim().isEmpty
+        ? (hasStoredAnchorDate
+              ? null
+              : _resolveInitialAnchorDate(defaultSingleMode))
+        : (DateInputUtils.parse(rawDate) ??
+              _resolveInitialAnchorDate(defaultSingleMode));
 
     return _CountdownSpaceSnapshot(
       singleMode:

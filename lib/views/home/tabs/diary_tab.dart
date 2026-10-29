@@ -5,13 +5,18 @@ import 'package:video_player/video_player.dart';
 import 'diary/widgets/diary_memory_video_controls.dart';
 import 'diary/widgets/diary_memory_video_player.dart';
 import 'diary/widgets/private_diary_image.dart';
+import 'diary/widgets/private_diary_image_scope.dart';
 import 'diary/widgets/diary_public_memory_image.dart';
+import 'diary/widgets/diary_memory_hero.dart';
+import 'diary/widgets/diary_video_buffer_cache.dart';
+import 'diary/widgets/diary_video_thumbnail.dart';
 import 'diary/utils/private_memory_link_policy.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
@@ -26,6 +31,7 @@ import '../../../core/constants/app_config.dart';
 import '../../../models/diary_post.dart';
 import '../../../utils/services/interaction_metrics_service.dart';
 import '../../../utils/services/diary_reaction_service.dart';
+import '../../../utils/services/diary_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/admob_service.dart';
 import 'package:soullocket_app/widgets/consent_ad_view.dart';
@@ -46,6 +52,8 @@ import 'diary/controllers/diary_feed_controller.dart';
 import 'diary/controllers/diary_guard_controller.dart';
 import 'diary/controllers/diary_memory_controller.dart';
 import 'diary/utils/diary_memory_media.dart';
+import 'diary/utils/diary_media_share_service.dart';
+import 'diary/widgets/diary_memory_share_sheet.dart';
 import 'diary_item.dart';
 import 'diary_list.dart';
 import 'diary/widgets/diary_memory_section.dart';
@@ -103,8 +111,12 @@ class _DiaryTabState extends State<DiaryTab>
 
   String _currentTab = 'memory';
   String? _lastSyncedMemoryHouseId;
+  String? _lastSyncedMemoryUid;
   bool _isAnimatingTabSwitch = false;
   final SingleOpenGate _memoryViewerGate = SingleOpenGate();
+  final SingleOpenGate _memoryShareGate = SingleOpenGate();
+  final _memoryMediaShareService = DiaryMediaShareService();
+  final _memoryVideoBufferCache = DiaryVideoBufferCache();
   String? _diaryReactionQuerySignature;
   Map<String, Map<String, int>> _diaryReactionCounts =
       <String, Map<String, int>>{};
@@ -133,10 +145,12 @@ class _DiaryTabState extends State<DiaryTab>
 
   void _syncMemoryControllerHouse() {
     final houseId = _feedController.houseId;
-    if (_lastSyncedMemoryHouseId == houseId) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (_lastSyncedMemoryHouseId == houseId && _lastSyncedMemoryUid == uid) {
       return;
     }
     _lastSyncedMemoryHouseId = houseId;
+    _lastSyncedMemoryUid = uid;
     _memoryController.syncHouseId(houseId);
   }
 
@@ -166,7 +180,10 @@ class _DiaryTabState extends State<DiaryTab>
       }
       return;
     }
-    final postIds = posts.map((post) => post.id.trim()).where((id) => id.isNotEmpty).toList();
+    final postIds = posts
+        .map((post) => post.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
     if (postIds.isEmpty) return;
     final signature = '$houseId|${postIds.join(',')}';
     if (_diaryReactionQuerySignature == signature) return;
@@ -248,6 +265,7 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   void _handleControllerChange() {
+    _syncMemoryControllerHouse();
     _syncSelectionOverlayVisibility();
     _throttledRebuild();
   }
@@ -300,6 +318,13 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   Future<void> _createMemoryShareLink(List<Map<String, dynamic>> photos) async {
+    if (photos.any(isDiaryMemoryVideo)) {
+      _showDiarySnackBar(
+        context.tr('memory_share_photos_only'),
+        backgroundColor: const Color(0xFFE53935),
+      );
+      return;
+    }
     final houseId = _houseId?.trim() ?? '';
     if (houseId.isEmpty) {
       _showDiarySnackBar(
@@ -317,6 +342,7 @@ class _DiaryTabState extends State<DiaryTab>
     }
 
     // Start fetching network data early to mask latency while user picks expiry days
+    AdMobService().preloadRewardedAd();
     final limitsFuture = _memoryShareService.fetchLimits();
     final isProUserFuture = AdMobService().isProUser();
     final currentUserFuture = _guardController.resolveCurrentUser();
@@ -364,6 +390,11 @@ class _DiaryTabState extends State<DiaryTab>
       final watched = await adMob.showRewardedAd(
         ignoreCooldown: true,
         loadTimeout: const Duration(seconds: 10),
+        isCurrent: () =>
+            mounted &&
+            _houseId?.trim() == houseId &&
+            TickerMode.valuesOf(context).enabled &&
+            (ModalRoute.of(context)?.isCurrent ?? true),
       );
       if (!watched) {
         if (!mounted) return;
@@ -688,7 +719,8 @@ class _DiaryTabState extends State<DiaryTab>
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 440),
-      builder: (sheetContext) => const MemoryViewerActionSheet(),
+      builder: (sheetContext) =>
+          MemoryViewerActionSheet(isVideo: isDiaryMemoryVideo(item)),
     );
 
     if (action == null || !mounted || !dialogContext.mounted) return;
@@ -799,6 +831,7 @@ class _DiaryTabState extends State<DiaryTab>
   @override
   void dispose() {
     _stopDiaryActiveTimer();
+    _memoryVideoBufferCache.dispose();
     CustomMoodStickerService.instance.stopSync();
     AdMobService().disposeBanner(_bottomBannerAd);
     widget.onSelectionOverlayChanged?.call(false);
@@ -948,6 +981,10 @@ class _DiaryTabState extends State<DiaryTab>
     await _feedController.fetchDiaryPosts(
       resolveCurrentUser: _guardController.resolveCurrentUser,
     );
+    final houseId = _houseId?.trim();
+    if (houseId != null && houseId.isNotEmpty) {
+      unawaited(_composerState.refreshQuota(houseId, force: true));
+    }
     _handleFeedControllerChange();
   }
 
@@ -1065,6 +1102,10 @@ class _DiaryTabState extends State<DiaryTab>
     try {
       await _feedController.deleteDiaryPost(post);
       if (!mounted) return;
+      final houseId = _houseId?.trim();
+      if (houseId != null && houseId.isNotEmpty) {
+        unawaited(_composerState.refreshQuota(houseId, force: true));
+      }
       _handleFeedControllerChange();
       _showDiarySnackBar(
         L10nService().translate(context.tr('home_xatms_0872c5')),
@@ -1106,15 +1147,20 @@ class _DiaryTabState extends State<DiaryTab>
   void _showMemoryZoom(
     Map<String, dynamic> initialItem,
     List<Map<String, dynamic>> allPhotos,
+    BuildContext sourceContext,
   ) {
+    final wrapImages = PrivateDiaryImageScope.capture(sourceContext);
     unawaited(
-      _memoryViewerGate.run(() => _showMemoryZoomFlow(initialItem, allPhotos)),
+      _memoryViewerGate.run(
+        () => _showMemoryZoomFlow(initialItem, allPhotos, wrapImages),
+      ),
     );
   }
 
   Future<void> _showMemoryZoomFlow(
     Map<String, dynamic> initialItem,
     List<Map<String, dynamic>> allPhotos,
+    Widget Function(Widget) wrapImages,
   ) async {
     // Refresh signed URL cho item hiện tại trước khi mở viewer
     if (!PrivateMemoryLinkPolicy.isPrivate(initialItem)) {
@@ -1151,7 +1197,7 @@ class _DiaryTabState extends State<DiaryTab>
             null,
           );
 
-          return StatefulBuilder(
+          final viewer = StatefulBuilder(
             builder: (context, setState) {
               final currentItem = allPhotos.isNotEmpty
                   ? allPhotos[currentIndex]
@@ -1219,6 +1265,7 @@ class _DiaryTabState extends State<DiaryTab>
                               },
                               itemBuilder: (context, index) {
                                 return _MemoryViewerPage(
+                                  videoBufferCache: _memoryVideoBufferCache,
                                   isActive: index == currentIndex,
                                   item: allPhotos[index],
                                   activeVideoNotifier: activeVideoNotifier,
@@ -1240,6 +1287,7 @@ class _DiaryTabState extends State<DiaryTab>
                           else
                             Builder(
                               builder: (context) => _MemoryViewerPage(
+                                videoBufferCache: _memoryVideoBufferCache,
                                 item: initialItem,
                                 activeVideoNotifier: activeVideoNotifier,
                                 dragOffsetNotifier: dragOffsetNotifier,
@@ -1374,6 +1422,9 @@ class _DiaryTabState extends State<DiaryTab>
                                                 16,
                                             right: 12,
                                             child: MemoryViewerActionsButton(
+                                              isVideo: isDiaryMemoryVideo(
+                                                currentItem,
+                                              ),
                                               onSelected: (value) async {
                                                 switch (value) {
                                                   case 'save':
@@ -1423,9 +1474,12 @@ class _DiaryTabState extends State<DiaryTab>
               );
             },
           );
+          return wrapImages(viewer);
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
+          // Nền và controls đã có animation riêng; không fade toàn route
+          // bên dưới Hero vì sẽ để nền album lóe qua lúc ảnh đang bay.
+          return child;
         },
       ),
     );
@@ -1584,6 +1638,7 @@ class _DiaryTabState extends State<DiaryTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    _syncMemoryControllerHouse();
     return _DiaryTabShell(state: this);
   }
 }
@@ -1691,6 +1746,7 @@ class _MemoryViewerPage extends StatefulWidget {
   final Map<String, dynamic> item;
   final bool isActive;
   final ValueNotifier<VideoPlayerController?>? activeVideoNotifier;
+  final DiaryVideoBufferCache? videoBufferCache;
   final ValueNotifier<Offset> dragOffsetNotifier;
   final ValueNotifier<double> dragScaleNotifier;
   final ValueNotifier<bool> isZoomedInNotifier;
@@ -1703,6 +1759,7 @@ class _MemoryViewerPage extends StatefulWidget {
     required this.item,
     this.isActive = true,
     this.activeVideoNotifier,
+    this.videoBufferCache,
     required this.dragOffsetNotifier,
     required this.dragScaleNotifier,
     required this.isZoomedInNotifier,
@@ -1771,6 +1828,37 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
     );
   }
 
+  Widget _buildVideoLoadingPoster(String videoUrl) {
+    final isPrivate = PrivateMemoryLinkPolicy.isPrivate(widget.item);
+    final cachedFrame = DiaryVideoThumbnail(
+      url: isPrivate ? '' : CloudflareR2Service.resolveVideoUrl(videoUrl),
+      private: isPrivate,
+      houseId: isPrivate
+          ? widget.item['houseId']?.toString() ??
+                widget.item['house_id']?.toString()
+          : null,
+      memoryId: isPrivate ? widget.item['id']?.toString() : null,
+      cacheOnly: true,
+      showPlayOverlay: false,
+      fit: BoxFit.contain,
+      cacheWidth: widget.previewCacheWidth,
+    );
+    if (isPrivate) return cachedFrame;
+    final posterUrl =
+        resolveDiaryMemoryVideoThumbnailUrl(widget.item)?.trim() ?? '';
+    if (posterUrl.isEmpty) return cachedFrame;
+    // Video public cũ có poster riêng: dùng lại provider/cỡ ảnh của album.
+    return Image(
+      image: widget.imageProviderBuilder(
+        posterUrl,
+        maxWidth: widget.previewCacheWidth,
+      ),
+      fit: BoxFit.contain,
+      gaplessPlayback: true,
+      errorBuilder: (_, _, _) => cachedFrame,
+    );
+  }
+
   void _handleTransformChanged() {
     final matrix = _transformationController.value;
     final scale = matrix.getMaxScaleOnAxis();
@@ -1826,6 +1914,8 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     interactionEndFrictionCoefficient: 0.00008,
                     child: _isVideo
                         ? DiaryMemoryVideoPlayer(
+                            loadingPoster: _buildVideoLoadingPoster(url),
+                            bufferCache: widget.videoBufferCache,
                             requireFreshAuthorization:
                                 PrivateMemoryLinkPolicy.isPrivate(widget.item),
                             isActive: widget.isActive,
@@ -1837,7 +1927,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                             memoryId: widget.item['id']?.toString(),
                           )
                         : PrivateMemoryLinkPolicy.isPrivate(widget.item)
-                        ? Hero(
+                        ? DiaryMemoryHero(
                             tag: 'memory_image_${widget.item['id']}',
                             child: PrivateDiaryImage(
                               highPriority: true,
@@ -1855,7 +1945,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                                   ),
                             ),
                           )
-                        : Hero(
+                        : DiaryMemoryHero(
                             tag: 'memory_image_${widget.item['id']}',
                             child: _buildPublicImage(),
                           ),

@@ -1,5 +1,6 @@
 import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/utils/ui_copy.dart';
+import 'package:soullocket_app/utils/breakup_notice_copy.dart';
 import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
@@ -15,7 +16,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/widgets/utility_vip_badge.dart';
 import 'package:soullocket_app/widgets/pro_upsell_dialog.dart';
 import 'package:soullocket_app/widgets/app_help_center.dart';
@@ -46,6 +46,8 @@ import '../../../core/app_appearance.dart';
 import 'settings/theme/theme_preview_builder.dart';
 import 'settings/widget/widget_studio_components.dart';
 import '../../../models/widget_appearance.dart';
+import '../../../utils/widget_diary_images.dart';
+import 'diary/widgets/private_diary_image.dart';
 import '../../../models/weather_background.dart';
 import 'settings/widget/widget_couple_preview.dart';
 import 'settings/widget/widget_theme_surface.dart';
@@ -53,6 +55,7 @@ import 'settings/widget/widget_photo_collage.dart';
 import 'settings/widget/widget_content_controls.dart';
 import 'settings/widget/widget_utility_gallery.dart';
 import 'settings/settings_initial_identity.dart';
+import 'settings/media_data_settings_card.dart';
 import 'settings/settings_initial_content.dart';
 import 'settings/settings_panel_navigation.dart';
 import 'settings/settings_menu_widgets.dart';
@@ -314,6 +317,8 @@ class _SettingsBackgroundLayer extends StatelessWidget {
 class SettingsTab extends StatefulWidget {
   final bool embedded;
   final bool autoOpenCountdownMode;
+  final bool autoOpenRelationship;
+  final bool autoOpenWidget;
   final bool showGuideOnOpen;
   final Future<void> Function()? onReplayFirstSetupGuide;
 
@@ -321,6 +326,8 @@ class SettingsTab extends StatefulWidget {
     super.key,
     this.embedded = false,
     this.autoOpenCountdownMode = false,
+    this.autoOpenRelationship = false,
+    this.autoOpenWidget = false,
     this.showGuideOnOpen = false,
     this.onReplayFirstSetupGuide,
   });
@@ -486,6 +493,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _widgetStyleKey = WidgetService.defaultWidgetStyleKey;
   bool _showDiaryOnWidget = true;
   bool _widgetHeartAnimated = true;
+  int _widgetMotionIntervalMinutes =
+      WidgetAppearance.defaultMotionIntervalMinutes;
   String _widgetHeartStyleKey = _defaultWidgetHeartStyleKey;
   String _widgetHeartColorKey = 'rose';
   String _widgetStickerKey = 'none';
@@ -704,8 +713,15 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       unawaited(_restorePendingEmailVerificationState());
       unawaited(
         _fetchSettingsData().then((_) async {
+          if (widget.autoOpenWidget) {
+            if (mounted) await _togglePanel('widget');
+            return;
+          }
           await _maybeShowSettingsGuideOnOpen();
           await _maybeAutoOpenCountdownMode();
+          if (mounted && widget.autoOpenRelationship) {
+            await _togglePanel('relationship');
+          }
         }),
       );
       unawaited(_loadAppLockSettings());
@@ -730,11 +746,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   }
 
   Future<void> _maybeShowSettingsGuideOnOpen({bool replay = false}) async {
-    if ((!replay && (!widget.showGuideOnOpen || _didShowGuideOnOpen)) ||
-        !mounted ||
-        (!replay && _settingsPanelNavigation.isBusy)) {
-      return;
-    }
+    // Tour tự động chỉ bắt đầu ở Home ngay sau khi tạo nhà. Cài đặt chỉ
+    // mở khi người dùng chủ động chọn xem lại hướng dẫn.
+    if (!replay || !mounted) return;
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) {
       return;
@@ -744,12 +758,13 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     if (uid.isEmpty) return;
     final progress = SetupGuideProgress(
       prefs,
-      SetupGuideProgress.scopedKey(uid, houseId, 'settings'),
+      SetupGuideProgress.firstRunKey(uid),
     );
-    if (!replay && !progress.shouldOffer) return;
+    await progress.migratePresentedFrom(
+      SetupGuideProgress.legacyFirstRunKeys(prefs, uid),
+    );
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted ||
-        (!replay && _settingsPanelNavigation.isBusy) ||
         !(ModalRoute.of(context)?.isCurrent ?? true)) {
       return;
     }

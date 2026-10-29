@@ -547,7 +547,9 @@ class HouseService {
         }
       } else {
         final reason =
-            map?['reason'] ?? map?['message'] ?? UiCopy.text('copy_351defc82d77');
+            map?['reason'] ??
+            map?['message'] ??
+            UiCopy.text('copy_351defc82d77');
         throw Exception(reason);
       }
       return success;
@@ -558,24 +560,31 @@ class HouseService {
   }
 
   Future<void> joinHouseByAcceptedInvite() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      throw firebase_auth.FirebaseAuthException(code: 'user-token-expired');
+    }
     try {
+      await _waitForAuthenticatedSessionReady();
+      _requireCreationSession(uid);
       await _refreshCallableSecurityContext(force: false);
-      final uid = _auth.currentUser?.uid;
+      _requireCreationSession(uid);
       final prefs = await SharedPreferences.getInstance();
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'joinHouseByInvite',
         requireAppCheck: true,
-        payload: const <String, dynamic>{},
-        fallbackErrorMessage:
-            UiCopy.text('copy_fae030b2a9fa'),
+        timeout: const Duration(seconds: 75),
+        payload: <String, dynamic>{'expectedUid': uid},
+        fallbackErrorMessage: UiCopy.text('copy_fae030b2a9fa'),
       );
 
+      _requireCreationSession(uid);
       final map = _asStringDynamicMap(response.data);
       if (map != null && map['houseId'] != null) {
         final newHouseId = map['houseId'].toString();
         // getCurrentHouseId ưu tiên secure storage; phải cập nhật cùng nơi
         // sau khi server chuyển nhà, tránh màn ghép nối đọc lại nhà cũ.
-        if (uid != null && _auth.currentUser?.uid == uid) {
+        if (_auth.currentUser?.uid == uid) {
           await SecureStorageService.instance.write(
             SecureStorageService.keyHouseId,
             newHouseId,

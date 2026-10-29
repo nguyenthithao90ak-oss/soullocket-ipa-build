@@ -1,9 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../widgets/soul_merge_mark.dart';
+
+@immutable
+class SoulCallStatus {
+  const SoulCallStatus(this.text, {this.warning = false});
+  final String text;
+  final bool warning;
+}
 
 /// Lớp trình bày thuần UI để kiểm tra bố cục mà không mở camera/cuộc gọi thật.
 class SoulCallSurface extends StatelessWidget {
@@ -28,6 +36,10 @@ class SoulCallSurface extends StatelessWidget {
     this.localVideo,
     this.remoteVideo,
     this.warning = false,
+    this.statusListenable,
+    this.speakerBusy = false,
+    this.switchBusy = false,
+    this.ending = false,
   });
 
   final String name;
@@ -41,6 +53,10 @@ class SoulCallSurface extends StatelessWidget {
   final bool cameraBusy;
   final double beautyAmount;
   final bool warning;
+  final ValueListenable<SoulCallStatus>? statusListenable;
+  final bool speakerBusy;
+  final bool switchBusy;
+  final bool ending;
   final Widget? localVideo;
   final Widget? remoteVideo;
   final VoidCallback? onCamera;
@@ -106,7 +122,7 @@ class SoulCallSurface extends StatelessWidget {
                         ),
                         IconButton(
                           tooltip: context.tr('p4_call_end_and_back'),
-                          onPressed: onEnd,
+                          onPressed: ending ? null : onEnd,
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white10,
                           ),
@@ -249,7 +265,18 @@ class SoulCallSurface extends StatelessWidget {
     );
   }
 
-  Widget _statusChip(BuildContext context) => Container(
+  Widget _statusChip(BuildContext context) {
+    final listenable = statusListenable;
+    if (listenable == null) {
+      return _buildStatusChip(SoulCallStatus(status, warning: warning));
+    }
+    return ValueListenableBuilder<SoulCallStatus>(
+      valueListenable: listenable,
+      builder: (context, value, _) => _buildStatusChip(value),
+    );
+  }
+
+  Widget _buildStatusChip(SoulCallStatus value) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: 0.07),
@@ -260,16 +287,20 @@ class SoulCallSurface extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          connected ? Icons.graphic_eq_rounded : Icons.ring_volume_rounded,
+          ending
+              ? Icons.call_end_rounded
+              : connected
+              ? Icons.graphic_eq_rounded
+              : Icons.ring_volume_rounded,
           size: 16,
-          color: warning ? const Color(0xFFFF9A9A) : _accent,
+          color: value.warning ? const Color(0xFFFF9A9A) : _accent,
         ),
         const SizedBox(width: 8),
         Flexible(
           child: Text(
-            status,
+            value.text,
             style: SLTheme.quicksand(
-              color: warning ? const Color(0xFFFF9A9A) : _muted,
+              color: value.warning ? const Color(0xFFFF9A9A) : _muted,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -297,7 +328,12 @@ class SoulCallSurface extends StatelessWidget {
                       key: const ValueKey('call-switch-camera'),
                       onPressed: onSwitchCamera,
                       style: _pillStyle(),
-                      icon: const Icon(Icons.cameraswitch_rounded, size: 19),
+                      icon: switchBusy
+                          ? const SizedBox.square(
+                              dimension: 19,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.cameraswitch_rounded, size: 19),
                       label: Text(
                         context.tr('p4_call_switch_camera'),
                         textAlign: TextAlign.center,
@@ -350,6 +386,7 @@ class SoulCallSurface extends StatelessWidget {
                     speakerOn ? 'p4_call_speaker_off' : 'p4_call_speaker_on',
                   ),
                   selected: speakerOn,
+                  busy: speakerBusy,
                   onTap: onSpeaker,
                 ),
                 _CallAction(
@@ -381,7 +418,8 @@ class SoulCallSurface extends StatelessWidget {
                   label: context.tr('call_hang_up'),
                   tooltip: context.tr('p4_call_end'),
                   destructive: true,
-                  onTap: onEnd,
+                  busy: ending,
+                  onTap: ending ? null : onEnd,
                 ),
               ],
             ),

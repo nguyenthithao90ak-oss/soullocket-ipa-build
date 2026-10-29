@@ -62,6 +62,8 @@ class DiaryFeedController extends ChangeNotifier {
   final Map<String, String> _memberRoleByUid = <String, String>{};
 
   bool _disposed = false;
+  String? _sessionUid;
+  int _sessionGeneration = 0;
 
   bool get isLoading => _isLoading;
   String? get houseId => _houseId;
@@ -82,6 +84,14 @@ class DiaryFeedController extends ChangeNotifier {
       return;
     }
     notifyListeners();
+  }
+
+  bool _isSessionCurrent(int generation, String uid, {String? houseId}) {
+    return !_disposed &&
+        generation == _sessionGeneration &&
+        _sessionUid == uid &&
+        _auth.currentUser?.uid == uid &&
+        (houseId == null || _houseId == houseId);
   }
 
   void _setLoading(bool value) {
@@ -211,12 +221,25 @@ class DiaryFeedController extends ChangeNotifier {
     return _memberRoleByUid[authorId]?.trim() ?? '';
   }
 
-  Future<void> _fetchHouseSettingsData(String houseId) async {
+  Future<void> _fetchHouseSettingsData(
+    String houseId, {
+    String? expectedUid,
+    int? sessionGeneration,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final settingsMap = await _houseService.getHouseSettings(houseId);
       if (settingsMap == null) {
+        return;
+      }
+      if (expectedUid != null &&
+          (sessionGeneration == null ||
+              !_isSessionCurrent(
+                sessionGeneration,
+                expectedUid,
+                houseId: houseId,
+              ))) {
         return;
       }
 
@@ -245,22 +268,42 @@ class DiaryFeedController extends ChangeNotifier {
     }
   }
 
-  Future<String?> resolveHouseId() async {
+  Future<String?> resolveHouseId({
+    String? expectedUid,
+    int? sessionGeneration,
+  }) async {
+    bool isCurrent() =>
+        expectedUid == null ||
+        (sessionGeneration != null &&
+            _isSessionCurrent(sessionGeneration, expectedUid));
+
     final cachedHouseId = _normalizeHouseId(_houseId);
     if (cachedHouseId != null) {
+      if (!isCurrent()) return null;
       _applyHouseId(cachedHouseId);
       await _houseService.ensureFirestoreMembership(cachedHouseId);
-      await _fetchHouseSettingsData(cachedHouseId);
+      if (!isCurrent()) return null;
+      await _fetchHouseSettingsData(
+        cachedHouseId,
+        expectedUid: expectedUid,
+        sessionGeneration: sessionGeneration,
+      );
       return cachedHouseId;
     }
 
     final resolvedHouseId = _normalizeHouseId(
       await _houseService.getCurrentHouseId(),
     );
+    if (!isCurrent()) return null;
     _applyHouseId(resolvedHouseId);
     if (resolvedHouseId != null) {
       await _houseService.ensureFirestoreMembership(resolvedHouseId);
-      await _fetchHouseSettingsData(resolvedHouseId);
+      if (!isCurrent()) return null;
+      await _fetchHouseSettingsData(
+        resolvedHouseId,
+        expectedUid: expectedUid,
+        sessionGeneration: sessionGeneration,
+      );
     }
     return resolvedHouseId;
   }
@@ -316,7 +359,16 @@ class DiaryFeedController extends ChangeNotifier {
     ]);
   }
 
-  Future<void> _hydrateAuthorNames(Iterable<DiaryPost> posts) async {
+  Future<void> _hydrateAuthorNames(
+    Iterable<DiaryPost> posts, {
+    String? expectedUid,
+    int? sessionGeneration,
+  }) async {
+    bool isCurrent() =>
+        expectedUid == null ||
+        (sessionGeneration != null &&
+            _isSessionCurrent(sessionGeneration, expectedUid));
+    if (!isCurrent()) return;
     final currentUser = _auth.currentUser;
     final namesFromPosts = <String, String>{};
     for (final post in posts) {
@@ -398,11 +450,16 @@ class DiaryFeedController extends ChangeNotifier {
     if (resolved.isEmpty) {
       return;
     }
+    if (!isCurrent()) return;
     _authorNameByUid.addAll(resolved);
     _notifySafely();
   }
 
-  Future<void> _hydrateMemberRoles(String houseId) async {
+  Future<void> _hydrateMemberRoles(
+    String houseId, {
+    String? expectedUid,
+    int? sessionGeneration,
+  }) async {
     try {
       final snaps = await Future.wait([
         _dbRef
@@ -417,6 +474,16 @@ class DiaryFeedController extends ChangeNotifier {
 
       final ownerUidSnap = snaps[0];
       final membersSnap = snaps[1];
+
+      if (expectedUid != null &&
+          (sessionGeneration == null ||
+              !_isSessionCurrent(
+                sessionGeneration,
+                expectedUid,
+                houseId: houseId,
+              ))) {
+        return;
+      }
 
       final ownerUid = ownerUidSnap.value?.toString().trim() ?? '';
       final membersRaw = membersSnap.value;
@@ -497,8 +564,13 @@ class DiaryFeedController extends ChangeNotifier {
 
   Future<void> _cacheDiaryPosts(
     String houseId,
-    List<Map<String, dynamic>> items,
-  ) async {
+    List<Map<String, dynamic>> items, {
+    required String expectedUid,
+    required int sessionGeneration,
+  }) async {
+    if (!_isSessionCurrent(sessionGeneration, expectedUid, houseId: houseId)) {
+      return;
+    }
     final limited = items.take(_diaryCacheLimit).toList(growable: false);
     final signature = _buildCacheSignature(limited);
     if (_lastDiaryCacheSignature == signature) {
@@ -572,6 +644,8 @@ class DiaryFeedController extends ChangeNotifier {
   Future<void> fetchDiaryPosts({
     required Future<User?> Function() resolveCurrentUser,
   }) async {
+    final requestGeneration = ++_sessionGeneration;
+    _isLoadingMore = false;
     final shouldShowBlockingLoader = postsVN.value.isEmpty;
     if (shouldShowBlockingLoader) {
       _setLoading(true);
@@ -584,31 +658,72 @@ class DiaryFeedController extends ChangeNotifier {
       debugPrint(
         '[DiaryFeed] resolve current user timed out or failed: $error',
       );
-      _setLoading(false);
+      if (requestGeneration == _sessionGeneration) _setLoading(false);
       return;
     }
     if (user == null) {
-      await _diarySubscription?.cancel();
+      _sessionUid = null;
+      final logoutGeneration = ++_sessionGeneration;
+      final diarySubscription = _diarySubscription;
+      final pinnedSubscription = _pinnedSubscription;
       _diarySubscription = null;
-      await _pinnedSubscription?.cancel();
       _pinnedSubscription = null;
+      await diarySubscription?.cancel();
+      await pinnedSubscription?.cancel();
+      if (_disposed || logoutGeneration != _sessionGeneration) return;
       _applyHouseId(null);
       postsVN.value = const <DiaryPost>[];
       _setLoading(false);
       return;
     }
 
+    final sessionUid = user.uid;
+    if (_sessionUid != null && _sessionUid != sessionUid) {
+      _lastDiaryCacheSignature = null;
+      _latestPosts = const [];
+      _pinnedPosts = const [];
+      _paginatedPosts = const [];
+      postsVN.value = const <DiaryPost>[];
+    }
+    _sessionUid = sessionUid;
+    if (!_isSessionCurrent(requestGeneration, sessionUid)) return;
+
     try {
-      final houseId = await resolveHouseId().timeout(
-        const Duration(seconds: 15),
-      );
+      final houseId = await resolveHouseId(
+        expectedUid: sessionUid,
+        sessionGeneration: requestGeneration,
+      ).timeout(const Duration(seconds: 15));
+      if (!_isSessionCurrent(requestGeneration, sessionUid)) return;
       if (houseId != null) {
-        await _hydrateMemberRoles(houseId).timeout(const Duration(seconds: 8));
+        await _hydrateMemberRoles(
+          houseId,
+          expectedUid: sessionUid,
+          sessionGeneration: requestGeneration,
+        ).timeout(const Duration(seconds: 8));
+        if (!_isSessionCurrent(
+          requestGeneration,
+          sessionUid,
+          houseId: houseId,
+        )) {
+          return;
+        }
         await _fetchHouseSettingsData(
           houseId,
+          expectedUid: sessionUid,
+          sessionGeneration: requestGeneration,
         ).timeout(const Duration(seconds: 8));
+        if (!_isSessionCurrent(
+          requestGeneration,
+          sessionUid,
+          houseId: houseId,
+        )) {
+          return;
+        }
       }
       await resolveCurrentAuthorName(user).timeout(const Duration(seconds: 8));
+      if (!_isSessionCurrent(requestGeneration, sessionUid, houseId: houseId)) {
+        return;
+      }
 
       final initialPosts = <DiaryPost>[];
       if (houseId != null) {
@@ -639,21 +754,37 @@ class DiaryFeedController extends ChangeNotifier {
             );
           }
           _sortDiaryPosts(initialPosts);
-          if (!_disposed) {
+          if (_isSessionCurrent(
+            requestGeneration,
+            sessionUid,
+            houseId: houseId,
+          )) {
             postsVN.value = initialPosts;
+            unawaited(
+              _hydrateAuthorNames(
+                initialPosts,
+                expectedUid: sessionUid,
+                sessionGeneration: requestGeneration,
+              ),
+            );
+            _setLoading(false);
           }
-          unawaited(_hydrateAuthorNames(initialPosts));
-          _setLoading(false);
         }
       }
 
       if (houseId == null) {
-        await _diarySubscription?.cancel();
+        if (!_isSessionCurrent(requestGeneration, sessionUid)) return;
+        final diarySubscription = _diarySubscription;
+        final pinnedSubscription = _pinnedSubscription;
         _diarySubscription = null;
-        await _pinnedSubscription?.cancel();
         _pinnedSubscription = null;
+        await diarySubscription?.cancel();
+        await pinnedSubscription?.cancel();
+        if (!_isSessionCurrent(requestGeneration, sessionUid)) return;
         postsVN.value = const <DiaryPost>[];
-        _setLoading(false);
+        if (_isSessionCurrent(requestGeneration, sessionUid)) {
+          _setLoading(false);
+        }
         return;
       }
 
@@ -664,20 +795,32 @@ class DiaryFeedController extends ChangeNotifier {
       _pinnedPosts = const [];
       _paginatedPosts = const [];
 
-      await _diarySubscription?.cancel();
-      await _pinnedSubscription?.cancel();
+      final previousDiarySubscription = _diarySubscription;
+      final previousPinnedSubscription = _pinnedSubscription;
+      _diarySubscription = null;
+      _pinnedSubscription = null;
+      await previousDiarySubscription?.cancel();
+      await previousPinnedSubscription?.cancel();
+      if (!_isSessionCurrent(requestGeneration, sessionUid, houseId: houseId)) {
+        return;
+      }
 
       // Auto migrate old RTDB diaries to Firestore in the background
       unawaited(DiaryService().migrateDiariesFromRTDB(houseId));
 
       // Bài ghim chỉ cần một lần đọc khi mở Nhật ký. Giữ một listener duy
       // nhất cho danh sách mới để tránh hai luồng realtime cùng phát một bài.
-      _pinnedSubscription = null;
       unawaited(
         DiaryService()
             .fetchPinnedDiary(houseId)
             .then((loadedPinned) {
-              if (_disposed || _houseId != houseId) return;
+              if (!_isSessionCurrent(
+                requestGeneration,
+                sessionUid,
+                houseId: houseId,
+              )) {
+                return;
+              }
               _pinnedPosts = loadedPinned;
               _updatePostsVN();
             })
@@ -690,6 +833,13 @@ class DiaryFeedController extends ChangeNotifier {
           .streamDiary(houseId, limit: 10)
           .listen(
             (loadedPosts) {
+              if (!_isSessionCurrent(
+                requestGeneration,
+                sessionUid,
+                houseId: houseId,
+              )) {
+                return;
+              }
               _diaryInitialLoadTimer?.cancel();
               _diaryInitialLoadTimer = null;
               try {
@@ -700,12 +850,13 @@ class DiaryFeedController extends ChangeNotifier {
                 if (loadedPosts.isEmpty) {
                   _latestPosts = const [];
                   _updatePostsVN();
-                  _lastDiaryCacheSignature = '0';
                   unawaited(
-                    OfflineCacheService.saveCache('diary_$houseId', {
-                      '_cachedAt': DateTime.now().millisecondsSinceEpoch,
-                      'items': const <Map<String, dynamic>>[],
-                    }),
+                    _cacheDiaryPosts(
+                      houseId,
+                      const <Map<String, dynamic>>[],
+                      expectedUid: sessionUid,
+                      sessionGeneration: requestGeneration,
+                    ),
                   );
                   return;
                 }
@@ -714,8 +865,21 @@ class DiaryFeedController extends ChangeNotifier {
                 _updatePostsVN();
 
                 final cacheList = loadedPosts.map((p) => p.toJson()).toList();
-                unawaited(_cacheDiaryPosts(houseId, cacheList));
-                unawaited(_hydrateAuthorNames(loadedPosts));
+                unawaited(
+                  _cacheDiaryPosts(
+                    houseId,
+                    cacheList,
+                    expectedUid: sessionUid,
+                    sessionGeneration: requestGeneration,
+                  ),
+                );
+                unawaited(
+                  _hydrateAuthorNames(
+                    loadedPosts,
+                    expectedUid: sessionUid,
+                    sessionGeneration: requestGeneration,
+                  ),
+                );
               } catch (e, stack) {
                 debugPrint('Error processing diary realtime event: $e\n$stack');
               } finally {
@@ -723,6 +887,13 @@ class DiaryFeedController extends ChangeNotifier {
               }
             },
             onError: (Object error) {
+              if (!_isSessionCurrent(
+                requestGeneration,
+                sessionUid,
+                houseId: houseId,
+              )) {
+                return;
+              }
               _diaryInitialLoadTimer?.cancel();
               _diaryInitialLoadTimer = null;
               debugPrint(
@@ -733,20 +904,32 @@ class DiaryFeedController extends ChangeNotifier {
           );
       _diaryInitialLoadTimer?.cancel();
       _diaryInitialLoadTimer = Timer(const Duration(seconds: 12), () {
-        if (!_disposed) {
+        if (_isSessionCurrent(
+          requestGeneration,
+          sessionUid,
+          houseId: houseId,
+        )) {
           _setLoading(false);
         }
       });
     } catch (e) {
       debugPrint('[DiaryFeed] fetchDiaryPosts error: $e');
-      _setLoading(false);
+      if (_isSessionCurrent(requestGeneration, sessionUid)) {
+        _setLoading(false);
+      }
     }
   }
 
   Future<void> fetchNextDiaryPage() async {
     if (_isLoadingMore || !_hasMore) return;
     final houseId = _houseId;
-    if (houseId == null) return;
+    final sessionUid = _sessionUid ?? _auth.currentUser?.uid;
+    final requestGeneration = _sessionGeneration;
+    if (houseId == null ||
+        sessionUid == null ||
+        !_isSessionCurrent(requestGeneration, sessionUid, houseId: houseId)) {
+      return;
+    }
 
     _isLoadingMore = true;
     _notifySafely();
@@ -756,6 +939,13 @@ class DiaryFeedController extends ChangeNotifier {
         final firstPageResult = await DiaryService()
             .fetchDiaryPage(houseId, limit: 10)
             .timeout(const Duration(seconds: 15));
+        if (!_isSessionCurrent(
+          requestGeneration,
+          sessionUid,
+          houseId: houseId,
+        )) {
+          return;
+        }
         _lastDocument = firstPageResult.lastDoc;
         if (_lastDocument == null) {
           _hasMore = false;
@@ -769,6 +959,10 @@ class DiaryFeedController extends ChangeNotifier {
           .fetchDiaryPage(houseId, limit: 10, startAfter: _lastDocument)
           .timeout(const Duration(seconds: 15));
 
+      if (!_isSessionCurrent(requestGeneration, sessionUid, houseId: houseId)) {
+        return;
+      }
+
       if (result.posts.isNotEmpty) {
         _lastDocument = result.lastDoc;
         _paginatedPosts = [..._paginatedPosts, ...result.posts];
@@ -778,31 +972,37 @@ class DiaryFeedController extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error fetching next diary page: $e');
     } finally {
-      _isLoadingMore = false;
-      _notifySafely();
+      if (_isSessionCurrent(requestGeneration, sessionUid, houseId: houseId)) {
+        _isLoadingMore = false;
+        _notifySafely();
+      }
     }
   }
 
   Future<void> pauseRealtime() async {
+    _sessionGeneration++;
+    _isLoadingMore = false;
     _diaryInitialLoadTimer?.cancel();
     _diaryInitialLoadTimer = null;
-    await _diarySubscription?.cancel();
+    final diarySubscription = _diarySubscription;
+    final pinnedSubscription = _pinnedSubscription;
     _diarySubscription = null;
-    await _pinnedSubscription?.cancel();
     _pinnedSubscription = null;
+    await diarySubscription?.cancel();
+    await pinnedSubscription?.cancel();
   }
 
   Future<void> deleteDiaryPost(DiaryPost post) async {
     final houseId = _houseId;
-    if (houseId == null) {
+    final uid = _auth.currentUser?.uid.trim() ?? '';
+    if (houseId == null || uid.isEmpty) {
       return;
     }
-    await FirebaseFirestore.instance
-        .collection('houses')
-        .doc(houseId)
-        .collection('diaries')
-        .doc(post.id)
-        .delete();
+    await DiaryService().deleteDiaryPost(
+      houseId: houseId,
+      postId: post.id,
+      requestingAuthorId: uid,
+    );
   }
 
   Future<void> togglePinDiaryPost(DiaryPost post) async {
@@ -953,6 +1153,7 @@ class DiaryFeedController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _sessionGeneration++;
     _diaryInitialLoadTimer?.cancel();
     _diarySubscription?.cancel();
     _pinnedSubscription?.cancel();

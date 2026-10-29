@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
@@ -5,6 +6,7 @@ import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
 import '../../../widgets/skeleton_container.dart';
+import 'diary/widgets/diary_keyboard_dismiss_area.dart';
 
 class DiaryList extends StatelessWidget {
   final Widget? header;
@@ -21,6 +23,7 @@ class DiaryList extends StatelessWidget {
   final Widget Function() buildDiaryEmptyState;
   final Widget Function(DiaryPost) buildPostCard;
   final ScrollController? scrollController;
+  final ValueListenable<bool>? isActiveListenable;
 
   const DiaryList({
     super.key,
@@ -37,6 +40,7 @@ class DiaryList extends StatelessWidget {
     required this.buildDiaryEmptyState,
     required this.buildPostCard,
     this.scrollController,
+    this.isActiveListenable,
   });
 
   @override
@@ -44,10 +48,11 @@ class DiaryList extends StatelessWidget {
     final hasPosts = posts.isNotEmpty;
     final showBlockingLoader = isLoading && !hasPosts;
 
-    return CustomScrollView(
+    final content = CustomScrollView(
       key: const ValueKey('diary_content'),
       physics: SLResponsive.scrollPhysicsForPlatform(),
       controller: scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
         if (header != null)
           SliverSafeArea(
@@ -172,6 +177,17 @@ class DiaryList extends StatelessWidget {
             ),
           ),
       ],
+    );
+    final writingArea = DiaryKeyboardDismissArea(child: content);
+    final activeListenable = isActiveListenable;
+    if (activeListenable == null) return writingArea;
+    return ValueListenableBuilder<bool>(
+      valueListenable: activeListenable,
+      builder: (context, active, child) => ExcludeFocus(
+        excluding: !active,
+        child: child!,
+      ),
+      child: writingArea,
     );
   }
 }

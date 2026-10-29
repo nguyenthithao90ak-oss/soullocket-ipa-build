@@ -51,8 +51,14 @@ class LoveCardService {
     int expiryMonths = LoveCardService.defaultExpiryMonths,
   }) async {
     try {
+      if (FirebaseAuth.instance.currentUser?.uid != fromUid) {
+        throw StateError('Love card account changed');
+      }
       final expiresAt = _expiresAtForMonths(expiryMonths);
       final cardsSnap = await _db.ref('houses/$houseId/love_cards').get();
+      if (FirebaseAuth.instance.currentUser?.uid != fromUid) {
+        throw StateError('Love card account changed');
+      }
       if (cardsSnap.exists && cardsSnap.value is Map) {
         final cardsMap = cardsSnap.value as Map;
         if (cardsMap.length >= 100) {
@@ -119,6 +125,9 @@ class LoveCardService {
     String? existingShareId,
     int expiryMonths = LoveCardService.defaultExpiryMonths,
   }) async {
+    if (FirebaseAuth.instance.currentUser?.uid != fromUid) {
+      throw StateError('Love card account changed');
+    }
     final normalizedCardId = cardId.trim();
     final normalizedShareId = existingShareId?.trim() ?? '';
     if (normalizedCardId.isEmpty) {
@@ -372,7 +381,9 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
     if (_didPromptPendingUploadRetry || !mounted) {
       return;
     }
-    final pending = await PendingUploadService.instance.load(_pendingUploadKey);
+    final pending = await PendingUploadService.instance.load(
+      _pendingUploadKey, expectedUid: widget.myUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -396,7 +407,9 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
   }
 
   Future<void> _retryPendingSendCard() async {
-    final pending = await PendingUploadService.instance.load(_pendingUploadKey);
+    final pending = await PendingUploadService.instance.load(
+      _pendingUploadKey, expectedUid: widget.myUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -661,6 +674,9 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
   }
 
   Future<void> _sendCard() async {
+    final uid = widget.myUid;
+    bool isCurrent() => mounted && FirebaseAuth.instance.currentUser?.uid == uid;
+    if (!isCurrent()) return;
     final content = _contentCtrl.text.trim();
     if (content.isEmpty || _isSending) {
       return;
@@ -684,8 +700,10 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
             'theme': _selectedTheme,
             'bgColor': _selectedBg,
             'imagePath': _selectedImageFile?.path ?? '',
-          });
+          }, expectedUid: uid);
+      if (!isCurrent()) return;
       imageUrl = await _uploadSelectedCardImage();
+      if (!isCurrent()) return;
 
       final cardId = await _svc.sendCard(
         widget.houseId,
@@ -698,6 +716,7 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
         imageUrl: imageUrl,
       );
 
+      if (!isCurrent()) return;
       if (cardId != null) {
         final payload = LoveCardLinkPayload(
           id: cardId,
@@ -732,7 +751,8 @@ class _LoveCardScreenState extends State<LoveCardScreen> {
               );
       }
 
-      await PendingUploadService.instance.clear(_pendingUploadKey);
+      if (!isCurrent()) return;
+      await PendingUploadService.instance.clear(_pendingUploadKey, expectedUid: uid);
       isSuccess = true;
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(e, fallbackMessage: fallbackMsg);

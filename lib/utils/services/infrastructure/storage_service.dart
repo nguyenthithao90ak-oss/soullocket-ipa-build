@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 import '../storage/secret_vault_put.dart';
 import '../encryption_service.dart';
+import '../media_data_preferences.dart';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +26,7 @@ import 'package:soullocket_app/utils/services/secret_vault_media_policy.dart'
     as secret_vault_policy;
 import 'package:soullocket_app/utils/services/storage/storage_app_check_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_content_policy.dart';
+import 'package:soullocket_app/utils/services/storage/firebase_signed_put_headers.dart';
 import 'package:soullocket_app/utils/services/storage/storage_delete_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_finalize_helper.dart';
@@ -296,6 +298,7 @@ class StorageService {
     required String scope,
     required String contentType,
     required String fileName,
+    required int fileSize,
     String? targetHouseId,
   }) async {
     try {
@@ -310,6 +313,8 @@ class StorageService {
           'scope': scope.trim(),
           'contentType': contentType.trim(),
           'fileName': fileName.trim(),
+          'fileSize': fileSize,
+          'uploadProtocolVersion': 2,
           if ((targetHouseId ?? '').trim().isNotEmpty)
             'targetHouseId': targetHouseId!.trim(),
         },
@@ -370,6 +375,7 @@ class StorageService {
     required String houseId,
     required String contentType,
     required String fileName,
+    required int fileSize,
   }) async {
     try {
       return _uploadSessionHelper.createUploadSession(
@@ -382,6 +388,8 @@ class StorageService {
           'houseId': houseId.trim(),
           'contentType': contentType.trim(),
           'fileName': fileName.trim(),
+          'fileSize': fileSize,
+          'uploadProtocolVersion': 2,
         },
         label: 'Memory image upload session',
         requireSessionId: true,
@@ -422,6 +430,7 @@ class StorageService {
     required String houseId,
     required String contentType,
     required String fileName,
+    required int fileSize,
   }) async {
     try {
       return _uploadSessionHelper.createUploadSession(
@@ -434,6 +443,8 @@ class StorageService {
           'houseId': houseId.trim(),
           'contentType': contentType.trim(),
           'fileName': fileName.trim(),
+          'fileSize': fileSize,
+          'uploadProtocolVersion': 2,
         },
         label: 'Album image upload session',
         requireSessionId: true,
@@ -474,6 +485,7 @@ class StorageService {
     required String houseId,
     required String contentType,
     required String fileName,
+    required int fileSize,
   }) {
     return _uploadSessionHelper.createUploadSession(
       invokeCallable: (name, payload) =>
@@ -483,6 +495,8 @@ class StorageService {
         'houseId': houseId.trim(),
         'contentType': contentType.trim(),
         'fileName': fileName.trim(),
+          'fileSize': fileSize,
+          'uploadProtocolVersion': 2,
       },
       label: 'Gift image upload session',
     );
@@ -492,6 +506,7 @@ class StorageService {
     required String houseId,
     required String contentType,
     required String fileName,
+    required int fileSize,
   }) {
     return _uploadSessionHelper.createUploadSession(
       invokeCallable: (name, payload) =>
@@ -501,6 +516,8 @@ class StorageService {
         'houseId': houseId.trim(),
         'contentType': contentType.trim(),
         'fileName': fileName.trim(),
+          'fileSize': fileSize,
+          'uploadProtocolVersion': 2,
       },
       label: 'Love card image upload session',
     );
@@ -511,7 +528,7 @@ class StorageService {
     required String target,
     required String contentType,
     required String fileName,
-    int? fileSize,
+    required int fileSize,
   }) async {
     try {
       return _uploadSessionHelper.createUploadSession(
@@ -525,7 +542,8 @@ class StorageService {
           'target': target.trim(),
           'contentType': contentType.trim(),
           'fileName': fileName.trim(),
-          'fileSize': ?fileSize,
+          'fileSize': fileSize,
+          'uploadProtocolVersion': 2,
         },
         label: 'Public image upload session',
         requireSessionId: true,
@@ -1226,15 +1244,13 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName, _, _) async =>
+      sessionBuilder: (contentType, preferredFileName, size, _) async =>
           _createPublicImageUploadSession(
             houseId: houseId,
             target: target,
             contentType: contentType,
             fileName: preferredFileName,
-            fileSize: target == 'custom_mood_sticker'
-                ? await file.length()
-                : null,
+            fileSize: size,
           ),
       minWidth: minWidth,
       minHeight: minHeight,
@@ -1278,12 +1294,13 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName, _, _) =>
+      sessionBuilder: (contentType, preferredFileName, size, _) =>
           _createChatImageUploadSession(
             houseId: houseId,
             scope: isInternal ? 'internal' : 'direct',
             contentType: contentType,
             fileName: preferredFileName,
+            fileSize: size,
             targetHouseId: isInternal ? null : targetHouseId,
           ),
       minWidth: minWidth,
@@ -1341,7 +1358,12 @@ class StorageService {
         client: client,
         requestIsFresh: requestIsFresh,
         isLivePhoto: isLivePhoto,
-        beforeUpload: beforeUpload,
+        beforeUpload: (bytes, isVideo) async {
+          if (isVideo && !await MediaDataPreferences.instance.canStartVideo()) {
+            throw const UiCopyException('media_data_wifi_required');
+          }
+          await beforeUpload?.call(bytes, isVideo);
+        },
         latitude: latitude,
         longitude: longitude,
         prepareFile: () async {
@@ -1353,6 +1375,9 @@ class StorageService {
             originalFileName: name,
           );
           if (!kIsWeb && contentType.startsWith('video/')) {
+            if (!await MediaDataPreferences.instance.canStartVideo()) {
+              throw const UiCopyException('media_data_wifi_required');
+            }
             final optimized = await StorageVideoOptimizer.prepareVideoForUpload(
               file,
               isLivePhoto: isLivePhoto,
@@ -1363,12 +1388,18 @@ class StorageService {
               contentType: optimized.temporaryPath != null ? 'video/mp4' : contentType,
             );
           }
+          final settings = await MediaDataPreferences.instance.read();
+          final options = settings.imageOptions(
+            width: minWidth,
+            height: minHeight,
+            quality: quality,
+          );
           final prepared = await const StorageImageOptimizer().prepare(
             file,
             contentType: contentType,
-            minWidth: minWidth,
-            minHeight: minHeight,
-            quality: quality.clamp(70, 100),
+            minWidth: options.width,
+            minHeight: options.height,
+            quality: options.quality.clamp(70, 100),
           );
           compressedPath = prepared.temporaryPath;
           return (file: prepared.file, contentType: prepared.contentType);
@@ -1397,11 +1428,12 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName, _, _) =>
+      sessionBuilder: (contentType, preferredFileName, size, _) =>
           _createMemoryImageUploadSession(
             houseId: houseId,
             contentType: contentType,
             fileName: preferredFileName,
+            fileSize: size,
           ),
       minWidth: minWidth,
       minHeight: minHeight,
@@ -1436,6 +1468,7 @@ class StorageService {
               'fileName': preferredFileName.trim(),
               'transport': 'r2',
               'size': size,
+              'uploadProtocolVersion': 2,
               'md5': md5Hex,
             },
             label: 'Time capsule image upload session',
@@ -1476,11 +1509,12 @@ class StorageService {
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName, _, _) =>
+      sessionBuilder: (contentType, preferredFileName, size, _) =>
           _createAlbumImageUploadSession(
             houseId: houseId,
             contentType: contentType,
             fileName: preferredFileName,
+            fileSize: size,
           ),
       minWidth: minWidth,
       minHeight: minHeight,
@@ -1501,11 +1535,12 @@ class StorageService {
   }) async {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName, _, _) =>
+      sessionBuilder: (contentType, preferredFileName, size, _) =>
           _createGiftImageUploadSession(
             houseId: houseId,
             contentType: contentType,
             fileName: preferredFileName,
+            fileSize: size,
           ),
       minWidth: minWidth,
       minHeight: minHeight,
@@ -1526,11 +1561,12 @@ class StorageService {
   }) async {
     return _uploadSignedImageWithCompression(
       file: file,
-      sessionBuilder: (contentType, preferredFileName, _, _) =>
+      sessionBuilder: (contentType, preferredFileName, size, _) =>
           _createLoveCardImageUploadSession(
             houseId: houseId,
             contentType: contentType,
             fileName: preferredFileName,
+            fileSize: size,
           ),
       minWidth: minWidth,
       minHeight: minHeight,
@@ -1732,24 +1768,12 @@ class StorageService {
             uploadUri.host.endsWith('.storage.googleapis.com'))) {
       throw StateError('Invalid upload destination');
     }
-    final headers = <String, String>{};
-    for (final entry in rawHeaders.entries) {
-      if (entry.key is! String || entry.value is! String) {
-        throw StateError('Invalid upload headers');
-      }
-      final name = (entry.key as String).toLowerCase();
-      final value = entry.value as String;
-      if (RegExp(r'[\x00-\x1f\x7f]').hasMatch(name + value) ||
-          headers.containsKey(name)) {
-        throw StateError('Invalid upload headers');
-      }
-      if (name == 'content-type' || name.startsWith('x-goog-meta-')) {
-        headers[name] = value;
-      }
-    }
-    if (headers['content-type'] != contentType) {
-      throw StateError('Upload content type mismatch');
-    }
+    final headers = FirebaseSignedPutHeaders.parse(
+      rawHeaders: rawHeaders,
+      contentType: contentType,
+      fileSize: bytes.length,
+      uploadUri: uploadUri,
+    );
 
     final client = http.Client();
     try {

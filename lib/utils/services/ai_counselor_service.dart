@@ -199,7 +199,7 @@ class AiCounselorService {
         errorMessage: _translate(
           uid == null || _currentUid() != uid
               ? 'ai_task_auth_error'
-              : 'ai_data_consent_title',
+              : 'ai_data_consent_required',
         ),
       );
     }

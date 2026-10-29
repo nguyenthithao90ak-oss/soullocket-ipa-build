@@ -37,11 +37,41 @@ extension DiaryTabSelectionActions on _DiaryTabState {
   }
 
   Future<void> _shareSelectedMemories() async {
-    await _createMemoryShareLink(_selectedMemories.values.toList());
+    await _chooseMemoryShare(_selectedMemories.values.toList());
     _handleControllerChange();
   }
 
   Future<void> _shareSingleMemory(Map<String, dynamic> item) async {
-    await _createMemoryShareLink([item]);
+    await _chooseMemoryShare([item]);
+  }
+
+  Future<void> _chooseMemoryShare(List<Map<String, dynamic>> memories) {
+    return _memoryShareGate.run(() async {
+      if (!mounted || memories.isEmpty) return;
+      final houseId = _houseId?.trim() ?? '';
+      final photosOnly = !memories.any(isDiaryMemoryVideo);
+      final action = await showModalBottomSheet<DiaryMemoryShareAction>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        constraints: const BoxConstraints(maxWidth: 480),
+        builder: (_) => DiaryMemoryShareSheet(
+          photosOnly: photosOnly,
+          onShareFiles: (origin, isCurrent) async {
+            await _memoryMediaShareService.share(
+              houseId: houseId,
+              memories: memories,
+              sharePositionOrigin: origin,
+              scopeIsCurrent: () => mounted && isCurrent() &&
+                  _isTabActive && _houseId?.trim() == houseId,
+            );
+          },
+        ),
+      );
+      if (!mounted || _houseId?.trim() != houseId) return;
+      if (action == DiaryMemoryShareAction.cuteLink && photosOnly) {
+        await _createMemoryShareLink(memories);
+      }
+    });
   }
 }

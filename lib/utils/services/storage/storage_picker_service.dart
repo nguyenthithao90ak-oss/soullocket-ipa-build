@@ -93,7 +93,6 @@ class StoragePickerService {
         final files = await FilePicker.pickFiles(
           type: FileType.custom,
           allowedExtensions: storageMusicPickerExtensions,
-          allowMultiple: true,
         );
         if (files.isNotEmpty) {
           return files
@@ -112,7 +111,6 @@ class StoragePickerService {
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: storageMusicPickerExtensions,
-        allowMultiple: true,
       );
       if (files.isEmpty) {
         return <XFile>[];
@@ -216,7 +214,6 @@ class StoragePickerService {
       try {
         final files = await FilePicker.pickFiles(
           type: FileType.media,
-          allowMultiple: true,
         );
         final mapped = files
             .map(platformFileToXFile)

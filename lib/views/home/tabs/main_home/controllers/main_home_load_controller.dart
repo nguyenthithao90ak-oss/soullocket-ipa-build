@@ -70,6 +70,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _gpsSubscription?.cancel();
     _gpsSubscription = null;
     _homeMapPreviewBindingSerial++;
+    _homeGpsFreshnessDeadline.cancel();
+    _refreshHomeGpsSnapshot = null;
     _interactionRotationTimer?.cancel();
     _interactionRotationTimer = null;
     _pendingWidgetSettings = null;
@@ -340,6 +342,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _safeSetState(() {
         _insightData = insight;
       });
+    } catch (_) {
+      // Giữ dữ liệu hiện có; lỗi mạng chưa có cache không phải thống kê bằng 0.
+      // Lời gọi này chạy nền nên phải xử lý lỗi ngay tại đây.
     } finally {
       if (_pendingInsightSettingsKey == settingsKey) {
         _pendingInsightSettingsKey = null;

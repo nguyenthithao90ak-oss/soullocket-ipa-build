@@ -6,24 +6,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/utils/services/soul_message_history.dart';
 import 'package:soullocket_app/utils/services/soul_message_actions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:soullocket_app/models/diary_post.dart';
+import 'package:soullocket_app/utils/soul_bubble_overlay.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
-import 'package:soullocket_app/utils/helpers/bump_detector.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
-import 'package:soullocket_app/utils/services/house_service.dart';
+import 'package:soullocket_app/utils/services/soul_merge_touch_session.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/core/service_locator.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/giftcode_service.dart';
@@ -40,14 +38,14 @@ import 'soul_merge/soul_merge_interaction_strip.dart';
 import 'soul_merge/soul_merge_touch_cascade.dart';
 import 'soul_merge/soul_merge_options_sheet.dart';
 import 'soul_merge/sticker_bottom_sheet.dart';
+import 'package:soullocket_app/utils/services/soul_merge_memories.dart';
+import '../tabs/diary/widgets/private_diary_image_scope.dart';
+import 'soul_merge/exploding_photo_part.dart';
+export 'soul_merge/exploding_photo_part.dart';
 
-part 'soul_merge/exploding_photo_part.dart';
-part 'soul_merge/particle_explosion_part.dart';
 part 'soul_merge/tap_hearts_overlay_part.dart';
 part 'soul_merge/floating_message_part.dart';
 part 'soul_merge/persistent_floating_photo_part.dart';
-
-Stream<dynamic>? _sharedOverlayStream;
 
 class SoulMergeScreen extends StatefulWidget {
   const SoulMergeScreen({super.key});
@@ -58,16 +56,20 @@ class SoulMergeScreen extends StatefulWidget {
 
 class _SoulMergeScreenState extends State<SoulMergeScreen>
     with ScreenActivityMixin {
-  late BumpDetector _bumpDetector;
   final SoulMergeService _mergeService = SoulMergeService();
-  StreamSubscription<Map<String, int>>? _mergeTimesSub;
+  SoulMergeTouchSession? _touchSession;
+  int? _touchPointer;
+  int _mergeGeneration = 0;
+  String? _activeTouchPairId;
 
   bool _isMerged = false;
 
   // Memory photos lists and timers
-  List<Map<String, String>> _memoriesData = [];
+  final _memoryService = locator<SoulMergeMemories>();
+  List<SoulMergeMemory> _memoriesData = [];
+  Future<List<SoulMergeMemory>>? _memoriesLoad;
   final List<ExplodingPhoto> _activePhotos = [];
-  final List<({Offset position, UniqueKey id})> _activeParticleExplosions = [];
+  final Map<UniqueKey, Timer> _photoExpiryTimers = {};
   Timer? _explosionTimer;
   int _explosionGeneration = 0;
   bool _celebrationPlayed = false;
@@ -95,7 +97,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   Map<String, dynamic> _readReceipts = {};
   String? _lastMarkedReadId;
   final List<FloatingMessage> _floatingMessages = [];
+  final Map<UniqueKey, Timer> _floatingMessageTimers = {};
+  final Set<Timer> _pendingFloatingMessageTimers = <Timer>{};
+  static const int _maxFloatingMessages = 4;
   final List<String> _persistentPhotos = [];
+  final Set<String> _handledInteractiveEventIds = <String>{};
   bool _isUploadingPhoto = false;
   int _lastMsgTimestamp = 0;
   int _lastSeenMsgTimestamp = 0;
@@ -126,9 +132,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   SoulMessageWindow? _pinnedWindow;
   bool _isViewingPinnedWindow = false;
   bool _isLoadingPinnedMessage = false;
+  bool _isReadingHistory = false;
   int _pinnedJumpGeneration = 0;
   bool _overlayEnabled = false;
-  StreamSubscription<dynamic>? _overlayListenerSub;
+  bool _overlayBusy = false;
+  int _overlayRevision = 0;
 
   // Anti-spam state variables
   final List<int> _msgTimestamps = [];
@@ -155,17 +163,17 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   List<Map<String, dynamic>> get _pinnedDisplayMessages {
+    final messagesById = <String, Map<String, dynamic>>{
+      for (final message in [
+        ...?_pinnedWindow?.messages,
+        ..._messageHistory.messages,
+      ])
+        if (message['id'] != null) message['id'].toString(): message,
+    };
     return _pinnedMessages
         .map((pin) {
           final id = pin['id']?.toString();
-          Map<String, dynamic>? message;
-          for (final entry in _messageHistory.messages) {
-            if (entry['id']?.toString() == id) {
-              message = entry;
-              break;
-            }
-          }
-          return {...?message, ...pin, if (id case final value?) 'id': value};
+          return <String, dynamic>{...pin, ...?messagesById[id]};
         })
         .toList(growable: false);
   }
@@ -175,13 +183,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     super.initState();
     _screenOwnerUid = FirebaseAuth.instance.currentUser?.uid;
     _chatScrollController.addListener(_onChatScroll);
-    _bumpDetector = BumpDetector(
-      threshold: 3.5, // Sensitive enough for a gentle bump
-      onBump: _handleLocalBump,
-    );
-
-    // Clear previous bumps to start fresh
-    unawaited(_mergeService.clearBumps());
     _vipSub = PurchaseService().vipStatusStream().listen((isVip) {
       if (mounted) {
         setState(() {
@@ -192,42 +193,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _initUserInfo().then((_) {
       if (!mounted || !_scopeIsCurrent) return;
       if (isScreenActive) _bindRealtimeListeners();
-      _fetchMemoriesData().then((data) {
-        if (mounted) setState(() => _memoriesData = data);
+      _loadMemoriesOnce().then((data) {
+        if (mounted && _scopeIsCurrent) setState(() => _memoriesData = data);
       });
     });
 
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      _sharedOverlayStream ??= FlutterOverlayWindow.overlayListener
-          .asBroadcastStream();
-      _overlayListenerSub = _sharedOverlayStream!.listen((event) {
-        if (event == 'launch_app') {
-          const MethodChannel(
-            'soul_locket/app_control',
-          ).invokeMethod('bringToForeground');
-        } else if (event == 'request_sync') {
-          _sendOverlaySyncPayload();
-        } else if (event is String && event.startsWith('{')) {
-          try {
-            final data = jsonDecode(event);
-            if (data['action'] == 'send_msg') {
-              // Overlay now sends messages directly to Firebase, no action needed here.
-            }
-          } catch (e) {
-            debugPrint('[SoulMergeScreen] overlayListener error: $e');
-          }
-        }
-      });
-      FlutterOverlayWindow.isActive().then((active) async {
-        if (mounted) {
-          setState(() {
-            _overlayEnabled = active;
-          });
-        }
-      });
-    }
-
-    // mergeTimes được bind theo lifecycle màn hình trong _bindRealtimeListeners.
+    // Phiên giữ tay được bind theo lifecycle trong _bindRealtimeListeners.
   }
 
   void _bindRealtimeListeners() {
@@ -250,55 +221,88 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (houseId != null && houseId.isNotEmpty) {
       _pinnedMessagesSub = _mergeService
           .watchSoulPinnedMessages(houseId: houseId)
-          .listen((pinned) {
-            if (!mounted ||
-                !isScreenActive ||
-                !_scopeIsCurrent ||
-                _houseId != houseId) {
-              return;
-            }
-            setState(() => _pinnedMessages = pinned);
-          });
+          .listen(
+            (pinned) {
+              if (!mounted ||
+                  !isScreenActive ||
+                  !_scopeIsCurrent ||
+                  _houseId != houseId) {
+                return;
+              }
+              setState(() => _pinnedMessages = pinned);
+            },
+            onError: (Object error) {
+              if (!mounted ||
+                  !isScreenActive ||
+                  !_scopeIsCurrent ||
+                  _houseId != houseId) {
+                return;
+              }
+              setState(() => _pinnedMessages = []);
+              debugPrint(
+                '[SoulMergeScreen] Pinned metadata failed: ${error.runtimeType}',
+              );
+            },
+          );
     }
-    _mergeTimesSub?.cancel();
-    _mergeTimesSub = _mergeService.watchMergeTimes().listen((mergeTimes) {
-      if (!mounted || !isScreenActive || !_scopeIsCurrent) return;
-      debugPrint('[SoulMergeScreen] watchMergeTimes update: $mergeTimes');
+    _bindTouchSession();
+  }
 
-      // Dùng role ('user1'/'user2') làm key — không dùng uid vì 2 người chung 1 uid.
-      final prefs = SharedPreferences.getInstance();
-      prefs.then((p) {
-        final myRole = p.getString('il_role')?.trim() == 'user2'
-            ? 'user2'
-            : 'user1';
-        final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
-        final iBumped = mergeTimes.containsKey(myRole);
-        final partnerBumped = mergeTimes.containsKey(partnerRole);
+  void _bindTouchSession() {
+    final houseId = _houseId;
+    final uid = _screenOwnerUid;
+    if (_touchSession != null || houseId == null || uid == null) return;
+    _touchSession = _mergeService.createTouchSession(
+      houseId: houseId,
+      expectedUid: uid,
+      role: _myRole,
+    )..addListener(_onTouchStateChanged);
+    _onTouchStateChanged();
+  }
 
-        if (mounted && isScreenActive) {
-          setState(() {
-            _iHaveBumped = iBumped;
-            _partnerHasBumped = partnerBumped;
-          });
-        }
+  bool get _bothAreTouching =>
+      mounted &&
+      isScreenActive &&
+      _scopeIsCurrent &&
+      _touchSession?.value.isTogether == true;
 
-        if (iBumped && partnerBumped) {
-          final time1 = mergeTimes[myRole]!;
-          final time2 = mergeTimes[partnerRole]!;
-          final diff = (time1 - time2).abs();
-          debugPrint('[SoulMergeScreen] Time diff between bumps: ${diff}ms');
-          if (diff < 1500) {
-            _triggerMerge();
-          }
-        }
-      });
+  void _onTouchStateChanged() {
+    if (!mounted || !isScreenActive || !_scopeIsCurrent) return;
+    final touch = _touchSession?.value;
+    if (touch == null) return;
+    setState(() {
+      _iHaveBumped = touch.isSelfReady;
+      _partnerHasBumped = touch.isPartnerReady;
+      if (!touch.isTogether ||
+          (_activeTouchPairId != null && _activeTouchPairId != touch.pairId)) {
+        _resetMergeEffects();
+      }
     });
+    if (touch.isTogether && !_isMerged) unawaited(_triggerMerge());
+  }
+
+  void _resetMergeEffects() {
+    _isMerged = false;
+    _activeTouchPairId = null;
+    _touchCascadeKey.currentState?.resetConnection(
+      holding: isScreenActive && _touchSession?.value.isHolding == true,
+    );
+    _celebrationPlayed = false;
+    _mergeGeneration++;
+    _explosionGeneration++;
+    _explosionTimer?.cancel();
+    _explosionTimer = null;
+    _clearMemoryEffects();
   }
 
   void _unbindRealtimeListeners() {
     _realtimeBound = false;
-    _mergeTimesSub?.cancel();
-    _mergeTimesSub = null;
+    final touchSession = _touchSession;
+    _touchSession = null;
+    touchSession?.removeListener(_onTouchStateChanged);
+    touchSession?.close();
+    _iHaveBumped = false;
+    _partnerHasBumped = false;
     _messagesSub?.cancel();
     _messagesSub = null;
     _interactiveEventsSub?.cancel();
@@ -313,14 +317,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _pinnedMessagesSub = null;
   }
 
-  void _handleLocalBump() {
-    if (_isMerged) return;
-    debugPrint('[SoulMergeScreen] _handleLocalBump triggered (bump or tap)');
-    _mergeService.reportBump();
-    HapticFeedback.mediumImpact();
-    setState(() => _heartPulse++);
-  }
-
   void _startTouchHolding() {
     _touchCascadeKey.currentState?.startHolding(connected: _isMerged);
   }
@@ -331,7 +327,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       if (!mounted || !_scopeIsCurrent) return;
       if (_houseId != null && _houseId!.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
-        final myRole = prefs.getString('il_role') ?? 'user1';
+        final myRole = prefs.getString('il_role')?.trim() == 'user2'
+            ? 'user2'
+            : 'user1';
         final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
 
         final defaultMyName = myRole == 'user2'
@@ -366,47 +364,46 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           _showHeartNotif = showNotif;
         });
 
-        final settings = await HouseService().getHouseSettings(_houseId!);
+        final names = await _mergeService.loadSoulNames(_houseId!);
         if (!mounted || !_scopeIsCurrent) return;
-        if (settings != null) {
-          final myNameKey = myRole == 'user2' ? 'nameU2' : 'nameU1';
-          final myCustomName = settings[myNameKey]?.toString().trim() ?? '';
-          if (myCustomName.isNotEmpty) {
-            setState(() {
-              _myName = myCustomName;
-            });
-          }
-
-          final partnerNameKey = partnerRole == 'user2' ? 'nameU2' : 'nameU1';
-          final name = settings[partnerNameKey]?.toString().trim() ?? '';
-          if (name.isNotEmpty) {
-            setState(() {
-              _partnerName = name;
-            });
-          }
-        }
-        _sendOverlaySyncPayload();
+        final myCustomName = names[myRole] ?? '';
+        final partnerCustomName = names[partnerRole] ?? '';
+        setState(() {
+          if (myCustomName.isNotEmpty) _myName = myCustomName;
+          if (partnerCustomName.isNotEmpty) _partnerName = partnerCustomName;
+        });
+        unawaited(_refreshOverlayState());
       }
     } catch (e) {
       debugPrint('[SoulMergeScreen] _initUserInfo error: $e');
     }
   }
 
-  void _sendManualNudgeNotification() async {
-    if (_houseId == null || _houseId!.isEmpty) return;
+  Future<void> _sendManualNudgeNotification() async {
+    final houseId = _houseId;
+    if (houseId == null || houseId.isEmpty || !_scopeIsCurrent) return;
 
-    await NotificationService().sendPartnerNotification(
-      houseId: _houseId!,
-      title: L10nService().format('p4_soul_nudge_notification_title', {
-        'name': _myName,
-      }),
-      body: L10nService().format('p4_soul_nudge_notification_body', {
-        'name': _myName,
-      }),
-      data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
-    );
+    try {
+      await NotificationService().sendPartnerNotification(
+        houseId: houseId,
+        title: L10nService().format('p4_soul_nudge_notification_title', {
+          'name': _myName,
+        }),
+        body: L10nService().format('p4_soul_nudge_notification_body', {
+          'name': _myName,
+        }),
+        data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
+      );
+    } catch (error) {
+      // Chạm tim vẫn phản hồi local khi mạng/API lỗi; không để Future tự do
+      // đẩy lỗi lên zone toàn app hoặc báo nhầm là đã gửi thành công.
+      debugPrint(
+        '[SoulMergeScreen] Nudge notification failed: ${error.runtimeType}',
+      );
+      return;
+    }
 
-    if (mounted) {
+    if (mounted && isScreenActive && _scopeIsCurrent && _houseId == houseId) {
       ScaffoldMessenger.of(context).showSnackBar(
         SLSnackBar(
           content: Text(
@@ -498,39 +495,42 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     }
   }
 
-  void _onTapDown(Offset globalPosition) {
+  void _onTapDown() {
+    final session = _touchSession;
+    if (!isScreenActive || !_scopeIsCurrent || session == null) return;
+    if (session.value.isHolding) return;
     _interactiveScaleNotifier.value = 0.9;
     _startTouchHolding();
-    _handleLocalBump();
+    session.press();
+    HapticFeedback.mediumImpact();
+    setState(() => _heartPulse++);
 
     final now = DateTime.now();
     if (_showHeartNotif &&
         (_lastManualNudgeTime == null ||
             now.difference(_lastManualNudgeTime!).inMinutes >= 10)) {
       _lastManualNudgeTime = now;
-      _sendManualNudgeNotification();
-    }
-
-    if (_memoriesData.isNotEmpty) {
-      final randomItem = _memoriesData[_random.nextInt(_memoriesData.length)];
-      if (randomItem['url'] != null && randomItem['url']!.isNotEmpty) {
-        _mergeService.sendInteractiveEvent(
-          type: 'photo_shot',
-          url: randomItem['url'],
-          x: globalPosition.dx,
-          y: globalPosition.dy,
-        );
-        _spawnPhotoExplosion(
-          specificItem: randomItem,
-          specificPosition: Offset(globalPosition.dx, globalPosition.dy - 100),
-        );
-      }
+      unawaited(_sendManualNudgeNotification());
     }
   }
 
   void _onTapUp() {
+    _touchPointer = null;
     _interactiveScaleNotifier.value = 1.0;
     _touchCascadeKey.currentState?.releaseHolding();
+    _touchSession?.release();
+    if (mounted) setState(_resetMergeEffects);
+  }
+
+  void _onTouchPointerDown(PointerDownEvent event) {
+    // Hai ngón trên cùng máy vẫn chỉ là một người đang giữ.
+    if (_touchPointer != null) return;
+    _touchPointer = event.pointer;
+    _onTapDown();
+  }
+
+  void _onTouchPointerUp(PointerEvent event) {
+    if (_touchPointer == event.pointer) _onTapUp();
   }
 
   void _onTapCancel() {
@@ -562,159 +562,94 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     return Colors.white70;
   }
 
-  Future<List<Map<String, String>>> _fetchMemoriesData() async {
-    try {
-      final houseId = await _mergeService.getCurrentHouseId();
-      if (houseId == null || houseId.isEmpty) return const [];
-
-      final memoriesSnap = await FirebaseFirestore.instance
-          .collection('houses')
-          .doc(houseId)
-          .collection('album')
-          .orderBy('ts', descending: true)
-          .limit(15)
-          .get();
-
-      final diarySnap = await FirebaseFirestore.instance
-          .collection('houses')
-          .doc(houseId)
-          .collection('diaries')
-          .orderBy('ts', descending: true)
-          .limit(15)
-          .get();
-
-      final List<Map<String, String>> items = [];
-      final seenPhotoUrls = <String>{};
-      final seenDiaryTexts = <String>{};
-
-      for (var doc in memoriesSnap.docs) {
-        final val = doc.data();
-        final imageUrl =
-            (val['url'] ?? val['imageUrl'] ?? val['thumbUrl'] ?? '')
-                .toString()
-                .trim();
-        final tsRaw = val['timestamp'] ?? val['ts'];
-        String dateStr = '';
-        if (tsRaw is int) {
-          final dt = DateTime.fromMillisecondsSinceEpoch(tsRaw);
-          dateStr =
-              '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
-        }
-        final imageKey = imageUrl.split('?').first.toLowerCase();
-        if (imageUrl.isNotEmpty && seenPhotoUrls.add(imageKey)) {
-          items.add({
-            'url': imageUrl,
-            'text': '',
-            'type': 'photo',
-            'mood': '💖',
-            'dateStr': dateStr,
-          });
-        }
-      }
-
-      for (var doc in diarySnap.docs) {
-        final val = doc.data();
-        final post = DiaryPost.fromJson(doc.id, val);
-        final dt = post.timestamp;
-        final dateStr =
-            '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
-
-        final postImageUrl = post.imageUrl.trim();
-        final postImageKey = postImageUrl.split('?').first.toLowerCase();
-        if (postImageUrl.isNotEmpty && seenPhotoUrls.add(postImageKey)) {
-          items.add({
-            'url': postImageUrl,
-            'text': post.content,
-            'type': 'photo',
-            'mood': post.mood,
-            'dateStr': dateStr,
-          });
-        } else if (post.content.trim().isNotEmpty &&
-            seenDiaryTexts.add('${dateStr}|${post.content.trim()}')) {
-          items.add({
-            'url': '',
-            'text': post.content,
-            'type': 'text',
-            'mood': post.mood,
-            'dateStr': dateStr,
-          });
-        }
-      }
-
-      if (items.isEmpty) {
-        items.add({
-          'url': '',
-          'text': L10nService().translate('p4_soul_memory_fallback_one'),
-          'type': 'text',
-          'mood': '💖',
-          'dateStr': '',
-        });
-        items.add({
-          'url': '',
-          'text': L10nService().translate('p4_soul_memory_fallback_two'),
-          'type': 'text',
-          'mood': '🥰',
-          'dateStr': '',
-        });
-      }
-
-      return items;
-    } catch (e) {
-      debugPrint('[SoulMergeScreen] _fetchMemoriesData error: $e');
-      return const [];
-    }
+  Future<List<SoulMergeMemory>> _loadMemoriesOnce() {
+    if (_memoriesData.isNotEmpty) return Future.value(_memoriesData);
+    return _memoriesLoad ??= _fetchMemoriesData().then((data) {
+      // Một lần mở màn chỉ dùng một Future/catalog. Khi kết nối đôi xảy ra,
+      // không đọc lại Nhật ký giữa lúc đang chạy hiệu ứng ảnh.
+      return data;
+    });
   }
 
-  void _triggerMerge() async {
-    if (_isMerged) return;
+  Future<List<SoulMergeMemory>> _fetchMemoriesData() async {
+    final houseId = _houseId;
+    final uid = _screenOwnerUid;
+    if (houseId == null || uid == null || !_scopeIsCurrent) return const [];
+    final data = await _memoryService.load(uid: uid, houseId: houseId);
+    return mounted && _scopeIsCurrent && _houseId == houseId ? data : const [];
+  }
+
+  Future<void> _triggerMerge() async {
+    if (_isMerged || !_bothAreTouching) return;
+    final generation = ++_mergeGeneration;
+    final pairId = _touchSession!.value.pairId;
     debugPrint('[SoulMergeScreen] Merging triggered!');
     _touchCascadeKey.currentState?.completeConnection();
     setState(() {
       _isMerged = true;
+      _activeTouchPairId = pairId;
     });
-    _bumpDetector.stop();
     HapticFeedback.heavyImpact();
     Future.delayed(const Duration(milliseconds: 200), () {
-      HapticFeedback.heavyImpact();
+      if (_bothAreTouching && generation == _mergeGeneration) {
+        HapticFeedback.heavyImpact();
+      }
     });
     Future.delayed(const Duration(milliseconds: 400), () {
-      HapticFeedback.heavyImpact();
+      if (_bothAreTouching && generation == _mergeGeneration) {
+        HapticFeedback.heavyImpact();
+      }
     });
 
     // Fetch memory fragments and start explosion loop
-    final data = await _fetchMemoriesData();
-    if (mounted) {
-      setState(() {
-        _memoriesData = data;
-      });
+    try {
+      final data = _memoriesData.isNotEmpty
+          ? _memoriesData
+          : await _loadMemoriesOnce();
+      if (!_bothAreTouching ||
+          generation != _mergeGeneration ||
+          _touchSession?.value.pairId != pairId) {
+        return;
+      }
+      if (!listEquals(_memoriesData, data)) {
+        setState(() => _memoriesData = data);
+      }
       if (_memoriesData.isNotEmpty) {
         _startPhotoExplosions();
       }
+    } catch (error) {
+      debugPrint(
+        '[SoulMergeScreen] Memory celebration failed: ${error.runtimeType}',
+      );
     }
   }
 
   void _startPhotoExplosions() {
     _explosionTimer?.cancel();
     _explosionTimer = null;
-    if (_celebrationPlayed || !isScreenActive || _memoriesData.isEmpty) return;
+    if (_celebrationPlayed || !_bothAreTouching || _memoriesData.isEmpty) {
+      return;
+    }
     _celebrationPlayed = true;
     final generation = ++_explosionGeneration;
     var index = 0;
+    final photos = _memoriesData.where((item) => item.hasPhoto).toList();
+    final items = (photos.isEmpty ? _memoriesData : photos).take(3).toList();
 
     void emitNext() {
-      if (!mounted || !isScreenActive || generation != _explosionGeneration) {
+      if (!_bothAreTouching || generation != _explosionGeneration) {
         _explosionTimer = null;
         return;
       }
-      final total = math.min(3, _memoriesData.length);
+      final total = items.length;
       if (index >= total) {
         _explosionTimer = null;
         return;
       }
-      _spawnPhotoExplosion(specificItem: _memoriesData[index], slot: index);
+      _spawnPhotoExplosion(specificItem: items[index], slot: index);
       index++;
       if (index < total) {
-        _explosionTimer = Timer(const Duration(milliseconds: 520), emitNext);
+        _explosionTimer = Timer(const Duration(milliseconds: 850), emitNext);
       } else {
         _explosionTimer = null;
       }
@@ -723,91 +658,104 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     emitNext();
   }
 
+  Size _memoryOverlaySize() {
+    final media = MediaQuery.of(context);
+    final top = media.padding.top + SoulMergeHeader.contentHeight(context) + 8;
+    final available = math.max(
+      0.0,
+      media.size.height -
+          media.viewInsets.bottom -
+          top -
+          media.padding.bottom -
+          84,
+    );
+    return Size(
+      media.size.width,
+      math.min((media.size.height * .48).clamp(300.0, 400.0), available),
+    );
+  }
+
+  void _clearMemoryEffects() {
+    for (final timer in _photoExpiryTimers.values) {
+      timer.cancel();
+    }
+    _photoExpiryTimers.clear();
+    _activePhotos.clear();
+  }
+
+  void _clearFloatingMessages() {
+    for (final timer in _floatingMessageTimers.values) {
+      timer.cancel();
+    }
+    _floatingMessageTimers.clear();
+    for (final timer in _pendingFloatingMessageTimers) {
+      timer.cancel();
+    }
+    _pendingFloatingMessageTimers.clear();
+    _floatingMessages.clear();
+  }
+
   void _spawnPhotoExplosion({
-    Map<String, String>? specificItem,
+    SoulMergeMemory? specificItem,
     Offset? specificPosition,
     int? slot,
   }) {
-    if (!isScreenActive) return;
+    if (!_bothAreTouching) return;
     if (_memoriesData.isEmpty && specificItem == null) return;
-    final randomItem =
-        specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
-
-    final size = MediaQuery.of(context).size;
-    final safeTop = MediaQuery.paddingOf(context).top;
-    final overlayTop = safeTop + SoulMergeHeader.contentHeight(context) + 8;
-    final overlayHeight = (size.height * .42).clamp(260.0, 360.0);
-    final slotX = <double>[size.width * .5 - 70, 18, size.width - 158];
-    final slotY = <double>[10, 42, 72];
-    final double x = slot != null && slot < slotX.length
-        ? slotX[slot]
-        : 20 + _random.nextDouble() * math.max(1, size.width - 160);
-    final double y = slot != null && slot < slotY.length
-        ? slotY[slot]
-        : 18 + _random.nextDouble() * math.max(1, overlayHeight - 190);
-    final position = Offset(
-      (specificPosition?.dx ?? x)
-          .clamp(12, math.max(12, size.width - 150))
-          .toDouble(),
-      (specificPosition == null ? y : specificPosition.dy - overlayTop)
-          .clamp(8, math.max(8, overlayHeight - 188))
-          .toDouble(),
-    );
-
+    final memory = specificItem ?? _memoriesData.first;
+    if (memory.houseId != _houseId) return;
+    final available = _memoryOverlaySize();
+    if (available.height < 180) return;
+    final card = SoulMergeMemoryLayout.cardSize(available);
+    final top =
+        MediaQuery.paddingOf(context).top +
+        SoulMergeHeader.contentHeight(context) +
+        8;
+    final index = slot ?? (_activePhotos.length % 3);
+    final anchor = specificPosition == null
+        ? null
+        : Offset(specificPosition.dx, specificPosition.dy - top);
     final photo = ExplodingPhoto(
-      url: randomItem['url'] ?? '',
-      text: randomItem['text'] ?? '',
-      type: randomItem['type'] ?? 'photo',
-      mood: randomItem['mood'] ?? '💖',
-      dateStr: randomItem['dateStr'] ?? '',
-      position: position,
-      angle: (_random.nextDouble() - 0.5) * 0.4, // Slight rotation
-      targetScale: 0.42 + _random.nextDouble() * 0.06,
+      memory: memory,
+      size: card,
+      position: SoulMergeMemoryLayout.position(
+        available,
+        card,
+        index,
+        anchor: anchor,
+      ),
+      angle: [0.035, -.065, .065][index % 3],
     );
-
-    final particleId = UniqueKey();
-
     setState(() {
+      // Chạm dồn cũng chỉ giữ tối đa ba thẻ và ba timer.
+      if (_activePhotos.length >= 3) {
+        final oldest = _activePhotos.removeAt(0);
+        _photoExpiryTimers.remove(oldest.id)?.cancel();
+      }
       _activePhotos.add(photo);
-      _activeParticleExplosions.add((position: position, id: particleId));
     });
-
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (mounted) {
-        setState(() {
-          _activeParticleExplosions.removeWhere(
-            (item) => item.id == particleId,
-          );
-        });
-      }
-    });
-
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        setState(() {
-          _activePhotos.removeWhere((p) => p.id == photo.id);
-        });
-      }
+    _photoExpiryTimers[photo.id] = Timer(ExplodingPhotoWidget.duration, () {
+      _photoExpiryTimers.remove(photo.id);
+      if (!mounted) return;
+      setState(() => _activePhotos.removeWhere((item) => item.id == photo.id));
     });
   }
 
   @override
   void onScreenActivityChanged(bool active) {
     if (!active) {
-      _bumpDetector.stop();
+      _onTapCancel();
       _explosionTimer?.cancel();
       _explosionTimer = null;
       _explosionGeneration++;
+      _clearMemoryEffects();
+      _clearFloatingMessages();
+      _handledInteractiveEventIds.clear();
       _unbindRealtimeListeners();
       return;
     }
     _bindRealtimeListeners();
-    if (!_isMerged) _bumpDetector.start();
-    if (_isMerged && _memoriesData.isNotEmpty && !_celebrationPlayed) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (isScreenActive) _startPhotoExplosions();
-      });
-    }
+    unawaited(_refreshOverlayState());
   }
 
   @override
@@ -825,13 +773,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _interactiveEventsSub?.cancel();
     _readReceiptsSub?.cancel();
     _messageOutbox.dispose();
-    _bumpDetector.stop();
     _unbindRealtimeListeners();
-    _overlayListenerSub?.cancel();
     _explosionTimer?.cancel();
     _explosionGeneration++;
+    _clearMemoryEffects();
+    _clearFloatingMessages();
+    _memoryService.dispose();
     _tempBlockTimer?.cancel();
-    unawaited(_mergeService.clearBumps());
     unawaited(_mergeService.clearChat());
     super.dispose();
   }
@@ -870,6 +818,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   @override
   Widget build(BuildContext context) {
     final colors = SoulMergeColors(context);
+    // Lấy trước Scaffold vì body đã loại viewInsets của bàn phím.
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final backgroundDecodeWidth =
+        (MediaQuery.sizeOf(context).width *
+                MediaQuery.devicePixelRatioOf(context))
+            .ceil()
+            .clamp(1, 1440)
+            .toInt();
     final photoMessages = _chatHistory.where((m) {
       final url = (m['imageUrl']?.toString() ?? '').trim();
       return url.startsWith('http://') || url.startsWith('https://');
@@ -892,27 +848,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 child: CachedNetworkImage(
                   imageUrl: _backgroundUrl,
                   fit: BoxFit.cover,
-                  memCacheWidth: 1440,
+                  memCacheWidth: backgroundDecodeWidth,
                   errorWidget: (_, _, _) => const SizedBox.shrink(),
-                  color: Colors.black.withValues(alpha: 0.18),
-                  colorBlendMode: BlendMode.darken,
                 ),
               ),
             ),
 
           if (_backgroundUrl.isNotEmpty)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: ColoredBox(color: Colors.white.withValues(alpha: .08)),
-              ),
+            const Positioned.fill(
+              child: IgnorePointer(child: SoulMergeBackgroundScrim()),
             ),
-
-          Positioned.fill(
-            child: SoulMergeTouchCascade(
-              key: _touchCascadeKey,
-              style: _activeStyle,
-            ),
-          ),
 
           // 4. Floating message bubbles
           for (final msg in _floatingMessages)
@@ -929,13 +874,17 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 constraints: const BoxConstraints(maxWidth: 860),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final showInteraction =
-                        constraints.maxHeight >= 300 &&
-                        MediaQuery.viewInsetsOf(context).bottom == 0;
+                    final showInteraction = constraints.maxHeight >= 300;
+                    final compactInteraction =
+                        keyboardVisible ||
+                        constraints.maxHeight < 440 ||
+                        _isReadingHistory ||
+                        _isViewingPinnedWindow;
                     return Column(
                       children: [
                         if (showInteraction) ...[
                           SoulMergeInteractionStrip(
+                            compact: compactInteraction,
                             scale: _interactiveScaleNotifier,
                             isMerged: _isMerged,
                             partnerName: _partnerName,
@@ -943,12 +892,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             isPartnerReady: _partnerHasBumped,
                             onAccessibleTap: () {
                               // Screen reader dùng hai lần kích hoạt để giữ/thả.
-                              if (_interactiveScaleNotifier.value < 1) {
+                              if (_touchSession?.value.isHolding == true) {
                                 _onTapUp();
                               } else {
-                                _interactiveScaleNotifier.value = .9;
-                                _startTouchHolding();
-                                _handleLocalBump();
+                                _onTapDown();
                               }
                             },
                             heartPulse: _heartPulse,
@@ -956,20 +903,30 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             photoUrls: latestPhotos
                                 .map((photo) => photo['imageUrl'].toString())
                                 .toList(growable: false),
-                            onPointerDown: (event) =>
-                                _onTapDown(event.position),
+                            onPointerDown: _onTouchPointerDown,
                             onPointerMove: (_) {},
-                            onPointerUp: (_) => _onTapUp(),
-                            onPointerCancel: (_) => _onTapCancel(),
+                            onPointerUp: _onTouchPointerUp,
+                            onPointerCancel: _onTouchPointerUp,
                           ),
                           const SizedBox(height: 10),
                         ],
-                        Expanded(child: _buildChatInputBar()),
+                        Expanded(
+                          child: _buildChatInputBar(
+                            keyboardVisible: keyboardVisible,
+                          ),
+                        ),
                       ],
                     );
                   },
                 ),
               ),
+            ),
+          ),
+
+          Positioned.fill(
+            child: SoulMergeTouchCascade(
+              key: _touchCascadeKey,
+              style: _activeStyle,
             ),
           ),
 
@@ -980,22 +937,19 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 8,
             left: 0,
             right: 0,
-            height: (MediaQuery.sizeOf(context).height * .42).clamp(
-              260.0,
-              360.0,
-            ),
-            child: IgnorePointer(
-              child: ClipRect(
-                child: Stack(
-                  children: [
-                    for (final explosion in _activeParticleExplosions)
-                      ParticleExplosionWidget(
-                        key: explosion.id,
-                        position: explosion.position,
-                      ),
-                    for (final photo in _activePhotos)
-                      ExplodingPhotoWidget(key: photo.id, photo: photo),
-                  ],
+            height: _memoryOverlaySize().height,
+            child: PrivateDiaryImageScope(
+              houseId: _houseId ?? '',
+              child: IgnorePointer(
+                child: ClipRect(
+                  child: Stack(
+                    children: [
+                      for (final photo in _activePhotos.where(
+                        (_) => isScreenActive && _scopeIsCurrent,
+                      ))
+                        ExplodingPhotoWidget(key: photo.id, photo: photo),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1038,33 +992,24 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             return;
           }
           if (event.isEmpty) return;
+          final eventId = event['id']?.toString().trim() ?? '';
+          if (eventId.isNotEmpty) {
+            if (!_handledInteractiveEventIds.add(eventId)) return;
+            // The listener can stay bound for a long session. Keep the
+            // de-duplication set bounded so it cannot become a memory leak.
+            while (_handledInteractiveEventIds.length > 64) {
+              _handledInteractiveEventIds.remove(
+                _handledInteractiveEventIds.first,
+              );
+            }
+          }
           final sender = event['sender']?.toString();
           if (sender == _myRole) return; // ignore my own
 
           final type = event['type']?.toString();
-          if (type == 'photo_shot') {
-            final url = event['url']?.toString() ?? '';
-            final x = (event['x'] as num?)?.toDouble() ?? 0.0;
-            final y = (event['y'] as num?)?.toDouble() ?? 0.0;
-
-            final pos = Offset(
-              x > 0 ? x : MediaQuery.of(context).size.width / 2,
-              y > 0 ? y : MediaQuery.of(context).size.height / 2,
-            );
-            setState(() => _heartPulse++);
-            if (url.isNotEmpty) {
-              _spawnPhotoExplosion(
-                specificItem: {
-                  'url': url,
-                  'type': 'photo',
-                  'mood': '💖',
-                  'text': '',
-                  'dateStr': '',
-                },
-                specificPosition: Offset(pos.dx, pos.dy - 100),
-              );
-            }
-          } else if (type == 'persistent_photo') {
+          // photo_shot của app cũ không được vượt điều kiện hai người giữ tay.
+          // Ảnh kỷ niệm chỉ phát từ _triggerMerge sau xác nhận phiên chạm đôi.
+          if (type == 'persistent_photo') {
             final url = event['url']?.toString() ?? '';
             if (url.isNotEmpty) {
               setState(() {
@@ -1141,16 +1086,24 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 return t > _lastSeenMsgTimestamp && !isSelf;
               }).toList();
 
-              for (int i = 0; i < unreadMsgs.length; i++) {
-                final msg = unreadMsgs[i];
+              // Lịch sử vẫn hiển thị đầy đủ trong hộp chat, nhưng chỉ cho
+              // vài lời nhắn mới bay vào màn hình để tránh dồn animation.
+              final floatingUnread = unreadMsgs.length > _maxFloatingMessages
+                  ? unreadMsgs.sublist(unreadMsgs.length - _maxFloatingMessages)
+                  : unreadMsgs;
+              for (int i = 0; i < floatingUnread.length; i++) {
+                final msg = floatingUnread[i];
                 final text = (msg['text'] ?? '').toString().trim();
                 if (text.isNotEmpty) {
                   final delayMs = i * 800; // Staggered by 800ms
-                  Future.delayed(Duration(milliseconds: delayMs), () {
+                  late final Timer timer;
+                  timer = Timer(Duration(milliseconds: delayMs), () {
+                    _pendingFloatingMessageTimers.remove(timer);
                     if (mounted && isScreenActive) {
                       _spawnFloatingMessage(text, false);
                     }
                   });
+                  _pendingFloatingMessageTimers.add(timer);
                 }
               }
 
@@ -1171,19 +1124,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     final isSelf = (sender == _myRole);
                     if (!isSelf) {
                       _spawnFloatingMessage(text, false);
-
-                      if (!kIsWeb &&
-                          defaultTargetPlatform == TargetPlatform.android) {
-                        FlutterOverlayWindow.isActive().then((active) {
-                          if (active && mounted && isScreenActive) {
-                            final payload = jsonEncode({
-                              'type': 'new_msg_preview',
-                              'text': text,
-                            });
-                            FlutterOverlayWindow.shareData(payload);
-                          }
-                        });
-                      }
                     }
                   }
                 }
@@ -1200,18 +1140,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               _latestMessagesFailed = false;
               _lastMsgTimestamp = maxTimestamp;
             });
-
-            _sendOverlaySyncPayload();
-
-            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-              FlutterOverlayWindow.isActive().then((active) {
-                if (mounted && isScreenActive && _overlayEnabled != active) {
-                  setState(() {
-                    _overlayEnabled = active;
-                  });
-                }
-              });
-            }
 
             if (wasNearBottom && !_isViewingPinnedWindow) {
               _scrollChatToBottom();
@@ -1246,6 +1174,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       return;
     }
     final position = _chatScrollController.position;
+    final readingHistory = position.pixels > 160;
+    if (_isReadingHistory != readingHistory) {
+      setState(() => _isReadingHistory = readingHistory);
+    }
     if (_isViewingPinnedWindow) {
       if (position.extentAfter < 100 &&
           position.userScrollDirection == ScrollDirection.reverse) {
@@ -1626,7 +1558,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   Future<void> _showSoulOptions() async {
     final option = await showModalBottomSheet<SoulMergeOption>(
       context: context,
-      backgroundColor: const Color(0xFFFFF8FA),
+      backgroundColor: SoulMergeColors(context).surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
@@ -1853,7 +1785,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   void _spawnFloatingMessage(String text, bool isSelf) {
-    if (!mounted) return;
+    if (!mounted || !isScreenActive || !_scopeIsCurrent) return;
+    final cleanText = text.trim();
+    if (cleanText.isEmpty) return;
     final size = MediaQuery.of(context).size;
     final double x = isSelf
         ? size.width * 0.25 + _random.nextDouble() * (size.width * 0.1)
@@ -1863,22 +1797,34 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         : size.height * 0.2 + _random.nextDouble() * 150.0;
 
     final msg = FloatingMessage(
-      text: text,
+      text: cleanText,
       isSelf: isSelf,
-      position: Offset(x, y),
+      position: Offset(
+        x.clamp(
+          16.0,
+          math.max(16.0, size.width - math.min(320.0, size.width * .78) - 16),
+        ),
+        y,
+      ),
     );
 
     setState(() {
+      if (_floatingMessages.length >= _maxFloatingMessages) {
+        final oldest = _floatingMessages.removeAt(0);
+        _floatingMessageTimers.remove(oldest.id)?.cancel();
+      }
       _floatingMessages.add(msg);
     });
 
-    Future.delayed(const Duration(milliseconds: 4000), () {
+    final expiry = Timer(const Duration(milliseconds: 4000), () {
+      _floatingMessageTimers.remove(msg.id);
       if (mounted) {
         setState(() {
           _floatingMessages.removeWhere((m) => m.id == msg.id);
         });
       }
     });
+    _floatingMessageTimers[msg.id] = expiry;
   }
 
   Future<bool> _checkSpamAndMaybeBlock() async {
@@ -1896,6 +1842,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (now < blockUntil) {
       final remainingMs = blockUntil - now;
       final remainingMin = (remainingMs / 60000).ceil();
+      if (!mounted) return true;
       setState(() {
         _spamWarning = L10nService().format('p4_soul_spam_minutes', {
           'count': remainingMin,
@@ -1958,6 +1905,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         } catch (e) {
           debugPrint('[SpamCheck] Error writing prefs: $e');
         }
+        if (!mounted) return true;
         setState(() {
           _spamWarning = L10nService().translate('p4_soul_spam_hour');
           _tempBlockSecondsLeft = 0;
@@ -2151,7 +2099,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             : null;
       }
     });
-    _sendOverlaySyncPayload();
   }
 
   Future<void> _performMessageAction(
@@ -2439,9 +2386,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     return '$hour:$minute';
   }
 
-  Widget _buildChatInputBar() {
+  Widget _buildChatInputBar({bool keyboardVisible = false}) {
     return SoulMergeChatBar(
       chatHistory: _filteredChatHistory,
+      keyboardVisible: keyboardVisible,
       myRole: _myRole,
       partnerName: _partnerName,
       spamWarning: _spamWarning,
@@ -2502,105 +2450,71 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     );
   }
 
-  void _sendOverlaySyncPayload() {
-    if (!isScreenActive ||
-        kIsWeb ||
-        defaultTargetPlatform != TargetPlatform.android) {
-      return;
-    }
-    FlutterOverlayWindow.isActive().then((active) {
-      if (!active || !mounted || !isScreenActive) return;
-      final credentialsPayload = jsonEncode({
-        'type': 'sync_credentials',
-        'houseId': _houseId ?? '',
-        'role': _myRole,
-        'partnerName': _partnerName,
-      });
-      FlutterOverlayWindow.shareData(credentialsPayload);
-
-      final chatPayload = jsonEncode({
-        'type': 'update_chat',
-        'history': _chatHistory.reversed
-            .take(SoulMessageHistory.pageSize)
-            .toList()
-            .reversed
-            .toList(),
-        'myRole': _myRole,
-        'partnerName': _partnerName,
-      });
-      FlutterOverlayWindow.shareData(chatPayload);
-
-      try {
-        final payloadText = jsonEncode({
-          'houseId': _houseId ?? '',
-          'role': _myRole,
-          'partnerName': _partnerName,
-        });
-        getApplicationDocumentsDirectory().then((dir) {
-          final file = File('${dir.path}/overlay_sync.json');
-          file.writeAsString(payloadText);
-        });
-      } catch (e) {
-        debugPrint('[SoulMergeScreen] File IO save error: $e');
+  Future<void> _refreshOverlayState() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android || _overlayBusy) return;
+    final revision = _overlayRevision;
+    try {
+      final active = await FlutterOverlayWindow.isActive();
+      if (mounted && _scopeIsCurrent && revision == _overlayRevision && !_overlayBusy) {
+        setState(() => _overlayEnabled = active);
       }
-    });
+    } catch (error) {
+      debugPrint('[SoulMerge] Overlay state: ${error.runtimeType}');
+    }
   }
 
   Future<void> _toggleOverlaySetting() async {
-    final granted = await FlutterOverlayWindow.isPermissionGranted();
-    if (!_overlayEnabled) {
-      if (!granted) {
-        final reqResult = await FlutterOverlayWindow.requestPermission();
-        if (reqResult != true) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SLSnackBar(
-                content: Text(context.tr('p4_soul_overlay_permission')),
-                backgroundColor: Colors.redAccent,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+    if (_overlayBusy || kIsWeb || defaultTargetPlatform != TargetPlatform.android ||
+        !_scopeIsCurrent) {
+      return;
+    }
+    final uid = _screenOwnerUid;
+    final houseId = _houseId;
+    if (uid == null || houseId == null || houseId.isEmpty) return;
+    bool current() => mounted && _scopeIsCurrent && _houseId == houseId;
+    final enabling = !_overlayEnabled;
+    _overlayBusy = true;
+    _overlayRevision++;
+    try {
+      if (enabling) {
+        if (!await FlutterOverlayWindow.isPermissionGranted()) {
+          final granted = await FlutterOverlayWindow.requestPermission();
+          if (!mounted || !current()) return;
+          if (granted != true) {
+            SLNotice.showError(context, context.tr('p4_soul_overlay_permission'));
+            return;
           }
+        }
+        if (!current() || await _mergeService.getCurrentHouseId() != houseId || !current()) return;
+        await SoulBubbleOverlay.enable(uid, houseId);
+        if (!current()) {
+          await SoulBubbleOverlay.close();
           return;
         }
+        await SoulBubbleOverlay.show();
+      } else {
+        await SoulBubbleOverlay.close();
       }
-
-      await FlutterOverlayWindow.showOverlay(
-        enableDrag: true,
-        height: 80,
-        width: 80,
-        alignment: OverlayAlignment.centerRight,
-        overlayTitle: L10nService().translate('p4_soul_overlay_title'),
-        overlayContent: L10nService().translate('p4_soul_overlay_content'),
-      );
-      _sendOverlaySyncPayload();
-
-      if (mounted) {
-        setState(() {
-          _overlayEnabled = true;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(
-            content: Text(context.tr('p4_soul_overlay_enabled')),
-            backgroundColor: const Color(0xFFFF4F93),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      if (!mounted || !current()) return;
+      setState(() => _overlayEnabled = enabling);
+      ScaffoldMessenger.of(context).showSnackBar(SLSnackBar(
+        content: Text(context.tr(enabling ? 'p4_soul_overlay_enabled' : 'p4_soul_overlay_disabled')),
+        backgroundColor: enabling ? const Color(0xFFFF4F93) : Colors.grey.shade800,
+        behavior: SnackBarBehavior.floating,
+      ));
+    } catch (error) {
+      if (enabling) {
+        try {
+          await SoulBubbleOverlay.close();
+        } catch (_) {}
       }
-    } else {
-      await FlutterOverlayWindow.closeOverlay();
-      if (mounted) {
-        setState(() {
-          _overlayEnabled = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SLSnackBar(
-            content: Text(context.tr('p4_soul_overlay_disabled')),
-            backgroundColor: Colors.grey.shade800,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      if (mounted && current()) {
+        setState(() => _overlayEnabled = false);
+        SLNotice.showError(context, context.tr('core_retry'));
       }
+      debugPrint('[SoulMerge] Overlay toggle: ${error.runtimeType}');
+    } finally {
+      _overlayBusy = false;
     }
   }
 
@@ -2802,6 +2716,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             'soul_merge_show_heart_notif',
                             val,
                           );
+                          if (!context.mounted || !mounted) return;
                           setSheetState(() {
                             _showHeartNotif = val;
                           });

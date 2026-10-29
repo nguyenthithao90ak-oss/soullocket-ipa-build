@@ -19,7 +19,6 @@ import '../../core/sl_theme.dart';
 import '../../core/sl_route.dart';
 import 'widgets/keepsake_design.dart';
 import '../../utils/services/drawing_studio_service.dart';
-import '../../utils/app_error_mapper.dart';
 
 part 'drawing_studio/models/drawing_models.dart';
 part 'drawing_studio/painters/drawing_painters.dart';
@@ -47,6 +46,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   static const int _maxGalleryItems = 20;
 
   final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey _artworkKey = GlobalKey();
   final _CanvasRepaintNotifier _canvasRepaintNotifier =
       _CanvasRepaintNotifier();
   final List<_DrawStroke> _strokes = [];
@@ -176,10 +176,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       ..showSnackBar(
         SLSnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
-  }
-
-  String _errorText(Object error, {required String fallback}) {
-    return AppErrorMapper.resolve(error, fallbackMessage: fallback).message;
   }
 
   Offset? _toCanvasPoint(Offset globalPosition) {
@@ -328,14 +324,15 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       MediaQuery.devicePixelRatioOf(context) * 1.8,
       3.0,
     );
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await WidgetsBinding.instance.endOfFrame;
     final boundary =
-        _canvasKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+        _artworkKey.currentContext?.findRenderObject()
+            as _StudioArtworkRenderBoundary?;
     if (boundary == null) {
       throw StateError(errNoCanvas);
     }
 
-    final image = await boundary.toImage(pixelRatio: pixelRatio);
+    final image = await boundary.toArtworkImage(pixelRatio: pixelRatio);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
 
@@ -547,7 +544,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final successMsg = context.tr('util_luvokhovtr_c1e919');
-    final fallbackMsg = context.tr('util_vuilngthli_abc123');
 
     setState(() => _isSaving = true);
     try {
@@ -561,9 +557,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_gallery_failed', {
-          'error': _errorText(error, fallback: fallbackMsg),
-        }),
+        L10nService().format('util_drawing_save_gallery_failed'),
       );
     } finally {
       if (mounted) {
@@ -578,7 +572,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final successMsg = context.tr('util_ctvinvlust_ce2f9d');
-    final fallbackMsg = context.tr('util_vuilngthli_abc123');
 
     setState(() => _isSavingSticker = true);
     try {
@@ -592,9 +585,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_create_sticker_failed', {
-          'error': _errorText(error, fallback: fallbackMsg),
-        }),
+        L10nService().format('util_drawing_create_sticker_failed'),
       );
     } finally {
       if (mounted) {
@@ -609,7 +600,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final successMsg = context.tr('util_lustickerv_944eed');
-    final fallbackMsg = context.tr('util_check_photo_permission_abc123');
 
     setState(() => _isSavingToDevice = true);
     try {
@@ -621,9 +611,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_sticker_failed', {
-          'error': _errorText(error, fallback: fallbackMsg),
-        }),
+        L10nService().format('util_drawing_save_sticker_failed'),
       );
     } finally {
       if (mounted) {
@@ -638,7 +626,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final successMsg = context.tr('util_lunhvmy_2a4557');
-    final fallbackMsg = context.tr('util_check_photo_permission_abc123');
 
     setState(() => _isSavingToDevice = true);
     try {
@@ -647,9 +634,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_device_failed', {
-          'error': _errorText(error, fallback: fallbackMsg),
-        }),
+        L10nService().format('util_drawing_save_device_failed'),
       );
     } finally {
       if (mounted) {
@@ -664,7 +649,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final successMsg = context.tr('util_lunhtkhovv_cc546c');
-    final fallbackMsg = context.tr('util_vuilngthli_abc123');
 
     setState(() => _activeGalleryActionId = item.id);
     try {
@@ -672,9 +656,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_image_failed', {
-          'error': _errorText(error, fallback: fallbackMsg),
-        }),
+        L10nService().format('util_drawing_save_image_failed'),
       );
     } finally {
       if (mounted) {
@@ -689,7 +671,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     }
 
     final successMsg = context.tr('util_xanhkhikho_4a5be7');
-    final fallbackMsg = context.tr('util_vuilngthli_abc123');
 
     setState(() => _activeGalleryActionId = item.id);
     try {
@@ -704,9 +685,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return true;
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_delete_image_failed', {
-          'error': _errorText(error, fallback: fallbackMsg),
-        }),
+        L10nService().format('util_drawing_delete_image_failed'),
       );
       return false;
     } finally {
@@ -1308,10 +1287,6 @@ class _DrawingStudioPreviewScreenState
       );
   }
 
-  String _errorText(Object error, {required String fallback}) {
-    return AppErrorMapper.resolve(error, fallbackMessage: fallback).message;
-  }
-
   Future<void> _handleSaveToDevice() async {
     if (_isSaving || !widget.canSaveToDevice) {
       return;
@@ -1325,12 +1300,7 @@ class _DrawingStudioPreviewScreenState
         return;
       }
       _showSnack(
-        L10nService().format('util_drawing_save_device_failed', {
-          'error': _errorText(
-            error,
-            fallback: context.tr('util_vuilngthli_abc123'),
-          ),
-        }),
+        L10nService().format('util_drawing_save_device_failed'),
       );
     } finally {
       if (mounted) {
@@ -1358,12 +1328,7 @@ class _DrawingStudioPreviewScreenState
         return;
       }
       _showSnack(
-        L10nService().format('util_drawing_delete_image_failed', {
-          'error': _errorText(
-            error,
-            fallback: context.tr('util_vuilngthli_abc123'),
-          ),
-        }),
+        L10nService().format('util_drawing_delete_image_failed'),
       );
     } finally {
       if (mounted) {

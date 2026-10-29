@@ -6,6 +6,11 @@ import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../utils/house_money_currency.dart';
 import '../../utils/finance_category.dart';
+import '../../core/service_locator.dart';
+import '../../utils/services/finance/finance_d1_client.dart';
+import '../../utils/services/finance/finance_ledger_controller.dart';
+import '../../utils/services/market_service.dart';
+import '../../utils/calendar/calendar_time_zone.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,7 +36,7 @@ class FinanceScreen extends StatefulWidget {
   State<FinanceScreen> createState() => _FinanceScreenState();
 }
 
-class _FinanceScreenState extends State<FinanceScreen> {
+class _FinanceScreenState extends State<FinanceScreen> with WidgetsBindingObserver {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
@@ -56,7 +61,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
   Map<String, dynamic>? _savingsGoal;
   List<Map<String, dynamic>> _allTransactions = [];
   String _transactionSignature = '';
-  late Stream<DatabaseEvent> _budgetStream;
+  late Stream<Map<String, dynamic>> _budgetStream;
+  FinanceLedgerController? _ledger;
+  late final FinanceD1Client _financeD1 = locator<FinanceD1Client>();
+  StreamSubscription<User?>? _authSub;
+  String? _financeUid;
+  String? _pendingCreateId, _pendingCreateSignature;
+  Map<String, dynamic>? _pendingCreateRecord;
   StreamSubscription<DatabaseEvent>? _budgetPlanSub;
   StreamSubscription<DatabaseEvent>? _savingsGoalSub;
 
@@ -70,7 +81,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _bindHouse();
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (mounted && user?.uid != _financeUid) setState(_bindHouse);
+    });
   }
 
   @override
@@ -81,6 +96,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   void _bindHouse() {
     final generation = ++_houseGeneration;
+    _financeUid = FirebaseAuth.instance.currentUser?.uid;
+    _pendingCreateId = _pendingCreateSignature = null;
+    _pendingCreateRecord = null;
     final houseId = widget.houseId;
     _saving = false;
     _houseCurrency = '';
@@ -121,12 +139,43 @@ class _FinanceScreenState extends State<FinanceScreen> {
     return code;
   }
 
-  Stream<DatabaseEvent> _watchBudget() => withInitialEventTimeout(
-    _dbRef.child('houses/${widget.houseId}/budget').limitToLast(200).onValue,
-  );
+  Stream<Map<String, dynamic>> _watchBudget() {
+    _ledger?.dispose();
+    final generation = _houseGeneration, house = widget.houseId, uid = _financeUid;
+    final ledger = FinanceLedgerController(
+      backends: _dbRef.child('houses/$house/settings/dataBackends/finance').onValue
+          .map((event) => event.snapshot.value?.toString()),
+      revisions: () => _dbRef.child('houses/$house/metadata/last_updated_finance').onValue
+          .map((event) => event.snapshot.value),
+      legacy: () => withInitialEventTimeout(
+        _dbRef.child('houses/$house/budget').limitToLast(200).onValue,
+      ).map((event) => event.snapshot.value is Map
+          ? Map<String, dynamic>.from(event.snapshot.value as Map) : <String, dynamic>{}),
+      loadD1: () => _financeD1.list(house),
+      isCurrent: () => _isCurrentWrite(generation, uid),
+    );
+    _ledger = ledger;
+    return ledger.stream;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _ledger?.useD1 == true) {
+      unawaited(_ledger!.refresh());
+    }
+  }
+
+  Future<void> _signalFinanceChanged(String house) async {
+    try {
+      await _dbRef.child('houses/$house/metadata/last_updated_finance')
+          .set(_dbRef.push().key);
+    } catch (_) {
+      // D1 đã commit; lần mở/resume luôn tải lại để phục hồi tín hiệu bị mất.
+    }
+  }
 
   bool _isCurrentWrite(int generation, String? uid) =>
-      mounted &&
+      mounted && uid != null &&
       generation == _houseGeneration &&
       FirebaseAuth.instance.currentUser?.uid == uid;
 
@@ -333,6 +382,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final category = _category;
     _saving = true;
     try {
+      if (_ledger?.ready != true) throw StateError('finance_backend_not_ready');
+      final useD1 = _ledger!.useD1;
+      if (!useD1) {
       final currentSnap = await _dbRef
           .child('houses/$houseId/budget')
           .limitToFirst(101)
@@ -344,10 +396,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
         SLToast.show(context, context.tr('p8_finance_transaction_limit'));
         return;
       }
-      await _ensureHouseCurrency(generation, uid);
-      if (!_isCurrentWrite(generation, uid)) return;
+      }
+      final currency = await _ensureHouseCurrency(generation, uid);
+      if (!_isCurrentWrite(generation, uid) || _ledger?.ready != true || _ledger?.useD1 != useD1) return;
       final now = DateTime.now();
-      await _dbRef.child('houses/$houseId/budget').push().set({
+      final record = <String, dynamic>{
         'from': author,
         'amount': amount,
         'type': type,
@@ -355,7 +408,27 @@ class _FinanceScreenState extends State<FinanceScreen> {
         'note': noteText.trim(),
         'ts': now.millisecondsSinceEpoch,
         'time': LocaleDateFormat.dayMonthTime(now),
-      });
+      };
+      if (useD1) {
+        final signature = '$houseId|$uid|$author|$amount|$type|$category|$noteText|$currency';
+        if (_pendingCreateSignature != signature) {
+          final timezone = MarketService.instance.preferences.timeZoneId;
+          final civil = CalendarTimeZone.fromMilliseconds(now.millisecondsSinceEpoch, timezone);
+          _pendingCreateId = _dbRef.push().key!;
+          _pendingCreateSignature = signature;
+          _pendingCreateRecord = {...record, 'currency': currency, 'timezone': timezone,
+            'date': DateFormat('yyyy-MM-dd').format(civil)};
+        }
+        // Giữ đúng ID/payload sau timeout: bấm Lưu lại không tạo giao dịch thứ hai.
+        await _financeD1.create(houseId, _pendingCreateId!, _pendingCreateRecord!);
+        if (!_isCurrentWrite(generation, uid)) return;
+        _pendingCreateId = _pendingCreateSignature = null;
+        _pendingCreateRecord = null;
+        unawaited(_signalFinanceChanged(houseId));
+        unawaited(_ledger?.refresh());
+      } else {
+        await _dbRef.child('houses/$houseId/budget').push().set(record);
+      }
       if (!_isCurrentWrite(generation, uid)) return;
       if (_amountController.text == amountText) _amountController.clear();
       if (_noteController.text == noteText) _noteController.clear();
@@ -370,6 +443,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   void _deleteTransaction(String key) {
+    final generation = _houseGeneration, uid = _financeUid;
     showDialog(
       context: context,
       builder: (ctx) => FinanceDialog(
@@ -386,7 +460,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
             onPressed: () {
               Navigator.pop(ctx);
-              _dbRef.child('houses/${widget.houseId}/budget/$key').remove();
+              if (_isCurrentWrite(generation, uid)) unawaited(_removeTransaction(key));
             },
 
             child: Text(context.tr('p8_finance_delete')),
@@ -394,6 +468,23 @@ class _FinanceScreenState extends State<FinanceScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _removeTransaction(String key) async {
+    final generation = _houseGeneration, uid = _financeUid, house = widget.houseId;
+    try {
+      if (_ledger?.ready != true) throw StateError('finance_backend_not_ready');
+      if (_ledger!.useD1) {
+        await _financeD1.delete(house, key);
+        if (!_isCurrentWrite(generation, uid)) return;
+        unawaited(_signalFinanceChanged(house));
+        unawaited(_ledger?.refresh());
+      } else {
+        await _dbRef.child('houses/$house/budget/$key').remove();
+      }
+    } catch (error) {
+      if (_isCurrentWrite(generation, uid)) _showWriteError(error);
+    }
   }
 
   void _showSplitBillDialog() {
@@ -441,6 +532,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _houseGeneration++;
+    _authSub?.cancel();
+    _ledger?.dispose();
+    _financeD1.dispose();
     _budgetPlanSub?.cancel();
     _savingsGoalSub?.cancel();
     _currencySub?.cancel();
@@ -743,7 +839,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   Widget _buildModernTransactionList() {
-    return StreamBuilder<DatabaseEvent>(
+    return StreamBuilder<Map<String, dynamic>>(
       key: ValueKey('finance-modern-${widget.houseId}'),
       stream: _budgetStream,
       builder: (context, snapshot) {
@@ -764,9 +860,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               child: Column(
                 children: [
                   Text(
-                    L10nService().format('util_finance_load_tx_error', {
-                      'error': AppErrorMapper.resolve(snapshot.error).message,
-                    }),
+                    L10nService().format('util_finance_load_tx_error'),
                     textAlign: TextAlign.center,
                     style: FinancePalette.text(context, size: 13),
                   ),
@@ -782,8 +876,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
           );
         }
-        final raw = snapshot.data?.snapshot.value;
-        if (raw == null || raw is! Map) {
+        final raw = snapshot.data;
+        if (raw == null || raw.isEmpty) {
           _syncTransactionSummary(
             items: const <Map<String, dynamic>>[],
             totalIn: 0,
@@ -1947,8 +2041,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       return;
     }
 
+    final generation = _houseGeneration;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || generation != _houseGeneration) return;
       if (_totalIn == totalIn &&
           _totalOut == totalOut &&
           _totalBalance == balance &&
@@ -1970,7 +2065,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     return StreamBuilder(
       key: ValueKey(widget.houseId),
       stream: _budgetStream,
-      builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+      builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
@@ -1991,9 +2086,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    L10nService().format('util_finance_load_tx_error', {
-                      'error': AppErrorMapper.resolve(snapshot.error).message,
-                    }),
+                    L10nService().format('util_finance_load_tx_error'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: SLTheme.textMain,
@@ -2011,7 +2104,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
           );
         }
-        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+        if (!snapshot.hasData || snapshot.data == null) {
           _syncTransactionSummary(
             items: const <Map<String, dynamic>>[],
             totalIn: 0,
@@ -2043,7 +2136,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           );
         }
         final data = Map<dynamic, dynamic>.from(
-          snapshot.data!.snapshot.value as Map,
+          snapshot.data!,
         );
         final items = data.entries
             .map((e) => {'key': e.key, ...Map<String, dynamic>.from(e.value)})

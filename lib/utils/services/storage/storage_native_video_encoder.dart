@@ -81,9 +81,10 @@ class StorageVideoEncodingProfile {
     // của cả khung 720p/1080p. Không phóng lớn nguồn nhỏ để giả tăng độ nét.
     final pixelRatio = width * height / (longEdge * shortEdge);
     final fpsRatio = (fps / maxFrameRate).clamp(0.5, 1.0);
-    final bitrate = (baseBitrate * pixelRatio * fpsRatio)
-        .round()
-        .clamp(400000, baseBitrate);
+    final bitrate = (baseBitrate * pixelRatio * fpsRatio).round().clamp(
+      400000,
+      baseBitrate,
+    );
     return StorageVideoEncodingProfile(
       width: width,
       height: height,
@@ -117,18 +118,32 @@ class StorageNativeVideoEncoder {
     this.channel = const MethodChannel('soullocket/memory_video_encoder'),
     this.temporaryDirectory,
     this.compressionTimeout = const Duration(minutes: 5),
+    this.inspectionTimeout = const Duration(seconds: 20),
   });
 
   final MethodChannel channel;
   final Future<Directory> Function()? temporaryDirectory;
   final Duration compressionTimeout;
+  final Duration inspectionTimeout;
   static int _sequence = 0;
 
-  Future<String?> compress(String sourcePath, {required bool isLivePhoto}) async {
-    final metadata = await channel.invokeMapMethod<dynamic, dynamic>(
-      'inspectVideo',
-      {'path': sourcePath},
-    ).timeout(const Duration(seconds: 20));
+  Future<String?> compress(
+    String sourcePath, {
+    required bool isLivePhoto,
+  }) async {
+    final requestId = '${DateTime.now().microsecondsSinceEpoch}_${_sequence++}';
+    Map<dynamic, dynamic>? metadata;
+    try {
+      metadata = await channel
+          .invokeMapMethod<dynamic, dynamic>('inspectVideo', {
+            'path': sourcePath,
+            'requestId': requestId,
+          })
+          .timeout(inspectionTimeout);
+    } on TimeoutException {
+      await _cancel('cancelInspection', requestId);
+      rethrow;
+    }
     if (metadata == null) throw const FormatException('Video metadata missing');
     final source = StorageVideoSourceInfo.fromMap(metadata);
     final profile = StorageVideoEncodingProfile.forSource(
@@ -141,35 +156,30 @@ class StorageNativeVideoEncoder {
     }
 
     final directory = await (temporaryDirectory ?? getTemporaryDirectory)();
-    final requestId = '${DateTime.now().microsecondsSinceEpoch}_${_sequence++}';
     final outputPath = p.join(directory.path, 'sl_memory_video_$requestId.mp4');
     var accepted = false;
     try {
-      final result = await channel.invokeMethod<String>('compressVideo', {
-        'requestId': requestId,
-        'path': sourcePath,
-        'outputPath': outputPath,
-        'width': profile.width,
-        'height': profile.height,
-        'frameRate': profile.frameRate,
-        'videoBitrate': profile.videoBitrate,
-        'audioBitrate': profile.audioBitrate,
-        'includeAudio': source.hasAudio,
-      }).timeout(compressionTimeout);
+      final result = await channel
+          .invokeMethod<String>('compressVideo', {
+            'requestId': requestId,
+            'path': sourcePath,
+            'outputPath': outputPath,
+            'width': profile.width,
+            'height': profile.height,
+            'frameRate': profile.frameRate,
+            'videoBitrate': profile.videoBitrate,
+            'audioBitrate': profile.audioBitrate,
+            'includeAudio': source.hasAudio,
+          })
+          .timeout(compressionTimeout);
       if (result == null || !p.equals(result, outputPath)) {
         throw const FormatException('Unexpected video output');
       }
       accepted = true;
       return outputPath;
     } on TimeoutException {
-      try {
-        // Hủy tác vụ native trước khi hàng đợi cho file kế tiếp chạy.
-        await channel.invokeMethod<void>('cancelCompression', {
-          'requestId': requestId,
-        }).timeout(const Duration(seconds: 10));
-      } catch (_) {
-        // Native vẫn giữ guard busy tới khi encoder cũ đã dừng.
-      }
+      // Hủy tác vụ native trước khi hàng đợi cho file kế tiếp chạy.
+      await _cancel('cancelCompression', requestId);
       rethrow;
     } finally {
       if (!accepted) {
@@ -178,6 +188,16 @@ class StorageNativeVideoEncoder {
           if (await output.exists()) await output.delete();
         } catch (_) {}
       }
+    }
+  }
+
+  Future<void> _cancel(String method, String requestId) async {
+    try {
+      await channel
+          .invokeMethod<void>(method, {'requestId': requestId})
+          .timeout(const Duration(seconds: 10));
+    } catch (_) {
+      // Native vẫn giữ guard busy tới khi worker cũ đã dừng.
     }
   }
 }

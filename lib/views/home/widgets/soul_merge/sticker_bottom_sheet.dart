@@ -31,7 +31,9 @@ class StickerBottomSheet extends StatefulWidget {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) => SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.72,
+        height: MediaQuery.sizeOf(context).height <= 500
+            ? MediaQuery.sizeOf(context).height - 8
+            : MediaQuery.sizeOf(context).height * 0.72,
         child: StickerBottomSheet(
           onStickerSelected: onStickerSelected,
           closeOnSelect: closeOnSelect,
@@ -45,7 +47,7 @@ class StickerBottomSheet extends StatefulWidget {
 }
 
 class _StickerBottomSheetState extends State<StickerBottomSheet> {
-  static const _packs = livingStickerPacks;
+  static final _packs = livingStickerPickerPacks;
 
   var _selectedIndex = 0;
 
@@ -55,247 +57,296 @@ class _StickerBottomSheetState extends State<StickerBottomSheet> {
     final selectedPack = _packs[_selectedIndex];
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: Column(
-        children: [
-          if (widget.showHeader) ...[
-            const SizedBox(height: 10),
-            Container(
-              width: 38,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE7DDE1),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 14, 10),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE8EF),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.emoji_emotions_rounded,
-                      color: Color(0xFFE9577D),
-                    ),
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Text(
-                      context.tr(widget.titleKey),
-                      style: SLTheme.quicksand(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: colors.ink,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: context.tr('p4_back'),
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: Color(0xFF7E6E76),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          SizedBox(
-            height: 90,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: List.generate(_packs.length, (index) {
-                  final pack = _packs[index];
-                  final selected = index == _selectedIndex;
-                  return SizedBox(
-                    width: 94,
-                    child: Semantics(
-                      button: true,
-                      selected: selected,
-                      label: context.tr(pack.titleKey),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => setState(() => _selectedIndex = index),
-                          borderRadius: BorderRadius.circular(16),
-                          child: AnimatedContainer(
-                            duration: disableAnimations
-                                ? Duration.zero
-                                : const Duration(milliseconds: 180),
-                            curve: Curves.easeOutCubic,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 3,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? pack.surface
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: selected
-                                    ? pack.accent.withValues(alpha: 0.32)
-                                    : Colors.transparent,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SoulLocketAnimatedSticker(
-                                  sticker: pack.stickers.first,
-                                  size: 38,
-                                  animate: false,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  context.tr(pack.titleKey),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 10.4,
-                                    fontWeight: selected
-                                        ? FontWeight.w900
-                                        : FontWeight.w700,
-                                    color: selected
-                                        ? pack.accent
-                                        : const Color(0xFF7D6F76),
-                                  ),
-                                ),
-                              ],
-                            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 420;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            children: [
+              if (widget.showHeader && compact)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 18, end: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          context.tr(widget.titleKey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.ink,
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr(selectedPack.titleKey),
-                        style: SLTheme.quicksand(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: colors.ink,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        context.tr(selectedPack.styleKey),
-                        style: TextStyle(fontSize: 12, color: colors.muted),
+                      IconButton(
+                        tooltip: context.tr('p4_back'),
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close_rounded, color: colors.muted),
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  selectedPack.stickers.length.toString(),
-                  style: TextStyle(
-                    color: colors.rose,
-                    fontWeight: FontWeight.w700,
+              if (widget.showHeader && !compact) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE7DDE1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 14, 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFE8EF),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.emoji_emotions_rounded,
+                          color: Color(0xFFE9577D),
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Text(
+                          context.tr(widget.titleKey),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: colors.ink,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: context.tr('p4_back'),
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close_rounded, color: colors.muted),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-          ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: disableAnimations
-                  ? Duration.zero
-                  : const Duration(milliseconds: 180),
-              child: LayoutBuilder(
-                builder: (context, constraints) => GridView.builder(
-                  // Tương thích cả kernel Flutter hiện dùng để chạy test.
-                  // ignore: deprecated_member_use
-                  cacheExtent: 0,
-                  addAutomaticKeepAlives: false,
-                  key: ValueKey(selectedPack.id),
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: constraints.maxWidth < 350 ? 2 : 3,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: selectedPack.stickers.length,
-                  itemBuilder: (context, index) {
-                    final sticker = selectedPack.stickers[index];
-                    return Semantics(
-                      button: true,
-                      label: context.tr(selectedPack.titleKey),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            if (widget.closeOnSelect) {
-                              Navigator.of(context).pop();
-                            }
-                            widget.onStickerSelected(
-                              SoulLocketStickerCatalog.referenceFor(sticker.id),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              color: colors.dark
-                                  ? colors.blush
-                                  : selectedPack.surface.withValues(
-                                      alpha: 0.36,
-                                    ),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: selectedPack.accent.withValues(
-                                  alpha: 0.12,
+              SizedBox(
+                height:
+                    (compact ? 68 : 90) +
+                    (MediaQuery.textScalerOf(context).scale(10.4) - 10.4).clamp(
+                          0.0,
+                          30.0,
+                        ) *
+                        (compact ? 1 : 2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: List.generate(_packs.length, (index) {
+                      final pack = _packs[index];
+                      final selected = index == _selectedIndex;
+                      return SizedBox(
+                        width: 94,
+                        child: Semantics(
+                          button: true,
+                          selected: selected,
+                          label: context.tr(pack.titleKey),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () =>
+                                  setState(() => _selectedIndex = index),
+                              borderRadius: BorderRadius.circular(16),
+                              child: AnimatedContainer(
+                                duration: disableAnimations
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 180),
+                                curve: Curves.easeOutCubic,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 2,
                                 ),
-                              ),
-                            ),
-                            child: Center(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) =>
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? pack.surface
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: selected
+                                        ? pack.accent.withValues(alpha: 0.32)
+                                        : Colors.transparent,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
                                     SoulLocketAnimatedSticker(
-                                      sticker: sticker,
-                                      size: constraints.maxWidth.clamp(
-                                        0.0,
-                                        88.0,
-                                      ),
-                                      filterQuality: FilterQuality.medium,
+                                      sticker: pack.stickers.first,
+                                      size: compact ? 30 : 38,
+                                      animate: false,
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      context.tr(pack.titleKey),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 10.4,
+                                        fontWeight: selected
+                                            ? FontWeight.w900
+                                            : FontWeight.w700,
+                                        color: selected
+                                            ? pack.accent
+                                            : colors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    }),
+                  ),
                 ),
               ),
-            ),
+              if (!compact)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr(selectedPack.titleKey),
+                              style: SLTheme.quicksand(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: colors.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              context.tr(selectedPack.styleKey),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        selectedPack.stickers.length.toString(),
+                        style: TextStyle(
+                          color: colors.rose,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: disableAnimations
+                      ? Duration.zero
+                      : const Duration(milliseconds: 180),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => GridView.builder(
+                      // Tương thích cả kernel Flutter hiện dùng để chạy test.
+                      // ignore: deprecated_member_use
+                      cacheExtent: 0,
+                      addAutomaticKeepAlives: false,
+                      key: ValueKey(selectedPack.id),
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 28),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: constraints.maxWidth < 350 ? 2 : 3,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: selectedPack.stickers.length,
+                      itemBuilder: (context, index) {
+                        final sticker = selectedPack.stickers[index];
+                        return Semantics(
+                          button: true,
+                          label: context.tr(
+                            sticker.labelKey ?? selectedPack.titleKey,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              key: ValueKey('soul-sticker-${sticker.id}'),
+                              onTap: () {
+                                if (widget.closeOnSelect) {
+                                  Navigator.of(context).pop();
+                                }
+                                widget.onStickerSelected(
+                                  SoulLocketStickerCatalog.referenceFor(
+                                    sticker.id,
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  color: colors.dark
+                                      ? colors.blush
+                                      : selectedPack.surface.withValues(
+                                          alpha: 0.36,
+                                        ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: selectedPack.accent.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) =>
+                                        SoulLocketAnimatedSticker(
+                                          sticker: sticker,
+                                          size: constraints.maxWidth.clamp(
+                                            0.0,
+                                            88.0,
+                                          ),
+                                          filterQuality: FilterQuality.medium,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

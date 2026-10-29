@@ -121,6 +121,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
 
   void _onBannerPrivacyChanged() {
     if (!mounted) return;
+    _bannerRetry.reset();
     if (_bannerAd != null && !_adMob.isBannerUsable(_bannerAd!)) {
       _adMob.disposeBanner(_bannerAd);
       setState(() {
@@ -131,11 +132,20 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
   }
 
   Future<void> _prepareBannerAd() async {
-    if (_bannerAd != null || _loadingBanner || !mounted) return;
+    if (_bannerAd != null || _loadingBanner || !mounted || !isScreenActive) {
+      return;
+    }
     _loadingBanner = true;
     final revision = _adMob.adRevision.value;
     try {
-      final banner = await _adMob.createBannerAd(onAdLoaded: (_) {});
+      final banner = await _adMob.createBannerAd(
+        onAdLoaded: (_) {},
+        onAdInvalidated: () {
+          if (!mounted) return;
+          setState(() => _bannerAd = null);
+          _bannerRetry.schedule();
+        },
+      );
       if (!mounted) {
         _adMob.disposeBanner(banner);
         return;
@@ -143,6 +153,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       setState(() {
         _bannerAd = banner;
       });
+      if (banner != null) _bannerRetry.reset();
     } catch (error) {
       debugPrint('Soul Block banner load failed: $error');
     } finally {
@@ -151,6 +162,8 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
           _adMob.canRequestAds &&
           revision != _adMob.adRevision.value) {
         unawaited(_prepareBannerAd());
+      } else if (mounted && _bannerAd == null) {
+        _bannerRetry.schedule();
       }
     }
   }
@@ -162,6 +175,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
     }
 
     if (isPro) {
+      _bannerRetry.cancel();
       AdMobService().disposeBanner(_bannerAd);
       setState(() {
         _bannerAd = null;

@@ -12,7 +12,7 @@ extension _InsightStatsGridExt on LoveInsightsView {
       ),
       _MetricCardData(
         title: L10nService().translate('home_albumnh_9e1acf'),
-        value: '${insight.albumTotal}',
+        value: insight.albumTotalKnown ? '${insight.albumTotal}' : '—',
         subtitle: L10nService().translateThisMonth(insight.albumMonth),
         accent: const Color(0xFF80709E),
         icon: Icons.photo_library_rounded,
@@ -22,16 +22,16 @@ extension _InsightStatsGridExt on LoveInsightsView {
             ? L10nService().translate('home_ngyhotng_367ea9')
             : L10nService().translate('home_tngtc_f5f47c'),
         value: '${insight.activeDays}',
-        subtitle: _isSingle
-            ? L10nService().translate('home_cdliu_81b703')
-            : L10nService().translate('home_ngycdun_98fd1e'),
+        subtitle: context.tr('insight_activity_window'),
         accent: const Color(0xFFA47735),
         icon: Icons.auto_graph_rounded,
       ),
       _MetricCardData(
         title: L10nService().translate('home_tchcc_f12429'),
-        value: '${insight.positivity}%',
-        subtitle: _positivityStatus(insight.positivity),
+        value: insight.moodSampleCount == 0 ? '—' : '${insight.positivity}%',
+        subtitle: insight.moodSampleCount == 0
+            ? context.tr('insight_no_data')
+            : _positivityStatus(insight.positivity),
         accent: const Color(0xFF397C78),
         icon: Icons.favorite_rounded,
       ),

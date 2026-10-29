@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -495,40 +497,65 @@ class AuthRecoveryService {
   Future<void> sendOtpEmail(String email) async {
     try {
       final deviceId = await SecurityService().getDeviceId();
-      await _callOtpFunction(
-        () => CloudFunctionsHelper.callSecure<dynamic>(
+      final result = await _callOtpFunction(
+        () => _callRecoveryFunction<dynamic>(
           'requestEmailOTP',
+          // Server có deadline 60 giây; chừa thêm thời gian kết nối/khởi động
+          // để thư gửi thành công sau 15 giây không bị app báo thất bại sớm.
+          timeout: const Duration(seconds: 75),
           payload: {
             'email': email.trim(),
             'locale': L10nService().localeCode,
             if (deviceId.trim().isNotEmpty) 'deviceId': deviceId.trim(),
           },
-          throwOriginalException: true,
         ),
         allowUnauthenticatedWithoutMarkers: true,
       );
+      if (_asStringDynamicMap(result.data)?['success'] != true) {
+        throw AppErrorInfo(
+          kind: AppErrorKind.server,
+          message: L10nService().translate(
+            'auth_fallback_verification_code_send',
+          ),
+        );
+      }
     } catch (error) {
+      if (error is TimeoutException ||
+          (error is FirebaseFunctionsException &&
+              error.code == 'deadline-exceeded')) {
+        // Timeout chưa chứng minh thư không được gửi. Giữ kiểu lỗi để dialog
+        // không diễn giải lại câu đã dịch thành lỗi mất Wi-Fi chung chung.
+        throw AppErrorInfo(
+          kind: AppErrorKind.network,
+          message: L10nService().translate('settings_email_send_timeout'),
+        );
+      }
       if (error is FirebaseFunctionsException) {
-        throw _messageFromFunctionsError(
-          error,
-          fallbackMessage: L10nService().translate('auth_fallback_verification_code_send'),
-          permissionDeniedMessage: UiCopy.text('copy_fd3b19bd52c2'),
-          failedPreconditionMessage: UiCopy.text('copy_aa51e7b93807'),
-          resourceExhaustedMessage:
-              UiCopy.text('copy_0e4a181a798a'),
-          unauthenticatedMessage:
-              UiCopy.text('copy_e687147b4e28'),
-          invalidArgumentMessage: UiCopy.text('copy_0196a75224f3'),
-          appCheckMessage: kDebugMode
-              ? UiCopy.text('copy_21eaeaa66ac6')
-              : UiCopy.text('copy_bb2c1fe6f42a'),
-          allowUnauthenticatedWithoutMarkers: true,
+        throw AppErrorInfo(
+          kind: AppErrorMapper.resolve(error).kind,
+          message: _messageFromFunctionsError(
+            error,
+            fallbackMessage: L10nService().translate(
+              'auth_fallback_verification_code_send',
+            ),
+            permissionDeniedMessage: UiCopy.text('copy_fd3b19bd52c2'),
+            failedPreconditionMessage: UiCopy.text('copy_aa51e7b93807'),
+            resourceExhaustedMessage: UiCopy.text('copy_0e4a181a798a'),
+            unauthenticatedMessage: UiCopy.text('copy_e687147b4e28'),
+            invalidArgumentMessage: UiCopy.text('copy_0196a75224f3'),
+            appCheckMessage: kDebugMode
+                ? UiCopy.text('copy_21eaeaa66ac6')
+                : UiCopy.text('copy_bb2c1fe6f42a'),
+            allowUnauthenticatedWithoutMarkers: true,
+          ),
         );
       }
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage: L10nService().translate('auth_fallback_verification_code_send'),
-      ).message;
+        fallbackMessage: L10nService().translate(
+          'auth_fallback_verification_code_send',
+        ),
+      );
     }
   }
 

@@ -142,8 +142,15 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
   }
 
   Future<void> _listenForSettings() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
     final houseId = await _houseService.getCurrentHouseId();
-    if (houseId == null || houseId.isEmpty) return;
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid ||
+        houseId == null || houseId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await UiPrefs.ensureLoaded();
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid ||
+        prefs.getString('il_house_id')?.trim() != houseId) return;
 
     FriendsService().initGlobalSync(houseId);
 
@@ -180,6 +187,20 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     _settingsSub = _houseSettingsService.streamSettings(houseId).listen((
       settings,
     ) {
+      if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid ||
+          prefs.getString('il_house_id')?.trim() != houseId) return;
+      if (settings != null) {
+        final role = RoleUtils.normalize(prefs.getString('il_role'));
+        unawaited(NotificationService().updateHouseReminderIdentity(
+          accountUid: uid,
+          houseId: houseId,
+          role: role,
+          displayName: role == 'user2' ? settings.displayNameU2 : settings.displayNameU1,
+          genderSwapped: RoleUtils.readGenderSwapped(settings.source),
+        ).catchError((Object error) {
+          debugPrint('[Home] Chưa đồng bộ được tên lời nhắc: ' + error.runtimeType.toString());
+        }));
+      }
       // Bộ nhắc ghép nối dùng lại cài đặt đang nghe, không đọc thêm server.
       if (mounted) _pairingReminder.updateHouse(houseId, settings);
       if (settings != null && mounted) {
@@ -196,7 +217,9 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
             source.containsKey('customHomeBackground');
         final nextUi = currentUi.copyWith(
           themeKey:
-              !source.containsKey('theme') || settings.theme.trim().isEmpty
+              (prefs.getString('il_theme_key') ?? '').trim().isNotEmpty
+              ? prefs.getString('il_theme_key')!.trim()
+              : !source.containsKey('theme') || settings.theme.trim().isEmpty
               ? currentUi.themeKey
               : settings.theme.trim(),
           fallingEffectKey:
@@ -269,7 +292,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
             nextUi.transparentMode != currentUi.transparentMode ||
             nextUi.customBackgroundUrl != currentUi.customBackgroundUrl;
         if (shouldSync) {
-          UiPrefs.saveState(nextUi);
+          unawaited(UiPrefs.saveState(nextUi, preserveTheme: true));
         }
       }
     });

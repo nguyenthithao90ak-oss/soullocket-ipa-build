@@ -7,7 +7,65 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'services/app_lifecycle_presence_guard.dart';
 
+class LocationPermissionAccess {
+  const LocationPermissionAccess(this.permission, {this.restricted = false});
+
+  final LocationPermission permission;
+  final bool restricted;
+
+  bool get granted =>
+      !restricted &&
+      (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always);
+  bool get blocked =>
+      restricted || permission == LocationPermission.deniedForever;
+}
+
 class PermissionHelper {
+  static bool _locationRequestBlocked = false;
+
+  /// Android checkPermission không giữ deniedForever; kết hợp trạng thái OS
+  /// và kết quả request vừa nhận. Chỉ đọc, không bật hộp thoại xin quyền.
+  static Future<LocationPermissionAccess> checkLocationAccess() async {
+    var permission = await Geolocator.checkPermission().timeout(
+      const Duration(seconds: 6),
+    );
+    var restricted = false;
+    if (!kIsWeb &&
+        permission != LocationPermission.whileInUse &&
+        permission != LocationPermission.always &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      try {
+        final status = await Permission.locationWhenInUse.status.timeout(
+          const Duration(seconds: 3),
+        );
+        restricted = status.isRestricted;
+        if (permission == LocationPermission.denied &&
+            status.isPermanentlyDenied) {
+          permission = LocationPermission.deniedForever;
+        }
+      } catch (_) {
+        // Nền tảng không hỗ trợ: vẫn giữ kết quả từ Geolocator.
+      }
+    }
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      _locationRequestBlocked = false;
+    } else if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android &&
+        _locationRequestBlocked &&
+        permission == LocationPermission.denied) {
+      permission = LocationPermission.deniedForever;
+    }
+    return LocationPermissionAccess(permission, restricted: restricted);
+  }
+
+  @visibleForTesting
+  static void resetLocationRequestResultForTesting() {
+    _locationRequestBlocked = false;
+  }
+
   /// Request permission (Permission Handler) with a Prominent Disclosure dialog.
   /// Returns [true] if permission is granted, [false] otherwise.
   static Future<bool> requestWithDisclosure(
@@ -104,20 +162,25 @@ class PermissionHelper {
     required String title,
     required String disclosure,
   }) async {
-    final status = await Geolocator.checkPermission();
-    if (status == LocationPermission.whileInUse ||
-        status == LocationPermission.always) {
+    final access = await checkLocationAccess();
+    if (access.granted) {
       return true;
     }
 
     if (!context.mounted) return false;
-    if (status == LocationPermission.deniedForever) {
+    if (access.blocked) {
       final openSettings = await showDialog<bool>(
         context: context,
         builder: (ctx) => SLAlertDialog(
           scrollable: true,
           title: Text(ctx.tr('map_refresh_permission_blocked')),
-          content: Text(ctx.tr('map_refresh_permission_blocked_body')),
+          content: Text(
+            ctx.tr(
+              access.restricted
+                  ? 'map_refresh_permission_restricted_body'
+                  : 'map_refresh_permission_blocked_body',
+            ),
+          ),
           actions: [
             SLDialogAction(
               onPressed: () => Navigator.pop(ctx, false),
@@ -142,6 +205,8 @@ class PermissionHelper {
     final result = await _withLifecyclePresenceGuard(
       Geolocator.requestPermission,
     );
+
+    _locationRequestBlocked = result == LocationPermission.deniedForever;
 
     return result == LocationPermission.always ||
         result == LocationPermission.whileInUse;

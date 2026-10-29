@@ -302,7 +302,9 @@ class AppEntryController {
 
   Future<AppEntryResumeResult> handleAppResumed({
     required BuildContext context,
+    bool Function()? canShowAppOpen,
   }) async {
+    final resumedAt = DateTime.now();
     if (pendingSignedOutCleanup != null) {
       return const AppEntryResumeResult();
     }
@@ -318,8 +320,13 @@ class AppEntryController {
       return AppEntryResumeResult(authState: compromisedState);
     }
 
-    await _refreshPresenceContext();
-    await _sessionConnectivityCoordinator.goOnlineNow();
+    // RTDB có thể chờ kết nối rất lâu; presence không giữ cửa sổ App Open.
+    unawaited(
+      _runGuarded('restore presence on resume', () async {
+        await _refreshPresenceContext();
+        await _sessionConnectivityCoordinator.goOnlineNow();
+      }),
+    );
 
     _scheduleDeviceRegistration();
 
@@ -337,18 +344,28 @@ class AppEntryController {
       return AppEntryResumeResult(authState: authState);
     }
 
-    await _runGuarded(
-      'record app open metric on resume',
-      () => _recordAppOpenMetric(),
+    unawaited(
+      _runGuarded(
+        'record app open metric on resume',
+        () => _recordAppOpenMetric(),
+      ),
     );
-    await _runGuarded(
-      'refresh widget shell on resume',
-      () => WidgetService.refreshWidgetShell(),
+    unawaited(
+      _runGuarded(
+        'refresh widget shell on resume',
+        () => WidgetService.refreshWidgetShell(),
+      ),
     );
     unawaited(
       _runGuarded(
         'show app open ad on resume',
-        () => _adMobService.showAppOpenAdIfEligible(),
+        () => _adMobService.showAppOpenAdIfEligible(
+          canShow: () =>
+              context.mounted &&
+              DateTime.now().difference(resumedAt) <
+                  const Duration(seconds: 2) &&
+              canShowAppOpen?.call() != false,
+        ),
       ),
     );
     await _adMobService.resumeAutoInterstitialScheduler();
@@ -440,6 +457,24 @@ class AppEntryController {
       () => _adMobService.stopAutoInterstitialScheduler(clearPersisted: true),
     );
   }
+
+  Future<bool> prepareStartupAppOpenAd() async {
+    try {
+      if (await _adMobService
+          .isProUser()
+          .timeout(const Duration(milliseconds: 1200))) {
+        return false;
+      }
+    } catch (_) {
+      // Không để kiểm tra entitlement chậm chặn Home; service vẫn tự kiểm tra
+      // lại trước khi gọi show.
+    }
+    await _adMobService.initialize();
+    return _adMobService.loadAppOpenAd();
+  }
+
+  Future<bool> showStartupAppOpenAd(bool Function() canShow) =>
+      _adMobService.showAppOpenAdIfEligible(canShow: canShow);
 
   Future<AppEntryHouseSessionResult> prepareSignedInHouseSession({
     required BuildContext context,

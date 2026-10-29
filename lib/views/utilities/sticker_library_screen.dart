@@ -29,7 +29,7 @@ class StickerLibraryScreen extends StatefulWidget {
 
   static const int previewStickerLimit = 30;
   static List<String> get stickers => List.unmodifiable(
-    SoulLocketStickerCatalog.all.map(
+    SoulLocketStickerCatalog.active.map(
       (item) => SoulLocketStickerCatalog.referenceFor(item.id),
     ),
   );

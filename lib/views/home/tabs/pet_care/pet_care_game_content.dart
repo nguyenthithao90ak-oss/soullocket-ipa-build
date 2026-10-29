@@ -7,13 +7,44 @@ class _PetCareContent extends StatefulWidget {
   State<_PetCareContent> createState() => _PetCareContentState();
 }
 
-enum _ShopTab { room, bath, dance }
+enum _ShopTab { room, bath, dance, wardrobe }
 
 class _PetCareContentState extends State<_PetCareContent> {
   bool _shopOpen = false;
   bool _fridgeOpen = false;
   bool _earnOpen = false;
   bool _gameOpen = false;
+  bool _toyChestOpen = false;
+  bool _gardenOpen = false;
+  bool _gardenEntering = false;
+  Timer? _gardenDoorTimer;
+
+  /// Bảng "Cột mốc lớn lên" (mở khi chạm tên/cấp trên HUD).
+  bool _milestonesOpen = false;
+  int _livingHintStep = 0;
+  Timer? _livingHintTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ba gợi ý ngắn trong lần mở màn này, không ghi thêm dữ liệu lên cloud.
+    _livingHintTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted) return timer.cancel();
+      setState(() => _livingHintStep++);
+      if (_livingHintStep >= 3) timer.cancel();
+    });
+  }
+
+  void _livingFeedback() {
+    if (!state._muted && UiPrefs.notifier.value.touchSound) {
+      unawaited(HapticFeedback.selectionClick());
+    }
+  }
+
+  void _dismissLivingHint() {
+    _livingHintTimer?.cancel();
+    if (_livingHintStep < 3) setState(() => _livingHintStep = 3);
+  }
 
   /// Chế độ trang trí phòng: khay dưới thành bảng chọn tường/sàn/cửa sổ/nội thất.
   bool _decorating = false;
@@ -31,8 +62,10 @@ class _PetCareContentState extends State<_PetCareContent> {
   void didUpdateWidget(_PetCareContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (state._error != null || state._loading || state._progress == null) {
-      _shopOpen = _fridgeOpen = _earnOpen = _gameOpen = false;
+      _shopOpen = _fridgeOpen = _earnOpen = _gameOpen = _toyChestOpen = false;
       _decorating = false;
+      _gardenOpen = _gardenEntering = false;
+      _gardenDoorTimer?.cancel();
       _preview = null;
     }
   }
@@ -40,6 +73,8 @@ class _PetCareContentState extends State<_PetCareContent> {
   @override
   void dispose() {
     _seedBumpTimer?.cancel();
+    _livingHintTimer?.cancel();
+    _gardenDoorTimer?.cancel();
     _foodScroll.dispose();
     super.dispose();
   }
@@ -68,7 +103,8 @@ class _PetCareContentState extends State<_PetCareContent> {
   }
 
   void _closeOverlays() => setState(() {
-    _shopOpen = _fridgeOpen = _earnOpen = _gameOpen = false;
+    _shopOpen = _fridgeOpen = _earnOpen = _gameOpen = _toyChestOpen = false;
+    _milestonesOpen = false;
   });
 
   /// Mở bảng phủ: hủy lượt kéo dở và tắt âm đang phát.
@@ -90,6 +126,45 @@ class _PetCareContentState extends State<_PetCareContent> {
     _preview = null;
   });
 
+  void _enterGarden() {
+    if (!state._sceneEnabled || _decorating || _gardenEntering) return;
+    _dismissLivingHint();
+    state._cancelTalk();
+    state._finishCare();
+    _openOverlay(() => _gardenEntering = true);
+    final reduce =
+        MediaQuery.disableAnimationsOf(context) ||
+        !UiPrefs.resolveEffectProfile(
+          state: UiPrefs.notifier.value,
+          isWeb: kIsWeb,
+        ).animationEnabled;
+    _gardenDoorTimer?.cancel();
+    _gardenDoorTimer = Timer(Duration(milliseconds: reduce ? 0 : 260), () {
+      if (!mounted) return;
+      setState(() {
+        _gardenOpen = state._foreground && state._tickerEnabled;
+        _gardenEntering = false;
+      });
+    });
+  }
+
+  void _leaveGarden() {
+    _gardenDoorTimer?.cancel();
+    setState(() {
+      _gardenOpen = _gardenEntering = false;
+    });
+  }
+
+  Future<bool> _saveGarden(PetCareGarden Function(PetCareGarden) change) async {
+    var changed = false;
+    final saved = await state._save((progress) {
+      final next = change(progress.garden);
+      changed = !identical(next, progress.garden);
+      return changed ? progress.copyWith(garden: next) : progress;
+    }, anyPet: true);
+    return saved && changed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = _PetGameColors(Theme.of(context).brightness);
@@ -99,17 +174,33 @@ class _PetCareContentState extends State<_PetCareContent> {
     final fridgeOpen = _fridgeOpen && ready;
     final earnOpen = _earnOpen && ready;
     final gameOpen = _gameOpen && ready;
-    final covered = shopOpen || fridgeOpen || earnOpen || gameOpen;
+    final toyChestOpen = _toyChestOpen && ready;
+    final milestonesOpen = _milestonesOpen && ready;
+    // Tiệc sinh nhật phủ cảnh nhưng cảnh vẫn chạy để hai bé đội mũ nhảy mừng.
+    final party = state._birthdayAge != null && ready;
+    final covered =
+        shopOpen ||
+        fridgeOpen ||
+        earnOpen ||
+        gameOpen ||
+        toyChestOpen ||
+        milestonesOpen ||
+        party;
     // Tiệm/ví/trò chơi phủ cảnh thì dừng chuyển động; tủ lạnh vẫn để cảnh
     // chạy để thấy cửa tủ mở ra.
-    final paused = shopOpen || earnOpen || gameOpen;
+    final paused =
+        shopOpen || earnOpen || gameOpen || toyChestOpen || milestonesOpen;
     if (progress != null) _trackSeeds(progress.seeds);
     return PopScope(
-      canPop: !covered && !_decorating,
+      canPop: !covered && !_decorating && !_gardenOpen && !_gardenEntering,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (covered) {
+        if (party && !milestonesOpen) {
+          state._closeBirthday();
+        } else if (covered) {
           _closeOverlays();
+        } else if (_gardenOpen || _gardenEntering) {
+          _leaveGarden();
         } else if (_decorating) {
           _endDecorating();
         }
@@ -123,7 +214,9 @@ class _PetCareContentState extends State<_PetCareContent> {
               ? _error(context, colors)
               : Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
+                    constraints: BoxConstraints(
+                      maxWidth: _gardenOpen ? double.infinity : 600,
+                    ),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -137,16 +230,39 @@ class _PetCareContentState extends State<_PetCareContent> {
                                 enabled: !paused,
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
-                                    final play = _playScreen(
-                                      context,
-                                      progress,
-                                      colors,
-                                    );
+                                    final play = _gardenOpen
+                                        ? PetCareGardenView(
+                                            progress: progress,
+                                            enabled: state._sceneEnabled,
+                                            now:
+                                                state._store?.now ??
+                                                DateTime.now,
+                                            onHome: _leaveGarden,
+                                            onChange: _saveGarden,
+                                          )
+                                        : _playScreen(
+                                            context,
+                                            progress,
+                                            colors,
+                                          );
+                                    if (_gardenOpen) return play;
                                     // Màn ngang thấp vẫn tới được mọi nút.
-                                    return constraints.maxHeight < 580
+                                    final largeText =
+                                        MediaQuery.textScalerOf(
+                                          context,
+                                        ).scale(1) >
+                                        1.4;
+                                    final minimumHeight =
+                                        !_gardenOpen && largeText
+                                        ? 820.0
+                                        : 680.0;
+                                    return constraints.maxHeight <
+                                            (!_gardenOpen && largeText
+                                                ? minimumHeight
+                                                : 580)
                                         ? SingleChildScrollView(
                                             child: SizedBox(
-                                              height: 680,
+                                              height: minimumHeight,
                                               child: play,
                                             ),
                                           )
@@ -179,8 +295,34 @@ class _PetCareContentState extends State<_PetCareContent> {
                             dim: .3,
                             child: _fridge(context, progress, colors),
                           ),
+                        if (toyChestOpen)
+                          ..._sheet(
+                            context,
+                            label: 'pet_care_toy_chest',
+                            heightFactor: .48,
+                            dim: .28,
+                            child: _toyChest(context, progress, colors),
+                          ),
                         if (gameOpen)
                           Positioned.fill(child: _game(context, progress)),
+                        if (milestonesOpen)
+                          ..._sheet(
+                            context,
+                            label: 'pet_care_milestones',
+                            heightFactor: .8,
+                            child: _milestones(context, progress, colors),
+                          ),
+                        if (party && !milestonesOpen)
+                          Positioned.fill(
+                            child: _BirthdayParty(
+                              key: ValueKey('party-${state._birthdayAge}'),
+                              age: state._birthdayAge!,
+                              gift: progress.birthdayGiftPending,
+                              onBlow: state._blowCandles,
+                              onOpen: state._openBirthdayGift,
+                              onClose: state._closeBirthday,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -208,16 +350,27 @@ class _PetCareContentState extends State<_PetCareContent> {
             ),
           ),
           const SizedBox(height: 14),
-          FilledButton(
-            onPressed: state._error == 'pet_care_scope_error'
-                ? () => Navigator.of(context).maybePop()
-                : state._load,
-            style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
-            child: Icon(
-              state._error == 'pet_care_scope_error'
-                  ? Icons.arrow_back_rounded
-                  : Icons.refresh_rounded,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (state._error == 'pet_care_scope_error') ...[
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded),
+                ),
+                const SizedBox(width: 12),
+              ],
+              FilledButton(
+                onPressed: state._error == 'pet_care_scope_error'
+                    ? state._retryFresh
+                    : state._load,
+                style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+                child: const Icon(Icons.refresh_rounded),
+              ),
+            ],
           ),
         ],
       ),
@@ -232,6 +385,7 @@ class _PetCareContentState extends State<_PetCareContent> {
     onPointerDown: (_) => state._unlockAudio(),
     child: Column(
       children: [
+        _hud(context, progress, colors),
         Expanded(
           child: Stack(
             fit: StackFit.expand,
@@ -244,11 +398,62 @@ class _PetCareContentState extends State<_PetCareContent> {
                 food: state._food,
                 upgrades: progress.upgradeLevels,
                 look: progress.look,
+                outfits: {
+                  for (final pet in PetCarePet.values)
+                    pet: progress.outfitFor(pet),
+                },
                 roomLook: _roomLook(progress),
                 danceSerial: state._danceSerial,
                 friendSerial: state._friendSerial,
                 seedProps: progress.seedPropsLeft,
                 fridgeOpen: _fridgeOpen,
+                toyChestOpen: _toyChestOpen,
+                onToyChestTap: _decorating
+                    ? null
+                    : () {
+                        _dismissLivingHint();
+                        _livingFeedback();
+                        _openOverlay(() => _toyChestOpen = true);
+                      },
+                toyChestLabel: context.tr('pet_care_toy_chest'),
+                livingLampLabel: context.tr('pet_care_prop_lamp'),
+                onGardenTap: _decorating ? null : _enterGarden,
+                gardenDoorLabel: context.tr('pet_garden_door'),
+                backDoorOpen: _gardenEntering,
+                guest: _decorating ? null : state._guest,
+                guestLeaving: state._guestLeaving,
+                onGuestTreated: () => unawaited(state._guestTreated()),
+                onGuestLeft: state._guestLeft,
+                guestLabel: state._guest == null
+                    ? null
+                    : L10nScope.of(context).format('pet_care_guest_label', {
+                        'pet': context.tr(
+                          'reward_companion_${state._guest!.name}',
+                        ),
+                      }),
+                guestHint: context.tr(
+                  state._guestFed
+                      ? 'pet_care_guest_pet_hint'
+                      : 'pet_care_guest_treat_hint',
+                ),
+                petTouchLabel: L10nScope.of(context)
+                    .format('pet_care_pet_touch_label', {
+                      'pet': context.tr(
+                        state._pet == PetCarePet.rabbit
+                            ? 'pet_care_bunny_name'
+                            : 'pet_care_bear_name',
+                      ),
+                    }),
+                partnerTouchLabel: L10nScope.of(context)
+                    .format('pet_care_pet_touch_label', {
+                      'pet': context.tr(
+                        state._mate == PetCarePet.rabbit
+                            ? 'pet_care_bunny_name'
+                            : 'pet_care_bear_name',
+                      ),
+                    }),
+                petStrokeHint: context.tr('pet_care_pet_stroke_hint'),
+                tapBallHint: context.tr('pet_care_tap_ball'),
                 onPropTap: (prop) {
                   state._onProp(prop);
                   if (prop == PetCareProp.fridge && !_decorating) {
@@ -256,7 +461,13 @@ class _PetCareContentState extends State<_PetCareContent> {
                   }
                 },
                 propLabel: (prop) => context.tr('pet_care_prop_${prop.name}'),
-                onPartnerTap: !_decorating ? state._hugFriend : null,
+                onPartnerTap: !_decorating
+                    ? () {
+                        _dismissLivingHint();
+                        _livingFeedback();
+                        state._hugFriend();
+                      }
+                    : null,
                 partnerLabel: context.tr('pet_care_friend_hug_action'),
                 sleepingLabel: (pet) =>
                     L10nScope.of(context).format('pet_care_sleeping_away', {
@@ -274,6 +485,19 @@ class _PetCareContentState extends State<_PetCareContent> {
                 serial: state._serial,
                 decoration: progress.decoration,
                 careListenable: state._petVitals,
+                growth: petCareGrowth(progress.bondPoints),
+                baby:
+                    PetCareGrowthStage.of(progress.bondPoints) ==
+                    PetCareGrowthStage.baby,
+                // Hai bé luôn điều khiển được cùng lúc: bé kia thức thì
+                // ngồi chung bồn tắm, ăn phần riêng khi được kéo món tới.
+                together: !progress.vitalsFor(state._mate).sleeping,
+                mateCare: state._mateCare,
+                mateMealSerial: state._mateMealSerial,
+                mateFood: state._mateFood,
+                party: state._birthdayAge != null,
+                talkListenable: state._talkMouth,
+                listenListenable: state._talkEar,
                 enabled:
                     state._sceneEnabled &&
                     (!progress.vitalsFor(state._pet).sleeping ||
@@ -281,7 +505,13 @@ class _PetCareContentState extends State<_PetCareContent> {
                 playing: state._playing,
                 bathStage: state._bathStage,
                 interactionLabel: context.tr(_roomActionKey(progress)),
-                onInteract: state._canCare ? () => _interact(progress) : null,
+                onInteract: state._canCare && !_decorating
+                    ? () {
+                        _dismissLivingHint();
+                        _livingFeedback();
+                        _interact(progress);
+                      }
+                    : null,
                 onActionComplete: state._finishCare,
                 dragListenable: state._drag,
                 interactionEpoch: state._toolEpoch,
@@ -289,18 +519,59 @@ class _PetCareContentState extends State<_PetCareContent> {
                 sceneTool: _decorating
                     ? null
                     : (tool, area) => _sceneTool(progress, tool, area),
-                onPetTap: state._canCare ? state._hug : null,
+                onPetTap: state._canCare && !_decorating
+                    ? () {
+                        _dismissLivingHint();
+                        _livingFeedback();
+                        state._hug();
+                      }
+                    : null,
                 onCue: state._cue,
               ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: _hud(context, progress, colors),
+              PositionedDirectional(
+                top: 12,
+                end: 12,
+                child: _roomTools(context, colors),
+              ),
+              PositionedDirectional(
+                top: 16,
+                start: 16,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.glass,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      child: Text(
+                        context.tr('pet_care_room_${state._room.name}'),
+                        style: SLTheme.quicksand(
+                          color: colors.ink,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               PositionedDirectional(
                 start: 16,
                 end: 16,
                 bottom: 12,
-                child: IgnorePointer(child: _speech(context, colors)),
+                child: IgnorePointer(
+                  child:
+                      state._room == PetCareRoom.living &&
+                          !_decorating &&
+                          _livingHintStep < 3 &&
+                          state._bubble != 'pet_care_save_error'
+                      ? _livingHint(context, colors)
+                      : _speech(context, colors),
+                ),
               ),
             ],
           ),
@@ -309,6 +580,140 @@ class _PetCareContentState extends State<_PetCareContent> {
             ? _decorDock(context, progress, colors)
             : _dock(context, progress, colors),
       ],
+    ),
+  );
+
+  Widget _livingHint(BuildContext context, _PetGameColors colors) {
+    const hints = [
+      'pet_care_tap_ball',
+      'pet_care_pet_stroke_hint',
+      'pet_care_toy_chest_hint',
+    ];
+    return Center(
+      child: DecoratedBox(
+        key: const ValueKey('pet-care-living-hint'),
+        decoration: BoxDecoration(
+          color: colors.glass,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            context.tr(hints[_livingHintStep.clamp(0, 2)]),
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              color: colors.ink,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Đồ chơi chỉ xuất hiện khi mở hòm; cảnh bên dưới vẫn là căn phòng.
+  Widget _toyChest(
+    BuildContext context,
+    PetCareProgress progress,
+    _PetGameColors colors,
+  ) => FocusScope(
+    child: _sheetFrame(
+      context,
+      colors,
+      key: const ValueKey('pet-care-toy-chest'),
+      title: context.tr('pet_care_toy_chest'),
+      closeLabel: context.tr('pet_care_toy_chest_close'),
+      autofocusClose: true,
+      children: [
+        if (progress.seedPropsLeft.contains(PetCareProp.basket)) ...[
+          _toyChoice(
+            key: 'pet-care-toy-seed',
+            label: context.tr('pet_care_earn_find'),
+            art: const Icon(
+              Icons.spa_rounded,
+              color: Color(0xFFC88A32),
+              size: 42,
+            ),
+            color: const Color(0xFFFFF0C9),
+            colors: colors,
+            onTap: state._canCare
+                ? () => state._onProp(PetCareProp.basket)
+                : null,
+          ),
+          const SizedBox(height: 12),
+        ],
+        _toyChoice(
+          key: 'pet-care-toy-ball',
+          label: context.tr('pet_care_tap_ball'),
+          art: _toolArt(PetCareTool.ball, 64),
+          color: const Color(0xFFCDEBD6),
+          colors: colors,
+          onTap: state._canCare && !progress.vitalsFor(state._pet).sleeping
+              ? () {
+                  _livingFeedback();
+                  _closeOverlays();
+                  state._play();
+                }
+              : null,
+        ),
+        const SizedBox(height: 12),
+        _toyChoice(
+          key: 'pet-care-game-open',
+          label: context.tr('pet_care_earn_game'),
+          art: const Icon(
+            Icons.auto_awesome_rounded,
+            color: Color(0xFFD69B32),
+            size: 52,
+          ),
+          color: const Color(0xFFFFE8B5),
+          colors: colors,
+          onTap: () => _openOverlay(() {
+            _toyChestOpen = false;
+            _gameOpen = true;
+          }),
+        ),
+      ],
+    ),
+  );
+
+  Widget _toyChoice({
+    required String key,
+    required String label,
+    required Widget art,
+    required Color color,
+    required _PetGameColors colors,
+    required VoidCallback? onTap,
+  }) => Material(
+    color: colors.dark ? colors.glass : color.withValues(alpha: .42),
+    borderRadius: BorderRadius.circular(24),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      key: ValueKey(key),
+      onTap: onTap,
+      child: Opacity(
+        opacity: onTap == null ? .4 : 1,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              SizedBox.square(dimension: 68, child: Center(child: art)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: SLTheme.quicksand(
+                    color: colors.ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: colors.muted),
+            ],
+          ),
+        ),
+      ),
     ),
   );
 
@@ -323,112 +728,218 @@ class _PetCareContentState extends State<_PetCareContent> {
   }
 
   // HUD kiểu mini game: nút tròn nổi trên cảnh, không bảng chữ hay khung vuông.
+  /// Hai hàng cố định; các nút không còn rải trên đồ vật trong phòng.
   Widget _hud(
     BuildContext context,
     PetCareProgress progress,
     _PetGameColors colors,
   ) {
     final level = progress.level;
-    final levelProgress = level >= 20 ? 1.0 : (progress.bondPoints % 20) / 20;
-    final levelLabel = '${context.tr('pet_care_level')} $level';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              _glassButton(
-                key: const ValueKey('pet-care-back'),
-                label: context.tr('settings_back_btn'),
-                colors: colors,
-                icon: Icons.arrow_back_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              const SizedBox(width: 8),
-              Semantics(
-                label: '${context.tr('pet_care_title')}, $levelLabel',
-                excludeSemantics: true,
-                child: Tooltip(
-                  message: levelLabel,
-                  child: SizedBox.square(
-                    key: const ValueKey('pet-care-level'),
-                    dimension: 48,
-                    child: CustomPaint(
-                      painter: _LevelBadgePainter(
-                        progress: levelProgress,
-                        dark: colors.dark,
-                      ),
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 3),
-                          child: FittedBox(
-                            child: Text(
-                              '$level',
-                              style: SLTheme.quicksand(
-                                color: const Color(0xFF8A4F14),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
+    final stage = PetCareGrowthStage.of(progress.bondPoints);
+    final levelLabel =
+        '${context.tr('pet_care_level')} $level · '
+        '${context.tr('pet_care_stage_${stage.name}')}';
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.panel,
+        border: Border(
+          bottom: BorderSide(color: colors.outline.withValues(alpha: .4)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                _glassButton(
+                  key: const ValueKey('pet-care-back'),
+                  label: context.tr('settings_back_btn'),
+                  colors: colors,
+                  icon: Icons.arrow_back_rounded,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+                const SizedBox(width: 10),
+                // Chạm tên/cấp: xem cột mốc lớn lên và quà sinh nhật.
+                Expanded(
+                  child: _milestoneButton(
+                    context,
+                    progress,
+                    levelLabel,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('pet_care_title'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            color: colors.ink,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Semantics(
+                          label: levelLabel,
+                          excludeSemantics: true,
+                          child: Tooltip(
+                            message: levelLabel,
+                            child: Row(
+                              children: [
+                                SizedBox.square(
+                                  dimension: 22,
+                                  key: const ValueKey('pet-care-level'),
+                                  child: CustomPaint(
+                                    painter: _LevelBadgePainter(
+                                      progress: level >= 20
+                                          ? 1
+                                          : (progress.bondPoints % 20) / 20,
+                                      dark: colors.dark,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    '${context.tr('pet_care_level')} $level',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: SLTheme.quicksand(
+                                      color: colors.muted,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                if (progress.birthdayGiftPending > 0) ...[
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.card_giftcard_rounded,
+                                    key: ValueKey('pet-care-birthday-pending'),
+                                    size: 14,
+                                    color: Color(0xFFE5507A),
+                                  ),
+                                ],
+                                const SizedBox(width: 2),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 14,
+                                  color: colors.muted,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-              const Spacer(),
-              ValueListenableBuilder(
-                valueListenable: UiPrefs.notifier,
-                builder: (context, prefs, _) => _glassButton(
-                  key: const ValueKey('pet-care-sound'),
-                  label: context.tr('touch_sound'),
-                  colors: colors,
-                  icon: state._muted || !prefs.touchSound
-                      ? Icons.volume_off_rounded
-                      : Icons.volume_up_rounded,
-                  onTap: prefs.touchSound ? state._toggleSound : null,
-                  size: 44,
-                ),
-              ),
-              const SizedBox(width: 6),
-              _seedPill(context, progress, colors),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              for (final pet in PetCarePet.values) ...[
-                if (pet.index > 0) const SizedBox(width: 6),
-                _petFace(context, pet, colors),
+                const SizedBox(width: 6),
+                _seedPill(context, progress, colors),
+                const SizedBox(width: 6),
+                _giftButton(context, progress, colors),
               ],
-              const Spacer(),
-              _giftButton(context, progress, colors),
-              const SizedBox(width: 6),
-              _glassButton(
-                key: const ValueKey('pet-care-decorate'),
-                label: context.tr('pet_care_decorate'),
-                colors: colors,
-                icon: _decorating
-                    ? Icons.check_rounded
-                    : Icons.format_paint_rounded,
-                iconColor: const Color(0xFF5E9E8A),
-                onTap: _decorating ? _endDecorating : _startDecorating,
-              ),
-              const SizedBox(width: 6),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.dark
+                        ? const Color(0xFF292A3D)
+                        : const Color(0xFFF0E9DE),
+                    borderRadius: BorderRadius.circular(32),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final pet in PetCarePet.values)
+                        _petFace(context, pet, colors),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                ValueListenableBuilder(
+                  valueListenable: UiPrefs.notifier,
+                  builder: (context, prefs, _) => _glassButton(
+                    key: const ValueKey('pet-care-sound'),
+                    label: context.tr('touch_sound'),
+                    colors: colors,
+                    icon: state._muted || !prefs.touchSound
+                        ? Icons.volume_off_rounded
+                        : Icons.volume_up_rounded,
+                    onTap: prefs.touchSound ? state._toggleSound : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _talkButton(context, colors),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _roomTools(BuildContext context, _PetGameColors colors) =>
+      DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.glass,
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: colors.glassEdge),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1859483E),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               _glassButton(
                 key: const ValueKey('pet-care-customize'),
                 label: context.tr('pet_care_customize'),
                 colors: colors,
                 icon: Icons.storefront_rounded,
-                iconColor: const Color(0xFFB07FC4),
+                iconColor: const Color(0xFF8B70AC),
                 onTap: () => _openOverlay(() => _shopOpen = true),
+              ),
+              const SizedBox(height: 4),
+              _glassButton(
+                key: const ValueKey('pet-care-decorate'),
+                label: context.tr('pet_care_decorate'),
+                colors: colors,
+                icon: _decorating ? Icons.check_rounded : Icons.chair_rounded,
+                iconColor: const Color(0xFF3D9B83),
+                onTap: _decorating ? _endDecorating : _startDecorating,
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      );
+
+  /// Micro cho bé nhại giọng: nghe (tai) → nhại lại (nút dừng).
+  Widget _talkButton(BuildContext context, _PetGameColors colors) {
+    final talk = state._talk;
+    return _glassButton(
+      key: const ValueKey('pet-care-talk'),
+      label:
+          '${context.tr('pet_care_talk')}. ${context.tr('pet_care_talk_note')}',
+      colors: colors,
+      icon: switch (talk) {
+        _PetTalk.idle => Icons.mic_rounded,
+        _PetTalk.listening => Icons.hearing_rounded,
+        _PetTalk.speaking => Icons.stop_rounded,
+      },
+      iconColor: talk == _PetTalk.idle
+          ? const Color(0xFFD0688A)
+          : const Color(0xFF8C7BC4),
+      onTap: _decorating ? null : () => unawaited(state._toggleTalk()),
     );
   }
 
@@ -785,48 +1296,49 @@ class _PetCareContentState extends State<_PetCareContent> {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _shelf(
-          colors,
-          night: _nightDock(progress),
-          duration: _nightDuration(context, progress),
-          curve: _nightCurve(progress),
-          Stack(
-            children: [
-              // Bé đang ngủ bên phòng ngủ mà mình xem phòng khác: đồ mờ đi
-              // và nút đánh thức nằm giữa, không đè đồ.
-              if (progress.vitalsFor(state._pet).sleeping &&
-                  state._room != PetCareRoom.bedroom) ...[
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity: .35,
-                      child: _actions(context, progress, colors),
+        if (state._room != PetCareRoom.living)
+          _shelf(
+            colors,
+            night: _nightDock(progress),
+            duration: _nightDuration(context, progress),
+            curve: _nightCurve(progress),
+            Stack(
+              children: [
+                // Bé đang ngủ bên phòng ngủ mà mình xem phòng khác: đồ mờ đi
+                // và nút đánh thức nằm giữa, không đè đồ.
+                if (progress.vitalsFor(state._pet).sleeping &&
+                    state._room != PetCareRoom.bedroom) ...[
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Opacity(
+                        opacity: .35,
+                        child: _actions(context, progress, colors),
+                      ),
                     ),
                   ),
-                ),
-                Align(
-                  alignment: const Alignment(0, -.35),
-                  child: _bubbleAction(
-                    key: 'pet-care-wake',
-                    label: context.tr('pet_care_wake'),
-                    art: const Icon(
-                      Icons.wb_sunny_rounded,
-                      size: 34,
-                      color: Color(0xFFE29B2E),
+                  Align(
+                    alignment: const Alignment(0, -.35),
+                    child: _bubbleAction(
+                      key: 'pet-care-wake',
+                      label: context.tr('pet_care_wake'),
+                      art: const Icon(
+                        Icons.wb_sunny_rounded,
+                        size: 34,
+                        color: Color(0xFFE29B2E),
+                      ),
+                      color: const Color(0xFFFFE6A8),
+                      onTap: state._saving
+                          ? null
+                          : () => unawaited(state._wakeUp()),
+                      colors: colors,
+                      size: 68,
                     ),
-                    color: const Color(0xFFFFE6A8),
-                    onTap: state._saving
-                        ? null
-                        : () => unawaited(state._wakeUp()),
-                    colors: colors,
-                    size: 68,
                   ),
-                ),
-              ] else
-                Positioned.fill(child: _actions(context, progress, colors)),
-            ],
+                ] else
+                  Positioned.fill(child: _actions(context, progress, colors)),
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 4),
         _roomButtons(context, progress, colors),
       ],
@@ -909,23 +1421,64 @@ class _PetCareContentState extends State<_PetCareContent> {
     BuildContext context,
     PetCareProgress progress,
     _PetGameColors colors,
-  ) {
-    final vitals = progress.vitalsFor(state._pet);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        for (final room in PetCareRoom.values)
-          _roomButton(context, room, vitals, colors),
-      ],
-    );
-  }
+  ) => LayoutBuilder(
+    builder: (context, constraints) {
+      final vitals = progress.vitalsFor(state._pet);
+      final textScale = MediaQuery.textScalerOf(context).scale(1);
+      // Chữ lớn hoặc màn hẹp dùng lưới 2×2 để tên phòng không bị ép thành
+      // một dòng nhỏ. Màn thông thường vẫn giữ dock ngang gọn như trước.
+      final expanded = textScale > 1.4 || constraints.maxWidth < 360;
+      if (expanded) {
+        final width = (constraints.maxWidth - 14) / 2;
+        final rowHeight = math.max(72.0, 20 + 50 * textScale.clamp(1.0, 3.0));
+        return SizedBox(
+          height: rowHeight * 2 + 8,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              for (final room in PetCareRoom.values)
+                SizedBox(
+                  width: width,
+                  height: rowHeight,
+                  child: _roomButton(
+                    context,
+                    room,
+                    vitals,
+                    colors,
+                    expanded: true,
+                  ),
+                ),
+            ],
+          ),
+        );
+      }
+      return SizedBox(
+        height: 86,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            for (final room in PetCareRoom.values)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: _roomButton(context, room, vitals, colors),
+                ),
+              ),
+          ],
+        ),
+      );
+    },
+  );
 
   Widget _roomButton(
     BuildContext context,
     PetCareRoom room,
     PetCareVitals vitals,
-    _PetGameColors colors,
-  ) {
+    _PetGameColors colors, {
+    bool expanded = false,
+  }) {
     final (need, value, color) = switch (room) {
       PetCareRoom.living => (
         'pet_care_joy',
@@ -952,7 +1505,62 @@ class _PetCareContentState extends State<_PetCareContent> {
     final low = value < 30;
     final label =
         '${context.tr('pet_care_room_${room.name}')} · ${context.tr(need)} $value%';
-    final inner = selected ? 54.0 : 48.0;
+    final tone = low ? const Color(0xFFD25864) : color;
+    final icon = SizedBox.square(
+      dimension: expanded ? 42 : 34,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _RingPainter(
+                value: value / 100,
+                color: tone,
+                track: tone.withValues(alpha: .18),
+                width: expanded ? 4 : 3.5,
+              ),
+            ),
+          ),
+          Icon(_roomIcon(room), color: tone, size: expanded ? 27 : 23),
+          if (low)
+            PositionedDirectional(
+              top: -4,
+              end: -5,
+              child: CircleAvatar(
+                radius: 8,
+                backgroundColor: tone,
+                child: const Icon(
+                  Icons.priority_high_rounded,
+                  size: 12,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    final name = Text(
+      context.tr('pet_care_room_${room.name}'),
+      textAlign: expanded ? TextAlign.start : TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: SLTheme.quicksand(
+        color: colors.ink,
+        fontSize: expanded ? 12 : 9,
+        fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+      ),
+    );
+    final percentage = Text(
+      '$value%',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: SLTheme.quicksand(
+        color: tone,
+        fontSize: expanded ? 12 : 10,
+        fontWeight: FontWeight.w800,
+      ),
+    );
     return Semantics(
       selected: selected,
       button: true,
@@ -960,64 +1568,51 @@ class _PetCareContentState extends State<_PetCareContent> {
       excludeSemantics: true,
       child: Tooltip(
         message: label,
-        child: SizedBox.square(
+        child: Material(
           key: ValueKey(need),
-          dimension: 68,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              CustomPaint(
-                size: Size.square(inner + 12),
-                painter: _RingPainter(
-                  value: value / 100,
-                  color: low ? const Color(0xFFE06C6C) : color,
-                  track: color.withValues(alpha: colors.dark ? .25 : .2),
-                  width: 5,
-                ),
-              ),
-              Material(
-                color: selected
-                    ? (colors.dark ? const Color(0xFF5B4A5E) : Colors.white)
-                    : colors.glass,
-                shape: const CircleBorder(),
-                elevation: selected ? 3 : 0,
-                shadowColor: color.withValues(alpha: .45),
-                surfaceTintColor: Colors.transparent,
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  key: ValueKey('pet-care-room-${room.index}'),
-                  onTap: state._saving ? null : () => state._changeRoom(room),
-                  child: SizedBox.square(
-                    dimension: inner,
-                    child: Icon(
-                      _roomIcon(room),
-                      color: selected ? color : color.withValues(alpha: .8),
-                      size: selected ? 27 : 23,
+          color: selected
+              ? (colors.dark
+                    ? const Color(0xFF3D4450)
+                    : const Color(0xFFFFFCF4))
+              : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: BorderSide(
+              color: selected ? tone.withValues(alpha: .5) : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: ValueKey('pet-care-room-${room.index}'),
+            onTap: state._saving ? null : () => state._changeRoom(room),
+            child: Padding(
+              padding: EdgeInsets.all(expanded ? 6 : 3),
+              child: expanded
+                  ? Row(
+                      children: [
+                        icon,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [name, percentage],
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        icon,
+                        const SizedBox(height: 2),
+                        name,
+                        const SizedBox(height: 1),
+                        percentage,
+                      ],
                     ),
-                  ),
-                ),
-              ),
-              if (low)
-                PositionedDirectional(
-                  top: 2,
-                  end: 4,
-                  child: Container(
-                    width: 18,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE06C6C),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
-                    ),
-                    child: const Icon(
-                      Icons.priority_high_rounded,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1025,7 +1620,7 @@ class _PetCareContentState extends State<_PetCareContent> {
   }
 
   IconData _roomIcon(PetCareRoom room) => switch (room) {
-    PetCareRoom.living => Icons.favorite_rounded,
+    PetCareRoom.living => Icons.sports_esports_rounded,
     PetCareRoom.kitchen => Icons.restaurant_rounded,
     PetCareRoom.bathroom => Icons.bathtub_rounded,
     PetCareRoom.bedroom => Icons.bedtime_rounded,
@@ -1187,9 +1782,10 @@ class _PetCareContentState extends State<_PetCareContent> {
     final canAct = state._canCare && !progress.vitalsFor(state._pet).sleeping;
     if (tool == PetCareTool.food) {
       final food = state._food;
+      // Bé này đang ăn vẫn nhấc được món để đút cho bé kia.
       return _draggable(
         tool,
-        canAct && progress.seeds >= food.cost,
+        (canAct || state._mateCanEat(progress)) && progress.seeds >= food.cost,
         area,
         food: food,
         inScene: true,
@@ -1211,7 +1807,8 @@ class _PetCareContentState extends State<_PetCareContent> {
   ) {
     final sleeping = progress.vitalsFor(state._pet).sleeping;
     final canAct = state._canCare && !sleeping;
-    final dragHint = context.tr('pet_care_drag_hint');
+    // Món ăn kéo được cả khi bé này đang ăn, để đút cho bé kia cùng lúc.
+    final canFeed = canAct || state._mateCanEat(progress);
     switch (state._room) {
       case PetCareRoom.kitchen:
         const foods = PetCareFood.values;
@@ -1248,7 +1845,7 @@ class _PetCareContentState extends State<_PetCareContent> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (newKind) _kindDivider(food.kind, colors),
-                      _foodTile(context, progress, food, canAct, colors),
+                      _foodTile(context, progress, food, canFeed, colors),
                     ],
                   );
                 },
@@ -1320,63 +1917,7 @@ class _PetCareContentState extends State<_PetCareContent> {
           ),
         );
       case PetCareRoom.living:
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _draggable(
-                PetCareTool.ball,
-                canAct,
-                Semantics(
-                  hint: dragHint,
-                  child: _bubbleAction(
-                    key: 'pet-care-play',
-                    label: context.tr('pet_care_play'),
-                    art: _toolArt(PetCareTool.ball, 52),
-                    color: const Color(0xFFCDEBD6),
-                    onTap: canAct ? state._play : null,
-                    colors: colors,
-                    size: 76,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              _draggable(
-                PetCareTool.cuddle,
-                canAct,
-                Semantics(
-                  hint: dragHint,
-                  child: _bubbleAction(
-                    key: 'pet-care-hug',
-                    label: context.tr('pet_care_hug'),
-                    art: _toolArt(PetCareTool.cuddle, 52),
-                    color: const Color(0xFFFBD3DF),
-                    onTap: canAct ? state._hug : null,
-                    colors: colors,
-                    size: 76,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              _bubbleAction(
-                key: 'pet-care-game-open',
-                label: context.tr('pet_care_earn_game'),
-                art: const Icon(
-                  Icons.sports_esports_rounded,
-                  size: 36,
-                  color: Color(0xFF6A7FC0),
-                ),
-                color: const Color(0xFFD7E3FA),
-                onTap: !sleeping
-                    ? () => _openOverlay(() => _gameOpen = true)
-                    : null,
-                colors: colors,
-                size: 76,
-              ),
-            ],
-          ),
-        );
+        return const SizedBox.shrink();
     }
   }
 
@@ -1562,6 +2103,8 @@ class _PetCareContentState extends State<_PetCareContent> {
     required Key key,
     required String title,
     String? subtitle,
+    String? closeLabel,
+    bool autofocusClose = false,
     required List<Widget> children,
   }) => Material(
     key: key,
@@ -1598,9 +2141,10 @@ class _PetCareContentState extends State<_PetCareContent> {
                   ),
                   IconButton(
                     key: const ValueKey('pet-care-sheet-close'),
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).closeButtonTooltip,
+                    autofocus: autofocusClose,
+                    tooltip:
+                        closeLabel ??
+                        MaterialLocalizations.of(context).closeButtonTooltip,
                     constraints: const BoxConstraints(
                       minWidth: 48,
                       minHeight: 48,
@@ -1638,6 +2182,356 @@ class _PetCareContentState extends State<_PetCareContent> {
       ],
     ),
   );
+
+  /// Vùng chạm tên + cấp trên HUD (tối thiểu 48dp) mở bảng cột mốc.
+  Widget _milestoneButton(
+    BuildContext context,
+    PetCareProgress progress,
+    String levelLabel, {
+    required Widget child,
+  }) => Semantics(
+    button: true,
+    label: '$levelLabel. ${context.tr('pet_care_milestones')}',
+    excludeSemantics: true,
+    child: InkWell(
+      key: const ValueKey('pet-care-milestones-open'),
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => _openOverlay(() => _milestonesOpen = true),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Align(alignment: AlignmentDirectional.centerStart, child: child),
+      ),
+    ),
+  );
+
+  /// Bảng "Cột mốc lớn lên": tuổi hiện tại, điểm còn thiếu tới sinh nhật kế
+  /// và 20 cột mốc (chào đời, sinh nhật từng tuổi, đổi giai đoạn, quà).
+  Widget _milestones(
+    BuildContext context,
+    PetCareProgress progress,
+    _PetGameColors colors,
+  ) {
+    final l10n = L10nScope.of(context);
+    final level = progress.level;
+    final stage = PetCareGrowthStage.of(progress.bondPoints);
+    final pending = progress.birthdayGiftPending;
+    final maxed = level >= petCareMaxLevel;
+    final next = level + 1;
+    final need = maxed
+        ? 0
+        : PetCareBirthday.bondFor(next) - progress.bondPoints;
+    final stepDone = maxed
+        ? 1.0
+        : (progress.bondPoints - PetCareBirthday.bondFor(level)) /
+              petCareBondPerLevel;
+    const gold = Color(0xFFE9B949);
+    const rose = Color(0xFFE5507A);
+    return _sheetFrame(
+      context,
+      colors,
+      key: const ValueKey('pet-care-milestones'),
+      title: context.tr('pet_care_milestones'),
+      subtitle: context.tr('pet_care_milestones_hint'),
+      children: [
+        // Tuổi hiện tại và đoạn đường tới sinh nhật kế tiếp.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFE7EF), Color(0xFFFFF4DC)],
+            ),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SizedBox.square(
+                      dimension: 52,
+                      child: CustomPaint(
+                        painter: _LevelBadgePainter(
+                          progress: stepDone.clamp(0.0, 1.0),
+                          dark: false,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$level',
+                            style: SLTheme.quicksand(
+                              color: const Color(0xFF8A4F14),
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.format('pet_care_age', {'age': '$level'}),
+                            style: SLTheme.quicksand(
+                              color: const Color(0xFF6B4A5E),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            context.tr('pet_care_stage_${stage.name}'),
+                            style: SLTheme.quicksand(
+                              color: const Color(0xFF9A7A86),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: stepDone.clamp(0.0, 1.0),
+                    minHeight: 10,
+                    color: rose,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  maxed
+                      ? context.tr('pet_care_milestone_max')
+                      : l10n.format('pet_care_milestone_next', {
+                          'points': '$need',
+                          'age': '$next',
+                        }),
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFF6B4A5E),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (pending > 0) ...[
+                  const SizedBox(height: 10),
+                  FilledButton.icon(
+                    key: const ValueKey('pet-care-milestone-party'),
+                    onPressed: () {
+                      _closeOverlays();
+                      state._showBirthday();
+                    },
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: rose,
+                      foregroundColor: Colors.white,
+                      shape: const StadiumBorder(),
+                    ),
+                    icon: const Icon(Icons.cake_rounded),
+                    label: Text(
+                      '${context.tr('pet_care_milestone_party')}  +$pending',
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        for (var age = 1; age <= petCareMaxLevel; age++)
+          _milestoneRow(context, progress, age, colors, gold: gold),
+      ],
+    );
+  }
+
+  Widget _milestoneRow(
+    BuildContext context,
+    PetCareProgress progress,
+    int age,
+    _PetGameColors colors, {
+    required Color gold,
+  }) {
+    final l10n = L10nScope.of(context);
+    final reached = age <= progress.level;
+    final current = age == progress.level;
+    final stage = PetCareBirthday.stageAt(age);
+    final gift = PetCareBirthday.giftFor(age);
+    final opened = age <= progress.birthdayLevel;
+    final title = age == 1
+        ? context.tr('pet_care_milestone_born')
+        : l10n.format('pet_care_milestone_birthday', {'age': '$age'});
+    final detail = [
+      if (stage != null)
+        l10n.format('pet_care_milestone_stage', {
+          'stage': context.tr('pet_care_stage_${stage.name}'),
+        }),
+      if (!reached)
+        l10n.format('pet_care_milestone_need', {
+          'points': '${PetCareBirthday.bondFor(age)}',
+        }),
+    ].join(' · ');
+    final status = gift <= 0
+        ? null
+        : opened
+        ? context.tr('pet_care_milestone_claimed')
+        : '+$gift';
+    return Semantics(
+      label: [title, if (detail.isNotEmpty) detail, ?status].join(', '),
+      excludeSemantics: true,
+      child: IntrinsicHeight(
+        key: ValueKey('pet-care-milestone-$age'),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 44,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Container(
+                      width: 3,
+                      color: age == 1
+                          ? Colors.transparent
+                          : reached
+                          ? gold
+                          : colors.outline,
+                    ),
+                  ),
+                  Container(
+                    width: current ? 38 : 32,
+                    height: current ? 38 : 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: reached ? gold : colors.panel,
+                      border: Border.all(
+                        color: current
+                            ? const Color(0xFFE5507A)
+                            : reached
+                            ? gold
+                            : colors.outline,
+                        width: current ? 3 : 2,
+                      ),
+                    ),
+                    child: Text(
+                      '$age',
+                      style: SLTheme.quicksand(
+                        color: reached ? Colors.white : colors.muted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      width: 3,
+                      color: age == petCareMaxLevel
+                          ? Colors.transparent
+                          : age < progress.level
+                          ? gold
+                          : colors.outline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        color: reached ? colors.ink : colors.muted,
+                        fontSize: 15,
+                        fontWeight: current ? FontWeight.w900 : FontWeight.w800,
+                      ),
+                    ),
+                    if (detail.isNotEmpty)
+                      Text(
+                        detail,
+                        style: SLTheme.quicksand(
+                          color: stage != null
+                              ? const Color(0xFF9A5BC0)
+                              : colors.muted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            if (status != null)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: opened
+                          ? const Color(0xFFCDEBD6)
+                          : reached
+                          ? const Color(0xFFFFE1EA)
+                          : colors.glass,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            opened
+                                ? Icons.check_rounded
+                                : reached
+                                ? Icons.card_giftcard_rounded
+                                : Icons.lock_rounded,
+                            size: 15,
+                            color: opened
+                                ? const Color(0xFF4F9A70)
+                                : reached
+                                ? const Color(0xFFE5507A)
+                                : colors.muted,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            status,
+                            style: SLTheme.quicksand(
+                              color: opened
+                                  ? const Color(0xFF4F9A70)
+                                  : reached
+                                  ? const Color(0xFFB0365F)
+                                  : colors.muted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   /// Ví Hạt Ấm: các cách kiếm hạt trong ngày và tiến độ từng cách.
   Widget _earn(
@@ -2564,6 +3458,15 @@ class _PetCareContentState extends State<_PetCareContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: switch (_shopTab) {
+                _ShopTab.wardrobe => [
+                  _PetCareWardrobe(
+                    progress: progress,
+                    initialPet: state._pet,
+                    canCare: state._canCare,
+                    colors: colors,
+                    onUse: state._useOutfit,
+                  ),
+                ],
                 _ShopTab.room => _roomShop(context, progress, colors),
                 _ShopTab.bath => [
                   for (final slot in const [
@@ -2626,79 +3529,88 @@ class _PetCareContentState extends State<_PetCareContent> {
     ),
   ];
 
-  Widget _shopTabs(BuildContext context, _PetGameColors colors) => Row(
-    children: [
-      for (final tab in _ShopTab.values) ...[
-        if (tab.index > 0) const SizedBox(width: 6),
-        Expanded(
-          child: Semantics(
-            selected: _shopTab == tab,
-            button: true,
-            child: Material(
-              color: _shopTab == tab
-                  ? colors.dark
-                        ? const Color(0xFF6A5065)
-                        : const Color(0xFFFFE3EC)
-                  : colors.dark
-                  ? const Color(0xFF423A4C)
-                  : const Color(0xFFF5EDE2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: _shopTab == tab
-                      ? const Color(0xFFCA8DA3)
-                      : colors.outline,
-                  width: _shopTab == tab ? 2 : 1,
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                key: ValueKey('pet-care-shop-tab-${tab.name}'),
-                onTap: () => setState(() => _shopTab = tab),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 48),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          switch (tab) {
-                            _ShopTab.room => Icons.chair_rounded,
-                            _ShopTab.bath => Icons.bubble_chart_rounded,
-                            _ShopTab.dance => Icons.celebration_rounded,
-                          },
-                          size: 20,
-                          color: const Color(0xFFB0819D),
+  Widget _shopTabs(BuildContext context, _PetGameColors colors) =>
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final large = MediaQuery.textScalerOf(context).scale(12) > 18;
+          final columns = large || constraints.maxWidth < 360 ? 2 : 4;
+          final width = (constraints.maxWidth - (columns - 1) * 6) / columns;
+          return Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final tab in _ShopTab.values)
+                SizedBox(
+                  width: width,
+                  child: Semantics(
+                    selected: _shopTab == tab,
+                    button: true,
+                    child: Material(
+                      color: _shopTab == tab
+                          ? colors.dark
+                                ? const Color(0xFF6A5065)
+                                : const Color(0xFFFFE3EC)
+                          : colors.dark
+                          ? const Color(0xFF423A4C)
+                          : const Color(0xFFF5EDE2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: _shopTab == tab
+                              ? const Color(0xFFCA8DA3)
+                              : colors.outline,
+                          width: _shopTab == tab ? 2 : 1,
                         ),
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            context.tr('pet_care_shop_tab_${tab.name}'),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              color: colors.ink,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        key: ValueKey('pet-care-shop-tab-${tab.name}'),
+                        onTap: () => setState(() => _shopTab = tab),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  switch (tab) {
+                                    _ShopTab.room => Icons.chair_rounded,
+                                    _ShopTab.bath => Icons.bubble_chart_rounded,
+                                    _ShopTab.dance => Icons.celebration_rounded,
+                                    _ShopTab.wardrobe =>
+                                      Icons.checkroom_rounded,
+                                  },
+                                  size: 20,
+                                  color: const Color(0xFFB0819D),
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    context.tr('pet_care_shop_tab_${tab.name}'),
+                                    textAlign: TextAlign.center,
+                                    style: SLTheme.quicksand(
+                                      color: colors.ink,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ],
-  );
+            ],
+          );
+        },
+      );
 
   List<Widget> _styleSection(
     BuildContext context,

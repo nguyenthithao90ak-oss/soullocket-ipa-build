@@ -753,9 +753,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   bool get _isSingleRelationship => _relationshipMode == 'single';
 
   bool _isFreshGpsTs(int? ts) {
-    if (ts == null) return false;
-    final ageMs = DateTime.now().millisecondsSinceEpoch - ts;
-    return ageMs >= 0 && ageMs <= 3 * 60 * 1000;
+    return GpsFreshness.isFresh(ts);
   }
 
   Map<String, dynamic>? _gpsPreviewStateForRole(
@@ -843,6 +841,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   void _pauseHomeMapPreview() {
+    _homeGpsFreshnessDeadline.cancel();
+    _refreshHomeGpsSnapshot = null;
     _homeMapPreviewBindingSerial++;
     final subscription = _gpsSubscription;
     _gpsSubscription = null;
@@ -857,6 +857,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     if (uid == null || _houseId != houseId) return;
     final role = _currentRole;
     final bindingSerial = ++_homeMapPreviewBindingSerial;
+    _homeGpsFreshnessDeadline.cancel();
     final scope = '$uid|$houseId|$role';
     if (_homeMapPreviewScope != scope) {
       _homeMapPreviewScope = scope;
@@ -871,142 +872,175 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         _auth.currentUser?.uid != uid ||
         _houseId != houseId ||
         _currentRole != role;
+    void renderSnapshot(Map<String, dynamic> gpsData) {
+      if (!mounted || isStale()) return;
+      final isSingle = _isSingleRelationship;
+      final myPoint = _gpsPreviewStateForRole(gpsData, _currentRole);
+      final partnerPoint = _gpsPreviewStateForRole(gpsData, _partnerRole);
+      final myLive = myPoint?['isLive'] == true;
+      final partnerLive = partnerPoint?['isLive'] == true;
+      final myHasHistory = myPoint?['hasHistory'] == true;
+      final partnerHasHistory = partnerPoint?['hasHistory'] == true;
+
+      final partnerNode = gpsData[_partnerRole];
+      if (partnerNode is Map) {
+        final partnerNodeMap = _toStringDynamicMap(partnerNode);
+        final battery =
+            partnerNodeMap['battery'] ?? partnerNodeMap['batteryPct'];
+        final isCharging = partnerNodeMap['isCharging'] == true;
+        if (battery is num) {
+          _homePartnerBatteryNotifier.value = {
+            'level': battery.toInt(),
+            'isCharging': isCharging,
+          };
+        } else {
+          final lastKnown = partnerNodeMap['lastKnown'];
+          if (lastKnown is Map) {
+            final lastKnownMap = _toStringDynamicMap(lastKnown);
+            final lkBattery =
+                lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
+            final lkIsCharging = lastKnownMap['isCharging'] == true;
+            if (lkBattery is num) {
+              _homePartnerBatteryNotifier.value = {
+                'level': lkBattery.toInt(),
+                'isCharging': lkIsCharging,
+              };
+            } else {
+              _homePartnerBatteryNotifier.value = null;
+            }
+          } else {
+            _homePartnerBatteryNotifier.value = null;
+          }
+        }
+      } else {
+        _homePartnerBatteryNotifier.value = null;
+      }
+
+      final myNode = gpsData[_currentRole];
+      if (myNode is Map) {
+        final myNodeMap = _toStringDynamicMap(myNode);
+        final battery = myNodeMap['battery'] ?? myNodeMap['batteryPct'];
+        final isCharging = myNodeMap['isCharging'] == true;
+        if (battery is num) {
+          _homeMyBatteryNotifier.value = {
+            'level': battery.toInt(),
+            'isCharging': isCharging,
+          };
+        } else {
+          final lastKnown = myNodeMap['lastKnown'];
+          if (lastKnown is Map) {
+            final lastKnownMap = _toStringDynamicMap(lastKnown);
+            final lkBattery =
+                lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
+            final lkIsCharging = lastKnownMap['isCharging'] == true;
+            if (lkBattery is num) {
+              _homeMyBatteryNotifier.value = {
+                'level': lkBattery.toInt(),
+                'isCharging': lkIsCharging,
+              };
+            } else {
+              _homeMyBatteryNotifier.value = null;
+            }
+          } else {
+            _homeMyBatteryNotifier.value = null;
+          }
+        }
+      } else {
+        _homeMyBatteryNotifier.value = null;
+      }
+
+      if (!mounted) return;
+      var nextDistance = context.tr('home_angnhv_ea3669');
+      String? nextAlert = isSingle
+          ? context.tr('home_btvtrbnhin_5f5891')
+          : context.tr('home_btvtrtheod_b09bba');
+
+      if (isSingle) {
+        if (myPoint != null && myLive) {
+          nextDistance = context.tr('home_angchias_51b41c');
+          nextAlert = context.tr('home_bmxemvtrhi_e4d474');
+        } else if (myPoint != null || myHasHistory) {
+          nextDistance = context.tr('home_vtrlu_7f955b');
+          nextAlert = context.tr('home_bnanghinth_652b9f');
+        } else {
+          nextDistance = context.tr('home_chabtvtr_5f7a9a');
+        }
+      } else if (myLive &&
+          partnerLive &&
+          myPoint != null &&
+          partnerPoint != null) {
+        final meters = const ll.Distance().as(
+          ll.LengthUnit.Meter,
+          ll.LatLng(myPoint['lt']!, myPoint['lg']!),
+          ll.LatLng(partnerPoint['lt']!, partnerPoint['lg']!),
+        );
+        nextDistance = _formatDistanceMeters(meters);
+        nextAlert = context.tr('home_bmxembnyca_b88207');
+      } else if (!partnerHasHistory) {
+        nextDistance = context.tr('home_ngiychabt_4fbd8d');
+        nextAlert = context.tr('home_ngiychabtv_a26a9a');
+      } else if (!myHasHistory) {
+        nextDistance = context.tr('home_bnchabt_4d6ead');
+        nextAlert = L10nService().format(
+          'home_location_not_enabled_action',
+          {'button': context.tr('home_btvtr_4d948b')},
+        );
+      } else if (!myLive || !partnerLive) {
+        nextDistance = context.tr('home_vtrcuilu_b4c8ee');
+        nextAlert = context.tr('home_cpnhtvtran_6aea3c');
+      }
+
+      _updateHomeMapPreview(
+        distanceText: nextDistance,
+        alertText: nextAlert,
+        myPoint: myPoint,
+        partnerPoint: partnerPoint,
+      );
+    }
+
+    Map<String, dynamic>? latestGpsData;
+    void refreshPreview() {
+      final gpsData = latestGpsData;
+      if (gpsData == null ||
+          isStale() ||
+          !_isTabActive ||
+          !_isAppResumed ||
+          MapScreen.isMapScreenActive.value) {
+        return;
+      }
+      renderSnapshot(gpsData);
+      _homeGpsFreshnessDeadline.schedule([
+        for (final role in [_currentRole, _partnerRole])
+          _readEpochMs(_toStringDynamicMap(gpsData[role])['ts']),
+      ], () {
+        if (isStale() ||
+            !_isTabActive ||
+            !_isAppResumed ||
+            MapScreen.isMapScreenActive.value) {
+          return;
+        }
+        renderSnapshot(gpsData);
+      });
+    }
+
+    _refreshHomeGpsSnapshot = refreshPreview;
     _gpsSubscription?.cancel();
     _gpsSubscription = _dbRef
         .child('gps/$houseId')
         .onValue
         .listen(
           (event) {
-            if (!mounted || isStale()) return;
-            final isSingle = _isSingleRelationship;
-            final gpsData = _toStringDynamicMap(event.snapshot.value);
-            final myPoint = _gpsPreviewStateForRole(gpsData, _currentRole);
-            final partnerPoint = _gpsPreviewStateForRole(gpsData, _partnerRole);
-            final myLive = myPoint?['isLive'] == true;
-            final partnerLive = partnerPoint?['isLive'] == true;
-            final myHasHistory = myPoint?['hasHistory'] == true;
-            final partnerHasHistory = partnerPoint?['hasHistory'] == true;
-
-            final partnerNode = gpsData[_partnerRole];
-            if (partnerNode is Map) {
-              final partnerNodeMap = _toStringDynamicMap(partnerNode);
-              final battery =
-                  partnerNodeMap['battery'] ?? partnerNodeMap['batteryPct'];
-              final isCharging = partnerNodeMap['isCharging'] == true;
-              if (battery is num) {
-                _homePartnerBatteryNotifier.value = {
-                  'level': battery.toInt(),
-                  'isCharging': isCharging,
-                };
-              } else {
-                final lastKnown = partnerNodeMap['lastKnown'];
-                if (lastKnown is Map) {
-                  final lastKnownMap = _toStringDynamicMap(lastKnown);
-                  final lkBattery =
-                      lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
-                  final lkIsCharging = lastKnownMap['isCharging'] == true;
-                  if (lkBattery is num) {
-                    _homePartnerBatteryNotifier.value = {
-                      'level': lkBattery.toInt(),
-                      'isCharging': lkIsCharging,
-                    };
-                  } else {
-                    _homePartnerBatteryNotifier.value = null;
-                  }
-                } else {
-                  _homePartnerBatteryNotifier.value = null;
-                }
-              }
-            } else {
-              _homePartnerBatteryNotifier.value = null;
-            }
-
-            final myNode = gpsData[_currentRole];
-            if (myNode is Map) {
-              final myNodeMap = _toStringDynamicMap(myNode);
-              final battery = myNodeMap['battery'] ?? myNodeMap['batteryPct'];
-              final isCharging = myNodeMap['isCharging'] == true;
-              if (battery is num) {
-                _homeMyBatteryNotifier.value = {
-                  'level': battery.toInt(),
-                  'isCharging': isCharging,
-                };
-              } else {
-                final lastKnown = myNodeMap['lastKnown'];
-                if (lastKnown is Map) {
-                  final lastKnownMap = _toStringDynamicMap(lastKnown);
-                  final lkBattery =
-                      lastKnownMap['battery'] ?? lastKnownMap['batteryPct'];
-                  final lkIsCharging = lastKnownMap['isCharging'] == true;
-                  if (lkBattery is num) {
-                    _homeMyBatteryNotifier.value = {
-                      'level': lkBattery.toInt(),
-                      'isCharging': lkIsCharging,
-                    };
-                  } else {
-                    _homeMyBatteryNotifier.value = null;
-                  }
-                } else {
-                  _homeMyBatteryNotifier.value = null;
-                }
-              }
-            } else {
-              _homeMyBatteryNotifier.value = null;
-            }
-
-            if (!mounted) return;
-            var nextDistance = context.tr('home_angnhv_ea3669');
-            String? nextAlert = isSingle
-                ? context.tr('home_btvtrbnhin_5f5891')
-                : context.tr('home_btvtrtheod_b09bba');
-
-            if (isSingle) {
-              if (myPoint != null && myLive) {
-                nextDistance = context.tr('home_angchias_51b41c');
-                nextAlert = context.tr('home_bmxemvtrhi_e4d474');
-              } else if (myPoint != null || myHasHistory) {
-                nextDistance = context.tr('home_vtrlu_7f955b');
-                nextAlert = context.tr('home_bnanghinth_652b9f');
-              } else {
-                nextDistance = context.tr('home_chabtvtr_5f7a9a');
-              }
-            } else if (myLive &&
-                partnerLive &&
-                myPoint != null &&
-                partnerPoint != null) {
-              final meters = const ll.Distance().as(
-                ll.LengthUnit.Meter,
-                ll.LatLng(myPoint['lt']!, myPoint['lg']!),
-                ll.LatLng(partnerPoint['lt']!, partnerPoint['lg']!),
-              );
-              nextDistance = _formatDistanceMeters(meters);
-              nextAlert = context.tr('home_bmxembnyca_b88207');
-            } else if (!partnerHasHistory) {
-              nextDistance = context.tr('home_ngiychabt_4fbd8d');
-              nextAlert = context.tr('home_ngiychabtv_a26a9a');
-            } else if (!myHasHistory) {
-              nextDistance = context.tr('home_bnchabt_4d6ead');
-              nextAlert = L10nService().format(
-                'home_location_not_enabled_action',
-                {'button': context.tr('home_btvtr_4d948b')},
-              );
-            } else if (!myLive || !partnerLive) {
-              nextDistance = context.tr('home_vtrcuilu_b4c8ee');
-              nextAlert = context.tr('home_cpnhtvtran_6aea3c');
-            }
-
-            _updateHomeMapPreview(
-              distanceText: nextDistance,
-              alertText: nextAlert,
-              myPoint: myPoint,
-              partnerPoint: partnerPoint,
-            );
+            if (isStale()) return;
+            latestGpsData = _toStringDynamicMap(event.snapshot.value);
+            refreshPreview();
           },
           onError: (Object error) {
             if (!mounted || isStale()) {
               debugPrint('Home GPS preview listener failed (unmounted)');
               return;
             }
+            latestGpsData = null;
+            _homeGpsFreshnessDeadline.cancel();
             debugPrint(
               'Home GPS preview listener failed: ${AppErrorMapper.resolve(error, fallbackMessage: context.tr('home_khngthtidl_d524ab')).message}',
             );

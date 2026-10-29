@@ -19,18 +19,34 @@ Future<Map<dynamic, dynamic>> loadChatHouseInfo(
   DatabaseReference dbRef,
   String houseId,
 ) async {
-  final merged = <dynamic, dynamic>{};
-
   // Chỉ fetch đúng các field cần, không load toàn bộ node
-  Future<void> fetchFields(String rootPath) async {
+  Future<Map<dynamic, dynamic>> fetchFields(
+    String rootPath, {
+    bool canonical = false,
+  }) async {
+    final fields = <dynamic, dynamic>{};
     try {
       final results = await Future.wait(
-        _kChatHouseFields.map((field) => dbRef.child('$rootPath/$field').get()),
+        _kChatHouseFields.map((field) {
+          final settingsField =
+              canonical &&
+              const {
+                'nameU1',
+                'nameU2',
+                'username',
+                'avtUser1',
+                'profileAvatarSizePx',
+                'relationshipMode',
+              }.contains(field);
+          return dbRef
+              .child('$rootPath/${settingsField ? 'settings/' : ''}$field')
+              .get();
+        }),
       );
       for (var i = 0; i < _kChatHouseFields.length; i++) {
         final snap = results[i];
         if (snap.exists && snap.value != null) {
-          merged[_kChatHouseFields[i]] = snap.value;
+          fields[_kChatHouseFields[i]] = snap.value;
         }
       }
     } catch (error) {
@@ -38,13 +54,14 @@ Future<Map<dynamic, dynamic>> loadChatHouseInfo(
         '[SuppressedError] lib/views/chat/chat_house_info_loader.dart: $error',
       );
     }
+    return fields;
   }
 
-  await Future.wait([
-    fetchFields('houses/$houseId'),
+  final sources = await Future.wait([
     fetchFields('houses_public/$houseId'),
     fetchFields('house_profiles/$houseId'),
+    fetchFields('houses/$houseId', canonical: true),
   ]);
-
-  return merged;
+  // Ưu tiên xác định, không phụ thuộc nguồn nào trả lời mạng sau cùng.
+  return {for (final source in sources) ...source};
 }

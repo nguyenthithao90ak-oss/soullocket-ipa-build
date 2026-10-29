@@ -4,26 +4,32 @@ import Photos
 import PhotosUI
 import UniformTypeIdentifiers
 import workmanager_apple
+import flutter_local_notifications
 #if canImport(ActivityKit)
 import ActivityKit
 #endif
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private let widgetBridgeChannelName = "soullocket/widget_ios_bridge"
   private let bootstrapChannelName = "soul_locket/bootstrap"
   private let appIconChannelName = "soullocket/app_icon"
   private let deviceInfoChannelName = "soul_locket/device_info"
   private let attPrePromptChannelName = "soullocket/att_pre_prompt"
   private var callCameraEffectsBridge: CallCameraEffectsBridge?
+  private var callToneBridge: CallToneBridge?
+  private var memoryVideoEncoderBridge: MemoryVideoEncoderBridge?
   private var memoryMediaPicker: NSObject?
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    // BGTaskScheduler và delegate thông báo phải sẵn sàng trước khi launch kết thúc.
     WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+    FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)
     }
     WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.soullocket.app.sleep.refresh", earliestBeginInSeconds: 1800)
@@ -31,130 +37,153 @@ import ActivityKit
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
     }
+    SystemCallBridge.shared.start()
 
-    if let controller = window?.rootViewController as? FlutterViewController {
-      callCameraEffectsBridge = CallCameraEffectsBridge(messenger: controller.binaryMessenger)
-      let memoryChannel = FlutterMethodChannel(
-        name: "soullocket/memory_media_picker",
-        binaryMessenger: controller.binaryMessenger
-      )
-      memoryChannel.setMethodCallHandler { [weak self] call, result in
-        guard call.method == "pickMemoryMedia" else {
-          result(FlutterMethodNotImplemented)
-          return
-        }
-        guard let self = self, let root = self.window?.rootViewController else {
-          result(FlutterError(code: "picker_unavailable", message: nil, details: nil))
-          return
-        }
-        guard self.memoryMediaPicker == nil else {
-          result(FlutterError(code: "picker_busy", message: nil, details: nil))
-          return
-        }
-        if #available(iOS 14.0, *) {
-          let args = call.arguments as? [String: Any] ?? [:]
-          var presenter = root
-          while let presented = presenter.presentedViewController {
-            presenter = presented
-          }
-          let picker = MemoryMediaPickerCoordinator(
-            limit: min(999, max(1, args["limit"] as? Int ?? 99)),
-            preserveOriginal: args["preserveOriginal"] as? Bool ?? true
-          ) { [weak self] value in
-            self?.memoryMediaPicker = nil
-            result(value)
-          }
-          self.memoryMediaPicker = picker
-          picker.present(from: presenter)
-        } else {
-          result(FlutterError(code: "unsupported", message: nil, details: nil))
-        }
-      }
-      let channel = FlutterMethodChannel(
-        name: widgetBridgeChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      channel.setMethodCallHandler { [weak self] call, result in
-        guard let self = self else {
-          result(
-            FlutterError(
-              code: "bridge_unavailable",
-              message: "App delegate bridge is unavailable.",
-              details: nil
-            )
-          )
-          return
-        }
-        self.handleWidgetBridge(call: call, result: result)
-      }
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
 
-      let bootstrapChannel = FlutterMethodChannel(
-        name: bootstrapChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      bootstrapChannel.setMethodCallHandler { [weak self] call, result in
-        guard let self = self else {
-          result(
-            FlutterError(
-              code: "bootstrap_unavailable",
-              message: "App delegate bootstrap is unavailable.",
-              details: nil
-            )
-          )
-          return
-        }
-        self.handleBootstrap(call: call, result: result)
-      }
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    registerNativeChannels(messenger: engineBridge.applicationRegistrar.messenger())
+  }
 
-      let appIconChannel = FlutterMethodChannel(
-        name: appIconChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      appIconChannel.setMethodCallHandler { [weak self] call, result in
-        guard let self = self else {
-          result(
-            FlutterError(
-              code: "app_icon_unavailable",
-              message: "App icon bridge is unavailable.",
-              details: nil
-            )
-          )
-          return
-        }
-        self.handleAppIcon(call: call, result: result)
+  private func registerNativeChannels(messenger: FlutterBinaryMessenger) {
+    SystemCallBridge.shared.attach(messenger: messenger)
+    memoryVideoEncoderBridge?.dispose()
+    memoryVideoEncoderBridge = MemoryVideoEncoderBridge(messenger: messenger)
+    callCameraEffectsBridge = CallCameraEffectsBridge(messenger: messenger)
+    callToneBridge?.dispose()
+    callToneBridge = CallToneBridge(messenger: messenger)
+    let memoryChannel = FlutterMethodChannel(
+      name: "soullocket/memory_media_picker",
+      binaryMessenger: messenger
+    )
+    memoryChannel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "pickMemoryMedia" else {
+        result(FlutterMethodNotImplemented)
+        return
       }
-
-      let deviceInfoChannel = FlutterMethodChannel(
-        name: deviceInfoChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      deviceInfoChannel.setMethodCallHandler { call, result in
-        switch call.method {
-        case "getBatteryInfo":
-          UIDevice.current.isBatteryMonitoringEnabled = true
-          let level = UIDevice.current.batteryLevel
-          let state = UIDevice.current.batteryState
-          let isCharging = state == .charging || state == .full
-          let pct = level >= 0 ? Int(level * 100) : -1
-          result(["level": pct, "isCharging": isCharging])
-        default:
-          result(FlutterMethodNotImplemented)
-        }
+      guard let self = self, let presenter = self.foregroundPresenter() else {
+        result(FlutterError(code: "picker_unavailable", message: nil, details: nil))
+        return
       }
-
-      let attPrePromptChannel = FlutterMethodChannel(
-        name: attPrePromptChannelName,
-        binaryMessenger: controller.binaryMessenger
-      )
-      attPrePromptChannel.setMethodCallHandler { [weak self] call, result in
-        guard let self = self else {
-          result(false)
-          return
+      guard self.memoryMediaPicker == nil else {
+        result(FlutterError(code: "picker_busy", message: nil, details: nil))
+        return
+      }
+      if #available(iOS 14.0, *) {
+        let args = call.arguments as? [String: Any] ?? [:]
+        let picker = MemoryMediaPickerCoordinator(
+          limit: min(999, max(1, args["limit"] as? Int ?? 99)),
+          preserveOriginal: args["preserveOriginal"] as? Bool ?? true
+        ) { [weak self] value in
+          self?.memoryMediaPicker = nil
+          result(value)
         }
-        self.handleAttPrePrompt(call: call, result: result)
+        self.memoryMediaPicker = picker
+        picker.present(from: presenter)
+      } else {
+        result(FlutterError(code: "unsupported", message: nil, details: nil))
       }
     }
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let channel = FlutterMethodChannel(
+      name: widgetBridgeChannelName,
+      binaryMessenger: messenger
+    )
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(
+          FlutterError(
+            code: "bridge_unavailable",
+            message: "App delegate bridge is unavailable.",
+            details: nil
+          )
+        )
+        return
+      }
+      self.handleWidgetBridge(call: call, result: result)
+    }
+
+    let bootstrapChannel = FlutterMethodChannel(
+      name: bootstrapChannelName,
+      binaryMessenger: messenger
+    )
+    bootstrapChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(
+          FlutterError(
+            code: "bootstrap_unavailable",
+            message: "App delegate bootstrap is unavailable.",
+            details: nil
+          )
+        )
+        return
+      }
+      self.handleBootstrap(call: call, result: result)
+    }
+
+    let appIconChannel = FlutterMethodChannel(
+      name: appIconChannelName,
+      binaryMessenger: messenger
+    )
+    appIconChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(
+          FlutterError(
+            code: "app_icon_unavailable",
+            message: "App icon bridge is unavailable.",
+            details: nil
+          )
+        )
+        return
+      }
+      self.handleAppIcon(call: call, result: result)
+    }
+
+    let deviceInfoChannel = FlutterMethodChannel(
+      name: deviceInfoChannelName,
+      binaryMessenger: messenger
+    )
+    deviceInfoChannel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "getBatteryInfo":
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let level = UIDevice.current.batteryLevel
+        let state = UIDevice.current.batteryState
+        let isCharging = state == .charging || state == .full
+        let pct = level >= 0 ? Int(level * 100) : -1
+        result(["level": pct, "isCharging": isCharging])
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
+    let attPrePromptChannel = FlutterMethodChannel(
+      name: attPrePromptChannelName,
+      binaryMessenger: messenger
+    )
+    attPrePromptChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self = self else {
+        result(false)
+        return
+      }
+      self.handleAttPrePrompt(call: call, result: result)
+    }
+  }
+
+  private func foregroundPresenter() -> UIViewController? {
+    // UIWindow thuộc scene; AppDelegate.window có thể nil sau khi chuyển lifecycle.
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    let scene = scenes.first { $0.activationState == .foregroundActive }
+      ?? scenes.first { $0.activationState == .foregroundInactive }
+    guard let root = scene?.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+      return nil
+    }
+    var presenter = root
+    while let presented = presenter.presentedViewController {
+      presenter = presented
+    }
+    return presenter
   }
 
   // MARK: - ATT Pre-Prompt (Apple guideline: explain before asking to track)
@@ -169,7 +198,7 @@ import ActivityKit
   }
 
   private func showAttPrePromptAlert(result: @escaping FlutterResult) {
-    guard let controller = window?.rootViewController else {
+    guard let controller = foregroundPresenter() else {
       // Nếu không có view controller, cho phép ATT prompt hiện lên
       result(true)
       return

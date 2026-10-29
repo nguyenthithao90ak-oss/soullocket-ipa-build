@@ -11,6 +11,9 @@ import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/push_notification_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/calendar/calendar_civil_date.dart';
+import 'love_insight_records.dart';
+
+export 'love_insight_records.dart';
 
 class LoveInsightTimelineEntry {
   final DateTime date;
@@ -80,6 +83,11 @@ class LoveInsightData {
   final int loveU1;
   final int loveU2;
   final List<LoveInsightTimelineEntry> timeline;
+  final int memoriesWeek;
+  final int activeDaysWeek;
+  final bool albumTotalKnown;
+  final bool isStale;
+  final int? moodSampleCount;
 
   const LoveInsightData({
     required this.updatedAt,
@@ -115,6 +123,11 @@ class LoveInsightData {
     required this.loveU1,
     required this.loveU2,
     required this.timeline,
+    this.memoriesWeek = 0,
+    this.activeDaysWeek = 0,
+    this.albumTotalKnown = true,
+    this.isStale = false,
+    this.moodSampleCount,
   });
 
   Map<String, dynamic> toMap() {
@@ -152,6 +165,10 @@ class LoveInsightData {
       'loveU1': loveU1,
       'loveU2': loveU2,
       'timeline': timeline.map((x) => x.toMap()).toList(),
+      'memoriesWeek': memoriesWeek,
+      'activeDaysWeek': activeDaysWeek,
+      'albumTotalKnown': albumTotalKnown,
+      'moodSampleCount': moodSampleCount,
     };
   }
 
@@ -189,6 +206,11 @@ class LoveInsightData {
       openU2: map['openU2'] as int? ?? 0,
       loveU1: map['loveU1'] as int? ?? 0,
       loveU2: map['loveU2'] as int? ?? 0,
+      memoriesWeek: map['memoriesWeek'] as int? ?? 0,
+      activeDaysWeek: map['activeDaysWeek'] as int? ?? 0,
+      albumTotalKnown: map['albumTotalKnown'] as bool? ?? false,
+      isStale: map['isStale'] == true,
+      moodSampleCount: map['moodSampleCount'] as int?,
       timeline: List<LoveInsightTimelineEntry>.from(
         (map['timeline'] as List<dynamic>? ?? []).map(
           (x) => LoveInsightTimelineEntry.fromMap(x as Map<String, dynamic>),
@@ -199,17 +221,51 @@ class LoveInsightData {
 }
 
 class LoveInsightService {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  LoveInsightService()
+    : _sourceForTesting = null,
+      _uidForTesting = null,
+      _nowForTesting = null,
+      _saveForTesting = null,
+      _loadForTesting = null;
+
+  @visibleForTesting
+  LoveInsightService.forTesting({
+    required Future<LoveInsightSourceData> Function(String, DateTime)
+    loadSource,
+    required String? Function() currentUid,
+    required DateTime Function() now,
+    required Future<void> Function(String, Map<String, dynamic>) saveCache,
+    required Future<Object?> Function(String) loadCache,
+  }) : _sourceForTesting = loadSource,
+       _uidForTesting = currentUid,
+       _nowForTesting = now,
+       _saveForTesting = saveCache,
+       _loadForTesting = loadCache;
+
+  final Future<LoveInsightSourceData> Function(String, DateTime)?
+  _sourceForTesting;
+  final String? Function()? _uidForTesting;
+  final DateTime Function()? _nowForTesting;
+  final Future<void> Function(String, Map<String, dynamic>)? _saveForTesting;
+  final Future<Object?> Function(String)? _loadForTesting;
+
+  DatabaseReference get _dbRef => FirebaseDatabase.instance.ref();
+  String? get _currentUid => _uidForTesting != null
+      ? _uidForTesting()
+      : FirebaseAuth.instance.currentUser?.uid;
+  DateTime get _now => _nowForTesting?.call() ?? DateTime.now();
 
   // Gộp lượt đọc presence trùng khi mở app (nhiều service cùng đọc trong vài giây).
-  Future<Object?> _readPresence(String houseId) => RtdbReadCoalescer.shared.read(
-    '${FirebaseAuth.instance.currentUser?.uid}|houses/$houseId/presence',
-    () async => (await _dbRef.child('houses/$houseId/presence').get()).value,
-  );
+  Future<Object?> _readPresence(String houseId) =>
+      RtdbReadCoalescer.shared.read(
+        '$_currentUid|houses/$houseId/presence',
+        () async =>
+            (await _dbRef.child('houses/$houseId/presence').get()).value,
+      );
 
-  // Cache 5 phút để tránh tải toàn bộ diary+album nhiều lần
+  // Cache theo phiên/ngôn ngữ; qua ngày phải tính lại các cửa sổ thời gian.
   static LoveInsightData? _cachedInsight;
-  static String? _cachedHouseId;
+  static String? _cachedInsightKey;
   static DateTime? _cacheTime;
   static const Duration _cacheTtl = Duration(minutes: 15);
 
@@ -298,22 +354,35 @@ class LoveInsightService {
 
   Future<LoveInsightData> computeInsights(
     String houseId,
-    String relationshipMode,
-  ) {
-    final now = DateTime.now();
-    // Trả về cache nếu còn trong TTL và cùng houseId
+    String relationshipMode, {
+    bool forceRefresh = false,
+  }) {
+    final now = _now;
+    final uid = _currentUid;
+    if (uid == null || uid.isEmpty || houseId.trim().isEmpty) {
+      return Future.error(StateError('Insight authentication required'));
+    }
+    final key = cacheKeyFor(uid, houseId, relationshipMode);
     if (_cachedInsight != null &&
-        _cachedHouseId == houseId &&
+        !forceRefresh &&
+        _cachedInsightKey == key &&
         _cacheTime != null &&
-        now.difference(_cacheTime!) < _cacheTtl) {
+        !now.isBefore(_cacheTime!) &&
+        now.difference(_cacheTime!) < _cacheTtl &&
+        CalendarCivilDate.daysBetween(_cacheTime!, now) == 0) {
       return Future<LoveInsightData>.value(_cachedInsight!);
     }
-    final key = '$houseId|$relationshipMode';
     final pending = _inFlightInsight;
     if (pending != null && _inFlightInsightKey == key) {
       return pending;
     }
-    final task = _computeInsightsUncached(houseId, relationshipMode, now);
+    final task = _computeInsightsUncached(
+      uid,
+      houseId,
+      relationshipMode,
+      key,
+      now,
+    );
     _inFlightInsight = task;
     _inFlightInsightKey = key;
     task.whenComplete(() {
@@ -326,142 +395,163 @@ class LoveInsightService {
   }
 
   Future<LoveInsightData> _computeInsightsUncached(
+    String uid,
     String houseId,
     String relationshipMode,
+    String cacheKey,
     DateTime now,
   ) async {
-    final monthStart = DateTime(now.year, now.month, 1);
-
-    final firestore = FirebaseFirestore.instance;
-    final cutoff45Days = now
-        .subtract(const Duration(days: 45))
-        .millisecondsSinceEpoch;
+    void ensureCurrentSession() {
+      if (_currentUid != uid) throw StateError('Insight session changed');
+      if (cacheKeyFor(uid, houseId, relationshipMode) != cacheKey) {
+        throw StateError('Insight locale changed');
+      }
+    }
 
     try {
-      final results = await Future.wait([
-        firestore
-            .collection('houses')
-            .doc(houseId)
-            .collection('diaries')
-            .where('ts', isGreaterThanOrEqualTo: cutoff45Days)
-            .get(),
-        firestore
-            .collection('houses')
-            .doc(houseId)
-            .collection('album')
-            .where('ts', isGreaterThanOrEqualTo: cutoff45Days)
-            .get(),
-        _dbRef.child('houses/$houseId/settings').get(),
-        _readPresence(houseId),
-        _dbRef.child('houses/$houseId/metrics/diary_views').get(),
-        _dbRef.child('houses/$houseId/metrics/app_open').get(),
-        firestore
-            .collection('houses')
-            .doc(houseId)
-            .collection('diaries')
-            .count()
-            .get(),
-        firestore
-            .collection('houses')
-            .doc(houseId)
-            .collection('album')
-            .count()
-            .get(),
-      ]).timeout(const Duration(seconds: 8));
-
-      final data = await _processInsightData(
-        relationshipMode,
-        monthStart,
-        (results[0] as QuerySnapshot).docs,
-        (results[1] as QuerySnapshot).docs,
-        (results[2] as DataSnapshot).value,
-        results[3],
-        (results[4] as DataSnapshot).value,
-        (results[5] as DataSnapshot).value,
-        (results[6] as AggregateQuerySnapshot).count ?? 0,
-        (results[7] as AggregateQuerySnapshot).count ?? 0,
-      );
-      await _saveInsightCache(houseId, relationshipMode, data);
-      // Cập nhật in-memory cache
+      final source =
+          await (_sourceForTesting?.call(houseId, now) ??
+                  _readSource(houseId, now))
+              .timeout(const Duration(seconds: 8));
+      ensureCurrentSession();
+      final data = await _processInsightData(relationshipMode, source, now);
+      ensureCurrentSession();
+      await _saveInsightCache(cacheKey, data);
+      ensureCurrentSession();
       _cachedInsight = data;
-      _cachedHouseId = houseId;
-      _cacheTime = DateTime.now();
+      _cachedInsightKey = cacheKey;
+      _cacheTime = now;
       return data;
-    } catch (e) {
-      final cached = await _loadInsightCache(houseId, relationshipMode);
-      if (cached != null) {
-        return cached;
-      }
-      // Offline fallback
-      return LoveInsightData(
-        updatedAt: DateTime.now().millisecondsSinceEpoch,
-        loveScore: 0,
-        level: UiCopy.text('copy_a6fbefb9ca66'),
-        loveDays: 0,
-        positivity: 0,
-        diaryMonth: 0,
-        albumMonth: 0,
-        memoryThisMonth: 0,
-        activeDays: 0,
-        diaryTotal: 0,
-        albumTotal: 0,
-        suggestion:
-            UiCopy.text('copy_bffcaabe2880'),
-        shareU1: 0,
-        shareU2: 0,
-        offU1: 0,
-        offU2: 0,
-        interactionRate: 0,
-        nameU1: UiCopy.text('copy_40ffd8d0f1c7'),
-        nameU2: UiCopy.text('copy_145933221191'),
-        favoriteActivity: UiCopy.text('copy_89a3a265c062'),
-        diaryU1: 0,
-        diaryU2: 0,
-        albumU1: 0,
-        albumU2: 0,
-        moodPosU1: 0,
-        moodPosU2: 0,
-        viewU1: 0,
-        viewU2: 0,
-        openU1: 0,
-        openU2: 0,
-        loveU1: 0,
-        loveU2: 0,
-        timeline: [],
-      );
+    } catch (_) {
+      ensureCurrentSession();
+      final cached = await _loadInsightCache(cacheKey);
+      ensureCurrentSession();
+      if (cached != null) return cached;
+      // Chưa có dữ liệu thì báo lỗi; không biến lỗi mạng thành thống kê bằng 0.
+      rethrow;
     }
   }
 
-  String _insightCacheKey(String houseId, String relationshipMode) =>
-      'love_insight_${houseId.trim()}_${relationshipMode.trim()}';
+  Future<LoveInsightSourceData> _readSource(
+    String houseId,
+    DateTime now,
+  ) async {
+    final cutoff = CalendarCivilDate.addDays(
+      _startOfDay(now),
+      -44,
+    ).millisecondsSinceEpoch;
+    final diaries = FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('diaries');
+    final results = await Future.wait<Object?>([
+      // Tách hai trường ngày để dùng index đơn sẵn có của Firestore.
+      // OR với hai bộ lọc khoảng cần composite index và làm màn tải thất bại.
+      // LoveInsightRecords.normalize gộp ID để bài có cả hai trường chỉ đếm một lần.
+      Future.wait([
+        diaries.where('ts', isGreaterThanOrEqualTo: cutoff).get(),
+        diaries.where('timestamp', isGreaterThanOrEqualTo: cutoff).get(),
+      ]),
+      _dbRef
+          .child('houses/$houseId/memories')
+          .orderByChild('ts')
+          .startAt(cutoff)
+          .endAt(now.millisecondsSinceEpoch)
+          .get(),
+      _dbRef.child('houses/$houseId/settings').get(),
+      _readPresence(houseId),
+      _dbRef.child('houses/$houseId/metrics/diary_views').get(),
+      _dbRef.child('houses/$houseId/metrics/app_open').get(),
+      diaries.count().get(),
+      _dbRef.child('houses/$houseId/memoriesCount').get(),
+      _dbRef.child('houses/$houseId/members').get(),
+    ]);
+    final memoryTotal = (results[7] as DataSnapshot).value;
+    return LoveInsightSourceData(
+      diaries: [
+        for (final snapshot
+            in results[0] as List<QuerySnapshot<Map<String, dynamic>>>)
+          for (final doc in snapshot.docs) {...doc.data(), 'id': doc.id},
+      ],
+      memories: [
+        for (final child in (results[1] as DataSnapshot).children)
+          {..._asMap(child.value), 'id': child.key},
+      ],
+      settings: (results[2] as DataSnapshot).value,
+      presence: results[3],
+      diaryViews: (results[4] as DataSnapshot).value,
+      appOpens: (results[5] as DataSnapshot).value,
+      diaryTotal: (results[6] as AggregateQuerySnapshot).count ?? 0,
+      memoryTotal:
+          memoryTotal is num && memoryTotal.isFinite && memoryTotal >= 0
+          ? memoryTotal.toInt()
+          : null,
+      members: (results[8] as DataSnapshot).value,
+    );
+  }
 
-  Future<void> _saveInsightCache(
+  static String cacheKeyFor(
+    String uid,
     String houseId,
     String relationshipMode,
-    LoveInsightData data,
-  ) async {
+  ) {
+    final parts = [
+      uid,
+      houseId.trim(),
+      relationshipMode.trim(),
+      L10nService().localeCode,
+    ];
+    return 'love_insight_v2_${parts.map((part) => '${part.length}:$part').join('|')}';
+  }
+
+  /// Đọc sớm đúng phiên; không nhận cache schema cũ vốn thiếu media Nhật ký.
+  LoveInsightData? loadCachedInsight(String houseId, String relationshipMode) {
+    final uid = _currentUid;
+    if (uid == null || uid.isEmpty) return null;
     try {
-      await OfflineCacheService.saveCache(
-        _insightCacheKey(houseId, relationshipMode),
-        data.toMap(),
+      final cached = OfflineCacheService.loadCacheSync(
+        cacheKeyFor(uid, houseId, relationshipMode),
       );
+      if (cached is Map) {
+        return LoveInsightData.fromMap({
+          ...Map<String, dynamic>.from(cached),
+          'isStale': true,
+        });
+      }
+    } catch (_) {
+      // Bản cache hỏng không ngăn việc tải dữ liệu mới.
+    }
+    return null;
+  }
+
+  @visibleForTesting
+  static void clearCacheForTesting() {
+    _cachedInsight = null;
+    _cachedInsightKey = null;
+    _cacheTime = null;
+    _inFlightInsight = null;
+    _inFlightInsightKey = null;
+  }
+
+  Future<void> _saveInsightCache(String key, LoveInsightData data) async {
+    try {
+      await (_saveForTesting?.call(key, data.toMap()) ??
+          OfflineCacheService.saveCache(key, data.toMap()));
     } catch (error) {
       debugPrint('[LoveInsight] Không lưu được insight cache: $error');
     }
   }
 
-  Future<LoveInsightData?> _loadInsightCache(
-    String houseId,
-    String relationshipMode,
-  ) async {
+  Future<LoveInsightData?> _loadInsightCache(String key) async {
     try {
-      final cached = await OfflineCacheService.loadCache(
-        _insightCacheKey(houseId, relationshipMode),
-      );
+      final cached =
+          await (_loadForTesting?.call(key) ??
+              OfflineCacheService.loadCache(key));
       if (cached is Map) {
-        return LoveInsightData.fromMap(
-          Map<String, dynamic>.from(Map<dynamic, dynamic>.from(cached)),
-        );
+        return LoveInsightData.fromMap({
+          ...Map<String, dynamic>.from(cached),
+          'isStale': true,
+        });
       }
     } catch (error) {
       debugPrint('[LoveInsight] Insight cache không hợp lệ: $error');
@@ -471,32 +561,26 @@ class LoveInsightService {
 
   Future<LoveInsightData> _processInsightData(
     String relationshipMode,
-    DateTime monthStart,
-    List<QueryDocumentSnapshot> diaryDocs,
-    List<QueryDocumentSnapshot> albumDocs,
-    dynamic settingsValue,
-    dynamic presenceValue,
-    dynamic diaryViewsValue,
-    dynamic appOpensValue,
-    int totalDiaryCount,
-    int totalAlbumCount,
+    LoveInsightSourceData source,
+    DateTime now,
   ) async {
-    final now = DateTime.now();
-    final diaryList = diaryDocs
-        .map((e) => e.data() as Map<String, dynamic>)
-        .toList();
-    final albumList = albumDocs
-        .map((e) => e.data() as Map<String, dynamic>)
-        .toList();
-    final settings = _asMap(settingsValue);
-    final presence = _asMap(presenceValue);
-    final diaryViews = _intMap(diaryViewsValue);
-    final appOpens = _intMap(appOpensValue);
-    final recent14Cutoff = _startOfDay(
-      now.subtract(const Duration(days: 13)),
+    final monthStart = DateTime(now.year, now.month, 1);
+    final settings = _asMap(source.settings);
+    final presence = _asMap(source.presence);
+    final diaryViews = _intMap(source.diaryViews);
+    final appOpens = _intMap(source.appOpens);
+    final today = _startOfDay(now);
+    final recent14Cutoff = CalendarCivilDate.addDays(
+      today,
+      -13,
     ).millisecondsSinceEpoch;
-    final recent30Cutoff = _startOfDay(
-      now.subtract(const Duration(days: 29)),
+    final recent30Cutoff = CalendarCivilDate.addDays(
+      today,
+      -29,
+    ).millisecondsSinceEpoch;
+    final recent7Cutoff = CalendarCivilDate.addDays(
+      today,
+      -6,
     ).millisecondsSinceEpoch;
 
     final isSingle = relationshipMode == 'single';
@@ -519,10 +603,30 @@ class LoveInsightService {
               ? L10nService().translate('male_role_default')
               : rawNameU2);
 
-    var diaryTotal = totalDiaryCount;
+    final rolesByUid = <String, String>{
+      for (final member in _asMap(source.members).entries)
+        if (const {'user1', 'user2'}.contains(_asMap(member.value)['role']))
+          member.key: _asMap(member.value)['role'] as String,
+    };
+    List<Map<String, dynamic>> normalize(List<Map<String, dynamic>> records) =>
+        LoveInsightRecords.normalize(
+          records,
+          from: CalendarCivilDate.addDays(today, -44),
+          through: now,
+          rolesByUid: rolesByUid,
+          nameU1: rawNameU1,
+          nameU2: rawNameU2,
+        );
+    final diaryList = normalize(source.diaries);
+    final albumList = normalize(source.memories);
+    final albumTotalKnown =
+        source.memoryTotal != null && source.memoryTotal! >= albumList.length;
+    final diaryTotal = max(diaryList.length, source.diaryTotal);
     var diaryMonth = 0;
-    var albumTotal = totalAlbumCount;
+    final albumTotal = albumTotalKnown ? source.memoryTotal! : albumList.length;
     var albumMonth = 0;
+    var memoriesWeek = 0;
+    final activeDaysWeek = <String>{};
     var moodTotal = 0;
     var positiveMoodTotal = 0;
     var negativeMoodTotal = 0;
@@ -580,6 +684,10 @@ class LoveInsightService {
           ts,
         ).toIso8601String().split('T').first;
         activeDays.add(dayKey);
+        if (ts >= recent7Cutoff) {
+          memoriesWeek++;
+          activeDaysWeek.add(dayKey);
+        }
         if (ts >= monthStart.millisecondsSinceEpoch) {
           diaryMonth++;
         }
@@ -646,9 +754,9 @@ class LoveInsightService {
         }
       }
 
-      if (owner == 'user1') {
+      if (ts >= recent30Cutoff && owner == 'user1') {
         diaryU1++;
-      } else if (owner == 'user2') {
+      } else if (ts >= recent30Cutoff && owner == 'user2') {
         diaryU2++;
       }
     }
@@ -668,6 +776,10 @@ class LoveInsightService {
           ts,
         ).toIso8601String().split('T').first;
         activeDays.add(dayKey);
+        if (ts >= recent7Cutoff) {
+          memoriesWeek++;
+          activeDaysWeek.add(dayKey);
+        }
         if (ts >= monthStart.millisecondsSinceEpoch) {
           albumMonth++;
         }
@@ -695,9 +807,9 @@ class LoveInsightService {
         }
       }
 
-      if (owner == 'user1') {
+      if (ts >= recent30Cutoff && owner == 'user1') {
         albumU1++;
-      } else if (owner == 'user2') {
+      } else if (ts >= recent30Cutoff && owner == 'user2') {
         albumU2++;
       }
     }
@@ -708,7 +820,7 @@ class LoveInsightService {
         : max(0, CalendarCivilDate.daysBetween(startDate, now));
     final positivity = moodTotal > 0
         ? ((positiveMoodTotal / moodTotal) * 100).round().clamp(0, 100)
-        : 74;
+        : 0;
     final memoryThisMonth = diaryMonth + albumMonth;
     final viewU1 = diaryViews['user1'] ?? 0;
     final viewU2 = diaryViews['user2'] ?? 0;
@@ -877,6 +989,26 @@ class LoveInsightService {
     }
     loveScore = max(isSingle ? 30 : 28, min(100, loveScore));
 
+    final sortedDays = activeDays.toList()..sort((a, b) => b.compareTo(a));
+    var currentStreak = 0;
+    var currentDay = today;
+    if (sortedDays.isNotEmpty) {
+      final todayKey = today.toIso8601String().split('T').first;
+      final yesterday = CalendarCivilDate.addDays(today, -1);
+      if (sortedDays.first != todayKey &&
+          sortedDays.first == yesterday.toIso8601String().split('T').first) {
+        currentDay = yesterday;
+      }
+      for (final day in sortedDays) {
+        if (day != currentDay.toIso8601String().split('T').first) break;
+        currentStreak++;
+        currentDay = CalendarCivilDate.addDays(currentDay, -1);
+      }
+    }
+    if (currentStreak >= 3) {
+      loveScore = min(100, loveScore + (currentStreak >= 7 ? 5 : 3));
+    }
+
     final level = loveScore >= 90
         ? _tr('love_level_soulmate')
         : loveScore >= 75
@@ -933,9 +1065,11 @@ class LoveInsightService {
     final interactionRate = recentActiveDays.isNotEmpty
         ? ((recentMemory30 / recentActiveDays.length) * 10).round() / 10
         : 0.0;
-    final favoriteActivity = diaryTotal > albumTotal
+    final comparisonDiaries = albumTotalKnown ? diaryTotal : diaryMonth;
+    final comparisonMemories = albumTotalKnown ? albumTotal : albumMonth;
+    final favoriteActivity = comparisonDiaries > comparisonMemories
         ? _tr('love_activity_diary')
-        : diaryTotal < albumTotal
+        : comparisonDiaries < comparisonMemories
         ? _tr('love_activity_photo')
         : _tr('love_activity_balanced');
 
@@ -946,36 +1080,6 @@ class LoveInsightService {
       now: now,
     );
 
-    final sortedDays = activeDays.toList()..sort((a, b) => b.compareTo(a));
-    int currentStreak = 0;
-    DateTime currentDay = DateTime(now.year, now.month, now.day);
-    if (sortedDays.isNotEmpty) {
-      String todayStr = currentDay.toIso8601String().split('T').first;
-      String yesterdayStr = CalendarCivilDate.addDays(currentDay, -1)
-          .toIso8601String()
-          .split('T')
-          .first;
-      if (sortedDays.first == todayStr) {
-        // Start from today
-      } else if (sortedDays.first == yesterdayStr) {
-        currentDay = CalendarCivilDate.addDays(currentDay, -1);
-      }
-      for (final d in sortedDays) {
-        if (d == currentDay.toIso8601String().split('T').first) {
-          currentStreak++;
-          currentDay = CalendarCivilDate.addDays(currentDay, -1);
-        } else {
-          break;
-        }
-      }
-    }
-
-    // Tăng điểm thưởng nếu chuỗi tương tác dài
-    if (currentStreak >= 3) {
-      loveScore += (currentStreak >= 7 ? 5 : 3);
-      loveScore = min(100, loveScore);
-    }
-
     final suggestion = await _buildSuggestion(
       isSingle: isSingle,
       loveDays: loveDays,
@@ -983,7 +1087,7 @@ class LoveInsightService {
       level: level,
       positivity: positivity,
       memoryThisMonth: memoryThisMonth,
-      activeDays: activeDays.length,
+      activeDays: recentActiveDays.length,
       shareU1: shareU1,
       shareU2: shareU2,
       offU1: offU1,
@@ -1006,7 +1110,7 @@ class LoveInsightService {
       diaryMonth: diaryMonth,
       albumMonth: albumMonth,
       memoryThisMonth: memoryThisMonth,
-      activeDays: activeDays.length,
+      activeDays: recentActiveDays.length,
       diaryTotal: diaryTotal,
       albumTotal: albumTotal,
       suggestion: suggestion,
@@ -1031,6 +1135,10 @@ class LoveInsightService {
       loveU1: loveU1,
       loveU2: loveU2,
       timeline: timeline,
+      memoriesWeek: memoriesWeek,
+      activeDaysWeek: activeDaysWeek.length,
+      albumTotalKnown: albumTotalKnown,
+      moodSampleCount: moodTotal,
     );
   }
 
@@ -1253,6 +1361,7 @@ class LoveInsightService {
       final now = DateTime.now();
       final nowTs = now.millisecondsSinceEpoch;
       final data = await computeInsights(houseId, relationshipMode);
+      if (data.isStale) return;
       final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
       final presenceValue = await _readPresence(houseId);
       final metricsSnap = await _dbRef.child('houses/$houseId/metrics').get();
@@ -1271,8 +1380,7 @@ class LoveInsightService {
           toHouseId: houseId,
           type: 'upcoming_anniversary_reminder',
           title: L10nService().translate('notif_insight_anniversary_title'),
-          content:
-              L10nService().translate('notif_insight_anniversary_body'),
+          content: L10nService().translate('notif_insight_anniversary_body'),
         );
         return;
       }
@@ -1308,14 +1416,21 @@ class LoveInsightService {
             nowTs: nowTs,
           )) {
         final name = quietRole == 'user2'
-            ? _string(settings['nameU2'], fallback: UiCopy.text('copy_ec96c474a63b'))
-            : _string(settings['nameU1'], fallback: UiCopy.text('copy_ec96c474a63b'));
+            ? _string(
+                settings['nameU2'],
+                fallback: UiCopy.text('copy_ec96c474a63b'),
+              )
+            : _string(
+                settings['nameU1'],
+                fallback: UiCopy.text('copy_ec96c474a63b'),
+              );
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'long_time_no_checkin',
           title: L10nService().translate('notif_insight_quiet_title'),
-          content:
-              L10nService().format('notif_insight_quiet_body', {'value1': name}),
+          content: L10nService().format('notif_insight_quiet_body', {
+            'value1': name,
+          }),
         );
       }
     } catch (error) {
@@ -1453,44 +1568,10 @@ class LoveInsightService {
     Map<String, dynamic> item,
     String nameU1,
     String nameU2,
-  ) {
-    final role = _string(item['role']).toLowerCase();
-    if (role == 'user1' || role == 'user2') {
-      return role;
-    }
+  ) => LoveInsightRecords.owner(item, nameU1: nameU1, nameU2: nameU2);
 
-    final author = _string(item['a']);
-    if (author.isNotEmpty && author == nameU1) {
-      return 'user1';
-    }
-    if (author.isNotEmpty && author == nameU2) {
-      return 'user2';
-    }
-
-    return '';
-  }
-
-  int _toTimestamp(Map<String, dynamic> item) {
-    final rawTs = item['ts'];
-    if (rawTs is int) {
-      return rawTs;
-    }
-    if (rawTs is num) {
-      return rawTs.toInt();
-    }
-    if (rawTs != null) {
-      final parsed = int.tryParse(rawTs.toString());
-      if (parsed != null) {
-        return parsed;
-      }
-    }
-
-    final raw = _string(item['time']).isNotEmpty
-        ? _string(item['time'])
-        : _string(item['date']);
-    final date = _parseFlexibleDate(raw);
-    return date?.millisecondsSinceEpoch ?? 0;
-  }
+  int _toTimestamp(Map<String, dynamic> item) =>
+      LoveInsightRecords.timestamp(item);
 
   Map<String, dynamic> _asMap(Object? value) {
     if (value is! Map) {

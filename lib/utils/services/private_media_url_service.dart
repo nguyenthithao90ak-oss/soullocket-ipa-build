@@ -6,16 +6,23 @@ import 'core/callable_app_check_guard.dart';
 import 'core/cloud_functions_helper.dart';
 
 class PrivateMediaUrlResult {
-  const PrivateMediaUrlResult({required this.url, required this.expiresAt});
+  const PrivateMediaUrlResult({
+    required this.url,
+    required this.expiresAt,
+    this.variant = 'original',
+  });
   final String url;
   final int expiresAt;
+  // Backend có thể trả original khi ảnh cũ chưa hỗ trợ thumbnail.
+  final String variant;
 }
 
 class _PrivateMediaBatch {
-  _PrivateMediaBatch(this.houseId, this.kind);
+  _PrivateMediaBatch(this.houseId, this.kind, this.variant);
 
   final String houseId;
   final String kind;
+  final String? variant;
   final requests = <String, Completer<Map<String, dynamic>>>{};
 }
 
@@ -124,6 +131,7 @@ class PrivateMediaUrlService {
     required String houseId,
     required String mediaId,
     required String kind,
+    String? variant,
     bool forceRefresh = false,
   }) async {
     final uid = _currentUid();
@@ -144,7 +152,10 @@ class PrivateMediaUrlService {
           'memory_image',
           'album_image',
           'voice',
-        }.contains(normalizedKind)) {
+        }.contains(normalizedKind) ||
+        (variant != null &&
+            !const {'original', 'thumbnail'}.contains(variant)) ||
+        (variant == 'thumbnail' && normalizedKind == 'voice')) {
       throw FirebaseFunctionsException(code: 'invalid-argument', message: '');
     }
     if (_uid != uid) {
@@ -152,7 +163,7 @@ class PrivateMediaUrlService {
       _uid = uid;
     }
     final cacheKey =
-        '$uid/$normalizedHouseId/$normalizedMediaId/$normalizedKind';
+        '$uid/$normalizedHouseId/$normalizedMediaId/$normalizedKind/${variant ?? 'original'}';
     if (forceRefresh) {
       final previous = _cache[cacheKey];
       if (previous != null) _removeCached(cacheKey, previous);
@@ -170,6 +181,7 @@ class PrivateMediaUrlService {
           houseId: normalizedHouseId,
           mediaId: normalizedMediaId,
           kind: normalizedKind,
+          variant: variant,
         );
     _pending[cacheKey] = pending;
     try {
@@ -296,11 +308,12 @@ class PrivateMediaUrlService {
     required String houseId,
     required String mediaId,
     required String kind,
+    required String? variant,
   }) {
-    final key = '$uid/$houseId/$kind';
+    final key = '$uid/$houseId/$kind/${variant ?? 'original'}';
     final batch = _batches.putIfAbsent(
       key,
-      () => _PrivateMediaBatch(houseId, kind),
+      () => _PrivateMediaBatch(houseId, kind, variant),
     );
     final response = Completer<Map<String, dynamic>>();
     batch.requests[mediaId] = response;
@@ -324,10 +337,11 @@ class PrivateMediaUrlService {
 
   Future<void> _sendBatch(_PrivateMediaBatch batch) async {
     try {
-      final data = await _invoke({
+      final data = await _invokeWithVariant({
         'houseId': batch.houseId,
         'mediaIds': batch.requests.keys.toList(),
         'kind': batch.kind,
+        if (batch.variant != null) 'variant': batch.variant,
       });
       final items = data['items'];
       final replies = <String, Map<String, dynamic>>{};
@@ -376,11 +390,34 @@ class PrivateMediaUrlService {
     }
   }
 
+  Future<Map<String, dynamic>> _invokeWithVariant(
+    Map<String, dynamic> payload,
+  ) async {
+    final generation = _generation;
+    final uid = _currentUid();
+    try {
+      return await _invoke(payload);
+    } on FirebaseFunctionsException catch (error) {
+      // Chỉ lùi giao thức khi server cũ chưa hiểu variant. Không thử lại khi
+      // bị từ chối quyền, App Check, hết hạn mức hay lỗi mạng.
+      if (!payload.containsKey('variant') ||
+          !const {'invalid-argument', 'unimplemented'}.contains(error.code)) {
+        rethrow;
+      }
+      if (_disposed || generation != _generation || uid != _currentUid()) {
+        throw FirebaseFunctionsException(code: 'unauthenticated', message: '');
+      }
+      final legacy = Map<String, dynamic>.from(payload)..remove('variant');
+      return _invoke(legacy);
+    }
+  }
+
   Future<PrivateMediaUrlResult> _resolveUncached({
     required String uid,
     required String houseId,
     required String mediaId,
     required String kind,
+    required String? variant,
   }) async {
     final generation = _generation;
     try {
@@ -390,17 +427,26 @@ class PrivateMediaUrlService {
               houseId: houseId,
               mediaId: mediaId,
               kind: kind,
+              variant: variant,
             )
-          : _invoke({'houseId': houseId, 'mediaId': mediaId, 'kind': kind}));
+          : _invokeWithVariant({
+              'houseId': houseId,
+              'mediaId': mediaId,
+              'kind': kind,
+              'variant': ?variant,
+            }));
       if (uid != _currentUid() || generation != _generation) {
         throw FirebaseFunctionsException(code: 'unauthenticated', message: '');
       }
       final url = data['url']?.toString().trim() ?? '';
       final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
+      final actualVariant = data['variant'] ?? 'original';
       final uri = Uri.tryParse(url);
       if (data['ok'] != true ||
           data['kind'] != kind ||
           data['mediaId'] != mediaId ||
+          !const {'original', 'thumbnail'}.contains(actualVariant) ||
+          (variant != 'thumbnail' && actualVariant != 'original') ||
           uri == null ||
           uri.scheme != 'https' ||
           uri.host.isEmpty ||
@@ -408,7 +454,11 @@ class PrivateMediaUrlService {
           expiresAt <= _now().millisecondsSinceEpoch) {
         throw FirebaseFunctionsException(code: 'unavailable', message: '');
       }
-      return PrivateMediaUrlResult(url: url, expiresAt: expiresAt);
+      return PrivateMediaUrlResult(
+        url: url,
+        expiresAt: expiresAt,
+        variant: actualVariant as String,
+      );
     } on FirebaseFunctionsException catch (error) {
       // Không chuyển message/details có thể chứa bearer URL ra UI hoặc log.
       throw FirebaseFunctionsException(code: error.code, message: '');

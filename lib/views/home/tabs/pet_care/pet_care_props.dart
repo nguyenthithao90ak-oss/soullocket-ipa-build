@@ -48,7 +48,7 @@ abstract final class _PetPropSpots {
     PetCareProp.plant => const Rect.fromLTWH(20, 138, 46, 78),
     PetCareProp.radio => const Rect.fromLTWH(266, 28, 52, 44),
     PetCareProp.basket => const Rect.fromLTWH(296, 164, 46, 56),
-    PetCareProp.cushion => const Rect.fromLTWH(140, 140, 146, 40),
+    PetCareProp.cushion => const Rect.fromLTWH(94, 122, 207, 82),
     PetCareProp.fridge => const Rect.fromLTWH(12, 38, 78, 170),
     PetCareProp.kitchenWindow => Rect.fromLTWH(134, 18 - ext * .35, 91, 112),
     PetCareProp.jars => const Rect.fromLTWH(246, 22, 86, 40),
@@ -97,6 +97,7 @@ extension _PetCareProps on _PetHousePainter {
   void _props(Canvas c, double ext) {
     switch (room) {
       case PetCareRoom.living:
+        _gardenBackDoor(c);
         _window(c, y: 37 - ext * .48);
         _sideCurtains(
           c,
@@ -118,6 +119,7 @@ extension _PetCareProps on _PetHousePainter {
         _propRadio(c);
         _propBasket(c);
         _propCushions(c);
+        _livingLamp(c);
       case PetCareRoom.kitchen:
         _propFridge(c);
         _window(c, x: 140, y: 25 - ext * .35, width: 79, height: 99);
@@ -400,53 +402,70 @@ extension _PetCareProps on _PetHousePainter {
   }
 
   void _propBasket(Canvas c) {
-    final t = _tap(PetCareProp.basket);
-    if (t > 0) {
-      // Đồ chơi bật lên khỏi giỏ rồi rơi lại.
-      for (var i = 0; i < 2; i++) {
-        final u = (t * 1.15 - i * .15).clamp(0.0, 1.0);
-        if (u <= 0 || u >= 1) continue;
-        final p = Offset(
-          312 + i * 14 + u * (i.isEven ? -10 : 8),
-          186 - math.sin(u * math.pi) * 42,
-        );
-        if (i == 0) {
-          _circle(c, p, 7, _PetHousePainter._rose);
-          _line(
-            c,
-            p + const Offset(-6, -2),
-            p + const Offset(6, 2),
-            _PetHousePainter._cream,
-            1.5,
-          );
-        } else {
-          _star(c, p, 7, _PetHousePainter._gold);
-        }
-      }
-    }
-    final squash = _wobble(t, cycles: 2) * .08;
-    c.save();
-    c.translate(319, 218);
-    c.scale(1 + squash, 1 - squash);
-    c.translate(-319, -218);
-    _round(c, const Rect.fromLTWH(306, 169, 10, 24), 2, _PetHousePainter._mint);
-    _round(c, const Rect.fromLTWH(318, 173, 9, 20), 2, _PetHousePainter._lilac);
+    const box = Rect.fromLTWH(295, 181, 48, 37);
+    _shadow(c, const Rect.fromLTWH(292, 214, 55, 8));
+    _round(c, box, 7, const Color(0xFFB99BD1));
     _round(
       c,
-      const Rect.fromLTWH(300, 183, 38, 35),
-      7,
-      const Color(0xFFC9AA91),
+      const Rect.fromLTWH(299, 184, 40, 30),
+      5,
+      const Color(0xFFE2CDEB),
     );
-    for (var i = 0; i < 5; i++) {
+    _round(c, const Rect.fromLTWH(297, 205, 44, 9), 3, const Color(0xFFC5A7DC));
+    for (final x in [303.0, 332.0]) {
+      _round(c, Rect.fromLTWH(x, 184, 4, 30), 2, const Color(0xFFF9E5AC));
+    }
+    _star(c, const Offset(319, 200), 8, const Color(0xFFFFE397));
+    if (toyChestOpen) {
+      _round(
+        c,
+        const Rect.fromLTWH(299, 172, 40, 15),
+        4,
+        const Color(0xFF776287),
+      );
+      _circle(c, const Offset(308, 177), 8, _PetHousePainter._rose);
       _line(
         c,
-        Offset(304, 190 + i * 5.0),
-        Offset(333, 190 + i * 5.0),
-        const Color(0xFFEAD4B3),
-        1,
+        const Offset(302, 174),
+        const Offset(314, 180),
+        Colors.white,
+        1.5,
       );
+      _star(c, const Offset(329, 174), 9, _PetHousePainter._gold);
     }
+    // Nắp quay quanh bản lề phía sau, mở đúng cả khi overlay tắt ticker.
+    c.save();
+    c.translate(319, 180);
+    c.rotate(toyChestOpen ? -.48 : -.025);
+    _round(
+      c,
+      Rect.fromLTWH(-25, toyChestOpen ? -22 : -7, 50, toyChestOpen ? 20 : 10),
+      5,
+      const Color(0xFFB99BD1),
+    );
+    _round(
+      c,
+      Rect.fromLTWH(-22, toyChestOpen ? -20 : -6, 44, toyChestOpen ? 15 : 6),
+      3,
+      const Color(0xFFEADAF2),
+    );
+    _line(
+      c,
+      Offset(-18, toyChestOpen ? -10 : -2),
+      Offset(18, toyChestOpen ? -10 : -2),
+      const Color(0xFFCFB1DF),
+      1.5,
+    );
     c.restore();
+    if (!toyChestOpen) {
+      _round(
+        c,
+        const Rect.fromLTWH(316, 179, 7, 8),
+        2,
+        const Color(0xFFFFE397),
+      );
+      _circle(c, const Offset(319.5, 183), 1.2, const Color(0xFFA7865A));
+    }
   }
 
   void _propCushions(Canvas c) {
@@ -454,7 +473,7 @@ extension _PetCareProps on _PetHousePainter {
     final squash = _wobble(t, cycles: 2.5) * .16;
     final hop = t > 0 ? math.sin(t * math.pi).abs() * 6 * (1 - t) : 0.0;
     c.save();
-    c.translate(163, 161 - hop);
+    c.translate(132, 155 - hop);
     c.rotate(-.16);
     c.scale(1 + squash, 1 - squash);
     _round(
@@ -466,7 +485,7 @@ extension _PetCareProps on _PetHousePainter {
     _heart(c, Offset.zero, 7, _PetHousePainter._rose);
     c.restore();
     c.save();
-    c.translate(264, 163 - hop * .7);
+    c.translate(260, 155 - hop * .7);
     c.rotate(.19);
     c.scale(1 - squash, 1 + squash);
     _round(

@@ -215,26 +215,14 @@ class ScheduleNotifService {
       if (key == null) continue;
       final value = customSnapshot.value;
       if (value is! Map) continue;
-      final dateStr = value['date']?.toString() ?? '';
-      final dateMs = _parseDateKey(dateStr);
-      if (dateMs == null) continue;
-
-      DateTime eventDate = DateTime.fromMillisecondsSinceEpoch(dateMs);
-      if (value['repeat'] == true) {
-        final now = _now();
-        eventDate = DateTime(now.year, eventDate.month, eventDate.day);
-        final todayDate = DateTime(now.year, now.month, now.day);
-        if (eventDate.isBefore(todayDate)) {
-          eventDate = DateTime(now.year + 1, eventDate.month, eventDate.day);
-        }
-      }
+      final eventDate = _customEventDate(value, today);
+      if (eventDate == null) continue;
 
       final resolvedMs = eventDate.millisecondsSinceEpoch;
       events.add(
         UpcomingEvent(
           eventKey: 'cust:$key',
-          dateKey:
-              '${eventDate.year}-${_pad(eventDate.month)}-${_pad(eventDate.day)}',
+          dateKey: _formatDateKey(eventDate),
           dateMs: resolvedMs,
           title: _nonEmpty(value['name'], _t('sched_event_default')),
           source: 'custom',
@@ -319,13 +307,13 @@ class ScheduleNotifService {
         if (key == null) continue;
         final value = customSnapshot.value;
         if (value is! Map) continue;
-        final dateStr = value['date']?.toString() ?? '';
-        final dateMs = _parseDateKey(dateStr);
-        if (dateMs == null) continue;
+        final eventDate = _customEventDate(value, today);
+        if (eventDate == null) continue;
+        final dateMs = eventDate.millisecondsSinceEpoch;
         events.add(
           UpcomingEvent(
             eventKey: 'cust:$key',
-            dateKey: dateStr,
+            dateKey: _formatDateKey(eventDate),
             dateMs: dateMs,
             title: value['name']?.toString() ?? '',
             source: 'custom',
@@ -376,6 +364,21 @@ class ScheduleNotifService {
 
   String _notificationIdFor(UpcomingEvent event) {
     return 'sched_d${event.daysUntil}_${event.eventKey.hashCode.toUnsigned(32).toRadixString(16)}';
+  }
+
+  // Xem trước và nhắc phải dùng cùng lần lặp; không gửi theo năm đã lưu cũ.
+  // Giữ tháng/ngày gốc qua năm nhuận, và không nhắc trước ngày bắt đầu.
+  DateTime? _customEventDate(Map value, int todayMs) {
+    final parsedMs = _parseDateKey(value['date']?.toString() ?? '');
+    if (parsedMs == null) return null;
+    final original = DateTime.fromMillisecondsSinceEpoch(parsedMs);
+    if (value['repeat'] != true || parsedMs >= todayMs) return original;
+    final today = DateTime.fromMillisecondsSinceEpoch(todayMs);
+    var occurrence = DateTime(today.year, original.month, original.day);
+    if (occurrence.isBefore(today)) {
+      occurrence = DateTime(today.year + 1, original.month, original.day);
+    }
+    return occurrence;
   }
 
   Query _calendarQuery(String houseId, DateTime now) {
@@ -632,6 +635,11 @@ class ScheduleNotifService {
         int.parse(parts[1]),
         int.parse(parts[2]),
       );
+      if (date.year != int.parse(parts[0]) ||
+          date.month != int.parse(parts[1]) ||
+          date.day != int.parse(parts[2])) {
+        return null;
+      }
       return date.millisecondsSinceEpoch;
     } catch (_) {
       return null;

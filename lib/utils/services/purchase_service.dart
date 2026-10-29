@@ -254,12 +254,13 @@ class PurchaseService with WidgetsBindingObserver {
     required FirebaseDatabase database,
     required http.Client client,
     required Future<Map<String, String>> Function(Map<String, String>) headers,
+    bool observeLifecycle = false,
   }) : _iapInstance = iap,
        _authInstance = auth,
        _dbInstance = database,
        _httpClient = client,
        _testHeaders = headers,
-       _observeEnabled = false;
+        _observeEnabled = observeLifecycle;
 
   InAppPurchase? _iapInstance;
   InAppPurchase get _iap => _iapInstance ??= InAppPurchase.instance;
@@ -284,6 +285,9 @@ class PurchaseService with WidgetsBindingObserver {
   int? _cachedAccessCheckedAt;
   Future<VipAccessInfo>? _pendingAccessInfo;
   String? _pendingAccessUid;
+  String? _accessIdentityUid;
+  bool _hasAccessIdentity = false;
+  int _accessEpoch = 0;
   final PurchaseProcessingQueue _purchaseQueue = PurchaseProcessingQueue();
   final Map<String, String> _purchaseOwners = <String, String>{};
   bool _openingPurchase = false;
@@ -307,16 +311,25 @@ class PurchaseService with WidgetsBindingObserver {
     _observing = true;
     WidgetsBinding.instance.addObserver(this);
     _authSub = _auth.authStateChanges().listen((user) {
-      _cachedAccessInfo = null;
-      _cachedAccessUid = null;
-      _cachedAccessCheckedAt = null;
-      // Đổi/đăng xuất tài khoản: trạng thái Pro chưa xác minh lại.
-      UtilityService.setProAccess(null);
+      _updateAccessIdentity(user?.uid);
       if (user != null && AppConfig.isPurchaseEnabled) {
         unawaited(initialize().catchError((Object _) {}));
         unawaited(syncVipEntitlements());
       }
     });
+  }
+
+  void _updateAccessIdentity(String? uid) {
+    if (_hasAccessIdentity && _accessIdentityUid == uid) return;
+    _hasAccessIdentity = true;
+    _accessIdentityUid = uid;
+    _accessEpoch++;
+    _cachedAccessInfo = null;
+    _cachedAccessUid = null;
+    _cachedAccessCheckedAt = null;
+    _pendingAccessInfo = null;
+    _pendingAccessUid = null;
+    UtilityService.setProAccess(null);
   }
 
   @override
@@ -872,15 +885,13 @@ class PurchaseService with WidgetsBindingObserver {
     return VipAccessInfo(isVip: true, planId: planId, expiresAtMs: expiresAt);
   }
 
-  Future<VipAccessInfo> _getHouseVipAccessInfo(String houseId) async {
+  Future<VipAccessInfo> _getHouseVipAccessInfo(String houseId, String uid) async {
     final memberSnap = await _db
         .ref('houses/$houseId/members')
         .get()
         .timeout(_requestTimeout);
     final members = _toMap(memberSnap.value);
-    final uid = _auth.currentUser?.uid;
     final member =
-        uid != null &&
         (members.containsKey(uid) ||
             members.values.any((value) => value is Map && value['uid'] == uid));
     if (!member) {
@@ -888,7 +899,7 @@ class PurchaseService with WidgetsBindingObserver {
           .ref('houses/$houseId/owner_uid')
           .get()
           .timeout(_requestTimeout);
-      if (uid == null || owner.value != uid) {
+      if (owner.value != uid) {
         return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
       }
     }
@@ -922,17 +933,21 @@ class PurchaseService with WidgetsBindingObserver {
   }
 
   Future<VipAccessInfo> getVipAccessInfo({bool forceRefresh = false}) async {
+    _observeLifecycle();
+    final uid = _auth.currentUser?.uid;
+    _updateAccessIdentity(uid);
+    final epoch = _accessEpoch;
     // Nhiều màn hỏi cùng lúc khi cache vừa hết hạn: dùng chung một lượt đọc
     // thay vì mỗi nơi đọc `users/{uid}/vip` và `houses/{id}/vip` riêng.
     final pending = _pendingAccessInfo;
     if (!forceRefresh &&
         pending != null &&
-        _pendingAccessUid == _auth.currentUser?.uid) {
+        _pendingAccessUid == uid) {
       return pending;
     }
-    final load = _loadVipAccessInfo(forceRefresh: forceRefresh);
+    final load = _loadVipAccessInfo(forceRefresh: forceRefresh, epoch: epoch);
     _pendingAccessInfo = load;
-    _pendingAccessUid = _auth.currentUser?.uid;
+    _pendingAccessUid = uid;
     final VipAccessInfo access;
     try {
       access = await load;
@@ -942,12 +957,18 @@ class PurchaseService with WidgetsBindingObserver {
         _pendingAccessUid = null;
       }
     }
-    // Tiện ích Pro (Chat thân thiện) mở chat hay lời mời nâng cấp theo kết quả này.
+    // Kết quả phiên cũ không được ghi đè PRO của người vừa đăng nhập, kể cả A→B→A.
+    if (_auth.currentUser?.uid != uid || _accessEpoch != epoch) {
+      return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
+    }
     UtilityService.setProAccess(access.isVip);
     return access;
   }
 
-  Future<VipAccessInfo> _loadVipAccessInfo({bool forceRefresh = false}) async {
+  Future<VipAccessInfo> _loadVipAccessInfo({
+    bool forceRefresh = false,
+    required int epoch,
+  }) async {
     if (!AppConfig.isPurchaseEnabled) {
       return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
     }
@@ -983,6 +1004,9 @@ class PurchaseService with WidgetsBindingObserver {
         .ref('users/${user.uid}/vip')
         .get()
         .timeout(_requestTimeout);
+    if (_auth.currentUser?.uid != user.uid || _accessEpoch != epoch) {
+      return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
+    }
     if (userVipSnap.exists) {
       final userVipData = _toMap(userVipSnap.value);
       final userAccess = _vipAccessFromPayload(
@@ -996,12 +1020,15 @@ class PurchaseService with WidgetsBindingObserver {
 
     if (!access.isVip) {
       final houseId = await _resolveCurrentHouseId(user.uid);
+      if (_auth.currentUser?.uid != user.uid || _accessEpoch != epoch) {
+        return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
+      }
       if (houseId != null && houseId.isNotEmpty) {
-        access = await _getHouseVipAccessInfo(houseId);
+        access = await _getHouseVipAccessInfo(houseId, user.uid);
       }
     }
 
-    if (_auth.currentUser?.uid != user.uid) {
+    if (_auth.currentUser?.uid != user.uid || _accessEpoch != epoch) {
       return const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null);
     }
     _cachedAccessCheckedAt = DateTime.now().millisecondsSinceEpoch;

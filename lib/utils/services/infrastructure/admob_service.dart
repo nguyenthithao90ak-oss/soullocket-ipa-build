@@ -110,7 +110,75 @@ class AdMobService {
   factory AdMobService() => _instance;
   AdMobService._internal() {
     ConsentService.adRequestsAllowed.addListener(_onPrivacyChanged);
+    _ensureAuthObserver();
   }
+
+  /// Dùng SDK/dispatcher thật với danh tính và quyền giả trong kiểm thử local.
+  @visibleForTesting
+  AdMobService.forTesting({
+    required String? Function() currentUid,
+    required Future<bool> Function() readPro,
+    DateTime Function()? now,
+    bool supportsGameAds = true,
+  }) : _currentUidOverride = currentUid,
+       _readProOverride = readPro,
+       _nowOverride = now,
+       _supportsGameAdsOverride = supportsGameAds {
+    _sdkInitialized = true;
+    _requestConfigurationReady = true;
+    _umpAllowsAds = true;
+    ConsentService.adRequestsAllowed.addListener(_onPrivacyChanged);
+  }
+
+  String? Function()? _currentUidOverride;
+  Future<bool> Function()? _readProOverride;
+  DateTime Function()? _nowOverride;
+  bool? _supportsGameAdsOverride;
+  StreamSubscription<User?>? _authSubscription;
+  String? _observedAuthUid;
+  String? get _adUid => _currentUidOverride == null
+      ? FirebaseAuth.instance.currentUser?.uid
+      : _currentUidOverride!();
+  DateTime _adNow() => _nowOverride?.call() ?? DateTime.now();
+
+  void _ensureAuthObserver() {
+    if (_currentUidOverride != null || _authSubscription != null) return;
+    try {
+      _authSubscription = FirebaseAuth.instance.authStateChanges().listen(
+        _onAuthChanged,
+      );
+    } catch (error) {
+      // Một số test/khởi động sớm tạo service trước Firebase.initializeApp().
+      debugPrint('AdMobService: auth observer delayed: $error');
+    }
+  }
+
+  void _onAuthChanged(User? user) {
+    if (_currentUidOverride != null) return;
+    final nextUid = user?.uid;
+    if (nextUid == _observedAuthUid) return;
+    _observedAuthUid = nextUid;
+    _discardAds(resetConsent: false);
+    if (nextUid != null && _canUseAds) {
+      // Tài khoản thường mới nhận lại rewarded sớm; PRO sẽ bị _canLoadAdsFor
+      // bỏ qua. Các định dạng còn lại được caller/màn active preload theo scope.
+      unawaited(_loadRewardedAd());
+    }
+  }
+
+  @visibleForTesting
+  void disposeForTesting() {
+    assert(_currentUidOverride != null);
+    ConsentService.adRequestsAllowed.removeListener(_onPrivacyChanged);
+    _discardAds();
+    adRevision.dispose();
+  }
+
+  @visibleForTesting
+  void handleIdentityChangeForTesting() {
+    _discardAds(resetConsent: false);
+  }
+
   static const int rewardedMainPoints = 50;
   static const int dailyRewardedAdLimit = 20;
   static const String _autoInterstitialNextAtPrefsKey =
@@ -199,13 +267,15 @@ class AdMobService {
 
   // ─── REWARDED AD (CHÍNH) ─────────────────────────────────────
   RewardedAd? _rewardedAd;
-  bool _isRewardedAdLoading = false;
+  final _rewardedLoad = SharedAdLoad();
+  bool get _isRewardedAdLoading => _rewardedLoad.isRunning;
+  Timer? _rewardedRetryTimer;
   int _rewardedLoadId = 0;
   DateTime? _rewardedLoadedAt;
   RewardedAd? _soulGameRewardedAd;
-  bool _isSoulGameRewardedAdLoading = false;
+  final _soulGameRewardedLoad = SharedAdLoad();
+  bool get _isSoulGameRewardedAdLoading => _soulGameRewardedLoad.isRunning;
   int _soulGameRewardedLoadId = 0;
-  Timer? _soulGameRewardedLoadTimer;
   DateTime? _soulGameRewardedLoadedAt;
   AppOpenAd? _appOpenAd;
   DateTime? _appOpenLoadedAt;
@@ -245,10 +315,7 @@ class AdMobService {
       !_privacyOptionsOpen &&
       ConsentService.adRequestsAllowed.value;
   bool _isCurrentAdRequest(String? uid, int epoch) =>
-      uid != null &&
-      _canUseAds &&
-      epoch == _privacyEpoch &&
-      FirebaseAuth.instance.currentUser?.uid == uid;
+      uid != null && _canUseAds && epoch == _privacyEpoch && _adUid == uid;
 
   Future<bool> _canLoadAdsFor(String? uid, int epoch) async {
     if (!_isCurrentAdRequest(uid, epoch)) return false;
@@ -278,11 +345,12 @@ class AdMobService {
   bool get hasReadyInterstitialAd {
     final loadedAt = _interstitialLoadedAt;
     if (_interstitialAd == null || loadedAt == null) return false;
-    return DateTime.now().difference(loadedAt) < const Duration(minutes: 55);
+    return _adNow().difference(loadedAt) < const Duration(minutes: 55);
   }
 
   bool get supportsSoulGameRewardedAds =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+      !kIsWeb &&
+      (_supportsGameAdsOverride ?? (Platform.isAndroid || Platform.isIOS));
   bool get soulGameAdsDisabledByPrivacy =>
       !ConsentService.adRequestsAllowed.value;
 
@@ -300,20 +368,20 @@ class AdMobService {
     _discardAds();
   }
 
-  void _discardAds() {
+  void _discardAds({bool resetConsent = true}) {
     _privacyEpoch++;
     _startupAdPreloader.cancel();
-    _requestConfigurationReady = false;
-    _isRewardedAdLoading = false;
+    if (resetConsent) _requestConfigurationReady = false;
+    _rewardedLoad.cancel();
+    _rewardedRetryTimer?.cancel();
+    _rewardedRetryTimer = null;
     _rewardedLoadId++;
     _rewardedLoadedAt = null;
     _interstitialLoadId++;
     _interstitialLoad.cancel();
     _interstitialLoadedAt = null;
-    _isSoulGameRewardedAdLoading = false;
+    _soulGameRewardedLoad.cancel();
     _soulGameRewardedLoadId++;
-    _soulGameRewardedLoadTimer?.cancel();
-    _soulGameRewardedLoadTimer = null;
     _soulGameRewardedLoadedAt = null;
     _isAppOpenLoading = false;
     final appOpenCompleter = _appOpenLoadCompleter;
@@ -322,7 +390,7 @@ class AdMobService {
       appOpenCompleter.complete(false);
     }
     _appOpenLoadedAt = null;
-    _umpAllowsAds = false;
+    if (resetConsent) _umpAllowsAds = false;
     _autoInterstitialTimer?.cancel();
     _autoInterstitialTimer = null;
     _rewardedAd?.dispose();
@@ -386,11 +454,12 @@ class AdMobService {
   }) {
     final lastShownMs = _lastFullscreenAdShownMs;
     if (lastShownMs <= 0) return false;
-    return DateTime.now().millisecondsSinceEpoch - lastShownMs <
+    return _adNow().millisecondsSinceEpoch - lastShownMs <
         cooldown.inMilliseconds;
   }
 
   Future<void> initialize() async {
+    _ensureAuthObserver();
     if (kIsWeb ||
         _privacyOptionsOpen ||
         !ConsentService.adRequestsAllowed.value) {
@@ -647,139 +716,113 @@ class AdMobService {
         : MaxAdContentRating.g,
   );
 
-  Future<void> _loadRewardedAd({int retryCount = 0}) async {
-    if (kIsWeb || !_canUseAds) return;
-    final epoch = _privacyEpoch;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (!await _canLoadAdsFor(uid, epoch)) return;
-    if (_rewardedAd != null &&
-        (_rewardedLoadedAt == null ||
-            DateTime.now().difference(_rewardedLoadedAt!) >=
-                const Duration(minutes: 55))) {
-      unawaited(_rewardedAd!.dispose());
-      _rewardedAd = null;
-      _rewardedLoadedAt = null;
-    }
-    if (_isRewardedAdLoading || _rewardedAd != null) return;
-    _isRewardedAdLoading = true;
-    final loadId = ++_rewardedLoadId;
-    bool current() => epoch == _privacyEpoch && loadId == _rewardedLoadId;
-    Future<void> load() async {
-      final ad = await loadAdWithTimeout<RewardedAd>(
-        debugLabel: 'rewarded main',
-        canAccept: () => current() && _isCurrentAdRequest(uid, epoch),
-        load: (loaded, failed) => RewardedAd.load(
-          adUnitId: rewardedMainId,
-          request: const AdRequest(),
-          rewardedAdLoadCallback: RewardedAdLoadCallback(
-            onAdLoaded: loaded,
-            onAdFailedToLoad: failed,
-          ),
-        ),
-      );
-      if (!current()) {
-        if (ad != null) unawaited(ad.dispose());
-        return;
-      }
-      _isRewardedAdLoading = false;
-      if (!_isCurrentAdRequest(uid, epoch)) {
-        if (ad != null) unawaited(ad.dispose());
-        return;
-      }
-      _rewardedAd = ad;
-      _rewardedLoadedAt = ad == null ? null : DateTime.now();
-      if (ad != null) {
-        debugPrint('AdMobService: rewarded main loaded.');
-      } else if (retryCount < 2) {
-        Future<void>.delayed(const Duration(seconds: 10), () {
-          if (current()) _loadRewardedAd(retryCount: retryCount + 1);
-        });
-      }
-    }
+  Future<void> _loadRewardedAd({int retryCount = 0}) =>
+      _rewardedLoad.run(() async {
+        if (kIsWeb || !_canUseAds) return;
+        final epoch = _privacyEpoch;
+        final uid = _adUid;
+        if (!await _canLoadAdsFor(uid, epoch)) return;
+        if (_rewardedAd != null &&
+            (_rewardedLoadedAt == null ||
+                _adNow().difference(_rewardedLoadedAt!) >=
+                    const Duration(minutes: 55))) {
+          unawaited(_rewardedAd!.dispose());
+          _rewardedAd = null;
+          _rewardedLoadedAt = null;
+        }
+        if (_rewardedAd != null) return;
+        _rewardedRetryTimer?.cancel();
+        _rewardedRetryTimer = null;
+        final loadId = ++_rewardedLoadId;
+        bool current() => epoch == _privacyEpoch && loadId == _rewardedLoadId;
+        Future<void> load() async {
+          final ad = await loadAdWithTimeout<RewardedAd>(
+            debugLabel: 'rewarded main',
+            canAccept: () => current() && _isCurrentAdRequest(uid, epoch),
+            load: (loaded, failed) => RewardedAd.load(
+              adUnitId: rewardedMainId,
+              request: const AdRequest(),
+              rewardedAdLoadCallback: RewardedAdLoadCallback(
+                onAdLoaded: loaded,
+                onAdFailedToLoad: failed,
+              ),
+            ),
+          );
+          if (!current()) {
+            if (ad != null) unawaited(ad.dispose());
+            return;
+          }
+          if (!_isCurrentAdRequest(uid, epoch)) {
+            if (ad != null) unawaited(ad.dispose());
+            return;
+          }
+          _rewardedAd = ad;
+          _rewardedLoadedAt = ad == null ? null : _adNow();
+          if (ad != null) {
+            debugPrint('AdMobService: rewarded main loaded.');
+          } else if (retryCount < 2) {
+            _rewardedRetryTimer = Timer(const Duration(seconds: 10), () {
+              _rewardedRetryTimer = null;
+              if (current() &&
+                  WidgetsBinding.instance.lifecycleState ==
+                      AppLifecycleState.resumed) {
+                unawaited(_loadRewardedAd(retryCount: retryCount + 1));
+              }
+            });
+          }
+        }
 
-    await load();
-  }
+        await load();
+      });
 
-  Future<void> _loadSoulGameRewardedAd() async {
+  Future<void> _loadSoulGameRewardedAd() => _soulGameRewardedLoad.run(() async {
     if (!supportsSoulGameRewardedAds || !_canUseAds) return;
     final epoch = _privacyEpoch;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _adUid;
     if (!await _canLoadAdsFor(uid, epoch)) return;
     final loadedAt = _soulGameRewardedLoadedAt;
     if (_soulGameRewardedAd != null &&
         (loadedAt == null ||
-            DateTime.now().difference(loadedAt) >=
-                const Duration(minutes: 55))) {
+            _adNow().difference(loadedAt) >= const Duration(minutes: 55))) {
       _soulGameRewardedAd?.dispose();
       _soulGameRewardedAd = null;
       _soulGameRewardedLoadedAt = null;
     }
-    if (_isSoulGameRewardedAdLoading || _soulGameRewardedAd != null) return;
-    _isSoulGameRewardedAdLoading = true;
+    if (_soulGameRewardedAd != null) return;
     final loadId = ++_soulGameRewardedLoadId;
 
     bool isCurrentLoad() =>
         epoch == _privacyEpoch && loadId == _soulGameRewardedLoadId;
 
-    void finishLoading() {
-      _soulGameRewardedLoadTimer?.cancel();
-      _soulGameRewardedLoadTimer = null;
-      _isSoulGameRewardedAdLoading = false;
+    final ad = await loadAdWithTimeout<RewardedAd>(
+      debugLabel: 'rewarded soul game',
+      timeout: const Duration(seconds: 15),
+      canAccept: () => isCurrentLoad() && _isCurrentAdRequest(uid, epoch),
+      load: (loaded, failed) => RewardedAd.load(
+        adUnitId: rewardedSoulGameId,
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: loaded,
+          onAdFailedToLoad: failed,
+        ),
+      ),
+    );
+    if (!isCurrentLoad() || !_isCurrentAdRequest(uid, epoch)) {
+      if (ad != null) unawaited(ad.dispose());
+      return;
     }
-
-    // SDK có thể không trả callback khi mạng đứt. Mở lại lần tải mới và bỏ
-    // callback cũ để một yêu cầu bị treo không khóa hồi sinh cả phiên.
-    _soulGameRewardedLoadTimer?.cancel();
-    _soulGameRewardedLoadTimer = Timer(const Duration(seconds: 15), () {
-      if (!isCurrentLoad()) return;
-      finishLoading();
-      _soulGameRewardedLoadId++;
-    });
-
-    Future<void> load() async {
-      try {
-        await RewardedAd.load(
-          adUnitId: rewardedSoulGameId,
-          request: const AdRequest(),
-          rewardedAdLoadCallback: RewardedAdLoadCallback(
-            onAdLoaded: (ad) {
-              if (!isCurrentLoad() || !_isCurrentAdRequest(uid, epoch)) {
-                ad.dispose();
-                if (isCurrentLoad()) finishLoading();
-                return;
-              }
-              finishLoading();
-              _soulGameRewardedAd = ad;
-              _soulGameRewardedLoadedAt = DateTime.now();
-              debugPrint('AdMobService: rewarded soul game loaded.');
-            },
-            onAdFailedToLoad: (error) {
-              if (!isCurrentLoad()) return;
-              finishLoading();
-              _soulGameRewardedLoadId++;
-              debugPrint(
-                'AdMobService: rewarded soul game failed to load: '
-                '${adFailureDetails(error)}',
-              );
-            },
-          ),
-        );
-      } catch (error) {
-        if (!isCurrentLoad() || !_isSoulGameRewardedAdLoading) return;
-        finishLoading();
-        _soulGameRewardedLoadId++;
-        debugPrint(
-          'AdMobService: rewarded soul game load exception: '
-          '${AppErrorMapper.resolve(error).message}',
-        );
-      }
-    }
-
-    unawaited(load());
-  }
+    _soulGameRewardedAd = ad;
+    _soulGameRewardedLoadedAt = ad == null ? null : _adNow();
+    if (ad != null) debugPrint('AdMobService: rewarded soul game loaded.');
+  });
 
   void preloadRewardedAd() {
-    unawaited(_loadRewardedAd());
+    unawaited(_initializeAndPreloadRewardedAd());
+  }
+
+  Future<void> _initializeAndPreloadRewardedAd() async {
+    await initialize();
+    await _loadRewardedAd();
   }
 
   void preloadSoulGameRewardedAd() {
@@ -791,15 +834,21 @@ class AdMobService {
     await _loadSoulGameRewardedAd();
   }
 
+  void preloadInterstitialAd() {
+    unawaited(() async {
+      await initialize();
+      await loadInterstitialAd();
+    }());
+  }
+
   Future<bool> loadAppOpenAd() async {
     if (kIsWeb || !_canUseAds) return false;
     final epoch = _privacyEpoch;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _adUid;
     if (!await _canLoadAdsFor(uid, epoch)) return false;
     if (_appOpenAd != null &&
         _appOpenLoadedAt != null &&
-        DateTime.now().difference(_appOpenLoadedAt!) <
-            const Duration(hours: 4)) {
+        _adNow().difference(_appOpenLoadedAt!) < const Duration(hours: 4)) {
       return true;
     }
     _appOpenAd?.dispose();
@@ -826,7 +875,8 @@ class AdMobService {
     final usable = current && _isCurrentAdRequest(uid, epoch) && ad != null;
     if (usable) {
       _appOpenAd = ad;
-      _appOpenLoadedAt = DateTime.now();
+      _appOpenLoadedAt = _adNow();
+      debugPrint('AdMobService: App Open loaded.');
     } else if (ad != null) {
       unawaited(ad.dispose());
     }
@@ -854,14 +904,18 @@ class AdMobService {
     }
   }
 
-  Future<bool> showAppOpenAdIfEligible() =>
-      _withFullscreenLock(_showAppOpenAdIfEligible);
+  Future<bool> showAppOpenAdIfEligible({bool Function()? canShow}) =>
+      _withFullscreenLock(
+        () => _showAppOpenAdIfEligible(canShowAtEntry: canShow),
+      );
 
-  Future<bool> _showAppOpenAdIfEligible() async {
-    if (kIsWeb) return false;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+  Future<bool> _showAppOpenAdIfEligible({
+    bool Function()? canShowAtEntry,
+  }) async {
+    if (kIsWeb || canShowAtEntry?.call() == false) return false;
+    final uid = _adUid;
     final showEpoch = _privacyEpoch;
-    final requestedAt = DateTime.now();
+    final requestedAt = _adNow();
     final readyAd = _appOpenAd;
     final loadedAt = _appOpenLoadedAt;
     if (uid == null || AdSuppressionGuard.instance.isSuppressed) return false;
@@ -885,8 +939,9 @@ class AdMobService {
     if (!await _canShowAppOpenToday()) return false;
     final ad = readyAd;
     bool canShow() =>
+        canShowAtEntry?.call() != false &&
         // Bỏ lượt resume nếu kiểm tra quyền/quota kéo dài tới lúc đã dùng Home.
-        DateTime.now().difference(requestedAt) < const Duration(seconds: 2) &&
+        _adNow().difference(requestedAt) < const Duration(seconds: 2) &&
         identical(_appOpenAd, ad) &&
         _canPresentAdFor(uid, showEpoch, blockKeyboard: true) &&
         !_isAutoInterstitialSuppressed &&
@@ -899,7 +954,7 @@ class AdMobService {
       canShow: canShow,
       onShown: () {
         _nativeFullscreenVisible = true;
-        _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
+        _lastFullscreenAdShownMs = _adNow().millisecondsSinceEpoch;
         unawaited(_sendAdImpressionPing('app_open', ad.adUnitId));
       },
       recordShown: _incrementAppOpenShownCount,
@@ -933,7 +988,7 @@ class AdMobService {
     }
 
     final lastShownMs = prefs.getInt(_appOpenLastShownDatePrefsKey) ?? 0;
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final nowMs = _adNow().millisecondsSinceEpoch;
 
     if (lastShownMs == 0) {
       return true; // Lần đầu tiên
@@ -977,13 +1032,13 @@ class AdMobService {
     await prefs.setInt(_appOpenShownCountPrefsKey, currentCount + 1);
     await prefs.setInt(
       _appOpenLastShownDatePrefsKey,
-      DateTime.now().millisecondsSinceEpoch,
+      _adNow().millisecondsSinceEpoch,
     );
   }
 
   // ─── DAILY REWARDED AD LIMIT ──────────────────────────────────
   String _getTodayDateKey() {
-    final now = DateTime.now();
+    final now = _adNow();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
@@ -1058,7 +1113,7 @@ class AdMobService {
     return Duration(
       milliseconds:
           (_rewardedCooldownMs -
-                  (DateTime.now().millisecondsSinceEpoch -
+                  (_adNow().millisecondsSinceEpoch -
                       _lastSoulGameRewardedShownMs))
               .clamp(0, _rewardedCooldownMs),
     );
@@ -1070,11 +1125,13 @@ class AdMobService {
     // Đồng bộ với timeout tải native để mạng chậm không bị bỏ qua sớm.
     Duration loadTimeout = const Duration(seconds: 12),
     String? verifiedPurpose,
+    bool Function()? isCurrent,
   }) => _withFullscreenLock(
     () => _showRewardedAd(
       ignoreCooldown: ignoreCooldown,
       loadTimeout: loadTimeout,
       verifiedPurpose: verifiedPurpose,
+      isCurrent: isCurrent ?? () => true,
     ),
   );
 
@@ -1082,9 +1139,10 @@ class AdMobService {
     required bool ignoreCooldown,
     required Duration loadTimeout,
     String? verifiedPurpose,
+    required bool Function() isCurrent,
   }) async {
-    if (kIsWeb) return false;
-    final rewardUid = FirebaseAuth.instance.currentUser?.uid;
+    if (kIsWeb || !isCurrent()) return false;
+    final rewardUid = _adUid;
     final showEpoch = _privacyEpoch;
     if (rewardUid == null) return false;
     _lastRewardedAdFailure = null;
@@ -1096,7 +1154,7 @@ class AdMobService {
       return false;
     }
 
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final nowMs = _adNow().millisecondsSinceEpoch;
     if (!ignoreCooldown && nowMs - _lastRewardedShownMs < _rewardedCooldownMs) {
       debugPrint('AdMobService: Xem quảng cáo quá nhanh, đang chờ cooldown.');
       return false; // Chưa qua cooldown
@@ -1109,23 +1167,18 @@ class AdMobService {
       );
       return false;
     }
-    unawaited(_loadRewardedAd());
-    if (_rewardedAd == null) {
-      final maxWaitMs = loadTimeout.inMilliseconds.clamp(0, 15000);
-      final attempts = (maxWaitMs / 250).ceil().clamp(1, 60);
-      debugPrint(
-        'AdMobService: waiting for rewarded ad, timeout=${maxWaitMs}ms.',
-      );
-      for (var i = 0; i < attempts && _rewardedAd == null; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-      }
-      if (_rewardedAd == null) {
-        debugPrint('AdMobService: rewarded skipped because ad is not loaded.');
-        return false;
-      }
-    }
-
-    final adForShow = _rewardedAd;
+    // Cùng chờ lượt preload và kiểm tra hạn trước khi lấy instance. Đọc cache
+    // ngay sau unawaited(load) có thể lấy ad cũ trong lúc quyền PRO đang chờ.
+    final adForShow = await prepareAdWithTimeout<RewardedAd>(
+      timeout: Duration(
+        milliseconds: loadTimeout.inMilliseconds.clamp(0, 15000),
+      ),
+      isCurrent: () => isCurrent() && _isCurrentAdRequest(rewardUid, showEpoch),
+      prepare: (canContinue) async {
+        await _loadRewardedAd();
+        return canContinue() ? _rewardedAd : null;
+      },
+    );
     if (adForShow == null) return false;
     String? rewardNonce;
     try {
@@ -1151,7 +1204,7 @@ class AdMobService {
         if (!_canUseAds ||
             showEpoch != _privacyEpoch ||
             !identical(_rewardedAd, adForShow) ||
-            FirebaseAuth.instance.currentUser?.uid != rewardUid) {
+            _adUid != rewardUid) {
           return false;
         }
         await adForShow
@@ -1173,7 +1226,7 @@ class AdMobService {
         await prefs.setString('ad_pending_purpose_$rewardUid', verifiedPurpose);
         await prefs.setInt(
           'ad_pending_started_$rewardUid',
-          DateTime.now().millisecondsSinceEpoch,
+          _adNow().millisecondsSinceEpoch,
         );
       } else {
         if (_rewardedAd == null) return false;
@@ -1209,7 +1262,8 @@ class AdMobService {
       );
       return false;
     }
-    if (!await _canLoadAdsFor(rewardUid, showEpoch) ||
+    if (!isCurrent() ||
+        !await _canLoadAdsFor(rewardUid, showEpoch) ||
         !_canPresentAdFor(rewardUid, showEpoch) ||
         !identical(_rewardedAd, adForShow)) {
       if (rewardNonce != null) {
@@ -1222,10 +1276,12 @@ class AdMobService {
     final outcome = await presentRewardedAd(
       ad: ad,
       canShow: () =>
-          _canPresentAdFor(rewardUid, showEpoch) && identical(_rewardedAd, ad),
+          isCurrent() &&
+          _canPresentAdFor(rewardUid, showEpoch) &&
+          identical(_rewardedAd, ad),
       onShown: () {
         _nativeFullscreenVisible = true;
-        _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
+        _lastRewardedShownMs = _adNow().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
         unawaited(_sendAdImpressionPing('rewarded', ad.adUnitId));
       },
@@ -1255,19 +1311,20 @@ class AdMobService {
         );
       }
     }
-    return outcome == FullscreenAdOutcome.rewarded &&
-        FirebaseAuth.instance.currentUser?.uid == rewardUid;
+    return outcome == FullscreenAdOutcome.rewarded && _adUid == rewardUid;
   }
 
   /// Hiển thị quảng cáo hồi sinh và trả về lý do chính xác khi không thể dùng.
   /// PRO được coi là đã nhận phần thưởng mà không mở quảng cáo.
-  Future<SoulGameRewardedAdResult> showSoulGameRewardedAdResult() async {
+  Future<SoulGameRewardedAdResult> showSoulGameRewardedAdResult({
+    bool Function()? isCurrent,
+  }) async {
     if (_isShowingFullscreenAd || _nativeFullscreenVisible) {
       return SoulGameRewardedAdResult.busy;
     }
     _isShowingFullscreenAd = true;
     try {
-      return await _showSoulGameRewardedAdResult();
+      return await _showSoulGameRewardedAdResult(isCurrent ?? () => true);
     } catch (error) {
       debugPrint(
         'AdMobService: Soul Game rewarded flow failed: '
@@ -1286,15 +1343,18 @@ class AdMobService {
         result == SoulGameRewardedAdResult.pro;
   }
 
-  Future<SoulGameRewardedAdResult> _showSoulGameRewardedAdResult() async {
+  Future<SoulGameRewardedAdResult> _showSoulGameRewardedAdResult(
+    bool Function() isCurrent,
+  ) async {
+    if (!isCurrent()) return SoulGameRewardedAdResult.cancelled;
     if (!supportsSoulGameRewardedAds) {
       return SoulGameRewardedAdResult.unsupported;
     }
-    final rewardUid = FirebaseAuth.instance.currentUser?.uid;
+    final rewardUid = _adUid;
     final showEpoch = _privacyEpoch;
     if (rewardUid == null) return SoulGameRewardedAdResult.cancelled;
     if (await isProUser()) {
-      return FirebaseAuth.instance.currentUser?.uid == rewardUid
+      return _adUid == rewardUid
           ? SoulGameRewardedAdResult.pro
           : SoulGameRewardedAdResult.cancelled;
     }
@@ -1320,41 +1380,32 @@ class AdMobService {
     // Kiểm tra tuổi thọ ngay trước khi hiển thị. App có thể nằm nền lâu hơn
     // thời gian hợp lệ của một rewarded đã preload; không đưa quảng cáo cũ
     // vào luồng hồi sinh rồi mới chờ SDK báo lỗi.
-    await _loadSoulGameRewardedAd();
-    if (_soulGameRewardedAd == null) {
-      final loadEpoch = _privacyEpoch;
-      // Mạng chậm cần thêm thời gian tải; dừng ngay khi SDK báo lỗi hoặc
-      // quyền riêng tư thay đổi. Không chặn luồng vẽ trong lúc chờ.
-      final deadline = DateTime.now().add(const Duration(seconds: 15));
-      while (_soulGameRewardedAd == null &&
-          _isSoulGameRewardedAdLoading &&
-          _canUseAds &&
-          loadEpoch == _privacyEpoch &&
-          DateTime.now().isBefore(deadline)) {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-      }
-      if (_soulGameRewardedAd == null ||
-          !_canUseAds ||
-          loadEpoch != _privacyEpoch) {
-        return soulGameAdsDisabledByPrivacy
-            ? SoulGameRewardedAdResult.privacyDisabled
-            : SoulGameRewardedAdResult.unavailable;
-      }
+    final ad = await prepareAdWithTimeout<RewardedAd>(
+      timeout: const Duration(seconds: 15),
+      isCurrent: () => isCurrent() && _isCurrentAdRequest(rewardUid, showEpoch),
+      prepare: (canContinue) async {
+        await _loadSoulGameRewardedAd();
+        return canContinue() ? _soulGameRewardedAd : null;
+      },
+    );
+    if (ad == null) {
+      return soulGameAdsDisabledByPrivacy
+          ? SoulGameRewardedAdResult.privacyDisabled
+          : SoulGameRewardedAdResult.unavailable;
     }
-
-    final ad = _soulGameRewardedAd;
-    if (!_canPresentAdFor(rewardUid, showEpoch) || ad == null) {
+    if (!isCurrent() || !_canPresentAdFor(rewardUid, showEpoch)) {
       return SoulGameRewardedAdResult.cancelled;
     }
     AppLifecyclePresenceGuard.arm();
     final outcome = await presentRewardedAd(
       ad: ad,
       canShow: () =>
+          isCurrent() &&
           _canPresentAdFor(rewardUid, showEpoch) &&
           identical(_soulGameRewardedAd, ad),
       onShown: () {
         _nativeFullscreenVisible = true;
-        _lastSoulGameRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
+        _lastSoulGameRewardedShownMs = _adNow().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastSoulGameRewardedShownMs;
         unawaited(_sendAdImpressionPing('rewarded', ad.adUnitId));
       },
@@ -1368,7 +1419,7 @@ class AdMobService {
         AppLifecyclePresenceGuard.settle();
       },
     );
-    if (FirebaseAuth.instance.currentUser?.uid != rewardUid) {
+    if (_adUid != rewardUid) {
       return SoulGameRewardedAdResult.cancelled;
     }
     return switch (outcome) {
@@ -1379,9 +1430,12 @@ class AdMobService {
   }
 
   // ─── BANNER AD ───────────────────────────────────────────────
-  Future<BannerAd?> createBannerAd({required Function(Ad) onAdLoaded}) async {
+  Future<BannerAd?> createBannerAd({
+    required Function(Ad) onAdLoaded,
+    VoidCallback? onAdInvalidated,
+  }) async {
     if (kIsWeb) return null;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _adUid;
     final epoch = _privacyEpoch;
     await initialize();
     if (!_canUseAds) {
@@ -1413,7 +1467,7 @@ class AdMobService {
         onAdImpression: (ad) {
           // Tải xong chưa có nghĩa đã hiển thị; bỏ callback cũ sau rút consent.
           if (epoch != _privacyEpoch ||
-              FirebaseAuth.instance.currentUser?.uid != uid ||
+              _adUid != uid ||
               !isBannerUsable(banner)) {
             return;
           }
@@ -1423,9 +1477,14 @@ class AdMobService {
           debugPrint(
             'AdMobService: banner failed to load: ${adFailureDetails(error)}',
           );
+          final wasUsable = isBannerUsable(banner);
           disposeBanner(banner);
           if (!completer.isCompleted) {
             completer.complete(null);
+          } else if (wasUsable) {
+            // Banner đã hiện có thể lỗi ở lượt refresh; màn phải bỏ view cũ
+            // và có cơ hội tải lại thay vì giữ một instance đã dispose.
+            onAdInvalidated?.call();
           }
         },
       ),
@@ -1482,11 +1541,11 @@ class AdMobService {
   Future<void> loadInterstitialAd() => _interstitialLoad.run(() async {
     if (kIsWeb || !_canUseAds) return;
     final epoch = _privacyEpoch;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _adUid;
     if (!await _canLoadAdsFor(uid, epoch)) return;
     if (_interstitialAd != null &&
         (_interstitialLoadedAt == null ||
-            DateTime.now().difference(_interstitialLoadedAt!) >=
+            _adNow().difference(_interstitialLoadedAt!) >=
                 const Duration(minutes: 55))) {
       unawaited(_interstitialAd!.dispose());
       _interstitialAd = null;
@@ -1512,7 +1571,7 @@ class AdMobService {
       return;
     }
     _interstitialAd = ad;
-    _interstitialLoadedAt = ad == null ? null : DateTime.now();
+    _interstitialLoadedAt = ad == null ? null : _adNow();
   });
 
   Future<bool> showInterstitialAd({
@@ -1525,19 +1584,31 @@ class AdMobService {
     ),
   );
 
-  Future<bool> showReadyInterstitialAd({bool Function()? isCurrent}) =>
-      _withFullscreenLock(
-        () => _showReadyInterstitialAd(isCurrent: isCurrent ?? () => true),
-      );
+  Future<bool> showReadyInterstitialAd({
+    bool Function()? isCurrent,
+    VoidCallback? onShown,
+  }) => _withFullscreenLock(
+    () => _showReadyInterstitialAd(
+      isCurrent: isCurrent ?? () => true,
+      onShown: onShown,
+    ),
+  );
 
   Future<bool> _showReadyInterstitialAd({
     required bool Function() isCurrent,
+    VoidCallback? onShown,
   }) async {
     if (kIsWeb || !isCurrent() || !hasReadyInterstitialAd) return false;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _adUid;
     final showEpoch = _privacyEpoch;
     final ad = _interstitialAd;
     if (uid == null || ad == null) return false;
+    final eligible = await prepareAdWithTimeout<bool>(
+      timeout: const Duration(seconds: 2),
+      isCurrent: isCurrent,
+      prepare: (_) => _canLoadAdsFor(uid, showEpoch),
+    );
+    if (eligible != true) return false;
     bool canShow() =>
         isCurrent() &&
         identical(_interstitialAd, ad) &&
@@ -1550,8 +1621,9 @@ class AdMobService {
       canShow: canShow,
       onShown: () {
         _nativeFullscreenVisible = true;
-        _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
+        _lastFullscreenAdShownMs = _adNow().millisecondsSinceEpoch;
         unawaited(_sendAdImpressionPing('interstitial', ad.adUnitId));
+        onShown?.call();
       },
       onClosed: () {
         _nativeFullscreenVisible = false;
@@ -1571,7 +1643,7 @@ class AdMobService {
     required Duration preparationTimeout,
   }) async {
     if (kIsWeb || !isCurrent() || hasRecentFullscreenAd()) return false;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _adUid;
     final showEpoch = _privacyEpoch;
     if (uid == null) return false;
     final ad = await prepareAdWithTimeout<InterstitialAd>(
@@ -1606,7 +1678,7 @@ class AdMobService {
       canShow: canShow,
       onShown: () {
         _nativeFullscreenVisible = true;
-        _lastFullscreenAdShownMs = DateTime.now().millisecondsSinceEpoch;
+        _lastFullscreenAdShownMs = _adNow().millisecondsSinceEpoch;
         unawaited(_sendAdImpressionPing('interstitial', ad.adUnitId));
       },
       onClosed: () {
@@ -1677,7 +1749,7 @@ class AdMobService {
       return _scheduleAutoInterstitialTimer();
     }
 
-    final now = DateTime.now();
+    final now = _adNow();
     if (!nextAt.isAfter(now)) {
       unawaited(_handleAutoInterstitialDue());
       return;
@@ -1712,7 +1784,7 @@ class AdMobService {
         _random.nextInt(
           (_autoInterstitialMaxMinutes - _autoInterstitialMinMinutes) + 1,
         );
-    return DateTime.now().add(Duration(minutes: offsetMinutes));
+    return _adNow().add(Duration(minutes: offsetMinutes));
   }
 
   Future<DateTime?> _readNextAutoInterstitialAt() async {
@@ -1808,6 +1880,7 @@ class AdMobService {
   }
 
   Future<bool> isProUser() async {
+    if (_readProOverride != null) return _readProOverride!();
     final access = await PurchaseService().getVipAccessInfo();
     return access.isVip;
   }
@@ -2200,9 +2273,12 @@ class AdMobService {
   Future<int?> unlockCountdownStyleWithAd(
     String style, {
     bool quick = false,
+    bool Function()? isCurrent,
   }) async {
     final purpose = '${quick ? 'countdown_day' : 'countdown'}:$style';
-    if (!await showRewardedAd(verifiedPurpose: purpose)) return null;
+    if (!await showRewardedAd(verifiedPurpose: purpose, isCurrent: isCurrent)) {
+      return null;
+    }
     final receipt = await _waitForVerifiedReward(purpose);
     if (receipt?['ok'] != true) return null;
     return (receipt?['expiresAt'] as num?)?.toInt();
@@ -2341,6 +2417,7 @@ class AdMobService {
   /// Gui ping len server xac nhan da show quang cao thanh cong.
   /// Giup server phat hien neu user tat quang cao bang cach patch client.
   Future<void> _sendAdImpressionPing(String adType, String adUnit) async {
+    if (_currentUidOverride != null) return;
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;

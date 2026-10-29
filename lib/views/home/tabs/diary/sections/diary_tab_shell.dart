@@ -145,6 +145,7 @@ class _DiaryTabShell extends StatelessWidget {
                           builder: (context, posts, child) {
                             return DiaryList(
                               header: header,
+                              isActiveListenable: state.widget.isActiveListenable,
                               showDiaryPrivacyNotice:
                                   state._showDiaryPrivacyNotice,
                               buildDiaryPrivacyNotice: () =>
@@ -154,7 +155,10 @@ class _DiaryTabShell extends StatelessWidget {
                               isLoading:
                                   state._isLoading &&
                                   !state._isAnimatingTabSwitch,
+                              isLoadingMore: state._feedController.isLoadingMore,
+                              hasMore: state._feedController.hasMore,
                               houseId: state._houseId,
+                              scrollController: state._diaryScrollController,
                               buildHouseSetupState:
                                   ({
                                     required String title,

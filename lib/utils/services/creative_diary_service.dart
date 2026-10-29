@@ -60,12 +60,13 @@ class CreativeDiaryService {
     }
 
     final pendingKey = _voicePendingKey(houseId);
+    guard();
     await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
       'content': content,
       'metadata': metadata,
       'fileName': fileName,
       'mimeType': mimeType,
-    }, category: 'creative_diary_voice');
+    }, category: 'creative_diary_voice', expectedUid: ownerUid);
 
     try {
       guard();
@@ -73,6 +74,7 @@ class CreativeDiaryService {
         houseId: houseId,
         fileName: fileName,
         contentType: mimeType,
+        fileSize: bytes.length,
       );
       guard();
       final sessionId = session['sessionId']?.toString().trim() ?? '';
@@ -98,10 +100,14 @@ class CreativeDiaryService {
       );
       guard();
       try {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(pendingKey, expectedUid: ownerUid);
       } catch (_) {}
     } catch (error) {
-      await PendingUploadService.instance.markFailed(pendingKey, error);
+      if (FirebaseAuth.instance.currentUser?.uid == ownerUid) {
+        await PendingUploadService.instance.markFailed(
+          pendingKey, error, expectedUid: ownerUid,
+        );
+      }
       rethrow;
     }
   }
@@ -110,6 +116,7 @@ class CreativeDiaryService {
     required String houseId,
     required String fileName,
     required String contentType,
+    required int fileSize,
   }) async {
     final response =
         await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
@@ -121,6 +128,8 @@ class CreativeDiaryService {
             'houseId': houseId.trim(),
             'fileName': fileName.trim(),
             'contentType': contentType.trim(),
+            'fileSize': fileSize,
+            'uploadProtocolVersion': 2,
           },
         );
     return response.data;

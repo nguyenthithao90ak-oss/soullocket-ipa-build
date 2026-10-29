@@ -137,6 +137,9 @@ extension _SettingsTabShell on _SettingsTabState {
           await _openCountdownMode();
           return;
         }
+        if (sectionId == 'theme' && !_isVipActive) {
+          AdMobService().preloadRewardedAd();
+        }
         final shouldAnimateWidgetPreview = sectionId == 'widget';
         _hasActiveStandalonePanel = true;
         if (shouldAnimateWidgetPreview) {
@@ -986,69 +989,6 @@ extension _SettingsTabShell on _SettingsTabState {
           isDark: isDark,
           onTap: _openHelpCenter,
         ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.tune_rounded,
-          iconBgColor: SLSettingsColors.sky,
-          title: context.tr('settings_menu_replay_settings'),
-          isDark: isDark,
-          onTap: () => _maybeShowSettingsGuideOnOpen(replay: true),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.explore_outlined,
-          iconBgColor: SLSettingsColors.rose,
-          title: context.tr('starter_title'),
-          isDark: isDark,
-          onTap: () {
-            final uid = _auth.currentUser?.uid ?? '';
-            final houseId = _houseId ?? '';
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              useSafeArea: true,
-              backgroundColor: SLSettingsColors.surface,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(SLSettingsRadius.sheet),
-                ),
-              ),
-              showDragHandle: true,
-              builder: (_) => FractionallySizedBox(
-                heightFactor: .85,
-                child: SafeArea(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: GettingStartedChecklist(
-                      uid: uid,
-                      houseId: houseId,
-                      isSingle: _relationshipMode == 'single',
-                      alwaysVisible: true,
-                      isStillValid: () =>
-                          mounted &&
-                          _auth.currentUser?.uid == uid &&
-                          _houseId == houseId,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-        if (widget.onReplayFirstSetupGuide != null) ...[
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.home_outlined,
-            iconBgColor: SLSettingsColors.indigo,
-            title: context.tr('settings_menu_replay_home'),
-            isDark: isDark,
-            onTap: () {
-              final replay = widget.onReplayFirstSetupGuide!;
-              Navigator.of(context).pop();
-              WidgetsBinding.instance.addPostFrameCallback((_) => replay());
-            },
-          ),
-        ],
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.star_outline_rounded,

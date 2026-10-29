@@ -65,6 +65,22 @@ bool isFreshCallTimestamp(Object? timestamp, {required int now}) =>
     now - timestamp <= CoupleCallInvite.ringingSeconds * 1000 &&
     timestamp - now <= 30000;
 
+/// Chuyển deadline giờ server sang giờ máy một lần; UI không kiểm tra lại bằng
+/// đồng hồ chưa bù lệch rồi vô tình bỏ cuộc gọi hợp lệ.
+int? localCallExpiresAt(
+  Object? timestamp, {
+  required int serverNow,
+  required int deviceNow,
+}) {
+  if (!isFreshCallTimestamp(timestamp, now: serverNow)) return null;
+  final remaining =
+      ((timestamp as num).toInt() +
+              CoupleCallInvite.ringingSeconds * 1000 -
+              serverNow)
+          .clamp(0, CoupleCallInvite.ringingSeconds * 1000);
+  return deviceNow + remaining;
+}
+
 /// ICE tới sớm phải đợi remote description và được áp dụng theo thứ tự.
 class RtcCandidateQueue<T> {
   RtcCandidateQueue(this.apply);

@@ -17,6 +17,25 @@ abstract final class _StudioStyle {
       : const Duration(milliseconds: 160);
 }
 
+class _StudioArtworkBoundary extends RepaintBoundary {
+  const _StudioArtworkBoundary({super.key, required super.child});
+
+  @override
+  _StudioArtworkRenderBoundary createRenderObject(BuildContext context) =>
+      _StudioArtworkRenderBoundary();
+}
+
+class _StudioArtworkRenderBoundary extends RenderRepaintBoundary {
+  Future<ui.Image> toArtworkImage({required double pixelRatio}) {
+    assert(!debugNeedsPaint);
+    // Chừa mép cho băng dính xoay và bóng giấy nhô ngoài vùng bố cục.
+    return (layer! as OffsetLayer).toImage(
+      (Offset.zero & size).inflate(20),
+      pixelRatio: pixelRatio,
+    );
+  }
+}
+
 class _StudioCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;

@@ -46,9 +46,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:geolocator/geolocator.dart';
+import 'package:soullocket_app/utils/gps_freshness.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, ValueListenable;
+    show kDebugMode, kIsWeb, defaultTargetPlatform, ValueListenable;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:latlong2/latlong.dart' as ll;
@@ -122,6 +123,8 @@ import 'package:soullocket_app/views/utilities/voice_screen.dart';
 // import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/utils/zodiac_utils.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
+import 'package:soullocket_app/utils/widget_diary_images.dart';
+import 'package:soullocket_app/utils/services/health_cycle_repository.dart';
 import 'package:soullocket_app/utils/services/daily_quest_service.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -163,6 +166,12 @@ import 'package:soullocket_app/views/home/tabs/pet_care/pet_care_progress.dart';
 import 'package:soullocket_app/views/home/tabs/pet_care/pet_care_home_binding.dart';
 import 'package:soullocket_app/views/home/tabs/pet_care/pet_care_identity.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/home_compact_sections.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_display_style.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_display_preferences.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_display_layout.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_display_hero.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_display_sections.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/home_display_style_picker.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/pairing_name_prompt.dart';
 import 'package:soullocket_app/views/utilities/utility_launcher.dart';
 
@@ -514,7 +523,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
   // Truy vấn lịch đang nghe (nhà|múi giờ|ngày), để không gắn lại khi trùng.
   String? _homeCalendarQueryKey;
-  StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
+  StreamSubscription<HealthCycleAccess>? _healthCycleSyncSubscription;
   List<Map<String, dynamic>> _homeCalendarEvents = [];
   HomeCalendarLoadState _homeCalendarLoadState = HomeCalendarLoadState.loading;
   String? _homeCalendarUid, _homeCalendarHouseId;
@@ -550,6 +559,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   String _homeMapPreviewSignature = '';
   String _homeMapPreviewScope = '';
   int _homeMapPreviewBindingSerial = 0;
+  final _homeGpsFreshnessDeadline = GpsFreshnessDeadline();
+  VoidCallback? _refreshHomeGpsSnapshot;
   String? _lastInsightSettingsKey;
   String? _pendingInsightSettingsKey;
   int _insightRequestSerial = 0;
@@ -801,6 +812,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _chatSignalSubscription?.cancel();
     _reactionFlightSubscription?.cancel();
     _gpsSubscription?.cancel();
+    _homeGpsFreshnessDeadline.cancel();
     _membersSubscription?.cancel();
 
     _homeMediaWarmupToken++;
@@ -830,10 +842,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed &&
         _isTabActive &&
         _houseId != null) {
+      _refreshHomeGpsSnapshot?.call();
       unawaited(_ensureAppWideLocationTracking(_houseId!));
       unawaited(_refreshCurrentRoleWeather());
       _listenHomeCalendarEvents(_houseId!);
     } else if (state != AppLifecycleState.resumed) {
+      _homeGpsFreshnessDeadline.cancel();
       _pauseHomeCalendarEvents();
     }
   }
@@ -841,6 +855,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   void _handleTabActivityChanged(bool isActive) {
     _isTabActive = isActive;
     if (isActive) {
+      _refreshHomeGpsSnapshot?.call();
       _deferHeavyHomeMotion = true;
       _ensureCoupleDecorLoaded();
       _warmHomeMedia(delayMotion: true);
@@ -866,6 +881,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       return;
     }
     // Preview lịch dừng khi Home ẩn; các binding khác giữ lifecycle sẵn có.
+    _homeGpsFreshnessDeadline.cancel();
     _fetchHouseDataDebounceTimer?.cancel();
     _pauseHomeCalendarEvents();
     _invalidateLiveWorkSession();
@@ -1115,14 +1131,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return _zodiacAndAgeForRoleImpl(role);
   }
 
-  int _widgetMemoryOrderValue(dynamic raw) {
-    return _widgetMemoryOrderValueImpl(raw);
-  }
-
-  List<({int order, String url})> _widgetDiaryImageEntriesFromRaw(dynamic raw) {
-    return _widgetDiaryImageEntriesFromRawImpl(raw);
-  }
-
   Future<List<String>> _loadWidgetDiaryImageUrls(String houseId) {
     return _loadWidgetDiaryImageUrlsImpl(
       houseId,
@@ -1134,6 +1142,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       String bgTheme,
       bool showDiaryOnWidget,
       bool heartAnimated,
+      int heartMotionIntervalMinutes,
       String heartStyleKey,
       String heartColorKey,
       String diaryLayoutKey,

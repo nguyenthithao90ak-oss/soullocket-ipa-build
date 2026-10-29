@@ -16,6 +16,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
     required this.onOpenAppearanceSettings,
   });
 
+  late final SoulMergeService _soulMergeService = SoulMergeService();
   final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
       GlobalKey<TapHeartsOverlayState>();
   final String? currentHouseId;
@@ -390,7 +391,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                           onCenterIconTap: () {
                                             if (!_isSingleMode) {
                                               unawaited(
-                                                SoulMergeService()
+                                                _soulMergeService
                                                     .sendInteractiveEvent(
                                                       type: 'photo_shot',
                                                     ),

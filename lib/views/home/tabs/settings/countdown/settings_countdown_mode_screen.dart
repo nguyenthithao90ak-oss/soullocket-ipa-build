@@ -37,6 +37,8 @@ class CountdownSpaceScreen extends StatefulWidget {
 }
 
 class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
+  late final SoulMergeService _soulMergeService = SoulMergeService();
+
   static const String _pendingSpaceAvatarUploadKeyPrefix =
       'countdown_space_avatar_';
   late final Stream<int> _loveTimeTickStream = Stream<int>.periodic(
@@ -174,6 +176,8 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
   final ValueNotifier<int> _spaceRevision = ValueNotifier(0);
   final Set<String> _spaceStreamErrors = {};
   final Map<String, _CountdownSpaceSnapshot> _unsyncedSpaceSnapshots = {};
+  final Map<String, _CountdownSpaceSnapshot> _latestRemoteSpaceSnapshots = {};
+  bool _evaluatingSpaceDeletes = false;
   Future<void> _spaceSaveQueue = Future<void>.value();
   bool _savingSpace = false;
 
@@ -229,7 +233,7 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
     if (widget.relationshipMode.trim() != 'single' &&
         _selfSpaceHouseId != 'local_self') {
       try {
-        _interactiveEventsSub = SoulMergeService()
+        _interactiveEventsSub = _soulMergeService
             .watchInteractiveEvents()
             .listen((event) async {
               if (!mounted ||
@@ -519,7 +523,7 @@ class _CountdownModeIndependentScreenState extends State<CountdownSpaceScreen> {
                                 if (!_singleMode &&
                                     _scopeKey == _selfSpaceHouseId) {
                                   unawaited(
-                                    SoulMergeService().sendInteractiveEvent(
+                                    _soulMergeService.sendInteractiveEvent(
                                       type: preset.type,
                                     ),
                                   );

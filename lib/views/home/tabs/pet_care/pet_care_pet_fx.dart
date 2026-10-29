@@ -37,7 +37,7 @@ extension _PetCareFx on _PetHousePainter {
   double get _reach {
     final hold = holdPoint;
     if (hold == null || room != PetCareRoom.kitchen || walking) return 0;
-    final distance = (hold - _mouth).distance;
+    final distance = (hold - _grownMouth).distance;
     return (1 - (distance - 16) / 120).clamp(0.0, 1.0);
   }
 
@@ -212,8 +212,8 @@ extension _PetCareFx on _PetHousePainter {
   }
 
   /// Miệng há theo khoảng cách món ăn; dùng cùng hệ tọa độ lớp phủ khi nhai.
-  void _paintMouthOpen(Canvas c, double reach) {
-    final patch = selectedPet == PetCarePet.rabbit
+  void _paintMouthOpen(Canvas c, double reach, {PetCarePet? pet}) {
+    final patch = (pet ?? selectedPet) == PetCarePet.rabbit
         ? const Color(0xFFFFFAEF)
         : const Color(0xFFF3D7B2);
     _oval(c, const Rect.fromLTWH(-3.8, -41.2, 11, 6.7), patch);
@@ -237,10 +237,54 @@ extension _PetCareFx on _PetHousePainter {
     );
   }
 
+  /// Miệng đang nhai và má phồng của [pet], vẽ trong hệ tọa độ hình bé
+  /// (chân ở 180, 260); dùng chung cho bé mình và bé kia khi ăn cùng.
+  void _paintChewMouth(
+    Canvas c,
+    PetCarePet pet,
+    bool faceRight,
+    double chew, {
+    double? t,
+  }) {
+    final progress = t ?? this.progress;
+    final k = _PetHousePainter._spriteOf(pet);
+    c.save();
+    c.translate(180, 260);
+    c.scale((faceRight ? 1 : -1) * k, k);
+    _oval(
+      c,
+      const Rect.fromLTWH(-3.8, -41.2, 11, 6.7),
+      pet == PetCarePet.rabbit
+          ? const Color(0xFFFFFAEF)
+          : const Color(0xFFF3D7B2),
+    );
+    final opening = progress < .45 ? 6.0 : 3 + chew.abs() * 1.8;
+    _oval(
+      c,
+      Rect.fromCenter(
+        center: const Offset(1.7, -38.6),
+        width: 7.5 + chew.abs(),
+        height: opening,
+      ),
+      const Color(0xFF79564E),
+    );
+    _oval(
+      c,
+      Rect.fromCenter(center: const Offset(1.7, -37.1), width: 4.5, height: 2),
+      const Color(0xFFEBA0AC),
+    );
+    _paintCheeks(
+      c,
+      progress > .46 && progress < .82 ? .6 + chew.abs() * .22 : 0,
+      pet: pet,
+    );
+    c.restore();
+  }
+
   /// Má phồng khi nhai, vẽ chồng lên viền mặt để nhìn như đang nhồm nhoàm.
-  void _paintCheeks(Canvas c, double puff) {
+  void _paintCheeks(Canvas c, double puff, {PetCarePet? pet}) {
     if (puff <= 0) return;
-    final face = selectedPet == PetCarePet.rabbit
+    final face = (pet ?? selectedPet) == PetCarePet.rabbit
         ? const Color(0xFFFFFAEF)
         : const Color(0xFFD6A171);
     for (final x in const [-23.5, 25.5]) {

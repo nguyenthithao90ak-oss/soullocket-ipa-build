@@ -5,6 +5,11 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pet_care_outfit.dart';
+import 'pet_care_garden_state.dart';
+export 'pet_care_garden_state.dart';
+export 'pet_care_outfit.dart';
+
 enum PetCareAction { bath, feed, hug }
 
 enum PetCarePet { rabbit, bear }
@@ -324,6 +329,66 @@ class PetCareRoomLook {
   int get hashCode => Object.hash(wall, floor, window, furniture);
 }
 
+/// Điểm gắn kết để bé lớn hẳn (cấp 16, khoảng hơn hai tuần chăm đều).
+const petCareGrownBond = 300;
+
+/// Cỡ bé sơ sinh và cỡ lúc trưởng thành (1 = cỡ vẽ gốc).
+const petCareBabySize = .4;
+const petCareAdultSize = 1.22;
+
+/// Bé lớn dần theo điểm gắn kết của nhà: mới đầu là bé sơ sinh nhỏ xíu
+/// (40% cỡ), mỗi lần chăm được điểm là lớn thêm một chút, đủ
+/// [petCareGrownBond] điểm (cấp 16) thì lớn hẳn, to cao hơn cỡ gốc.
+/// Chỉ đổi cỡ khi vẽ, không đổi chỉ số.
+double petCareGrowth(int bondPoints) =>
+    petCareBabySize +
+    (petCareAdultSize - petCareBabySize) *
+        (bondPoints.clamp(0, petCareGrownBond) / petCareGrownBond);
+
+/// Mỗi cấp (một tuổi) cần bấy nhiêu điểm gắn kết; tối đa [petCareMaxLevel].
+const petCareBondPerLevel = 20;
+const petCareMaxLevel = 20;
+
+/// Cột mốc tuổi: mỗi lần lên cấp là một sinh nhật có tiệc và hộp quà Hạt Ấm,
+/// sinh nhật bước sang giai đoạn mới (Bé con, Bé lớn, Trưởng thành) quà to
+/// hơn.
+abstract final class PetCareBirthday {
+  /// Điểm gắn kết cần để tới tuổi [age].
+  static int bondFor(int age) => (age - 1) * petCareBondPerLevel;
+
+  /// Giai đoạn bắt đầu đúng ở tuổi [age] (null nếu không đổi giai đoạn).
+  static PetCareGrowthStage? stageAt(int age) {
+    for (final stage in PetCareGrowthStage.values) {
+      if (1 + stage.fromBond ~/ petCareBondPerLevel == age) return stage;
+    }
+    return null;
+  }
+
+  /// Hạt Ấm trong hộp quà sinh nhật [age] tuổi (tuổi 1 là chào đời, không quà).
+  static int giftFor(int age) {
+    if (age <= 1) return 0;
+    final stage = stageAt(age);
+    return 4 + age ~/ 2 + (stage != null ? 10 : 0);
+  }
+}
+
+/// Giai đoạn lớn của hai bé theo điểm gắn kết.
+enum PetCareGrowthStage {
+  /// Sơ sinh (cấp 1–3): ngậm ti giả, đi lẫm chẫm.
+  baby(0),
+  kid(60),
+  teen(150),
+  adult(petCareGrownBond);
+
+  const PetCareGrowthStage(this.fromBond);
+  final int fromBond;
+
+  static PetCareGrowthStage of(int bondPoints) => values.lastWhere(
+    (stage) => bondPoints >= stage.fromBond,
+    orElse: () => baby,
+  );
+}
+
 /// Giới hạn kiếm Hạt Ấm mỗi ngày từ quảng cáo, mini game, đồ vật và ôm nhau.
 abstract final class PetCareEarn {
   static const adSeeds = 5;
@@ -343,6 +408,12 @@ abstract final class PetCareEarn {
   static const pointsPerSeed = 4;
   static const friendSeeds = 2;
   static const hiddenSeedsPerDay = 6;
+
+  /// Bạn ghé chơi (Mèo Mây/Chuột Phô Mai): số lượt ghé và quà mỗi ngày.
+  /// Bộ đếm lượt giữ trên máy, không thêm trường vào bản chung của nhà.
+  static const guestVisitsPerDay = 4;
+  static const guestGiftsPerDay = 3;
+  static const guestSeeds = 3;
 }
 
 enum PetCareDecor {
@@ -553,6 +624,8 @@ class PetCareProgress {
     this.dailyPlayDay,
     this.upgradeLevels = const {},
     this.dailyBondPoints = 0,
+    this.ownedOutfits = const {},
+    this.wornOutfits = const {},
     this.ownedStyles = const {},
     this.equippedStyles = const {},
     this.roomItems = const {},
@@ -569,6 +642,8 @@ class PetCareProgress {
     this.reviveDay,
     this.reviveCount = 0,
     this.giftDoubleDay,
+    this.birthdayLevel = 1,
+    this.garden = const PetCareGarden(),
   });
 
   factory PetCareProgress.forPet(PetCarePet pet, {String? day, DateTime? now}) {
@@ -583,6 +658,7 @@ class PetCareProgress {
     );
   }
 
+  final PetCareGarden garden;
   final String day;
   final int joy;
   final int food;
@@ -602,6 +678,18 @@ class PetCareProgress {
   final String? dailyPlayDay;
   final Map<PetCareUpgrade, int> upgradeLevels;
   final int dailyBondPoints;
+
+  /// Trang phục mua chung cả nhà; mỗi bé có lựa chọn mặc riêng.
+  final Set<PetCareOutfit> ownedOutfits;
+  final Map<PetCarePet, PetCareOutfit> wornOutfits;
+
+  bool ownsOutfit(PetCareOutfit outfit) =>
+      outfit.isFree || ownedOutfits.contains(outfit);
+
+  PetCareOutfit outfitFor(PetCarePet pet) {
+    final worn = wornOutfits[pet];
+    return worn != null && ownsOutfit(worn) ? worn : PetCareOutfit.bare;
+  }
 
   /// Món trả phí đã mua; món miễn phí luôn thuộc về người chơi.
   final Set<PetCareStyle> ownedStyles;
@@ -636,6 +724,28 @@ class PetCareProgress {
 
   /// Ngày quà chăm bé đã được nhân đôi bằng quảng cáo (chung cả nhà).
   final String? giftDoubleDay;
+
+  /// Tuổi (cấp) cao nhất đã mở quà sinh nhật, chung cả nhà. Nhà cũ chưa có
+  /// trường này bắt đầu từ 1 nên các sinh nhật đã qua vẫn mở quà được.
+  final int birthdayLevel;
+
+  /// Các sinh nhật đã tới mà chưa mở quà.
+  List<int> get pendingBirthdays => [
+    for (var age = birthdayLevel + 1; age <= level; age++) age,
+  ];
+
+  /// Tổng Hạt Ấm của các hộp quà sinh nhật đang chờ mở.
+  int get birthdayGiftPending => pendingBirthdays.fold(
+    0,
+    (sum, age) => sum + PetCareBirthday.giftFor(age),
+  );
+
+  /// Mở mọi hộp quà sinh nhật đang chờ (một lần cho cả nhà mỗi tuổi).
+  PetCareProgress openBirthdayGifts() {
+    final gift = birthdayGiftPending;
+    if (gift <= 0) return this;
+    return copyWith(seeds: seeds + gift, birthdayLevel: level);
+  }
 
   int get adsToday => adDay == day ? adCount : 0;
   bool get canWatchAd => adsToday < PetCareEarn.adsPerDay;
@@ -737,7 +847,8 @@ class PetCareProgress {
   PetCareVitals get currentVitals => vitalsFor(selectedPet);
   PetCareMood get mood => currentVitals.mood;
   int get bond => bondPoints;
-  int get level => _clampInt(1 + bondPoints ~/ 20, 1, 20);
+  int get level =>
+      _clampInt(1 + bondPoints ~/ petCareBondPerLevel, 1, petCareMaxLevel);
   int get playCurrency => seeds;
   int get currency => seeds;
 
@@ -784,6 +895,8 @@ class PetCareProgress {
     String? dailyPlayDay,
     Map<PetCareUpgrade, int>? upgradeLevels,
     int? dailyBondPoints,
+    Set<PetCareOutfit>? ownedOutfits,
+    Map<PetCarePet, PetCareOutfit>? wornOutfits,
     Set<PetCareStyle>? ownedStyles,
     Map<PetCareStyleSlot, PetCareStyle>? equippedStyles,
     Set<PetCareRoomItem>? roomItems,
@@ -800,6 +913,8 @@ class PetCareProgress {
     String? reviveDay,
     int? reviveCount,
     String? giftDoubleDay,
+    int? birthdayLevel,
+    PetCareGarden? garden,
   }) {
     final nextPet = selectedPet ?? this.selectedPet;
     final nextRabbit = rabbitState ?? this.rabbitState;
@@ -825,6 +940,8 @@ class PetCareProgress {
       dailyPlayDay: dailyPlayDay ?? this.dailyPlayDay,
       upgradeLevels: upgradeLevels ?? this.upgradeLevels,
       dailyBondPoints: dailyBondPoints ?? this.dailyBondPoints,
+      ownedOutfits: ownedOutfits ?? this.ownedOutfits,
+      wornOutfits: wornOutfits ?? this.wornOutfits,
       ownedStyles: ownedStyles ?? this.ownedStyles,
       equippedStyles: equippedStyles ?? this.equippedStyles,
       roomItems: roomItems ?? this.roomItems,
@@ -841,6 +958,8 @@ class PetCareProgress {
       reviveDay: reviveDay ?? this.reviveDay,
       reviveCount: reviveCount ?? this.reviveCount,
       giftDoubleDay: giftDoubleDay ?? this.giftDoubleDay,
+      birthdayLevel: birthdayLevel ?? this.birthdayLevel,
+      garden: garden ?? this.garden,
     );
   }
 
@@ -1012,6 +1131,22 @@ class PetCareProgress {
     );
   }
 
+  /// Mua một lần cho cả nhà rồi mặc cho đúng bé đã chọn. Chọn bộ gốc
+  /// để tháo đồ; không đổi lựa chọn của bé kia hoặc chỉ số chăm sóc.
+  PetCareProgress useOutfit(PetCarePet pet, PetCareOutfit outfit) {
+    final owned = ownsOutfit(outfit);
+    if (owned && outfitFor(pet) == outfit) return this;
+    if (!owned && seeds < outfit.cost) return this;
+    return copyWith(
+      seeds: seeds - (owned ? 0 : outfit.cost),
+      ownedOutfits: Set.unmodifiable({
+        ...ownedOutfits,
+        if (!outfit.isFree) outfit,
+      }),
+      wornOutfits: Map.unmodifiable({...wornOutfits, pet: outfit}),
+    );
+  }
+
   /// Mua món chưa có (trừ Hạt Ấm) rồi dùng ngay; món đã có thì chỉ đổi sang.
   PetCareProgress useStyle(PetCareStyle style) {
     if (ownsStyle(style)) {
@@ -1064,6 +1199,11 @@ class PetCareProgress {
       foundMask: mask | (1 << prop.index),
     );
   }
+
+  /// Bạn ghé chơi ăn xong bánh được mời: tặng Hạt. Trần mỗi ngày do màn
+  /// chơi đếm trên máy ([PetCareEarn.guestGiftsPerDay]).
+  PetCareProgress guestGift() =>
+      copyWith(seeds: seeds + PetCareEarn.guestSeeds);
 
   /// Xem hết quảng cáo có thưởng (hoặc PRO được bỏ qua quảng cáo).
   PetCareProgress rewardAd() {
@@ -1150,6 +1290,8 @@ class PetCareProgress {
     dailyPlayDay: dailyPlayDay,
     upgradeLevels: upgradeLevels,
     dailyBondPoints: dailyBondPoints,
+    ownedOutfits: ownedOutfits,
+    wornOutfits: wornOutfits,
     ownedStyles: ownedStyles,
     equippedStyles: equippedStyles,
     roomItems: roomItems,
@@ -1166,6 +1308,8 @@ class PetCareProgress {
     reviveDay: mine.reviveDay,
     reviveCount: mine.reviveCount,
     giftDoubleDay: giftDoubleDay,
+    birthdayLevel: birthdayLevel,
+    garden: garden,
   ).copyWith(selectedPet: mine.selectedPet);
 
   /// Lần đầu một máy nối vào bản chung của nhà: bé của người này lấy theo
@@ -1199,10 +1343,14 @@ class PetCareProgress {
           decoration: shared.decoration ?? mine.decoration,
           bondPoints: math.max(shared.bondPoints, mine.bondPoints),
           upgradeLevels: levels,
+          ownedOutfits: {...shared.ownedOutfits, ...mine.ownedOutfits},
+          wornOutfits: {...mine.wornOutfits, ...shared.wornOutfits},
           ownedStyles: {...shared.ownedStyles, ...mine.ownedStyles},
           equippedStyles: {...mine.equippedStyles, ...shared.equippedStyles},
           roomItems: {...shared.roomItems, ...mine.roomItems},
           roomLooks: looks,
+          garden: shared.garden.isEmpty ? mine.garden : shared.garden,
+          birthdayLevel: math.max(shared.birthdayLevel, mine.birthdayLevel),
         )
         .withPersonal(mine);
   }
@@ -1296,6 +1444,15 @@ class PetCareProgress {
       for (final entry in upgradeLevels.entries) entry.key.name: entry.value,
     },
     // Thứ tự cố định để so sánh snapshot không lệch theo thứ tự mua.
+    'outfits': [
+      for (final outfit in PetCareOutfit.values)
+        if (!outfit.isFree && ownedOutfits.contains(outfit)) outfit.name,
+    ],
+    'worn': {
+      for (final pet in PetCarePet.values)
+        if (wornOutfits[pet] case final outfit?)
+          if (ownsOutfit(outfit)) pet.name: outfit.name,
+    },
     'styles': [
       for (final style in PetCareStyle.values)
         if (!style.isFree && ownedStyles.contains(style)) style.name,
@@ -1331,6 +1488,8 @@ class PetCareProgress {
     'reviveDay': reviveDay,
     'reviveCount': reviveCount,
     'giftDoubleDay': giftDoubleDay,
+    'birthdayLevel': birthdayLevel,
+    'garden': garden.toJson(),
   });
 
   factory PetCareProgress.decode(String raw, {DateTime? now}) {
@@ -1397,6 +1556,26 @@ class PetCareProgress {
         final rawLevel = source[upgrade.name];
         if (rawLevel is num) {
           levels[upgrade] = _clampInt(rawLevel.round(), 0, 3);
+        }
+      }
+    }
+    final rawOutfits = value['outfits'];
+    final outfits = <PetCareOutfit>{
+      for (final outfit in PetCareOutfit.values)
+        if (!outfit.isFree &&
+            rawOutfits is List &&
+            rawOutfits.contains(outfit.name))
+          outfit,
+    };
+    final rawWorn = value['worn'];
+    final worn = <PetCarePet, PetCareOutfit>{};
+    if (rawWorn is Map) {
+      for (final pet in PetCarePet.values) {
+        for (final outfit in PetCareOutfit.values) {
+          if (rawWorn[pet.name] == outfit.name &&
+              (outfit.isFree || outfits.contains(outfit))) {
+            worn[pet] = outfit;
+          }
         }
       }
     }
@@ -1485,6 +1664,8 @@ class PetCareProgress {
           ? null
           : checkedDay(value['dailyPlayDay']),
       upgradeLevels: Map.unmodifiable(levels),
+      ownedOutfits: Set.unmodifiable(outfits),
+      wornOutfits: Map.unmodifiable(worn),
       ownedStyles: Set.unmodifiable(owned),
       equippedStyles: Map.unmodifiable(equipped),
       roomItems: Set.unmodifiable(ownedRoomItems),
@@ -1501,6 +1682,8 @@ class PetCareProgress {
       reviveDay: optionalDay('reviveDay'),
       reviveCount: number('reviveCount', 0, PetCareEarn.revivesPerDay),
       giftDoubleDay: optionalDay('giftDoubleDay'),
+      birthdayLevel: math.max(1, number('birthdayLevel', 1, petCareMaxLevel)),
+      garden: PetCareGarden.fromJson(value['garden']),
     );
   }
 }
@@ -1591,10 +1774,18 @@ abstract interface class PetCareRemote {
 /// (lúc mất mạng) dựa trên bản chung nào.
 @immutable
 class _PetCareSyncMeta {
-  const _PetCareSyncMeta({this.rev = 0, this.dirty = false, this.base = 0});
+  const _PetCareSyncMeta({
+    this.rev = 0,
+    this.dirty = false,
+    this.base = 0,
+    this.pendingOperations = const [],
+  });
   final int rev;
   final bool dirty;
   final int base;
+  final List<String> pendingOperations;
+  String? get pendingOperation =>
+      pendingOperations.isEmpty ? null : pendingOperations.last;
 
   static _PetCareSyncMeta decode(String? raw) {
     if (raw == null) return const _PetCareSyncMeta();
@@ -1607,13 +1798,27 @@ class _PetCareSyncMeta {
         rev: read('rev'),
         dirty: value['dirty'] == true,
         base: read('base'),
+        pendingOperations: [
+          if (value['pendingOperations'] is List)
+            for (final operation in value['pendingOperations'] as List)
+              if (operation is String && operation.isNotEmpty) operation,
+          if (value['pendingOperations'] is! List &&
+              value['pendingOperation'] is String &&
+              (value['pendingOperation'] as String).isNotEmpty)
+            value['pendingOperation'] as String,
+        ],
       );
     } on Object {
       return const _PetCareSyncMeta();
     }
   }
 
-  String encode() => jsonEncode({'rev': rev, 'dirty': dirty, 'base': base});
+  String encode() => jsonEncode({
+    'rev': rev,
+    'dirty': dirty,
+    'base': base,
+    if (pendingOperations.isNotEmpty) 'pendingOperations': pendingOperations,
+  });
 }
 
 class PetCareStore {
@@ -1671,6 +1876,7 @@ class PetCareStore {
 
   /// Chờ máy chủ tối đa chừng này; quá thì lưu trên máy và đẩy lên sau.
   static const remoteTimeout = Duration(seconds: 6);
+  static const _operationHistoryLimit = 32;
 
   final String key;
   final String? Function() read;
@@ -1688,6 +1894,7 @@ class PetCareStore {
   final DateTime Function() now;
   static final Map<String, Future<void>> _pending = {};
   static final Map<String, int> _revisions = {};
+  static int _operationSequence = 0;
   static final ValueNotifier<PetCareStoreEvent?> changes = ValueNotifier(null);
 
   void _checkScope() {
@@ -1726,6 +1933,64 @@ class PetCareStore {
     await writeMeta?.call(meta.encode());
   }
 
+  /// Gắn mã thao tác vào snapshot mà không thay đổi schema tiến trình.
+  /// PetCareProgress.decode bỏ qua khóa mở rộng này nên vẫn tương thích bản cũ.
+  static String? _operationOf(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final value = jsonDecode(raw);
+      final operation = value is Map ? value['_syncOperation'] : null;
+      return operation is String && operation.isNotEmpty ? operation : null;
+    } on Object {
+      return null;
+    }
+  }
+
+  static List<String> _operationsOf(String? raw) {
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const [];
+      return [
+        if (decoded['_syncOperations'] is List)
+          for (final operation in decoded['_syncOperations'] as List)
+            if (operation is String && operation.isNotEmpty) operation,
+        ?_operationOf(raw),
+      ];
+    } on Object {
+      return const [];
+    }
+  }
+
+  static List<String> _recentOperations(Iterable<String> operations) {
+    final unique = operations.toSet().toList(growable: false);
+    return unique.length <= _operationHistoryLimit
+        ? unique
+        : unique.sublist(unique.length - _operationHistoryLimit);
+  }
+
+  static String _stampOperation(
+    String raw,
+    String operation, {
+    Iterable<String> previous = const [],
+  }) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return raw;
+      final value = Map<String, dynamic>.from(decoded);
+      value['_syncOperation'] = operation;
+      value['_syncOperations'] = _recentOperations([...previous, operation]);
+      return jsonEncode(value);
+    } on Object {
+      return raw;
+    }
+  }
+
+  String _newOperation() {
+    _operationSequence++;
+    return '${DateTime.now().microsecondsSinceEpoch}-$_operationSequence';
+  }
+
   /// Xếp hàng thao tác theo khóa để lưu/đồng bộ không chen nhau.
   Future<T> _enqueue<T>(Future<T> Function() task) {
     final previous = _pending[key] ?? Future<void>.value();
@@ -1762,6 +2027,13 @@ class PetCareStore {
 
   /// Bản làm nền cho thao tác: bản chung mới nhất; lần đầu nối máy thì gộp;
   /// đang có thao tác chờ đẩy mà bản chung chưa đổi thì giữ bản trên máy.
+  bool _canUsePending(PetCareRemoteDoc? current, _PetCareSyncMeta meta) =>
+      meta.dirty &&
+      (current == null ||
+          current.rev == meta.base ||
+          (current.by == uid &&
+              meta.pendingOperations.contains(_operationOf(current.state))));
+
   (PetCareProgress, bool) _baseFor(
     PetCareRemoteDoc? current,
     PetCareProgress local,
@@ -1778,13 +2050,14 @@ class PetCareStore {
         true,
       );
     }
-    if (meta.dirty && current.rev == meta.base) return (local, true);
+    if (_canUsePending(current, meta)) return (local, true);
     return (shared, false);
   }
 
   Future<PetCareProgress> update(
-    PetCareProgress Function(PetCareProgress state) change,
-  ) => _enqueue(() async {
+    PetCareProgress Function(PetCareProgress state) change, {
+    bool reconcilePending = false,
+  }) => _enqueue(() async {
     final local = _read();
     final hadLocal = read() != null;
     final remote = this.remote;
@@ -1800,12 +2073,23 @@ class PetCareStore {
       return next;
     }
     final meta = _meta();
+    final operation = reconcilePending
+        ? meta.pendingOperation ?? _newOperation()
+        : _newOperation();
     PetCareProgress? result;
     PetCareRemoteDoc? settled;
     var merged = false;
     try {
       settled = await remote
           .commit((current) {
+            // Timeout không hủy transaction Firebase. Callback cũ có thể
+            // chạy lại sau khi sync đã ghi cùng thao tác, kể cả khi người
+            // ấy vừa ghi một thao tác khác tiếp theo.
+            final applied = _operationsOf(current?.state);
+            if (current != null && applied.contains(operation)) {
+              result = _adopt(current, local);
+              return null;
+            }
             final (base, mustWrite) = _baseFor(current, local, hadLocal, meta);
             merged =
                 current != null &&
@@ -1816,7 +2100,14 @@ class PetCareStore {
             result = next;
             if (!mustWrite && next.encode() == base.encode()) return null;
             return PetCareRemoteDoc(
-              state: next.encode(),
+              state: _stampOperation(
+                next.encode(),
+                operation,
+                previous: [
+                  ...applied,
+                  if (_canUsePending(current, meta)) ...meta.pendingOperations,
+                ],
+              ),
               rev: (current?.rev ?? 0) + 1,
               by: writer,
               joined: {...?current?.joined, writer},
@@ -1835,7 +2126,16 @@ class PetCareStore {
       // nếu bản chung chưa bị người ấy đổi trong lúc đó.
       final next = change(local);
       if (next.encode() != local.encode()) {
-        if (!await write(next.encode())) {
+        final pendingOperations = _recentOperations([
+          ...meta.pendingOperations,
+          operation,
+        ]);
+        final stamped = _stampOperation(
+          next.encode(),
+          operation,
+          previous: [..._operationsOf(read()), ...pendingOperations],
+        );
+        if (!await write(stamped)) {
           throw StateError('Pet care save failed');
         }
         await _saveMeta(
@@ -1843,6 +2143,16 @@ class PetCareStore {
             rev: meta.rev,
             dirty: true,
             base: meta.dirty ? meta.base : meta.rev,
+            pendingOperations: pendingOperations,
+          ),
+        );
+      } else if (meta.dirty && meta.pendingOperation == null) {
+        await _saveMeta(
+          _PetCareSyncMeta(
+            rev: meta.rev,
+            dirty: true,
+            base: meta.base,
+            pendingOperations: [operation],
           ),
         );
       }
@@ -1851,7 +2161,15 @@ class PetCareStore {
       return next;
     }
     final next = _adopt(settled, result ?? local);
-    if (!await write(next.encode())) throw StateError('Pet care save failed');
+    final settledOperation = _operationOf(settled.state);
+    final localSnapshot = settledOperation == null
+        ? next.encode()
+        : _stampOperation(
+            next.encode(),
+            settledOperation,
+            previous: _operationsOf(settled.state),
+          );
+    if (!await write(localSnapshot)) throw StateError('Pet care save failed');
     await _saveMeta(_PetCareSyncMeta(rev: settled.rev));
     _checkScope();
     _publish(next, merged: merged && settled.joined.contains(writer));
@@ -1860,7 +2178,8 @@ class PetCareStore {
 
   /// Nối/đẩy bản chung: lần đầu gộp tiến trình, có thao tác chờ thì đẩy lên,
   /// còn lại chỉ nhận bản mới nhất. Không ghi gì nếu không cần.
-  Future<PetCareProgress> sync() => update((state) => state);
+  Future<PetCareProgress> sync() =>
+      update((state) => state, reconcilePending: true);
 
   /// Nhận bản chung vừa đổi (đang mở Trạm Mây hoặc Home vừa đọc một lần).
   /// Chưa nối máy hoặc còn thao tác chờ đẩy thì để [sync] xử lý.
@@ -1868,11 +2187,25 @@ class PetCareStore {
     final writer = uid;
     if (doc == null || writer == null) return null;
     final meta = _meta();
-    if (!doc.joined.contains(writer) || meta.dirty) return null;
+    final pendingApplied =
+        meta.dirty &&
+        meta.pendingOperation != null &&
+        _operationOf(doc.state) == meta.pendingOperation;
+    if (!doc.joined.contains(writer) || (meta.dirty && !pendingApplied)) {
+      return null;
+    }
     if (doc.rev == meta.rev) return null;
     final local = _read();
     final next = _adopt(doc, local);
-    if (!await write(next.encode())) throw StateError('Pet care save failed');
+    final receivedOperation = _operationOf(doc.state) ?? meta.pendingOperation;
+    final localSnapshot = receivedOperation == null
+        ? next.encode()
+        : _stampOperation(
+            next.encode(),
+            receivedOperation,
+            previous: _operationsOf(doc.state),
+          );
+    if (!await write(localSnapshot)) throw StateError('Pet care save failed');
     await _saveMeta(_PetCareSyncMeta(rev: doc.rev));
     _checkScope();
     _publish(next, fromPartner: doc.by != writer && doc.rev > meta.rev);

@@ -23,9 +23,11 @@ extension MainHomeAvatarController on _MainHomeTabState {
       '${_MainHomeTabState._pendingAvatarUploadKeyPrefix}$houseId';
 
   Future<void> _promptPendingAvatarRetryIfNeeded() async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
     if (_didPromptPendingAvatarRetry || !mounted) {
       return;
     }
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final houseId = (_houseId ?? await _houseService.getCurrentHouseId())
         ?.trim();
     if (houseId == null || houseId.isEmpty) {
@@ -33,6 +35,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
     }
     final pending = await PendingUploadService.instance.load(
       _pendingAvatarUploadKeyForHouse(houseId),
+      expectedUid: ownerUid,
     );
     if (pending == null || !mounted) {
       return;
@@ -58,30 +61,44 @@ extension MainHomeAvatarController on _MainHomeTabState {
   }
 
   Future<void> _retryPendingAvatarUpload() async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final houseId = (_houseId ?? await _houseService.getCurrentHouseId())
         ?.trim();
     if (houseId == null || houseId.isEmpty) {
       return;
     }
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
-    final pending = await PendingUploadService.instance.load(pendingKey);
+    final pending = await PendingUploadService.instance.load(
+      pendingKey,
+      expectedUid: ownerUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
     final role = pending['role']?.toString().trim() ?? '';
     final filePath = pending['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(pendingKey);
+      await PendingUploadService.instance.clear(
+        pendingKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     final file = XFile(filePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: ownerUid,
+        );
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance.clear(pendingKey);
+      await PendingUploadService.instance.clear(
+        pendingKey,
+        expectedUid: ownerUid,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
@@ -146,7 +163,7 @@ extension MainHomeAvatarController on _MainHomeTabState {
       await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
         'role': role,
         'filePath': file.path,
-      });
+      }, expectedUid: uploadUid);
 
       if (!mounted ||
           _houseId != houseId ||
@@ -181,7 +198,10 @@ extension MainHomeAvatarController on _MainHomeTabState {
             _houseId == houseId &&
             FirebaseAuth.instance.currentUser?.uid == uploadUid,
         persist: () async {},
-        clearPending: () => PendingUploadService.instance.clear(pendingKey),
+        clearPending: () => PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: uploadUid,
+        ),
       );
 
       await discardConfirmedCropImage(file);

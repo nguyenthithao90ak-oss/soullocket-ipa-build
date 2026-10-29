@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:soullocket_app/utils/permission_helper.dart';
 
 enum MapLocationAccessStatus {
   checking,
   permissionRequired,
   deniedForever,
+  restricted,
   serviceDisabled,
   ready,
   unavailable,
@@ -23,7 +25,14 @@ class MapLocationAccess {
     required LocationPermission permission,
     required bool serviceEnabled,
     bool approximate = false,
+    bool restricted = false,
   }) {
+    if (restricted) {
+      return const MapLocationAccess(MapLocationAccessStatus.restricted);
+    }
+    if (!serviceEnabled) {
+      return const MapLocationAccess(MapLocationAccessStatus.serviceDisabled);
+    }
     if (permission == LocationPermission.deniedForever) {
       return const MapLocationAccess(MapLocationAccessStatus.deniedForever);
     }
@@ -32,9 +41,6 @@ class MapLocationAccess {
       return const MapLocationAccess(
         MapLocationAccessStatus.permissionRequired,
       );
-    }
-    if (!serviceEnabled) {
-      return const MapLocationAccess(MapLocationAccessStatus.serviceDisabled);
     }
     return MapLocationAccess(
       MapLocationAccessStatus.ready,
@@ -45,9 +51,8 @@ class MapLocationAccess {
   /// Chỉ kiểm tra; tuyệt đối không bật hộp thoại hệ thống khi mở lại màn hình.
   static Future<MapLocationAccess> inspect() async {
     try {
-      final permission = await Geolocator.checkPermission().timeout(
-        const Duration(seconds: 6),
-      );
+      final permissionAccess = await PermissionHelper.checkLocationAccess();
+      final permission = permissionAccess.permission;
       // Trình duyệt không cung cấp API bật/tắt GPS hệ thống như Android.
       final enabled =
           kIsWeb ||
@@ -72,6 +77,7 @@ class MapLocationAccess {
         permission: permission,
         serviceEnabled: enabled,
         approximate: approximate,
+        restricted: permissionAccess.restricted,
       );
     } catch (_) {
       return const MapLocationAccess(MapLocationAccessStatus.unavailable);

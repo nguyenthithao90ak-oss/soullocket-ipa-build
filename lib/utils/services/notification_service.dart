@@ -1,8 +1,10 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'package:soullocket_app/utils/notification_reminder_plan.dart';
+import 'package:soullocket_app/utils/notification_delivery_policy.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/routing/single_open_gate.dart';
 import 'package:soullocket_app/core/sl_route.dart';
@@ -24,11 +26,11 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/notifications/notification_center_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
+import 'package:soullocket_app/views/utilities/capsule_screen.dart';
 import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
 import 'package:soullocket_app/views/utilities/secret_vault_screen.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
 import '../../views/utilities/soul_events/soul_events_screen.dart';
 import '../../views/utilities/soul_events/soul_event_detail_screen.dart';
@@ -40,6 +42,11 @@ import 'time_capsule_service.dart';
 import 'role_utils.dart';
 import 'widget_service.dart';
 import 'l10n_service.dart';
+import 'notification_installation_service.dart';
+import '../incoming_call_payload.dart';
+import 'incoming_call_notifications.dart';
+import 'incoming_call_suppression.dart';
+import 'system_call_bridge.dart';
 
 /// NotificationService — Gra (Logic/Data) chịu trách nhiệm toàn bộ
 /// Chức năng:
@@ -54,17 +61,27 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal()
     : _fcm = FirebaseMessaging.instance,
-      _localNotif = FlutterLocalNotificationsPlugin();
+      _localNotif = FlutterLocalNotificationsPlugin(),
+      _readNotificationUid = (() => FirebaseAuth.instance.currentUser?.uid),
+      _readHouseSettingsForTesting = null;
 
   @visibleForTesting
   NotificationService.forTesting({
     required FirebaseMessaging messaging,
     required FlutterLocalNotificationsPlugin localNotifications,
+    String? Function()? readUid,
+    Future<Map<String, dynamic>?> Function(String houseId)? readHouseSettings,
   }) : _fcm = messaging,
-       _localNotif = localNotifications;
+       _localNotif = localNotifications,
+       _readNotificationUid = readUid ?? (() => FirebaseAuth.instance.currentUser?.uid),
+       _readHouseSettingsForTesting = readHouseSettings;
 
   final FirebaseMessaging _fcm;
   final FlutterLocalNotificationsPlugin _localNotif;
+  final String? Function() _readNotificationUid;
+  final Future<Map<String, dynamic>?> Function(String houseId)? _readHouseSettingsForTesting;
+  ({String uid, String houseId, String role, String name, bool genderSwapped})? _houseReminderIdentity;
+  int _houseIdentityRevision = 0;
   StreamSubscription<String>? _tokenRefreshSubscription;
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
@@ -89,6 +106,60 @@ class NotificationService {
   String? _reminderSignedOutUid;
   Future<void> _localNotificationWrites = Future<void>.value();
   int _notificationPreferenceRevision = 0;
+  final PendingNotificationTapBuffer _pendingTap = PendingNotificationTapBuffer();
+  String? _homeReadyUid;
+  String? _registeredFcmToken;
+  String? _registeredFcmUid;
+  int _pushRegistrationRevision = 0;
+  bool _pushRegistrationPaused = false;
+  Future<void> _fcmTokenWrites = Future<void>.value();
+  late final NotificationInstallationService _installations =
+      GetIt.instance.isRegistered<NotificationInstallationService>()
+          ? GetIt.instance<NotificationInstallationService>()
+          : NotificationInstallationService();
+  final NotificationDeliveryOnce _automaticDelivery = NotificationDeliveryOnce();
+  final incomingCallRequest = ValueNotifier<IncomingCallRequest?>(null);
+  StreamSubscription<IncomingCallRequest>? _systemCallSubscription;
+  StreamSubscription<void>? _callRegistrationSubscription;
+  Future<void> _callSettingsWrites = Future<void>.value();
+
+  /// Áp dụng lựa chọn cuộc gọi cho native trước khi đồng bộ token lên server.
+  Future<void> syncSystemCallSettings() {
+    final uid = _readNotificationUid();
+    final operation = _callSettingsWrites.then((_) async {
+      if (_readNotificationUid() != uid) return;
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = uid != null && !_pushRegistrationPaused &&
+          (prefs.getBool('il_notifications_enabled') ?? true) &&
+          (prefs.getBool('il_notif_chat') ?? true);
+      if (_readNotificationUid() != uid) return;
+      await SystemCallBridge.instance.configure(uid: uid, enabled: enabled);
+    });
+    _callSettingsWrites = operation.catchError((Object error) {
+      debugPrint('[IncomingCall] Cấu hình native chưa sẵn sàng: ${error.runtimeType}');
+    });
+    return _callSettingsWrites;
+  }
+
+  /// Chỉ mở trang cấp quyền khi người dùng chủ động bấm trong Cài đặt.
+  Future<void> openIncomingCallSettings() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    await _ensureLocalPluginInitialized();
+    try {
+      await _androidPlugin?.requestFullScreenIntentPermission();
+    } catch (error) {
+      debugPrint('[IncomingCall] Chưa mở được quyền toàn màn hình: ${error.runtimeType}');
+    }
+  }
+
+  IncomingCallRequest? takeIncomingCallRequest() {
+    final request = incomingCallRequest.value;
+    incomingCallRequest.value = null;
+    return request;
+  }
+
+  @visibleForTesting
+  void markHomeReadyForTesting() => _homeReadyUid = _readNotificationUid();
 
   /// Công tắc tổng không thay đổi lựa chọn từng loại. Hủy cả lịch và thẻ
   /// local đã hiện, cùng hàng đợi ghi để tác vụ cũ không sống lại sau khi tắt.
@@ -99,6 +170,7 @@ class NotificationService {
     // trạng thái tắt, còn tác vụ đã đọc trạng thái cũ bị chặn bởi revision.
     _notificationPreferenceRevision++;
     _reminderGeneration++;
+    await syncSystemCallSettings();
     if (enabled || kIsWeb) return;
     await _ensureLocalPluginInitialized();
     await _withLocalNotificationWrite(() => _localNotif.cancelAll());
@@ -181,10 +253,11 @@ class NotificationService {
       >();
 
   Future<bool> hasPriorityNotificationAccess() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
-      // iOS dùng Time Sensitive; Windows/Web không có quyền DND tương đương.
-      return true;
+    if (kIsWeb) return false;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return SystemCallBridge.instance.hasTimeSensitiveNotificationAccess();
     }
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
     await _ensureLocalPluginInitialized();
     try {
       return await _androidPlugin?.hasNotificationPolicyAccess() ?? false;
@@ -201,6 +274,7 @@ class NotificationService {
     try {
       if (await _androidPlugin?.hasNotificationPolicyAccess() == true) {
         await _androidPlugin?.createNotificationChannel(_priorityChannel);
+        await _androidPlugin?.createNotificationChannel(IncomingCallNotifications.priorityChannel);
       }
     } catch (error) {
       debugPrint(
@@ -209,13 +283,17 @@ class NotificationService {
     }
   }
 
-  /// Mở màn hình cấp Notification Policy Access trên Android.
+  /// Mở quyền Notification Policy Access trên Android hoặc Time Sensitive trên iOS.
   /// Kết quả `false` nghĩa là người dùng chưa bật quyền; UI sẽ kiểm tra lại
   /// khi quay về ứng dụng.
   Future<bool> requestPriorityNotificationAccess() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
-      return true;
+    if (kIsWeb) return false;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      if (await hasPriorityNotificationAccess()) return true;
+      await openPriorityNotificationSettings();
+      return hasPriorityNotificationAccess();
     }
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
     await _ensureLocalPluginInitialized();
     final plugin = _androidPlugin;
     if (plugin == null) return false;
@@ -265,12 +343,9 @@ class NotificationService {
   }
 
   bool _isPriorityNotificationType(Map<String, dynamic> data) {
-    final explicit = data['priority'];
-    if (explicit == true || explicit?.toString().toLowerCase() == 'true') {
-      return true;
-    }
     final type = data['type']?.toString().trim().toLowerCase() ?? '';
-    return _priorityNotificationTypes.contains(type);
+    return _priorityNotificationTypes.contains(type) ||
+        NotificationDeliveryPolicy.screen(data) == 'soul_merge_call';
   }
 
   Future<bool> _shouldUsePriorityChannel(Map<String, dynamic> data) async {
@@ -279,7 +354,13 @@ class NotificationService {
     if (!(prefs.getBool('il_priority_notifications_enabled') ?? false)) {
       return false;
     }
-    return hasPriorityNotificationAccess();
+    if (NotificationDeliveryPolicy.screen(data) == 'soul_merge_call' &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      return IncomingCallNotifications.preparePriorityChannel(plugin: _localNotif, prefs: prefs);
+    }
+    if (!await hasPriorityNotificationAccess()) return false;
+    await prefs.reload();
+    return prefs.getBool('il_priority_notifications_enabled') == true;
   }
 
   Future<bool> hasPermission() async {
@@ -323,6 +404,18 @@ class NotificationService {
 
   /// Khởi tạo toàn bộ hệ thống thông báo — gọi 1 lần trong main.dart
   Future<void> initialize() async {
+    _pushRegistrationPaused = false;
+    SystemCallBridge.instance.initialize();
+    _callRegistrationSubscription ??= SystemCallBridge.instance.registrationChanges.listen((_) {
+      unawaited(_saveNotificationLocale());
+    });
+    _systemCallSubscription ??= SystemCallBridge.instance.events.listen((request) {
+      // Mute/end của cuộc gọi đang kết nối do VideoCallScreen xử lý.
+      if (request.action == IncomingCallAction.mute) return;
+      unawaited(_navigateFromData({...request.data,
+        'screen': 'soul_merge_call', 'callAction': request.action.name}));
+    });
+    await syncSystemCallSettings();
     if (_isInitialized) {
       await _saveFcmToken();
       if (!_localeListenerAttached) {
@@ -352,12 +445,12 @@ class NotificationService {
 
         await _saveFcmToken();
 
-        // iOS: Bật hiển thị thông báo khi app đang mở (foreground)
-        // Nếu không gọi dòng này, iOS sẽ âm thầm bỏ qua notification khi app ở foreground.
+        // Chỉ onMessage sở hữu hiển thị foreground: tránh iOS hiện cả remote
+        // lẫn local và bảo đảm công tắc từng loại được kiểm tra trước khi hiện.
         await _fcm.setForegroundNotificationPresentationOptions(
-          alert: true,
-          badge: true,
-          sound: true,
+          alert: false,
+          badge: false,
+          sound: false,
         );
 
         _tokenRefreshSubscription ??= _fcm.onTokenRefresh.listen(
@@ -403,8 +496,9 @@ class NotificationService {
 
   /// Lưu FCM Token vào Firebase để Admin Panel và Cloud Function có thể dùng
   Future<void> _saveFcmToken() async {
+    final revision = _pushRegistrationRevision;
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null || _pushRegistrationPaused) return;
 
     // iOS yêu cầu phải có APNS Token trước, nếu chưa có thì chờ tối đa 3 giây.
     // Nếu bỏ qua bước này, getToken() sẽ trả về null trên thiết bị thật iOS.
@@ -442,35 +536,49 @@ class NotificationService {
       );
       return;
     }
-    if (token == null || FirebaseAuth.instance.currentUser?.uid != user.uid) {
+    if (token == null || _pushRegistrationPaused ||
+        revision != _pushRegistrationRevision ||
+        FirebaseAuth.instance.currentUser?.uid != user.uid) {
       return;
     }
 
-    await FirebaseDatabase.instance
-        .ref('users/${user.uid}/fcmToken')
-        .set(token)
-        .timeout(const Duration(seconds: 5));
-    await _saveNotificationLocale();
+    await _storeFcmToken(user.uid, token, revision);
 
-    // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
-    // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
+    // Field scalar giữ tương thích backend cũ; registry riêng từng máy được
+    // đồng bộ cùng locale, không ghi token vào House dùng chung.
   }
 
   Future<void> _onTokenRefresh(String newToken) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    final revision = _pushRegistrationRevision;
+    if (user == null || _pushRegistrationPaused) return;
     try {
-      await FirebaseDatabase.instance
-          .ref('users/${user.uid}/fcmToken')
-          .set(newToken)
-          .timeout(const Duration(seconds: 5));
-      await _saveNotificationLocale();
+      await _storeFcmToken(user.uid, newToken, revision);
     } catch (error) {
       debugPrint('[NotificationService] FCM token refresh deferred: $error');
     }
 
-    // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
-    // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
+  }
+
+  Future<void> _storeFcmToken(String uid, String token, int revision) async {
+    bool active() => !_pushRegistrationPaused &&
+        revision == _pushRegistrationRevision &&
+        FirebaseAuth.instance.currentUser?.uid == uid;
+    final write = _fcmTokenWrites.then((_) async {
+      if (!active() || token.isEmpty) return;
+      // Ghi tuần tự để logout chờ lượt đang ghi, rồi mới xóa token của máy.
+      _registeredFcmToken = token;
+      _registeredFcmUid = uid;
+      try {
+        await FirebaseDatabase.instance.ref('users/$uid/fcmToken')
+            .set(token).timeout(const Duration(seconds: 5));
+      } catch (_) {
+        debugPrint('[NotificationService] legacy token sync unavailable');
+      }
+    });
+    _fcmTokenWrites = write.then<void>((_) {}, onError: (Object error, StackTrace stack) {});
+    await write;
+    if (active()) await _saveNotificationLocale();
   }
 
   void _onNotificationLocaleChanged() {
@@ -516,12 +624,21 @@ class NotificationService {
         }
         await FirebaseDatabase.instance
             .ref('users/$uid/notificationLocale')
-            .set(locale);
+            .set(locale).timeout(const Duration(seconds: 5));
       } catch (_) {
         // Rules cũ có thể chưa hỗ trợ locale; vẫn giữ FCM token và thông báo trong app.
         debugPrint(
           '[NotificationService] notification locale sync unavailable',
         );
+      }
+      final token = _registeredFcmUid == uid ? _registeredFcmToken : null;
+      if (token != null && !_pushRegistrationPaused && revision == _localeRevision &&
+          FirebaseAuth.instance.currentUser?.uid == uid) {
+        try {
+          await _installations.register(uid: uid, token: token, locale: locale);
+        } catch (_) {
+          debugPrint('[NotificationService] installation registration deferred');
+        }
       }
     }();
     _localeWrite = write;
@@ -529,12 +646,38 @@ class NotificationService {
     if (identical(_localeWrite, write)) _localeWrite = null;
   }
 
+  /// Làm mới múi giờ/giờ chúc của đúng bản cài sau resume hoặc đổi cài đặt.
+  Future<void> refreshNotificationInstallation() async {
+    final uid = _readNotificationUid();
+    final token = _registeredFcmUid == uid ? _registeredFcmToken : null;
+    if (uid == null || token == null || _pushRegistrationPaused) return;
+    try {
+      await _installations.register(
+        uid: uid, token: token, locale: L10nService().localeCode,
+      );
+    } catch (_) {
+      debugPrint('[NotificationService] Chưa làm mới được múi giờ bản cài');
+    }
+  }
+
   /// Dọn dẹp FCM token khi người dùng đăng xuất
   Future<void> clearTokenOnSignOut() async {
+    final logoutUid = FirebaseAuth.instance.currentUser?.uid;
+    final knownToken = _registeredFcmUid == logoutUid ? _registeredFcmToken : null;
+    _pushRegistrationPaused = true;
+    _pushRegistrationRevision++;
+    _homeReadyUid = null;
+    _pendingTap.clear();
+    incomingCallRequest.value = null;
+    await syncSystemCallSettings();
+    _registeredFcmToken = null;
+    _registeredFcmUid = null;
     // Vô hiệu hóa mọi lần đồng bộ đang chờ để lịch của UID cũ không được
     // đặt lại sau khi người dùng đã đăng xuất.
     _reminderGeneration++;
-    _reminderSignedOutUid = FirebaseAuth.instance.currentUser?.uid;
+    _reminderSignedOutUid = _readNotificationUid();
+    _houseReminderIdentity = null;
+    _houseIdentityRevision++;
     _localeRevision++;
     if (_localeListenerAttached) {
       L10nService().removeListener(_onNotificationLocaleChanged);
@@ -547,12 +690,28 @@ class NotificationService {
       debugPrint('[NotificationService] clear local reminders error: $error');
     }
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        // Xóa ở đường dẫn chính nơi token được lưu
+      await _fcmTokenWrites;
+      if (logoutUid != null && FirebaseAuth.instance.currentUser?.uid == logoutUid) {
+        final localToken = knownToken ?? await _fcm.getToken().timeout(
+          const Duration(seconds: 2), onTimeout: () => null,
+        );
+        if (localToken != null) {
+          try {
+            await _installations.unregister(uid: logoutUid, token: localToken);
+          } catch (_) {
+            // App cũ/backend chưa rollout vẫn gỡ scalar và token native bên dưới.
+            debugPrint('[NotificationService] installation unregister deferred');
+          }
+        }
+        // Token trên server có thể đã thuộc máy khác. Transaction so sánh
+        // nguyên tử, không xóa nhầm token mới giữa lúc đọc và đăng xuất.
         await FirebaseDatabase.instance
-            .ref('users/${user.uid}/fcmToken')
-            .remove()
+            .ref('users/$logoutUid/fcmToken')
+            .runTransaction((remoteToken) {
+              if (remoteToken == null) return Transaction.success(null);
+              return NotificationDeliveryPolicy.ownsToken(remoteToken, localToken)
+                  ? Transaction.success(null) : Transaction.abort();
+            }, applyLocally: false)
             .timeout(const Duration(seconds: 2));
       }
     } catch (e) {
@@ -561,16 +720,29 @@ class NotificationService {
 
     // Xóa FCM token local trên thiết bị để ngắt hoàn toàn việc nhận notification
     try {
-      await _fcm.deleteToken();
+      if (FirebaseAuth.instance.currentUser?.uid == logoutUid) {
+        await _fcm.deleteToken();
+      }
     } catch (e) {
       debugPrint('[NotificationService] deleteToken error: $e');
     }
   }
 
   /// Xử lý thông báo khi App đang mở — hiển thị Local Notification
+  @visibleForTesting
+  Future<void> handleForegroundMessageForTesting(RemoteMessage message) =>
+      _handleForegroundMessage(message);
+
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
-    final screen = message.data['screen']?.toString() ?? '';
+    final screen = NotificationDeliveryPolicy.screen(message.data);
+    final prefs = await SharedPreferences.getInstance();
+    if (NotificationDeliveryPolicy.expired(message.data, DateTime.now()) ||
+        !NotificationDeliveryPolicy.matchesScope(message.data,
+          uid: _readNotificationUid(),
+          houseId: prefs.getString('il_house_id'))) {
+      return;
+    }
     final isSoulMergeCall =
         type == 'soul_merge_call' || screen == 'soul_merge_call';
 
@@ -595,6 +767,8 @@ class NotificationService {
       }
     }
 
+    if (!NotificationDeliveryPolicy.allowsLocal(message.data, prefs.getBool)) return;
+
     final isInteractionOrMerge =
         !isSoulMergeCall &&
         (type == 'soul_merge' ||
@@ -604,51 +778,19 @@ class NotificationService {
             type == 'photo_shot');
 
     if (isSoulMergeCall) {
-      final callerName = message.data['callerName']?.toString().trim() ?? '';
-      await showLocalNotification(
-        title:
-            message.notification?.title ??
-            L10nService().translate('home_cucgin_eff0b9'),
-        body:
-            message.notification?.body ??
-            L10nService().format('home_incoming_call_from', {
-              'name': callerName.isEmpty
-                  ? L10nService().translate('home_ngigi_f1117f')
-                  : callerName,
-            }),
-        data: message.data,
-        dedupeKey: _messageKey(message),
-      );
+      if (message.data['callAction'] == 'cancel') {
+        await dismissIncomingCallNotification(message.data['roomId']?.toString() ?? '');
+        return;
+      }
+      // Home kiểm chứng phòng và sở hữu UI/chuông. Inbox RTDB cùng FCM chỉ
+      // gợi ý cùng một room, không phát thêm local notification độc lập.
+      await _navigateFromData({...message.data, 'screen': 'soul_merge_call'});
       return;
     }
 
     // Yêu cầu: Không hiện thông báo in-app (Overlay/Heads-up) khi đang trong app đối với sự kiện gửi icon/bắn tim/tương tác (ôm, hôn...)
     // Chỉ hiện thông báo Push Notification của Hệ thống khi khóa màn hình hoặc thoát app.
     if (isInteractionOrMerge) return;
-
-    final isOverlayTarget = type == 'chat' || screen == 'chat';
-
-    // 1. Luôn hiển thị bong bóng (nếu được cấp quyền) ngay cả khi không có notification block (Data-only FCM)
-    if (isOverlayTarget) {
-      try {
-        final granted = await FlutterOverlayWindow.isPermissionGranted();
-        if (granted) {
-          final active = await FlutterOverlayWindow.isActive();
-          if (!active) {
-            await FlutterOverlayWindow.showOverlay(
-              enableDrag: true,
-              height: 100,
-              width: 100,
-              alignment: OverlayAlignment.centerRight,
-              overlayTitle: UiCopy.text('copy_2ae0a531a5df'),
-              overlayContent: UiCopy.text('copy_2beace08a4bf'),
-            );
-          }
-        }
-      } catch (e) {
-        debugPrint('Error showing overlay in foreground: $e');
-      }
-    }
 
     // 2. Xử lý hiển thị heads-up (Local Notification)
     final notification = message.notification;
@@ -670,23 +812,17 @@ class NotificationService {
 
   /// Xử lý khi user tap vào Local Notification
   void _onNotificationTap(NotificationResponse response) {
-    unawaited(_openLocalPayload(response.payload));
+    unawaited(_openLocalPayload(response.payload, actionId: response.actionId));
   }
 
-  Future<void> _openLocalPayload(
-    String? payload, {
-    bool eventsOnly = false,
-  }) async {
+  Future<void> _openLocalPayload(String? payload, {String? actionId}) async {
     if (payload == null) return;
     try {
       final decoded = jsonDecode(payload);
       if (decoded is! Map) return;
       final data = Map<String, dynamic>.from(decoded);
-      if (eventsOnly &&
-          data['type'] != 'soul_event_reminder_v1' &&
-          data['type'] != 'calendar_reminder_v2' &&
-          data['type'] != 'habit_reminder_v1') {
-        return;
+      if (NotificationDeliveryPolicy.screen(data) == 'soul_merge_call') {
+        data['callAction'] = incomingCallAction(actionId).name;
       }
       await _navigateFromData(data);
     } catch (error) {
@@ -696,6 +832,16 @@ class NotificationService {
 
   /// Chỉ xử lý cold start sau khi màn hình chính đã qua luồng đăng nhập.
   Future<void> handleSoulEventLaunch() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _homeReadyUid = uid;
+    for (final request in await SystemCallBridge.instance.takePending()) {
+      if (FirebaseAuth.instance.currentUser?.uid != uid) return;
+      unawaited(_navigateFromData({...request.data,
+        'screen': 'soul_merge_call', 'callAction': request.action.name}));
+    }
+    final pending = _pendingTap.take(uid: uid, now: DateTime.now());
+    if (pending != null) unawaited(_navigateFromData(pending));
     if (kIsWeb ||
         _didCheckSoulEventLaunch ||
         (defaultTargetPlatform != TargetPlatform.android &&
@@ -710,7 +856,7 @@ class NotificationService {
       if (details?.didNotificationLaunchApp != true) return;
       await _openLocalPayload(
         details?.notificationResponse?.payload,
-        eventsOnly: true,
+        actionId: details?.notificationResponse?.actionId,
       );
     } catch (error) {
       debugPrint(AppErrorMapper.resolve(error).message);
@@ -718,6 +864,27 @@ class NotificationService {
   }
 
   Future<void> _navigateFromData(Map<String, dynamic> data) {
+    final isCall = NotificationDeliveryPolicy.screen(data) == 'soul_merge_call';
+    final terminalAction = isCall && ['end', 'decline'].contains(data['callAction']);
+    if (!terminalAction && NotificationDeliveryPolicy.expired(data, DateTime.now())) {
+      return Future<void>.value();
+    }
+    final uid = _readNotificationUid();
+    if (uid == null || _homeReadyUid != uid || (!isCall && navigatorKey.currentState == null)) {
+      _pendingTap.store(data, uid: uid, now: DateTime.now());
+      return Future<void>.value();
+    }
+    if (isCall) {
+      final action = switch (data['callAction']) {
+        'answer' => IncomingCallAction.answer,
+        'decline' => IncomingCallAction.decline,
+        'end' => IncomingCallAction.end,
+        _ => IncomingCallAction.open,
+      };
+      // Không đẩy thêm Home lên trên màn nhận/cuộc gọi hiện có.
+      incomingCallRequest.value = IncomingCallRequest(Map.of(data), action);
+      return Future<void>.value();
+    }
     // Giữ khóa từ lúc đọc dữ liệu tới khi route đóng; callback trễ không
     // xếp thêm màn hình sau lưng người dùng khi mạng hoặc thiết bị chậm.
     return _navigationGate.run(() async {
@@ -735,12 +902,28 @@ class NotificationService {
     if (navigator == null || context == null) return;
 
     final requestUid = FirebaseAuth.instance.currentUser?.uid;
-    final screen = data['screen']?.toString() ?? 'home';
+    final screen = NotificationDeliveryPolicy.screen(data);
     final houseService = HouseService();
     final myHouseId = await houseService.getCurrentHouseId();
+    if (!NotificationDeliveryPolicy.matchesScope(data, uid: requestUid, houseId: myHouseId) ||
+        FirebaseAuth.instance.currentUser?.uid != requestUid) {
+      return;
+    }
 
     Widget destination;
     switch (screen) {
+      case 'internal_chat':
+        final senderRole = data['senderRole']?.toString();
+        if (myHouseId == null || !['user1', 'user2'].contains(senderRole)) return;
+        destination = ChatDetailScreen(
+          myHouseId: myHouseId,
+          targetHouseId: myHouseId,
+          targetName: UiCopy.text('copy_145933221191'),
+          isInternal: true,
+          currentRole: senderRole == 'user1' ? 'user2' : 'user1',
+          targetRole: senderRole!,
+        );
+        break;
       case 'chat':
         final targetHouseId =
             data['targetHouseId']?.toString() ??
@@ -750,7 +933,7 @@ class NotificationService {
         if (myHouseId == null ||
             targetHouseId == null ||
             targetHouseId.isEmpty) {
-          destination = const HomeScreen(initialTab: 1);
+          destination = const NotificationCenterScreen();
         } else {
           destination = ChatDetailScreen(
             myHouseId: myHouseId,
@@ -768,7 +951,7 @@ class NotificationService {
         if (myHouseId == null ||
             targetHouseId == null ||
             targetHouseId.isEmpty) {
-          destination = const HomeScreen(initialTab: 1);
+          destination = const NotificationCenterScreen();
         } else {
           destination = WatchTogetherScreen(
             myHouseId: myHouseId,
@@ -824,10 +1007,10 @@ class NotificationService {
         );
         break;
       case 'diary':
-        destination = const HomeScreen(initialTab: 2);
+        destination = HomeScreen(initialTab: NotificationDeliveryPolicy.homeTab(screen));
         break;
       case 'utilities':
-        destination = const HomeScreen(initialTab: 3);
+        destination = HomeScreen(initialTab: NotificationDeliveryPolicy.homeTab(screen));
         break;
       case 'habits':
         // Payload cũ không được mở thói quen của tài khoản/House trước đó.
@@ -849,13 +1032,22 @@ class NotificationService {
         destination = HabitScreen(houseId: myHouseId, myName: habitName);
         break;
       case 'game':
-        destination = const HomeScreen(initialTab: 4);
+        destination = HomeScreen(initialTab: NotificationDeliveryPolicy.homeTab(screen));
         break;
       case 'update':
-        destination = const HomeScreen(initialTab: 5);
+        destination = HomeScreen(initialTab: NotificationDeliveryPolicy.homeTab(screen));
         break;
       case 'creative_diary':
         destination = const CreativeDiaryScreen();
+        break;
+      case 'time_capsule':
+        if (myHouseId == null) return;
+        final name = await _resolveCurrentUserDisplayName(houseService, myHouseId);
+        if (FirebaseAuth.instance.currentUser?.uid != requestUid ||
+            await houseService.getCurrentHouseId() != myHouseId) {
+          return;
+        }
+        destination = CapsuleScreen(houseId: myHouseId, myName: name);
         break;
       case 'soul_merge':
         destination = const SoulMergeScreen();
@@ -867,7 +1059,7 @@ class NotificationService {
         destination = const HomeScreen(initialTab: 0);
         break;
       case 'feed':
-        destination = const HomeScreen(initialTab: 1);
+        destination = const NotificationCenterScreen();
         break;
       case 'notifications':
         // Payload thông báo cũ có thể còn nằm trong khay hệ thống sau khi
@@ -982,27 +1174,8 @@ class NotificationService {
   Future<String> _resolveCurrentUserDisplayName(
     HouseService houseService,
     String houseId,
-  ) async {
-    final fallback =
-        FirebaseAuth.instance.currentUser?.displayName?.trim().isNotEmpty ==
-            true
-        ? FirebaseAuth.instance.currentUser!.displayName!.trim()
-        : UiCopy.text('copy_40ffd8d0f1c7');
-
-    try {
-      final prefs =
-          OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
-      final role = RoleUtils.normalize(prefs.getString('il_role'));
-      final settings = await houseService.getHouseSettings(houseId);
-      if (settings == null) return fallback;
-      final key = role == 'user2' ? 'nameU2' : 'nameU1';
-      final resolved = settings[key]?.toString().trim() ?? '';
-      return resolved.isEmpty ? fallback : resolved;
-    } catch (_) {
-      return fallback;
-    }
-  }
+  ) async => await _currentHouseNotificationName(houseId) ??
+      UiCopy.text('copy_40ffd8d0f1c7');
 
   String _messageKey(RemoteMessage message) {
     final type = message.data['type']?.toString() ?? '';
@@ -1047,7 +1220,7 @@ class NotificationService {
     // lần rung lại cập nhật đúng một thẻ và khi kết thúc có thể dismiss được.
     if (type == 'soul_merge_call' || screen == 'soul_merge_call') {
       final roomId = payloadData['roomId']?.toString().trim() ?? '';
-      if (roomId.isNotEmpty) return roomId.hashCode;
+      if (roomId.isNotEmpty) return incomingCallNotificationId(roomId);
     }
     if (type == 'partner_care') {
       final careType = payloadData['careType']?.toString() ?? '';
@@ -1061,14 +1234,17 @@ class NotificationService {
 
   NotificationDetails _notificationDetails({
     bool isIncomingCall = false,
+    Map<String, dynamic> data = const {},
     bool isPriority = false,
   }) {
+    if (isIncomingCall) return IncomingCallNotifications.details(data: data, isPriority: isPriority);
     final channel = isPriority ? _priorityChannel : _channel;
     return NotificationDetails(
       android: AndroidNotificationDetails(
         channel.id,
         channel.name,
         channelDescription: channel.description,
+        channelBypassDnd: isPriority,
         importance: Importance.high,
         priority: Priority.high,
         playSound: true,
@@ -1081,7 +1257,8 @@ class NotificationService {
         autoCancel: !isIncomingCall,
         category: isIncomingCall ? AndroidNotificationCategory.call : null,
         fullScreenIntent: isIncomingCall,
-        icon: '@mipmap/ic_launcher',
+        timeoutAfter: isIncomingCall ? 60000 : null,
+        icon: 'ic_stat_soullocket',
         color: const Color(0xFFFF5E7E),
       ),
       iOS: DarwinNotificationDetails(
@@ -1099,30 +1276,61 @@ class NotificationService {
     Map<String, dynamic>? data,
     String? dedupeKey,
   }) async {
-    if (kIsWeb || (title.trim().isEmpty && body.trim().isEmpty)) return;
+    await _showLocalNotificationIfAllowed(
+      title: title, body: body, data: data, dedupeKey: dedupeKey,
+    );
+  }
+
+  Future<bool> _showLocalNotificationIfAllowed({
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+    String? dedupeKey,
+    bool Function()? active,
+  }) async {
+    if (kIsWeb || (title.trim().isEmpty && body.trim().isEmpty)) return false;
     final revision = _notificationPreferenceRevision;
+    final registrationRevision = _pushRegistrationRevision;
+    final requestUid = _readNotificationUid();
     final prefs = await SharedPreferences.getInstance();
-    if (!_canWriteLocalNotification(prefs, revision)) return;
+    final requestHouse = prefs.getString('il_house_id');
+    final payloadData = <String, dynamic>{...?data};
+    final incomingRoomId = NotificationDeliveryPolicy.screen(payloadData) == 'soul_merge_call'
+        ? payloadData['roomId']?.toString() ?? '' : '';
+    final hasScope = payloadData.containsKey('accountUid') ||
+        payloadData.containsKey('houseId') || payloadData.containsKey('house_id');
+    bool canShow() => (active?.call() ?? true) &&
+        registrationRevision == _pushRegistrationRevision &&
+        _readNotificationUid() == requestUid &&
+        prefs.getString('il_house_id') == requestHouse &&
+        _canWriteLocalNotification(prefs, revision) &&
+        NotificationDeliveryPolicy.allowsLocal(payloadData, prefs.getBool) &&
+        !NotificationDeliveryPolicy.expired(payloadData, DateTime.now()) &&
+        !incomingCallLocallyExpired(payloadData, DateTime.now().millisecondsSinceEpoch) &&
+        (incomingRoomId.isEmpty || !IncomingCallSuppression.isClosed(prefs,
+          uid: requestUid, roomId: incomingRoomId)) &&
+        (!hasScope || NotificationDeliveryPolicy.matchesScope(payloadData,
+          uid: _readNotificationUid(),
+          houseId: prefs.getString('il_house_id')));
+    if (!canShow()) return false;
     // Hiển thị local không cần lưu lại token FCM hay đồng bộ toàn bộ lịch.
     await _ensureLocalPluginInitialized();
 
-    final payloadData = <String, dynamic>{...?data};
     final key = dedupeKey ?? '$title|$body|${jsonEncode(payloadData)}';
-    await _withLocalNotificationWrite(() async {
-      if (!_canWriteLocalNotification(prefs, revision) ||
-          !await hasPermission()) {
-        return;
+    return _withLocalNotificationWrite(() async {
+      if (incomingRoomId.isNotEmpty) await prefs.reload();
+      if (!canShow() || !await hasPermission()) {
+        return false;
       }
       final isPriority = await _shouldUsePriorityChannel(payloadData);
-      if (!_canWriteLocalNotification(prefs, revision)) return;
+      if (incomingRoomId.isNotEmpty) await prefs.reload();
+      if (!canShow()) return false;
       final now = DateTime.now();
       final shouldSkip =
           _lastForegroundMessageKey == key &&
           _lastForegroundShownAt != null &&
           now.difference(_lastForegroundShownAt!) < const Duration(seconds: 5);
-      if (shouldSkip) return;
-      _lastForegroundMessageKey = key;
-      _lastForegroundShownAt = now;
+      if (shouldSkip) return true;
       final isIncomingCall =
           payloadData['type']?.toString() == 'soul_merge_call' ||
           payloadData['screen']?.toString() == 'soul_merge_call';
@@ -1134,10 +1342,21 @@ class NotificationService {
         body: body,
         notificationDetails: _notificationDetails(
           isIncomingCall: isIncomingCall,
-          isPriority: isPriority,
+          data: payloadData,
+          isPriority: isPriority && prefs.getBool('il_priority_notifications_enabled') == true,
         ),
         payload: jsonEncode(payloadData),
       );
+      if (incomingRoomId.isNotEmpty) {
+        await prefs.reload();
+        if (!canShow()) {
+          await _localNotif.cancel(id: notificationId);
+          return false;
+        }
+      }
+      _lastForegroundMessageKey = key;
+      _lastForegroundShownAt = now;
+      return true;
     });
   }
 
@@ -1149,6 +1368,10 @@ class NotificationService {
     required String callerName,
     required bool isVideo,
     int sequence = 0,
+    String? accountUid,
+    String? houseId,
+    String? callerAvatar,
+    int? localExpiresAt,
   }) async {
     final normalizedRoomId = roomId.trim();
     if (normalizedRoomId.isEmpty) return;
@@ -1156,16 +1379,18 @@ class NotificationService {
         ? L10nService().translate('home_ngigi_f1117f')
         : callerName.trim();
     await showLocalNotification(
-      title: L10nService().translate('home_cucgin_eff0b9'),
-      body: L10nService().format('home_incoming_call_from', {
-        'name': safeCallerName,
-      }),
+      title: safeCallerName,
+      body: L10nService().translate(isVideo ? 'call_incoming_video' : 'call_incoming_audio'),
       data: <String, dynamic>{
         'screen': 'soul_merge_call',
         'type': 'soul_merge_call',
         'roomId': normalizedRoomId,
         'callerName': safeCallerName,
         'isVideo': isVideo.toString(),
+        'accountUid': ?accountUid,
+        'houseId': ?houseId,
+        'callerAvatar': ?callerAvatar,
+        'localExpiresAt': ?localExpiresAt,
       },
       dedupeKey: _incomingCallDedupeKey(normalizedRoomId, sequence),
     );
@@ -1178,9 +1403,13 @@ class NotificationService {
     final normalizedRoomId = roomId.trim();
     if (normalizedRoomId.isEmpty) return;
     try {
-      await initialize();
+      await IncomingCallSuppression.close(uid: _readNotificationUid(), roomId: normalizedRoomId);
+      await _ensureLocalPluginInitialized();
       if (!_localPluginReady) return;
-      await _localNotif.cancel(id: normalizedRoomId.hashCode);
+      await _withLocalNotificationWrite(() async {
+        await _localNotif.cancel(id: incomingCallNotificationId(normalizedRoomId));
+        await _localNotif.cancel(id: normalizedRoomId.hashCode); // Thẻ của bản app cũ.
+      });
     } catch (error) {
       debugPrint(
         '[NotificationService] dismiss incoming call failed: '
@@ -1196,6 +1425,7 @@ class NotificationService {
     required String title,
     required String body,
     Map<String, String>? data,
+    String? idempotencyKey,
     bool throwOriginalException = false,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -1207,6 +1437,7 @@ class NotificationService {
       'body': body,
       'data': data ?? const <String, String>{},
       'audience': 'partner',
+      'idempotencyKey': ?idempotencyKey,
     };
 
     try {
@@ -1288,8 +1519,8 @@ class NotificationService {
 
   /// Gửi thông báo "Tôi nhớ bạn" cho người yêu
   Future<void> sendMissYouNotification(String houseId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
+    final name = await _currentHouseNotificationName(houseId);
+    if (name == null) return;
     await sendPartnerNotification(
       houseId: houseId,
       title: L10nService().format('notif_miss_you_title', {'value1': name}),
@@ -1300,8 +1531,8 @@ class NotificationService {
 
   /// Gửi thông báo khi đăng bài mới lên feed
   Future<void> sendNewPostNotification(String houseId, String postId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
+    final name = await _currentHouseNotificationName(houseId);
+    if (name == null) return;
     await sendPartnerNotification(
       houseId: houseId,
       title: L10nService().format('notif_new_post_title', {'value1': name}),
@@ -1315,15 +1546,17 @@ class NotificationService {
     if (_localPluginTask != null) return _localPluginTask;
     final task = () async {
       await _androidPlugin?.createNotificationChannel(_channel);
+      await _androidPlugin?.createNotificationChannel(IncomingCallNotifications.channel);
 
       const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('ic_stat_soullocket');
 
-      const DarwinInitializationSettings iosSettings =
+      final DarwinInitializationSettings iosSettings =
           DarwinInitializationSettings(
             requestAlertPermission: false,
             requestBadgePermission: false,
             requestSoundPermission: false,
+            notificationCategories: [IncomingCallNotifications.category],
           );
 
       const WindowsInitializationSettings windowsSettings =
@@ -1333,7 +1566,7 @@ class NotificationService {
             guid: '8d76c80d-3f20-4f42-9ad0-7f3f148bf17c',
           );
 
-      const InitializationSettings initSettings = InitializationSettings(
+      final InitializationSettings initSettings = InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
         windows: windowsSettings,
@@ -1342,6 +1575,7 @@ class NotificationService {
       await _localNotif.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: _onNotificationTap,
+        onDidReceiveBackgroundNotificationResponse: incomingCallNotificationBackgroundAction,
       );
 
       _localPluginReady = true;
@@ -1458,8 +1692,50 @@ class NotificationService {
     });
   }
 
+  /// Đồng bộ tên hiển thị theo snapshot settings Home đang nghe.
+  /// Revision tăng trước await để lượt lịch cũ không ghi đè tên mới.
+  Future<void> updateHouseReminderIdentity({
+    required String accountUid,
+    required String houseId,
+    required String role,
+    required String displayName,
+    bool genderSwapped = false,
+  }) {
+    final uid = accountUid.trim();
+    final house = houseId.trim();
+    if (uid.isEmpty || house.isEmpty || _readNotificationUid() != uid) {
+      return Future<void>.value();
+    }
+    final identity = (
+      uid: uid,
+      houseId: house,
+      role: RoleUtils.normalize(role),
+      name: displayName.trim(),
+      genderSwapped: genderSwapped,
+    );
+    if (_houseReminderIdentity == identity) {
+      return _reminderSyncTask ?? Future<void>.value();
+    }
+    _houseReminderIdentity = identity;
+    _houseIdentityRevision++;
+    _reminderGeneration++;
+    return _enqueueReminderSync((generation) async {
+      final prefs = await SharedPreferences.getInstance();
+      if (generation != _reminderGeneration ||
+          _readNotificationUid() != uid ||
+          prefs.getString('il_house_id')?.trim() != house ||
+          RoleUtils.normalize(prefs.getString('il_role')) != identity.role) {
+        return;
+      }
+      await _syncDailySleepReminderNow(generation, uid);
+      if (!_appForeground) {
+        await _syncInactivityReminderNow(generation, uid);
+      }
+    });
+  }
+
   Future<void> syncDailySleepReminder() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _readNotificationUid();
     return _enqueueReminderSync(
       (generation) => _syncDailySleepReminderNow(generation, uid),
     );
@@ -1485,7 +1761,7 @@ class NotificationService {
     final houseId = (prefs.getString('il_house_id') ?? '').trim();
     bool active() =>
         generation == _reminderGeneration &&
-        FirebaseAuth.instance.currentUser?.uid == uid &&
+        _readNotificationUid() == uid &&
         uid != _reminderSignedOutUid &&
         (prefs.getString('il_house_id') ?? '').trim() == houseId &&
         (prefs.getBool('il_notifications_enabled') ?? true) &&
@@ -1494,7 +1770,7 @@ class NotificationService {
     await _ensureLocalPluginInitialized();
     if (!active() || !await _ensureTimeZoneReady()) return;
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-    final displayName = await _resolveSleepReminderDisplayName(prefs, role);
+    final displayName = await _resolveSleepReminderDisplayName(prefs, role, houseId: houseId);
     if (!active()) return;
     final pending = await pendingLocalNotifications();
     if (!active()) return;
@@ -1526,6 +1802,7 @@ class NotificationService {
           data: {
             'screen': 'home',
             'type': 'daily_sleep_reminder',
+            'timeZoneId': tz.local.name,
             'accountUid': uid,
             'houseId': houseId,
             'role': role,
@@ -1624,52 +1901,63 @@ class NotificationService {
     return aliases[rawTimeZone] ?? rawTimeZone;
   }
 
-  Future<String> _resolveSleepReminderDisplayName(
-    SharedPreferences prefs,
-    String role,
-  ) async {
-    final fallback = role == 'user2'
-        ? L10nService().translate('female_role_default')
-        : L10nService().translate('male_role_default');
-    final cachedAuthUid = (prefs.getString('il_auth_uid') ?? '').trim();
-    final currentUid = FirebaseAuth.instance.currentUser?.uid.trim() ?? '';
-    final canUseSessionCache =
-        currentUid.isNotEmpty && cachedAuthUid == currentUid;
-    final cachedUserName = canUseSessionCache
-        ? (prefs.getString('il_user_name') ?? '').trim()
-        : '';
-    final cachedHouseId = canUseSessionCache
-        ? (prefs.getString('il_house_id') ?? '').trim()
-        : '';
-    final houseId = cachedHouseId.isNotEmpty
-        ? cachedHouseId
-        : (await HouseService().getCurrentHouseId().timeout(
-                const Duration(seconds: 2),
-                onTimeout: () => null,
-              ))?.trim() ??
-              '';
-    if (houseId.isEmpty) {
-      return cachedUserName.isNotEmpty ? cachedUserName : fallback;
-    }
-
-    try {
-      final settings = await HouseService()
-          .getHouseSettings(houseId)
-          .timeout(const Duration(seconds: 2), onTimeout: () => null);
-      final key = role == 'user2' ? 'nameU2' : 'nameU1';
-      final resolvedName = settings?[key]?.toString().trim() ?? '';
-      if (resolvedName.isNotEmpty) {
-        return resolvedName;
-      }
-    } catch (error) {
-      debugPrint(
-        '[NotificationService] Không lấy được tên hiển thị từ house: $error',
-      );
-    }
-
-    return cachedUserName.isNotEmpty ? cachedUserName : fallback;
+  String? _snapshotHouseName(String uid, String houseId, String role) {
+    final identity = _houseReminderIdentity;
+    if (identity == null || identity.uid != uid || identity.houseId != houseId ||
+        identity.role != role) return null;
+    if (identity.name.isNotEmpty) return identity.name;
+    return L10nService().translate(
+      RoleUtils.defaultNameKey(role, genderSwapped: identity.genderSwapped),
+    );
   }
 
+  Future<String> _resolveSleepReminderDisplayName(
+    SharedPreferences prefs,
+    String role, {
+    String? houseId,
+  }) async {
+    final fallback = L10nService().translate(RoleUtils.defaultNameKey(role));
+    final uid = _readNotificationUid()?.trim() ?? '';
+    final house = (houseId ?? prefs.getString('il_house_id') ?? '').trim();
+    if (uid.isEmpty || house.isEmpty ||
+        prefs.getString('il_auth_uid')?.trim() != uid ||
+        prefs.getString('il_house_id')?.trim() != house) return fallback;
+    final current = _snapshotHouseName(uid, house, role);
+    if (current != null) return current;
+    try {
+      final settings = await (_readHouseSettingsForTesting?.call(house) ??
+          HouseService().getHouseSettings(house))
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      if (_readNotificationUid() != uid ||
+          prefs.getString('il_house_id')?.trim() != house ||
+          RoleUtils.normalize(prefs.getString('il_role')) != role) return fallback;
+      final latest = _snapshotHouseName(uid, house, role);
+      if (latest != null) return latest;
+      final name = settings?[role == 'user2' ? 'nameU2' : 'nameU1']
+          ?.toString().trim() ?? '';
+      if (name.isNotEmpty) return name;
+      return L10nService().translate(RoleUtils.defaultNameKey(role,
+          genderSwapped: RoleUtils.readGenderSwapped(settings)));
+    } catch (error) {
+      debugPrint('[NotificationService] Không lấy được tên House: ' + error.runtimeType.toString());
+      return _snapshotHouseName(uid, house, role) ?? fallback;
+    }
+  }
+
+  Future<String?> _currentHouseNotificationName(String houseId) async {
+    final uid = _readNotificationUid();
+    if (uid == null) return null;
+    final prefs = await SharedPreferences.getInstance();
+    final role = RoleUtils.normalize(prefs.getString('il_role'));
+    bool active() => _readNotificationUid() == uid &&
+        prefs.getString('il_auth_uid')?.trim() == uid &&
+        prefs.getString('il_house_id')?.trim() == houseId.trim() &&
+        RoleUtils.normalize(prefs.getString('il_role')) == role;
+    if (!active()) return null;
+    final name = await _resolveSleepReminderDisplayName(prefs, role,
+        houseId: houseId);
+    return active() ? name : null;
+  }
   String buildSleepReminderBody(String displayName) {
     return buildSleepReminderMessage(displayName);
   }
@@ -1705,6 +1993,7 @@ class NotificationService {
     });
     if (foreground) {
       _timeZoneReady = false;
+      unawaited(refreshNotificationInstallation());
       await syncDailySleepReminder();
     }
   }
@@ -1830,6 +2119,9 @@ class NotificationService {
       NotificationReminderPlan.variantForDate(date);
 
   Future<void> checkAutoSleepGreetings(String houseId) async {
+    final uid = _readNotificationUid();
+    final identityRevision = _houseIdentityRevision;
+    if (uid == null) return;
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -1837,7 +2129,12 @@ class NotificationService {
         prefs.getBool('il_notifications_enabled') ?? true;
     if (!notificationsEnabled) return;
     final role = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-    final displayName = await _resolveSleepReminderDisplayName(prefs, role);
+    final displayName = await _resolveSleepReminderDisplayName(prefs, role, houseId: houseId);
+    bool active() => _readNotificationUid() == uid &&
+        _houseIdentityRevision == identityRevision &&
+        prefs.getString('il_house_id')?.trim() == houseId &&
+        RoleUtils.normalize(prefs.getString('il_role')) == role;
+    if (!active()) return;
 
     final nightTimeStr = prefs.getString('il_good_night_time') ?? '22:15';
     final nightParts = nightTimeStr.split(':');
@@ -1860,6 +2157,7 @@ class NotificationService {
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,
       kind: 'good_night',
+      identityActive: active,
       targetHour: nightHour,
       targetMinute: nightMinute,
       windowEndHour: 23,
@@ -1874,6 +2172,7 @@ class NotificationService {
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,
       kind: 'good_morning',
+      identityActive: active,
       targetHour: morningHour,
       targetMinute: morningMinute,
       windowEndHour: 9,
@@ -1890,6 +2189,7 @@ class NotificationService {
   Future<void> _maybeSendAutoTimedGreeting({
     required String houseId,
     required String kind,
+    required bool Function() identityActive,
     required int targetHour,
     required int targetMinute,
     required int windowEndHour,
@@ -1927,23 +2227,27 @@ class NotificationService {
 
     final dateKey =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    // Mốc "hôm nay đã gửi" theo UID/nhà/loại lời chúc. Luật RTDB không có node
-    // `system_auto_greetings` nên lệnh ghi cũ luôn bị từ chối và lời chúc chưa
-    // từng được gửi; lưu mốc trên máy để mỗi máy gửi tối đa một lần mỗi ngày.
+    // Mốc local chỉ ghi khi server nhận queue; idempotencyKey chống lặp hai máy.
     final markerKey = 'auto_greeting_last_${user.uid}_${houseId}_$kind';
-    if (prefs.getString(markerKey) == dateKey) {
-      return;
-    }
-    await prefs.setString(markerKey, dateKey);
-    if (FirebaseAuth.instance.currentUser?.uid != user.uid) {
-      return;
-    }
-
-    await sendPartnerNotification(
-      houseId: houseId,
-      title: title,
-      body: body,
-      data: {'screen': 'home', 'type': 'auto_$kind'},
+    final generation = _pushRegistrationRevision;
+    bool active() => identityActive() && generation == _pushRegistrationRevision &&
+        FirebaseAuth.instance.currentUser?.uid == user.uid &&
+        prefs.getString('il_house_id') == houseId &&
+        (prefs.getBool('il_notifications_enabled') ?? true) &&
+        (prefs.getBool('il_smart_reminder_love_note') ?? true);
+    await _automaticDelivery.run(
+      key: '$markerKey:$dateKey',
+      active: active,
+      alreadyDelivered: () => prefs.getString(markerKey) == dateKey,
+      deliver: () async {
+        await sendPartnerNotification(
+          houseId: houseId, title: title, body: body,
+          data: {'screen': 'home', 'type': 'auto_$kind'},
+          idempotencyKey: 'greeting:$kind:$dateKey',
+        );
+        return true;
+      },
+      markDelivered: () async { await prefs.setString(markerKey, dateKey); },
     );
   }
 
@@ -1964,8 +2268,8 @@ class NotificationService {
 
   /// Gửi thông báo chúc ngủ ngon / chào buổi sáng
   Future<void> sendSleepSyncNotification(String houseId, bool isWakeUp) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
+    final name = await _currentHouseNotificationName(houseId);
+    if (name == null) return;
 
     final title = L10nService().translate(
       isWakeUp ? 'notif_sleep_wake_title' : 'notif_sleep_bed_title',
@@ -1984,8 +2288,8 @@ class NotificationService {
 
   /// Gửi thông báo về nhà an toàn
   Future<void> sendSafeArrivalNotification(String houseId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
+    final name = await _currentHouseNotificationName(houseId);
+    if (name == null) return;
 
     await sendPartnerNotification(
       houseId: houseId,
@@ -2015,8 +2319,8 @@ class NotificationService {
     String houseId,
     String moodIcon,
   ) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? UiCopy.text('copy_145933221191');
+    final name = await _currentHouseNotificationName(houseId);
+    if (name == null) return;
 
     await sendPartnerNotification(
       houseId: houseId,
@@ -2032,42 +2336,59 @@ class NotificationService {
   /// Kiểm tra và hiển thị thông báo hộp thư tương lai đến ngày
   Future<void> checkTimeCapsules(String houseId) async {
     try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      final generation = _pushRegistrationRevision;
+      if (uid == null) return;
       final prefs =
           OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
-      if (!(prefs.getBool('il_smart_reminder_capsule') ?? true)) return;
-
-      // Luật RTDB khóa `houses/{id}/time_capsules` với app, chỉ máy chủ đọc được:
-      // hỏi qua listTimeCapsules. Hàm này còn ký link ảnh nên mỗi nhà chỉ hỏi
-      // một lần mỗi ngày; lỗi thì không đánh dấu để lần mở sau thử lại.
+      bool active() => generation == _pushRegistrationRevision &&
+          FirebaseAuth.instance.currentUser?.uid == uid &&
+          prefs.getString('il_house_id') == houseId &&
+          (prefs.getBool('il_notifications_enabled') ?? true) &&
+          (prefs.getBool('il_smart_reminder_capsule') ?? true);
+      if (!active()) return;
       final now = DateTime.now();
-      final todayKey = '${now.year}-${now.month}-${now.day}';
-      final checkedKey = 'capsule_checked_day_$houseId';
-      if (prefs.getString(checkedKey) == todayKey) return;
-
-      final capsules = await TimeCapsuleService().getUnopenedCapsules(houseId);
-      await prefs.setString(checkedKey, todayKey);
-
-      for (final capsule in capsules) {
-        final unlockTimeMs = (capsule['unlock_time_ms'] as num?)?.toInt() ?? 0;
-        final unlockDate = DateTime.fromMillisecondsSinceEpoch(unlockTimeMs);
-
-        // Cùng ngày, tháng, năm
-        if (now.year == unlockDate.year &&
-            now.month == unlockDate.month &&
-            now.day == unlockDate.day) {
-          final key = 'capsule_notified_${capsule['id']}';
-
-          if (!(prefs.getBool(key) ?? false)) {
-            await showLocalNotification(
-              title: L10nService().translate('notif_time_capsule_title'),
-              body: L10nService().translate('notif_time_capsule_body'),
-              data: {'screen': 'utilities', 'type': 'time_capsule'},
+      final checkedKey = 'capsule_check_after_${uid}_$houseId';
+      var nextCheckMs = DateTime(now.year, now.month, now.day + 1).millisecondsSinceEpoch;
+      // Giữ tối đa một lượt/ngày, nhưng cho kiểm tra lại khi thư đến giờ trong
+      // cùng ngày. Lỗi API/native, tắt quyền hoặc đổi phiên không ghi mốc thành công.
+      await _automaticDelivery.run(
+        key: checkedKey,
+        active: active,
+        alreadyDelivered: () => (prefs.getInt(checkedKey) ?? 0) > now.millisecondsSinceEpoch,
+        deliver: () async {
+          final capsules = await TimeCapsuleService().getUnopenedCapsules(houseId);
+          if (!active()) return false;
+          for (final capsule in capsules) {
+            final unlockMs = int.tryParse(capsule['unlock_time_ms']?.toString() ?? '') ?? 0;
+            if (unlockMs > now.millisecondsSinceEpoch && unlockMs < nextCheckMs) {
+              nextCheckMs = unlockMs;
+            }
+            if (!NotificationDeliveryPolicy.capsuleReady(capsule, now)) continue;
+            final id = capsule['id']?.toString().trim() ?? '';
+            if (id.isEmpty) continue;
+            final key = 'capsule_notified_${uid}_${houseId}_$id';
+            final delivered = await _automaticDelivery.run(
+              key: key,
+              active: active,
+              alreadyDelivered: () => prefs.getBool(key) ?? false,
+              deliver: () => _showLocalNotificationIfAllowed(
+                title: L10nService().translate('notif_time_capsule_title'),
+                body: L10nService().translate('notif_time_capsule_body'),
+                data: {'screen': 'time_capsule', 'type': 'time_capsule',
+                  'accountUid': uid, 'houseId': houseId, 'capsuleId': id},
+                dedupeKey: key,
+                active: active,
+              ),
+              markDelivered: () async { await prefs.setBool(key, true); },
             );
-            await prefs.setBool(key, true);
+            if (!delivered) return false;
           }
-        }
-      }
+          return true;
+        },
+        markDelivered: () async { await prefs.setInt(checkedKey, nextCheckMs); },
+      );
     } catch (e) {
       debugPrint(
         'Check time capsule error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể kiểm tra hộp thư tương lai lúc này.').message}',
@@ -2098,60 +2419,14 @@ class NotificationService {
     );
   }
 
-  Future<void> checkAnniversaryReminder(
-    String houseId,
-    DateTime coupleDate,
-  ) async {
-    final prefs =
-        OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    if (!(prefs.getBool('il_notif_anniversary') ?? true)) return;
-
-    final now = DateTime.now();
-    var thisYearDate = DateTime(now.year, coupleDate.month, coupleDate.day);
-    if (thisYearDate.isBefore(DateTime(now.year, now.month, now.day))) {
-      thisYearDate = DateTime(now.year + 1, coupleDate.month, coupleDate.day);
-    }
-
-    final diff = thisYearDate
-        .difference(DateTime(now.year, now.month, now.day))
-        .inDays;
-
-    if (diff == 3) {
-      await sendPartnerNotification(
-        houseId: houseId,
-        title: L10nService().translate('notif_anniversary_3_title'),
-        body: L10nService().translate('notif_anniversary_3_body'),
-        data: {'screen': 'home', 'type': 'anniversary'},
-      );
-    } else if (diff == 2) {
-      await sendPartnerNotification(
-        houseId: houseId,
-        title: L10nService().translate('notif_anniversary_2_title'),
-        body: L10nService().translate('notif_anniversary_2_body'),
-        data: {'screen': 'home', 'type': 'anniversary'},
-      );
-    } else if (diff == 1) {
-      await sendPartnerNotification(
-        houseId: houseId,
-        title: L10nService().translate('notif_anniversary_1_title'),
-        body: L10nService().translate('notif_anniversary_1_body'),
-        data: {'screen': 'home', 'type': 'anniversary'},
-      );
-    } else if (diff == 0) {
-      await sendPartnerNotification(
-        houseId: houseId,
-        title: L10nService().translate('notif_anniversary_0_title'),
-        body: L10nService().translate('notif_anniversary_0_body'),
-        data: {'screen': 'home', 'type': 'anniversary'},
-      );
-    }
-  }
-
   /// Dispose all subscriptions to prevent leaks.
   void dispose() {
     _tokenRefreshSubscription?.cancel();
     _foregroundSubscription?.cancel();
     _messageOpenedSubscription?.cancel();
+    _systemCallSubscription?.cancel();
+    _systemCallSubscription = null;
+    _callRegistrationSubscription?.cancel();
+    _callRegistrationSubscription = null;
   }
 }

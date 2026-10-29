@@ -17,10 +17,12 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/web_helpers.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
 import 'private_media_url_service.dart';
 import 'storage/private_memory_download_helper.dart';
 import 'storage/private_memory_lifecycle_policy.dart';
+import 'storage/diary_export_zip.dart';
 
 enum DiaryExportFormat { pdf, html }
 
@@ -44,6 +46,7 @@ class ExportService {
     this.exportDirectory,
     this.isWeb = kIsWeb,
     void Function(String, List<int>, String)? downloadFile,
+    Future<Map<String, dynamic>> Function(Map<String, dynamic>)? diaryExportPage,
   }) : _firestoreOverride = firestore,
        _currentUid =
            currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid),
@@ -53,7 +56,8 @@ class ExportService {
              (user) => user?.uid,
            )),
        _clientFactory = clientFactory ?? http.Client.new,
-       _downloadFile = downloadFile ?? downloadWebFile;
+       _downloadFile = downloadFile ?? downloadWebFile,
+       _diaryExportPage = diaryExportPage ?? _defaultDiaryExportPage;
 
   static const _pageSize = 200;
   static const _maxArchiveBytes = 128 * 1024 * 1024;
@@ -66,6 +70,7 @@ class ExportService {
   final Future<io.Directory> Function()? exportDirectory;
   final bool isWeb;
   final void Function(String, List<int>, String) _downloadFile;
+  final Future<Map<String, dynamic>> Function(Map<String, dynamic>) _diaryExportPage;
 
   FirebaseFirestore get _firestore =>
       _firestoreOverride ?? FirebaseFirestore.instance;
@@ -368,6 +373,57 @@ class ExportService {
     _DiaryExportScope scope, {
     int? sinceMs,
   }) async {
+    if (sinceMs != null) {
+      try {
+        return await _loadDiaryEntriesFromProjection(scope, sinceMs);
+      } on FirebaseException catch (error) {
+        if (!const {'not-found', 'unavailable', 'deadline-exceeded'}.contains(error.code)) rethrow;
+      }
+    }
+    return _loadDiaryEntriesLegacy(scope, sinceMs: sinceMs);
+  }
+
+  Future<List<Map<String, dynamic>>> _loadDiaryEntriesFromProjection(
+    _DiaryExportScope scope,
+    int sinceMs,
+  ) async {
+    final entries = <Map<String, dynamic>>[];
+    Map<String, dynamic>? cursor;
+    do {
+      scope.check();
+      final response = await _diaryExportPage({
+        'houseId': scope.houseId,
+        'sinceMs': sinceMs,
+        'expectedUid': scope.uid,
+        if (cursor != null) 'cursor': cursor,
+      });
+      final ids = (response['ids'] is List ? response['ids'] : const [])
+          .whereType<String>().take(_pageSize).toList(growable: false);
+      for (final id in ids) {
+        scope.check();
+        final document = await _firestore.collection('houses').doc(scope.houseId)
+            .collection('diaries').doc(id)
+            .get(const GetOptions(source: Source.server))
+            .timeout(const Duration(seconds: 20));
+        scope.check();
+        final value = document.data();
+        if (value == null) continue;
+        final entry = _jsonValue(value) as Map<String, dynamic>;
+        entry['id'] = document.id;
+        entry['ts'] = _timestamp(entry);
+        if (_timestamp(entry) >= sinceMs || _timestamp(entry) == 0) entries.add(entry);
+      }
+      final rawCursor = response['nextCursor'];
+      cursor = rawCursor is Map ? Map<String, dynamic>.from(rawCursor) : null;
+    } while (cursor != null);
+    entries.sort((first, second) => _timestamp(first).compareTo(_timestamp(second)));
+    return entries;
+  }
+
+  Future<List<Map<String, dynamic>>> _loadDiaryEntriesLegacy(
+    _DiaryExportScope scope, {
+    int? sinceMs,
+  }) async {
     final entries = <Map<String, dynamic>>[];
     final baseQuery = _firestore
         .collection('houses')
@@ -378,9 +434,7 @@ class ExportService {
     DocumentSnapshot<Map<String, dynamic>>? lastDocument;
     while (true) {
       scope.check();
-      final query = lastDocument == null
-          ? baseQuery
-          : baseQuery.startAfterDocument(lastDocument);
+      final query = lastDocument == null ? baseQuery : baseQuery.startAfterDocument(lastDocument);
       final snapshot = await _getDiaryPage(query);
       scope.check();
       for (final document in snapshot.docs) {
@@ -392,14 +446,22 @@ class ExportService {
       if (snapshot.docs.length < _pageSize) break;
       lastDocument = snapshot.docs.last;
     }
-
-    if (sinceMs != null) {
-      entries.removeWhere((entry) => _timestamp(entry) < sinceMs);
-    }
-    entries.sort(
-      (first, second) => _timestamp(first).compareTo(_timestamp(second)),
-    );
+    if (sinceMs != null) entries.removeWhere((entry) => _timestamp(entry) < sinceMs && _timestamp(entry) != 0);
+    entries.sort((first, second) => _timestamp(first).compareTo(_timestamp(second)));
     return entries;
+  }
+
+  static Future<Map<String, dynamic>> _defaultDiaryExportPage(
+    Map<String, dynamic> payload,
+  ) async {
+    final result = await CloudFunctionsHelper.callSecure<Map<String, dynamic>>(
+      'diaryExportPage',
+      payload: payload,
+      timeout: const Duration(seconds: 25),
+      requireAppCheck: true,
+      throwOriginalException: true,
+    );
+    return result.data;
   }
 
   static Object? _jsonValue(Object? value) {
@@ -548,6 +610,7 @@ class ExportService {
         : 'SoulHouse';
     final scope = await _beginScope(resolvedHouseId);
     final urls = privateMediaUrls ?? PrivateMediaUrlService();
+    io.Directory? archiveWorkDir;
     try {
       onProgress?.call(0.05, UiCopy.text('copy_927331615e0a'));
       final entries = await _loadDiaryEntries(scope);
@@ -557,17 +620,31 @@ class ExportService {
         throw const UiCopyException('copy_1a95ec8dce23');
       }
 
-      final archive = Archive();
+      // Native chỉ giữ media đang tải trong RAM; các file trước đó đã nằm trên đĩa.
+      final archive = isWeb ? Archive() : null;
+      if (!isWeb) {
+        final exportDir = await _getExportDir();
+        scope.check();
+        archiveWorkDir = await exportDir.createTemp('.diary_export_');
+      }
       var archiveBytes = 0;
-      void addFile(String filename, List<int> bytes) {
+      Future<void> addFile(String filename, List<int> bytes) async {
+        scope.check();
         if (archiveBytes + bytes.length > _maxArchiveBytes) {
           throw FirebaseException(plugin: 'export', code: 'resource-exhausted');
         }
         archiveBytes += bytes.length;
-        archive.addFile(ArchiveFile(filename, bytes.length, bytes));
+        if (archive != null) {
+          archive.addFile(ArchiveFile(filename, bytes.length, bytes));
+        } else {
+          final file = io.File(p.join(archiveWorkDir!.path, 'contents', filename));
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes);
+          scope.check();
+        }
       }
 
-      addFile(
+      await addFile(
         'diary.json',
         utf8.encode(
           const JsonEncoder.withIndent('  ').convert({
@@ -577,7 +654,7 @@ class ExportService {
           }),
         ),
       );
-      addFile(
+      await addFile(
         'diary.html',
         utf8.encode(_buildHtml(entries, resolvedHouseName)),
       );
@@ -609,7 +686,7 @@ class ExportService {
         if (bytes != null) {
           filename =
               'memories/memory_${index + 1}.${_mediaExtension(memory, bytes)}';
-          addFile(filename, bytes);
+          await addFile(filename, bytes);
           downloadedCount++;
         }
         final timestamp = _timestamp(memory);
@@ -638,29 +715,53 @@ class ExportService {
       if (entries.isEmpty && memories.isNotEmpty && downloadedCount == 0) {
         throw FirebaseException(plugin: 'export', code: 'unavailable');
       }
-      addFile(
+      await addFile(
         'memories/metadata.json',
         utf8.encode(const JsonEncoder.withIndent('  ').convert(metadata)),
       );
       scope.check();
       onProgress?.call(0.92, UiCopy.text('copy_b0a804b6d3d9'));
-      final zipData = ZipEncoder().encode(archive);
       final filename = _buildExportFilename(
         prefix: 'SoulLocket_All',
         houseName: resolvedHouseName,
         extension: 'zip',
       );
-      final filePath = await _saveOutput(
-        scope,
-        filename,
-        zipData,
-        'application/zip',
-      );
+      String? filePath;
+      if (archive != null) {
+        final zipData = ZipEncoder().encode(archive);
+        filePath = await _saveOutput(scope, filename, zipData, 'application/zip');
+      } else {
+        final stagedZip = io.File(p.join(archiveWorkDir!.path, 'export.zip'));
+        await encodeDiaryExportZip(
+          p.join(archiveWorkDir.path, 'contents'),
+          stagedZip.path,
+        );
+        scope.check();
+        await _verifyHouseMembership(scope);
+        scope.check();
+        final output = await stagedZip.rename(
+          p.join(archiveWorkDir.parent.path, filename),
+        );
+        try {
+          scope.check();
+          filePath = output.path;
+        } catch (_) {
+          await output.delete();
+          rethrow;
+        }
+      }
       onProgress?.call(1, UiCopy.text('copy_73feb527bf4b'));
       return filePath ?? '';
     } finally {
-      if (privateMediaUrls == null) urls.dispose();
-      await scope.close();
+      // Chờ encoder xong trước khi dọn; không để bản xuất dở hoặc media tạm khi đổi phiên.
+      try {
+        if (archiveWorkDir != null) {
+          await archiveWorkDir.delete(recursive: true);
+        }
+      } finally {
+        if (privateMediaUrls == null) urls.dispose();
+        await scope.close();
+      }
     }
   }
 

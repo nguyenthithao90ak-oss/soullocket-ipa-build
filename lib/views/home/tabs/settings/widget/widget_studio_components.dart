@@ -137,6 +137,77 @@ class WidgetStudioSection extends StatelessWidget {
   }
 }
 
+/// Nhóm tuỳ chọn nâng cao để màn hình chính chỉ tập trung vào việc chọn loại
+/// widget và xem trước. Người dùng vẫn giữ nguyên toàn bộ tuỳ chọn cũ, nhưng
+/// không phải cuộn qua nhiều thẻ khi chỉ muốn thêm widget ra màn hình.
+class WidgetStudioDisclosure extends StatelessWidget {
+  const WidgetStudioDisclosure({
+    super.key,
+    required this.title,
+    required this.child,
+    this.subtitle,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget child;
+  final bool initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return SLSettingsCard(
+      padding: EdgeInsets.zero,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: const PageStorageKey<String>('widget-advanced-options'),
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          shape: const RoundedRectangleBorder(),
+          collapsedShape: const RoundedRectangleBorder(),
+          leading: DecoratedBox(
+            decoration: BoxDecoration(
+              color: SLSettingsColors.violet.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(
+                Icons.tune_rounded,
+                size: 18,
+                color: SLSettingsColors.violet,
+              ),
+            ),
+          ),
+          title: Text(
+            title,
+            style: SLTheme.quicksand(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: SLSettingsColors.ink,
+            ),
+          ),
+          subtitle: subtitle == null || subtitle!.trim().isEmpty
+              ? null
+              : Text(
+                  subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: SLSettingsColors.inkSecondary,
+                  ),
+                ),
+          children: [child],
+        ),
+      ),
+    );
+  }
+}
+
 class WidgetStudioTab {
   const WidgetStudioTab({
     required this.id,

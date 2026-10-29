@@ -99,12 +99,10 @@ class PasswordResetOtpDialog {
                                 : sendError != null
                                     ? L10nService().format(
                                         'auth_reset_send_error',
-                                        {'error': sendError},
                                       )
                                     : verifyError != null
                                         ? L10nService().format(
                                             'auth_reset_verify_error',
-                                            {'error': verifyError},
                                           )
                                         : L10nService().format(
                                             'auth_reset_code_sent',

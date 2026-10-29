@@ -120,14 +120,16 @@ class RelationshipDurationCard extends StatelessWidget {
         // Bề mặt phải thẳng hàng với các khối Home khác, kể cả điện thoại có
         // chiều rộng logical lớn do DPI nhỏ. Lề an toàn đã được caller quản lý.
         final width = availableWidth;
+        // Dùng cỡ dải gọn của bản 15/10; màn có DPI nhỏ chỉ rộng thêm,
+        // không tự phóng số và chiều cao thẻ.
         final compact = width < 340;
         final metrics = _metrics(context);
         final metricFontSize = metrics.length == 3
-            ? (compact ? 30.0 : 38.0)
-            : (compact ? 38.0 : 50.0);
+            ? (compact ? 24.0 : 27.0)
+            : (compact ? 28.0 : 31.0);
         final metricLabelSize = metrics.length == 3
-            ? (compact ? 10.0 : 12.0)
-            : (compact ? 12.0 : 15.0);
+            ? (compact ? 9.5 : 10.5)
+            : (compact ? 11.0 : 12.0);
         const path = _EditorialSurfaceClipper.pathFor;
 
         return RepaintBoundary(
@@ -144,10 +146,10 @@ class RelationshipDurationCard extends StatelessWidget {
                   clipper: const _EditorialSurfaceClipper(),
                   child: Padding(
                     padding: EdgeInsetsDirectional.fromSTEB(
-                      compact ? 16 : 20,
-                      compact ? 16 : 18,
-                      compact ? 16 : 20,
-                      compact ? 14 : 16,
+                      compact ? 15 : 19,
+                      compact ? 11 : 12,
+                      compact ? 15 : 19,
+                      compact ? 10 : 11,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -177,16 +179,14 @@ class RelationshipDurationCard extends StatelessWidget {
                             ExcludeSemantics(
                               child: CustomPaint(
                                 size: Size.square(compact ? 18 : 20),
-                                painter: _TinyHeartPainter(
-                                  color: palette.rose,
-                                ),
+                                painter: _TinyHeartPainter(color: palette.rose),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: compact ? 13 : 16),
+                        SizedBox(height: compact ? 3 : 4),
                         SizedBox(
-                          height: compact ? 52 : 62,
+                          height: 48,
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -199,7 +199,7 @@ class RelationshipDurationCard extends StatelessWidget {
                                 if (index > 0)
                                   Padding(
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: compact ? 2 : 5,
+                                      horizontal: compact ? 2 : 4,
                                     ),
                                     child: ExcludeSemantics(
                                       child: _MetricDivider(
@@ -223,23 +223,6 @@ class RelationshipDurationCard extends StatelessWidget {
                                 ),
                               ],
                             ],
-                          ),
-                        ),
-                        SizedBox(height: compact ? 11 : 14),
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: AlignmentDirectional.centerStart,
-                            child: Text(
-                              context.tr('home_together_subtitle'),
-                              style: SLTheme.quicksand(
-                                fontSize: compact ? 11 : 12,
-                                fontWeight: FontWeight.w600,
-                                color: palette.muted,
-                                height: 1.2,
-                              ),
-                            ),
                           ),
                         ),
                       ],
@@ -363,9 +346,8 @@ class _EditorialSurfaceClipper extends CustomClipper<Path> {
   static Path pathFor(Rect rect) {
     final safe = rect.deflate(1);
     final radius = math.min(28.0, math.max(18.0, safe.shortestSide * .08));
-    return Path()..addRRect(
-      RRect.fromRectAndRadius(safe, Radius.circular(radius)),
-    );
+    return Path()
+      ..addRRect(RRect.fromRectAndRadius(safe, Radius.circular(radius)));
   }
 
   @override

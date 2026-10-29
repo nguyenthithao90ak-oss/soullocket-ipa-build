@@ -39,6 +39,7 @@ class _ModernHomeBody extends StatelessWidget {
   final VoidCallback? onEditTopLabel;
   final VoidCallback? onEditBottomLabel;
   final VoidCallback? onOpenSettings;
+  final HomeDisplayStyle displayStyle;
 
   const _ModernHomeBody({
     required this.state,
@@ -64,6 +65,7 @@ class _ModernHomeBody extends StatelessWidget {
     this.onEditTopLabel,
     this.onEditBottomLabel,
     this.onOpenSettings,
+    this.displayStyle = HomeDisplayStyle.current,
   });
 
   @override
@@ -75,7 +77,8 @@ class _ModernHomeBody extends StatelessWidget {
     );
 
     // Fullscreen layout mode
-    if (uiState.homeLayoutKey == 'fullscreen') {
+    if (displayStyle == HomeDisplayStyle.current &&
+        uiState.homeLayoutKey == 'fullscreen') {
       return _FullscreenHomeBody(
         state: state,
         isSingle: isSingle,
@@ -98,7 +101,7 @@ class _ModernHomeBody extends StatelessWidget {
     return PetCareHomeScope(
       uid: petUid,
       houseId: petHouseId,
-      builder: (context, care) => HomePartnerLetterHost(
+      appearanceBuilder: (context, care, outfits) => HomePartnerLetterHost(
         houseId: isSingle ? null : state._houseId,
         uid: state._auth.currentUser?.uid,
         partnerName: partnerName,
@@ -110,6 +113,7 @@ class _ModernHomeBody extends StatelessWidget {
           hasLetter: letter != null,
           openLetter: openLetter,
           petCare: care,
+          petOutfits: outfits,
         ),
       ),
     );
@@ -133,6 +137,25 @@ class _ModernHomeBody extends StatelessWidget {
         : HomeCompanionPartnerStatus.unknown;
   }
 
+  void _openPetCare(BuildContext context) {
+    if (!state.mounted || !context.mounted) return;
+    slPushRoute<void>(
+      context,
+      SLRoute<void>(
+        builder: (_) => PetCareGameScreen(
+          houseId: state._houseId,
+          ownedPet: petCareOwnedPetForRole(
+            state._currentRole,
+            genderSwapped: RoleUtils.readGenderSwapped(state._houseSettings),
+          ),
+        ),
+        settings: const RouteSettings(name: 'pet_care_game'),
+      ),
+      identity: const ValueKey('pet_care_game'),
+      rootNavigator: true,
+    );
+  }
+
   Widget _buildCompanionScene(
     BuildContext context, {
     required UiPrefsState uiState,
@@ -141,6 +164,7 @@ class _ModernHomeBody extends StatelessWidget {
     required bool hasLetter,
     required VoidCallback openLetter,
     required ValueListenable<Map<PetCarePet, PetCareVitals>> petCare,
+    required ValueListenable<Map<PetCarePet, PetCareOutfit>> petOutfits,
   }) {
     final sidePadding = _homeSidePadding(MediaQuery.sizeOf(context).width);
     final companionLane = _homeCompanionLane(sidePadding);
@@ -149,6 +173,8 @@ class _ModernHomeBody extends StatelessWidget {
       calm: true,
       guestVisits: true,
       petCare: petCare,
+      petOutfits: petOutfits,
+      onOpenPetCare: () => _openPetCare(context),
       partnerStatusListenable: _PartnerStatusListenable(
         state._presenceDataNotifier,
         _companionPartnerStatus,
@@ -187,9 +213,14 @@ class _ModernHomeBody extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(
-            child: _HomeScrapbookBackdrop(
-              hasCustomBackground: customBackgroundUrl.trim().isNotEmpty,
-            ),
+            child: displayStyle == HomeDisplayStyle.current
+                ? _HomeScrapbookBackdrop(
+                    hasCustomBackground: customBackgroundUrl.trim().isNotEmpty,
+                  )
+                : HomeDisplayBackdrop(
+                    style: displayStyle,
+                    hasCustomBackground: customBackgroundUrl.trim().isNotEmpty,
+                  ),
           ),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -261,6 +292,11 @@ class _ModernHomeBody extends StatelessWidget {
                   return false;
                 },
                 child: SingleChildScrollView(
+                  // Offset cuộn phải tách theo tài khoản/kiểu, không dùng chung
+                  // ô PageStorage với trạng thái mở chi tiết hồ sơ bên dưới.
+                  key: PageStorageKey<String>(
+                    'home-display-scroll-${state._auth.currentUser?.uid ?? 'guest'}-${displayStyle.storageKey}',
+                  ),
                   physics: SLResponsive.scrollPhysicsForPlatform(),
                   padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Center(
@@ -277,112 +313,101 @@ class _ModernHomeBody extends StatelessWidget {
                                   )
                                 : MediaQuery.paddingOf(context).top + 62,
                           ),
-                          // Cặp đôi: lời nhắn chung đồng bộ thay cho lời chào tự động.
-                          if (!isSingle &&
-                              (state._houseId?.isNotEmpty ?? false)) ...[
-                            if (homeShowHouseName &&
-                                houseName.trim().isNotEmpty)
-                              HomeCompactHeader(title: houseName),
-                            HomeCompanionContentArea(
-                              child: HomeSharedNoteHeader(
-                                houseId: state._houseId!,
-                                partnerName: state._resolvePartnerName(),
+                          if (displayStyle != HomeDisplayStyle.current)
+                            _buildDisplayContent(context)
+                          else ...[
+                            // Cặp đôi: lời nhắn chung đồng bộ thay cho lời chào tự động.
+                            if (!isSingle &&
+                                (state._houseId?.isNotEmpty ?? false)) ...[
+                              if (homeShowHouseName &&
+                                  houseName.trim().isNotEmpty)
+                                HomeCompactHeader(title: houseName),
+                              HomeCompanionContentArea(
+                                child: HomeSharedNoteHeader(
+                                  houseId: state._houseId!,
+                                  partnerName: state._resolvePartnerName(),
+                                ),
+                              ),
+                            ] else
+                              HomeCompactHeader(
+                                title:
+                                    homeShowHouseName &&
+                                        houseName.trim().isNotEmpty
+                                    ? houseName
+                                    : smartGreeting,
+                                subtitle:
+                                    homeShowHouseName &&
+                                        houseName.trim().isNotEmpty
+                                    ? smartGreeting
+                                    : null,
+                              ),
+                            SLSpacing.h16,
+                            state._buildGettingStartedChecklist(
+                              isSingle: isSingle,
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: state.widget.isSwipingListenable == null
+                                  ? buildCountdown(false)
+                                  : ValueListenableBuilder<bool>(
+                                      valueListenable:
+                                          state.widget.isSwipingListenable!,
+                                      builder: (context, isSwiping, _) =>
+                                          buildCountdown(isSwiping),
+                                    ),
+                            ),
+                            SLSpacing.h12,
+                            RepaintBoundary(
+                              // Chế độ độc thân không dựng vòng đếm; hướng dẫn
+                              // cần khoanh thẻ đại diện đang hiển thị thay thế.
+                              key: showDayCounter
+                                  ? null
+                                  : state.widget.firstGuideHeroKey,
+                              child: state._buildModernAvatarSection(
+                                isSingle: isSingle,
+                                nameU1: nameU1,
+                                nameU2: nameU2,
+                                avtUser1: avtUser1,
+                                avtUser2: avtUser2,
                               ),
                             ),
-                          ] else
-                            HomeCompactHeader(
-                              title:
-                                  homeShowHouseName &&
-                                      houseName.trim().isNotEmpty
-                                  ? houseName
-                                  : smartGreeting,
-                              subtitle:
-                                  homeShowHouseName &&
-                                      houseName.trim().isNotEmpty
-                                  ? smartGreeting
-                                  : null,
+                            SLSpacing.h16,
+                            RepaintBoundary(
+                              child: _ChatReminderBanner(
+                                state: state,
+                                isSingle: isSingle,
+                              ),
                             ),
-                          SLSpacing.h16,
-                          state._buildGettingStartedChecklist(
-                            isSingle: isSingle,
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: state.widget.isSwipingListenable == null
-                                ? buildCountdown(false)
-                                : ValueListenableBuilder<bool>(
-                                    valueListenable:
-                                        state.widget.isSwipingListenable!,
-                                    builder: (context, isSwiping, _) =>
-                                        buildCountdown(isSwiping),
-                                  ),
-                          ),
-                          SLSpacing.h12,
-                          RepaintBoundary(
-                            // Chế độ độc thân không dựng vòng đếm; hướng dẫn
-                            // cần khoanh thẻ đại diện đang hiển thị thay thế.
-                            key: showDayCounter
-                                ? null
-                                : state.widget.firstGuideHeroKey,
-                            child: state._buildModernAvatarSection(
-                              isSingle: isSingle,
-                              nameU1: nameU1,
-                              nameU2: nameU2,
-                              avtUser1: avtUser1,
-                              avtUser2: avtUser2,
-                            ),
-                          ),
-                          SLSpacing.h16,
-                          RepaintBoundary(
-                            child: _ChatReminderBanner(
-                              state: state,
-                              isSingle: isSingle,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          // Trạm Mây mở cho bản chính thức theo yêu cầu chủ dự
-                          // án 23/10/2026 (trước đó chỉ hiện ở debug).
-                          PetCareEntryCard(
-                            pet:
-                                petCareOwnedPetForRole(
-                                  state._currentRole,
-                                  genderSwapped: RoleUtils.readGenderSwapped(
-                                    state._houseSettings,
-                                  ),
-                                ) ??
-                                PetCarePet.bear,
-                            onTap: () => slPushRoute<void>(
-                              context,
-                              SLRoute<void>(
-                                builder: (_) => PetCareGameScreen(
-                                  ownedPet: petCareOwnedPetForRole(
+                            // Trạm Mây mở cho bản chính thức theo yêu cầu chủ dự
+                            // án 23/10/2026 (trước đó chỉ hiện ở debug).
+                            PetCareEntryCard(
+                              pet:
+                                  petCareOwnedPetForRole(
                                     state._currentRole,
                                     genderSwapped: RoleUtils.readGenderSwapped(
                                       state._houseSettings,
                                     ),
-                                  ),
-                                ),
-                                settings: const RouteSettings(
-                                  name: 'pet_care_game',
-                                ),
+                                  ) ??
+                                  PetCarePet.bear,
+                              onTap: () => _openPetCare(context),
+                            ),
+                            SLSpacing.h12,
+                            // Hàng nút nhanh (Nhật ký, Nhắn ngay, Lịch chung,
+                            // Chơi cùng, Ghim thêm) đã gỡ khỏi Home theo yêu cầu
+                            // chủ dự án 12/10/2026 cho đỡ chật.
+                            RepaintBoundary(
+                              child: state._buildCompactUpcoming(
+                                startDate: startDate,
+                                isSingle: isSingle,
                               ),
-                              identity: const ValueKey('pet_care_game'),
-                              rootNavigator: true,
                             ),
-                          ),
-                          // Hàng nút nhanh (Nhật ký, Nhắn ngay, Lịch chung,
-                          // Chơi cùng, Ghim thêm) đã gỡ khỏi Home theo yêu cầu
-                          // chủ dự án 12/10/2026 cho đỡ chật.
-                          RepaintBoundary(
-                            child: state._buildCompactUpcoming(
-                              startDate: startDate,
-                              isSingle: isSingle,
+                            SLSpacing.h16,
+                            RepaintBoundary(
+                              child: state._buildCompactBento(
+                                isSingle: isSingle,
+                              ),
                             ),
-                          ),
-                          SLSpacing.h16,
-                          RepaintBoundary(
-                            child: state._buildCompactBento(isSingle: isSingle),
-                          ),
+                          ],
                           SLSpacing.gapH(
                             uiState.homeCompanionEnabled ? 100 : 86,
                           ),
@@ -395,6 +420,156 @@ class _ModernHomeBody extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDisplayContent(BuildContext context) {
+    final hasHouse = state._houseId?.isNotEmpty ?? false;
+    final palette = HomeDisplayPalette.of(context, displayStyle);
+    final heading = HomeDisplayHeading(
+      style: displayStyle,
+      houseName: homeShowHouseName ? houseName : null,
+      title: isSingle ? smartGreeting : null,
+    );
+    final note = !isSingle && hasHouse
+        ? HomeDisplayNoteSurface(
+            style: displayStyle,
+            child: HomeCompanionContentArea(
+              child: HomeSharedNoteHeader(
+                houseId: state._houseId!,
+                partnerName: state._resolvePartnerName(),
+                textStyle: GoogleFonts.lora(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
+                  height: 1.5,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+          )
+        : const SizedBox.shrink();
+    final details = RepaintBoundary(
+      child: state._buildModernAvatarSection(
+        isSingle: isSingle,
+        nameU1: nameU1,
+        nameU2: nameU2,
+        avtUser1: avtUser1,
+        avtUser2: avtUser2,
+      ),
+    );
+    final dayBadge = showDayCounter
+        ? HomeDisplayDaySummary(
+            style: displayStyle,
+            value: circleValue,
+            topLabel: circleTopLabel,
+            bottomLabel: circleBottomLabel,
+            onEditValue: onEditStartDate,
+            onEditTopLabel: onEditTopLabel,
+            onEditBottomLabel: onEditBottomLabel,
+            onCustomize: state._showCountdownQuickCustomizeSheet,
+          )
+        : null;
+    Widget? photo(String name, String url, bool left) {
+      if (url.trim().isEmpty) return null;
+      return Semantics(
+        button: true,
+        label: name,
+        child: GestureDetector(
+          onTap: () => state._changeAvatar(isUser1: left),
+          onLongPress: () => state._changeAvatar(isUser1: left),
+          child: SizedBox.square(
+            dimension: 112,
+            child: _StableAvatarNetworkImage(
+              imageUrl: url,
+              female: !left,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final hero = HomeCompanionAnchor(
+      id: 'home-countdown',
+      shape: HomeCompanionSurfaceShape.ledge,
+      child: RepaintBoundary(
+        key: state.widget.firstGuideHeroKey,
+        child: HomeDisplayHero(
+          style: displayStyle,
+          nameU1: nameU1,
+          nameU2: nameU2,
+          avtUser1: avtUser1,
+          avtUser2: avtUser2,
+          isSingle: isSingle,
+          dayBadge: dayBadge,
+          leftAvatar: photo(nameU1, avtUser1, true),
+          rightAvatar: isSingle ? null : photo(nameU2, avtUser2, false),
+          onTapLeftAvatar: () => state._changeAvatar(isUser1: true),
+          onTapRightAvatar: isSingle
+              ? state._openSingleMatchHub
+              : () => state._changeAvatar(isUser1: false),
+          onEditLeftName: () =>
+              state._showEditNameDialog(isUser1: true, currentName: nameU1),
+          onEditRightName: isSingle
+              ? null
+              : () => state._showEditNameDialog(
+                  isUser1: false,
+                  currentName: nameU2,
+                ),
+          footer: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton.icon(
+              onPressed: isSingle
+                  ? state._openSingleMatchHub
+                  : state._openSoulMergeChat,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                foregroundColor: palette.accent,
+              ),
+              icon: Icon(
+                isSingle
+                    ? Icons.favorite_border_rounded
+                    : Icons.chat_bubble_outline_rounded,
+                size: 18,
+              ),
+              label: Text(
+                context.tr(
+                  isSingle ? 'sm_find_people' : 'main_home_chat_now',
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final compactCountdown = showLoveTimeDetail
+        ? _MainHomeHeroCounters(state: state, startDate: startDate)
+        : const SizedBox.shrink();
+    return HomeDisplayLayout(
+      style: displayStyle,
+      heading: heading,
+      note: note,
+      checklist: state._buildGettingStartedChecklist(isSingle: isSingle),
+      profile: hero,
+      details: details,
+      countdown: compactCountdown,
+      compactCountdown: compactCountdown,
+      reminder: _ChatReminderBanner(state: state, isSingle: isSingle),
+      pet: HomeDisplayPetEntry(
+        style: displayStyle,
+        onTap: () => _openPetCare(context),
+      ),
+      upcoming: RepaintBoundary(
+        child: state._buildCompactUpcoming(
+          startDate: startDate,
+          isSingle: isSingle,
+          displayStyle: displayStyle,
+        ),
+      ),
+      bento: RepaintBoundary(
+        child: state._buildCompactBento(isSingle: isSingle),
       ),
     );
   }

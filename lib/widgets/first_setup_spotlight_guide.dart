@@ -65,8 +65,23 @@ class FirstSetupSpotlightGuide extends StatefulWidget {
       return null;
     }
     if (!replay && progress != null && !progress.shouldOffer) return null;
+    // Giữ chỗ trước await để hai caller không cùng mở một tour.
     _showing = true;
     try {
+      if (!replay && progress != null) {
+        // Đánh dấu trước khi dựng overlay để một lần mở bị gián đoạn cũng
+        // không tự bật lại sau khi cập nhật hoặc đăng nhập lại.
+        try {
+          await progress.markPresented();
+        } catch (_) {
+          // Lỗi bộ nhớ cục bộ không được làm mất tour trong phiên hiện tại.
+        }
+      }
+      if (!context.mounted ||
+          !(ModalRoute.of(context)?.isCurrent ?? true) ||
+          !(isStillValid?.call() ?? true)) {
+        return null;
+      }
       return await showGeneralDialog<SetupGuideOutcome>(
         context: context,
         barrierDismissible: false,

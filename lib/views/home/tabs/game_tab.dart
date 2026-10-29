@@ -16,7 +16,6 @@ import '../../../utils/services/offline_cache_service.dart';
 import '../../utilities/memory_puzzle/memory_puzzle_screen.dart';
 import '../../utilities/memory_puzzle/memory_puzzle_session.dart';
 import 'game_library_view.dart';
-import 'pet_care_game_screen.dart';
 import 'soul_block_diary_cover.dart';
 
 class GameTab extends StatefulWidget {
@@ -294,19 +293,6 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
     }
   }
 
-  Future<void> _openPetCareGame(BuildContext context) async {
-    await slPushRoute<void>(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => const PetCareGameScreen(),
-        settings: const RouteSettings(name: 'pet_care_game'),
-      ),
-      identity: const ValueKey('pet_care_game'),
-      rootNavigator: true,
-    );
-    if (mounted) setState(() => _coverRevision++);
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -323,8 +309,6 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       ),
       secondaryLabel: context.tr('memory_puzzle_open'),
       secondaryAction: () => unawaited(_openMemoryPuzzle(context)),
-      // Trạm Mây mở cho bản chính thức theo yêu cầu chủ dự án 23/10/2026.
-      onOpenPetCare: () => unawaited(_openPetCareGame(context)),
       onDelete: downloaded
           ? () => _confirmDeleteGame(context, 'soul_block', 'Soul Block')
           : null,

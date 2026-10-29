@@ -107,13 +107,9 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                       : isVerifying
                       ? context.tr('home_angkimtram_b80b59')
                       : sendError != null
-                      ? L10nService().format('home_send_otp_failed', {
-                          'error': sendError!,
-                        })
+                      ? L10nService().format('home_send_otp_failed')
                       : verifyError != null
-                      ? L10nService().format('home_otp_invalid_or_expired', {
-                          'error': verifyError!,
-                        })
+                      ? L10nService().format('home_otp_invalid_or_expired')
                       : L10nService().format('home_otp_sent_to_email', {
                           'email': email,
                         }),
@@ -300,13 +296,9 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                         : isVerifying
                         ? context.tr('home_angkimtram_9b5339')
                         : sendError != null
-                        ? L10nService().format('home_send_otp_failed', {
-                            'error': sendError!,
-                          })
+                        ? L10nService().format('home_send_otp_failed')
                         : verifyError != null
-                        ? L10nService().format('home_reset_password_failed', {
-                            'error': verifyError!,
-                          })
+                        ? L10nService().format('home_reset_password_failed')
                         : L10nService().format('home_reset_otp_sent', {
                             'email': email,
                           }),

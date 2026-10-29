@@ -221,6 +221,24 @@ class UiPrefs {
           character: HomeCompanionOutfit.defaults(character),
       });
   static Future<void>? _wardrobeWrite;
+  static Future<void>? _stateWrite;
+  static int _accountWriteEpoch = 0;
+  static bool _accountWritesEnabled = true;
+
+  /// Chờ các lệnh ghi thật kết thúc trước khi dọn settings của tài khoản cũ.
+  static Future<void> pauseAccountWrites() async {
+    _accountWriteEpoch++;
+    _accountWritesEnabled = false;
+    await Future.wait([
+      if (_stateWrite != null) _stateWrite!,
+      if (_wardrobeWrite != null) _wardrobeWrite!,
+    ]);
+  }
+
+  static void resumeAccountWrites() => _accountWritesEnabled = true;
+
+  static bool _canWriteAccount(int epoch) =>
+      _accountWritesEnabled && epoch == _accountWriteEpoch;
 
   static void _restoreCompanionOutfits(SharedPreferences prefs) {
     dynamic raw;
@@ -244,6 +262,8 @@ class UiPrefs {
     HomeCompanionCharacter character,
     HomeCompanionOutfit outfit,
   ) {
+    final epoch = _accountWriteEpoch;
+    if (!_canWriteAccount(epoch)) return Future<void>.value();
     final previous = _wardrobeWrite;
     final operation = () async {
       if (previous != null) await previous;
@@ -251,6 +271,7 @@ class UiPrefs {
       final prefs =
           OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
+      if (!_canWriteAccount(epoch)) return;
       final next = {...companionOutfits.value, character: outfit};
       final saved = await prefs.setString(
         _wardrobeKey,
@@ -260,7 +281,7 @@ class UiPrefs {
         }),
       );
       if (!saved) throw StateError('Could not persist companion outfit');
-      companionOutfits.value = Map.unmodifiable(next);
+      if (_canWriteAccount(epoch)) companionOutfits.value = Map.unmodifiable(next);
     }();
     late final Future<void> tail;
     tail = operation.catchError((Object _) {}).whenComplete(() {
@@ -428,12 +449,32 @@ class UiPrefs {
   }
 
   static Future<void> ensureLoaded() async {
+    final loading = _loading;
+    if (loading != null) return loading;
     if (_loaded) return;
     await reload();
   }
 
-  static Future<void> reload() async {
-    _loaded = true;
+  static Future<void>? _loading;
+
+  static Future<void> reload() {
+    final previous = _loading;
+    _loaded = false;
+    late final Future<void> operation;
+    operation = () async {
+      try {
+        if (previous != null) await previous;
+        await _loadPreferences();
+        _loaded = true;
+      } finally {
+        if (identical(_loading, operation)) _loading = null;
+      }
+    }();
+    _loading = operation;
+    return operation;
+  }
+
+  static Future<void> _loadPreferences() async {
     _cachedAutoQuality = await _detectAutoQuality();
     final prefs =
         OfflineCacheService.getPrefsSync() ??
@@ -603,13 +644,47 @@ class UiPrefs {
     }
   }
 
-  static Future<void> saveState(UiPrefsState state) async {
+  static Future<void> saveState(
+    UiPrefsState state, {
+    bool preserveTheme = false,
+  }) {
+    final epoch = _accountWriteEpoch;
+    if (!_canWriteAccount(epoch)) return Future<void>.value();
+    final previous = _stateWrite;
+    final operation = () async {
+      if (previous != null) await previous;
+      if (_canWriteAccount(epoch)) {
+        await _saveAccountState(state, epoch, preserveTheme: preserveTheme);
+      }
+    }();
+    late final Future<void> tail;
+    tail = operation.catchError((Object _) {}).whenComplete(() {
+      if (identical(_stateWrite, tail)) _stateWrite = null;
+    });
+    _stateWrite = tail;
+    return operation;
+  }
+
+  static Future<void> _saveAccountState(
+    UiPrefsState state,
+    int epoch, {
+    required bool preserveTheme,
+  }) async {
     await ensureLoaded();
-    final normalized = _normalizeState(state);
-    notifier.value = normalized;
+    if (!_canWriteAccount(epoch)) return;
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    if (!_canWriteAccount(epoch)) return;
+    final savedTheme = prefs.getString(_kThemeKey)?.trim() ?? '';
+    // Snapshot House có thể đến muộn sau thao tác chọn Sáng/Tối. Đọc lại
+    // theme tại lúc ghi để không áp dụng lựa chọn cũ từ snapshot đó.
+    final normalized = _normalizeState(
+      preserveTheme && savedTheme.isNotEmpty
+          ? state.copyWith(themeKey: savedTheme)
+          : state,
+    );
+    notifier.value = normalized;
     await prefs.setString(_kThemeKey, normalized.themeKey);
     await prefs.setString(_kFallingEffectKey, normalized.fallingEffectKey);
     await prefs.setDouble(_kAvatarSizeKey, normalized.avatarSizePx);
@@ -664,6 +739,8 @@ class UiPrefs {
       _kHomeCompanionSoundEnabledKey,
       normalized.homeCompanionSoundEnabled,
     );
+
+    if (!_canWriteAccount(epoch)) return;
 
     try {
       unawaited(

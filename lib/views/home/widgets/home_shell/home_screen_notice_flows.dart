@@ -125,6 +125,19 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     final prefs = await OfflineCacheService.getPrefs();
     final pendingKey = 'il_first_setup_guide_pending_v2_$houseId';
     if (prefs.getString(pendingKey) != '1') return;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) return;
+    final progress = SetupGuideProgress(
+      prefs,
+      SetupGuideProgress.firstRunKey(uid),
+    );
+    await progress.migratePresentedFrom(
+      SetupGuideProgress.legacyFirstRunKeys(prefs, uid),
+    );
+    if (!progress.shouldOffer) {
+      await prefs.remove(pendingKey);
+      return;
+    }
 
     final settings = await _houseSettingsService.fetchSettings(houseId);
     final isSingle =
@@ -135,7 +148,9 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       houseId: houseId,
       isSingle: isSingle,
     );
-    if (outcome != null) await prefs.remove(pendingKey);
+    if (outcome != null || progress.hasBeenPresented) {
+      await prefs.remove(pendingKey);
+    }
   }
 
   Future<void> _replayFirstSetupGuideFromSettings() async {
@@ -177,7 +192,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       context,
       progress: SetupGuideProgress(
         prefs,
-        SetupGuideProgress.scopedKey(uid, houseId, 'home'),
+        SetupGuideProgress.firstRunKey(uid),
       ),
       replay: replay,
       // Mã nhà có thể chỉ nằm trong SecureStorage (getCurrentHouseId tự đọc
@@ -370,134 +385,20 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     );
   }
 
-  String _formatBreakupDateTime(int ts) {
-    if (ts <= 0) return context.tr('home_khngxcnh_fb806e');
-    final dt = DateTime.fromMillisecondsSinceEpoch(ts);
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return UiCopy.text('copy_03dc788a1b2c', {
-      'value1': day,
-      'value2': month,
-      'value3': dt.year,
-      'value4': hour,
-      'value5': minute,
-    });
-  }
-
-  Future<void> _maybeShowBreakupEntryNotice() async {
-    if (_isShowingBreakupEntryNotice) return;
-
+  Future<BreakupRequestData?> _loadHomeBreakupNotice() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
     final houseId = await _houseService.getCurrentHouseId();
-    if (houseId == null || houseId.isEmpty) return;
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid ||
+        houseId == null || houseId.isEmpty) return null;
 
+    // Giữ luồng đánh giá hiện có; kết quả chỉ được trình bày trong đúng phiên/nhà.
     final request = await _breakupService.evaluateBreakupRequest(houseId);
-    if (!mounted || request == null || !request.isActive) return;
-
-    _isShowingBreakupEntryNotice = true;
-
-    final title = request.isProcessing
-        ? context.tr('home_angxlxadli_9bb5cf')
-        : request.isScheduled
-        ? context.tr('home_lnlchxadli_6e8028')
-        : context.tr('home_yucuxaangc_2cf9cc');
-    final message = request.isProcessing
-        ? context.tr('home_hthngangxl_2041f8')
-        : request.isScheduled
-        ? L10nService().format(
-            'ui_home_the_deletion_request_has_now_been_scheduled_3217f8',
-            {'value1': _formatBreakupDateTime(request.deleteAt)},
-          )
-        : L10nService().format(
-            'ui_home_the_deletion_request_is_still_waiting_for_ef96d3',
-            {'value1': _formatBreakupDateTime(request.expireAt)},
-          );
-
-    try {
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) => SLAlertDialog(
-          title: Row(
-            children: [
-              Container(
-                padding: SLSpacing.all8,
-                decoration: BoxDecoration(
-                  color: SLColors.brandPink.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  request.isProcessing
-                      ? Icons.hourglass_top_rounded
-                      : Icons.heart_broken_rounded,
-                  color: const Color(0xFFD81B60),
-                  size: 24,
-                ),
-              ),
-              SLSpacing.w12,
-              Expanded(child: Text(title)),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  message,
-                  style: SLTheme.quicksand(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textSecondary,
-                    height: 1.55,
-                  ),
-                ),
-                SLSpacing.h12,
-                Text(
-                  context.tr('home_bncthmcitx_672088'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF7A6570),
-                    height: 1.5,
-                  ),
-                ),
-                SLSpacing.h24,
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(
-                          context.tr('home_ng_f63d1e'),
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF7A6570),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SLSpacing.w12,
-                    Expanded(
-                      child: SLDialogAction(
-                        primary: true,
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _openSettings();
-                        },
-                        child: Text(context.tr('home_mcit_8f1f98')),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } finally {
-      _isShowingBreakupEntryNotice = false;
-    }
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid) return null;
+    final currentHouseId = await _houseService.getCurrentHouseId();
+    if (!mounted || FirebaseAuth.instance.currentUser?.uid != uid ||
+        currentHouseId != houseId) return null;
+    return request;
   }
 
   void _openSettings() {

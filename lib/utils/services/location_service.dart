@@ -142,15 +142,11 @@ class LocationService {
     try {
       final prefs = await _prefsProvider();
 
-      final permission = await Geolocator.checkPermission().timeout(
-        const Duration(seconds: 6),
-        onTimeout: () => LocationPermission.denied,
-      );
+      var access = await PermissionHelper.checkLocationAccess();
 
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      if (!access.granted) {
         if (context == null || !context.mounted) {
-          _setTrackingState(GpsTrackingIssue.permissionRequired);
+          _setTrackingState(_permissionIssue(access));
           return false;
         }
         final granted = await PermissionHelper.requestLocationWithDisclosure(
@@ -160,18 +156,15 @@ class LocationService {
         );
         await prefs.setBool('il_gps_prompted', true);
         if (!granted) {
-          _setTrackingState(GpsTrackingIssue.permissionRequired);
+          access = await PermissionHelper.checkLocationAccess();
+          _setTrackingState(_permissionIssue(access));
           return false;
         }
       }
 
-      final refreshedPermission = await Geolocator.checkPermission().timeout(
-        const Duration(seconds: 6),
-        onTimeout: () => LocationPermission.denied,
-      );
-      if (refreshedPermission != LocationPermission.whileInUse &&
-          refreshedPermission != LocationPermission.always) {
-        _setTrackingState(GpsTrackingIssue.permissionRequired);
+      access = await PermissionHelper.checkLocationAccess();
+      if (!access.granted) {
+        _setTrackingState(_permissionIssue(access));
         return false;
       }
 
@@ -202,6 +195,13 @@ class LocationService {
       return false;
     }
   }
+
+  GpsTrackingIssue _permissionIssue(LocationPermissionAccess access) =>
+      access.restricted
+      ? GpsTrackingIssue.permissionRestricted
+      : access.blocked
+      ? GpsTrackingIssue.permissionBlocked
+      : GpsTrackingIssue.permissionRequired;
 
   Future<bool> requestBackgroundPermission({BuildContext? context}) async {
     _permissionRequestDepth++;
@@ -834,6 +834,7 @@ class LocationService {
             'location_background_title',
           ),
           notificationText: L10nService().translate('location_background_body'),
+          notificationIcon: const AndroidResource(name: 'ic_stat_soullocket'),
           enableWakeLock:
               false, // ⚡ Không giữ WakeLock liên tục để tiết kiệm 85% pin
         ),

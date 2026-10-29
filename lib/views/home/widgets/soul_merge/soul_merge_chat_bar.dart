@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/soul_message_actions.dart';
 import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 
 import 'soul_merge_design.dart';
@@ -40,6 +41,7 @@ class SoulMergeChatBar extends StatelessWidget {
     this.replyTarget,
     this.onCancelReply,
     this.isSending = false,
+    this.keyboardVisible = false,
     this.onReactMessage,
     this.onDeleteMessage,
     this.onReplyMessage,
@@ -87,6 +89,7 @@ class SoulMergeChatBar extends StatelessWidget {
   final Map<String, dynamic>? replyTarget;
   final VoidCallback? onCancelReply;
   final bool isSending;
+  final bool keyboardVisible;
   final Future<void> Function(Map<String, dynamic>, String)? onReactMessage;
   final Future<void> Function(Map<String, dynamic>)? onDeleteMessage;
   final ValueChanged<Map<String, dynamic>>? onReplyMessage;
@@ -112,6 +115,8 @@ class SoulMergeChatBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardOpen =
+        keyboardVisible || MediaQuery.viewInsetsOf(context).bottom > 0;
     final checkInPresets = <String>[
       L10nService().format('p4_soul_preset_check_in', {'name': partnerName}),
       L10nService().format('p4_soul_preset_hello', {'name': partnerName}),
@@ -143,79 +148,110 @@ class SoulMergeChatBar extends StatelessWidget {
           }
           return false;
         },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (searchQuery != null) ...[
-              _MergeSearchBar(
-                query: searchQuery!,
-                onChanged: onSearchChanged,
-                onClose: onCloseSearch,
-              ),
-              const SizedBox(height: 8),
-            ],
-            if (spamWarning != null) ...[
-              _MergeWarning(message: spamWarning!),
-              const SizedBox(height: 8),
-            ],
-            if (pinnedMessages.isNotEmpty || onReturnToLatest != null) ...[
-              _PinnedMessageStrip(
-                messages: pinnedMessages,
-                onMessageTap: onPinnedMessageTap,
-                onReturnToLatest: onReturnToLatest,
-              ),
-              const SizedBox(height: 8),
-            ],
-            Expanded(
-              child: _MergeChatHistory(
-                history: chatHistory,
-                myRole: myRole,
-                controller: scrollController,
-                formatTime: formatTime,
-                isLoading: isLoadingHistory,
-                loadFailed: historyLoadFailed,
-                onRetry: onRetryHistory,
-                imageProviderBuilder: imageProviderBuilder,
-                onReactMessage: onReactMessage,
-                onDeleteMessage: onDeleteMessage,
-                onReplyMessage: onReplyMessage,
-                canDeleteMessage: canDeleteMessage,
-                onHideMessage: onHideMessage,
-                onRemoveReaction: onRemoveReaction,
-                currentUid: currentUid,
-                watchMessage: watchMessage,
-                shouldWatchMessage: shouldWatchMessage,
-                onMessageChanged: onMessageChanged,
-                onMessageVisible: onMessageVisible,
-                onRetryMessage: onRetryMessage,
-                onPinMessage: onPinMessage,
-                onUnpinMessage: onUnpinMessage,
-                isMessagePinned: isMessagePinned,
-                messageKeys: messageKeys,
-                searchQuery: searchQuery,
-                isPinnedWindow: onReturnToLatest != null,
-              ),
-            ),
-            if (presets.isNotEmpty) ...[
-              const SizedBox(height: 9),
-              _MergePresetRow(presets: presets, onSelected: onSendPreset),
-            ],
-            const SizedBox(height: 10),
-            if (replyTarget != null)
-              _MergeReplyBanner(
-                preview: soulMessagePreview(context, replyTarget),
-                onCancel: onCancelReply,
-              ),
-            _MergeComposer(
-              controller: textController,
-              isUploadingPhoto: isUploadingPhoto,
-              onPickImage: onPickImage,
-              onShowSticker: onShowSticker,
-              onSend: onSendCustomMessage,
-              focusNode: composerFocusNode,
-              isSending: isSending,
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactChrome = keyboardOpen && constraints.maxHeight < 400;
+            final chrome = <Widget>[
+              if (searchQuery != null) ...[
+                _MergeSearchBar(
+                  query: searchQuery!,
+                  compact: keyboardOpen,
+                  onChanged: onSearchChanged,
+                  onClose: onCloseSearch,
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (spamWarning != null) ...[
+                _MergeWarning(message: spamWarning!),
+                const SizedBox(height: 8),
+              ],
+              if (pinnedMessages.isNotEmpty || onReturnToLatest != null) ...[
+                _PinnedMessageStrip(
+                  messages: pinnedMessages,
+                  onMessageTap: onPinnedMessageTap,
+                  onReturnToLatest: onReturnToLatest,
+                  watchMessage: watchMessage,
+                  shouldWatchMessage: shouldWatchMessage,
+                  currentUid: currentUid,
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (compactChrome && replyTarget != null)
+                _MergeReplyBanner(
+                  preview: soulMessagePreview(context, replyTarget),
+                  compact: true,
+                  onCancel: onCancelReply,
+                ),
+            ];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (compactChrome && chrome.isNotEmpty)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      primary: false,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: chrome,
+                      ),
+                    ),
+                  )
+                else
+                  ...chrome,
+                Expanded(
+                  child: _MergeChatHistory(
+                    history: chatHistory,
+                    myRole: myRole,
+                    controller: scrollController,
+                    formatTime: formatTime,
+                    isLoading: isLoadingHistory,
+                    loadFailed: historyLoadFailed,
+                    onRetry: onRetryHistory,
+                    imageProviderBuilder: imageProviderBuilder,
+                    onReactMessage: onReactMessage,
+                    onDeleteMessage: onDeleteMessage,
+                    onReplyMessage: onReplyMessage,
+                    canDeleteMessage: canDeleteMessage,
+                    onHideMessage: onHideMessage,
+                    onRemoveReaction: onRemoveReaction,
+                    currentUid: currentUid,
+                    watchMessage: watchMessage,
+                    shouldWatchMessage: shouldWatchMessage,
+                    onMessageChanged: onMessageChanged,
+                    onMessageVisible: onMessageVisible,
+                    onRetryMessage: onRetryMessage,
+                    onPinMessage: onPinMessage,
+                    onUnpinMessage: onUnpinMessage,
+                    isMessagePinned: isMessagePinned,
+                    messageKeys: messageKeys,
+                    searchQuery: searchQuery,
+                    isPinnedWindow: onReturnToLatest != null,
+                  ),
+                ),
+                if (presets.isNotEmpty && !keyboardOpen) ...[
+                  const SizedBox(height: 9),
+                  _MergePresetRow(presets: presets, onSelected: onSendPreset),
+                ],
+                const SizedBox(height: 10),
+                if (replyTarget != null && !compactChrome)
+                  _MergeReplyBanner(
+                    preview: soulMessagePreview(context, replyTarget),
+                    compact: keyboardOpen,
+                    onCancel: onCancelReply,
+                  ),
+                _MergeComposer(
+                  controller: textController,
+                  isUploadingPhoto: isUploadingPhoto,
+                  onPickImage: onPickImage,
+                  onShowSticker: onShowSticker,
+                  onSend: onSendCustomMessage,
+                  focusNode: composerFocusNode,
+                  isSending: isSending,
+                  compact: keyboardOpen,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -223,9 +259,15 @@ class SoulMergeChatBar extends StatelessWidget {
 }
 
 class _MergeSearchBar extends StatefulWidget {
-  const _MergeSearchBar({required this.query, this.onChanged, this.onClose});
+  const _MergeSearchBar({
+    required this.query,
+    this.onChanged,
+    this.onClose,
+    this.compact = false,
+  });
 
   final String query;
+  final bool compact;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onClose;
 
@@ -292,6 +334,8 @@ class _MergeSearchBarState extends State<_MergeSearchBar> {
         const SizedBox(height: 3),
         Text(
           context.tr('p4_soul_search_scope'),
+          maxLines: widget.compact ? 1 : null,
+          overflow: widget.compact ? TextOverflow.ellipsis : null,
           style: TextStyle(color: colors.muted, fontSize: 10.5),
         ),
       ],
@@ -299,128 +343,216 @@ class _MergeSearchBarState extends State<_MergeSearchBar> {
   }
 }
 
-class _PinnedMessageStrip extends StatefulWidget {
+class _PinnedMessageStrip extends StatelessWidget {
   const _PinnedMessageStrip({
     required this.messages,
     this.onMessageTap,
     this.onReturnToLatest,
+    this.watchMessage,
+    this.shouldWatchMessage,
+    this.currentUid,
   });
 
   final List<Map<String, dynamic>> messages;
   final ValueChanged<Map<String, dynamic>>? onMessageTap;
   final VoidCallback? onReturnToLatest;
+  final Stream<Map<String, dynamic>?> Function(String)? watchMessage;
+  final bool Function(String)? shouldWatchMessage;
+  final String? currentUid;
 
-  @override
-  State<_PinnedMessageStrip> createState() => _PinnedMessageStripState();
-}
-
-class _PinnedMessageStripState extends State<_PinnedMessageStrip> {
-  late final ScrollController _scrollController;
-  bool _canScrollBefore = false;
-  bool _canScrollAfter = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(_syncScrollAffordance);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncScrollAffordance();
-    });
+  Widget _preview(
+    Map<String, dynamic> message, {
+    bool inList = false,
+    ValueChanged<Map<String, dynamic>>? onTap,
+  }) {
+    return _PinnedMessagePreview(
+      key: ValueKey('pin-${message['id']}'),
+      message: message,
+      watchMessage: watchMessage,
+      // Sheet có route riêng nên các hàng đang thấy tự nghe cập nhật;
+      // dữ liệu trang chat không tự dựng lại nội dung trong sheet.
+      shouldWatch:
+          inList ||
+          (shouldWatchMessage?.call(message['id'].toString()) ?? true),
+      currentUid: currentUid,
+      inList: inList,
+      onTap: onTap ?? onMessageTap,
+    );
   }
 
-  @override
-  void didUpdateWidget(covariant _PinnedMessageStrip oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncScrollAffordance();
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_syncScrollAffordance)
-      ..dispose();
-    super.dispose();
-  }
-
-  void _syncScrollAffordance() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    final canScrollBefore = position.pixels > position.minScrollExtent + 1;
-    final canScrollAfter =
-        position.pixels < position.maxScrollExtent - 1;
-    if (canScrollBefore == _canScrollBefore &&
-        canScrollAfter == _canScrollAfter) {
-      return;
-    }
-    if (mounted) {
-      setState(() {
-        _canScrollBefore = canScrollBefore;
-        _canScrollAfter = canScrollAfter;
-      });
-    }
+  void _showPinnedMessages(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: SoulMergeColors(context).surface,
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * .6,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                child: Text(
+                  '${context.tr('p5_notif_pinned')} (${messages.length})',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  key: const ValueKey('soul-merge-pinned-list'),
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
+                  scrollCacheExtent: const ScrollCacheExtent.pixels(0),
+                  itemCount: messages.length,
+                  itemBuilder: (_, index) => Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _preview(
+                      messages[index],
+                      inList: true,
+                      onTap: (message) {
+                        Navigator.of(sheetContext).pop();
+                        onMessageTap?.call(message);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = SoulMergeColors(context);
-    final list = ListView.separated(
-      controller: _scrollController,
-      scrollDirection: Axis.horizontal,
-      itemCount:
-          widget.messages.length + (widget.onReturnToLatest == null ? 0 : 1),
-      separatorBuilder: (_, _) => const SizedBox(width: 6),
-      itemBuilder: (context, index) {
-        if (widget.onReturnToLatest != null &&
-            index == widget.messages.length) {
-          return ActionChip(
-            avatar: Icon(
-              Icons.vertical_align_bottom_rounded,
-              size: 16,
-              color: colors.rose,
-            ),
-            label: Text(context.tr('comm_minhtlnu_e9f8eb')),
-            onPressed: widget.onReturnToLatest,
-            backgroundColor: colors.surface,
-            side: BorderSide(color: colors.line),
-            materialTapTargetSize: MaterialTapTargetSize.padded,
-          );
-        }
-        final message = widget.messages[index];
-        return ActionChip(
-          avatar: Icon(Icons.push_pin_rounded, size: 15, color: colors.rose),
-          label: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 190),
-            child: Text(
-              '${context.tr('p5_notif_pinned')} · ${soulMessagePreview(context, message)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+    if (messages.isEmpty && onReturnToLatest != null) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: ActionChip(
+          avatar: Icon(
+            Icons.vertical_align_bottom_rounded,
+            size: 16,
+            color: colors.rose,
           ),
-          onPressed: widget.onMessageTap == null
-              ? null
-              : () => widget.onMessageTap!(message),
-          backgroundColor: colors.blush,
+          label: Text(context.tr('comm_minhtlnu_e9f8eb')),
+          onPressed: onReturnToLatest,
+          backgroundColor: colors.surface,
           side: BorderSide(color: colors.line),
           materialTapTargetSize: MaterialTapTargetSize.padded,
-        );
-      },
+        ),
+      );
+    }
+    return Row(
+      children: [
+        if (messages.isNotEmpty) Expanded(child: _preview(messages.first)),
+        if (messages.length > 1)
+          Tooltip(
+            message: '${context.tr('p5_notif_pinned')} (${messages.length})',
+            child: TextButton.icon(
+              key: const ValueKey('soul-merge-pinned-open-list'),
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              onPressed: () => _showPinnedMessages(context),
+              icon: const Icon(Icons.list_rounded, size: 20),
+              label: Text('${messages.length}'),
+            ),
+          ),
+        if (onReturnToLatest != null)
+          IconButton(
+            tooltip: context.tr('comm_minhtlnu_e9f8eb'),
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            onPressed: onReturnToLatest,
+            color: colors.rose,
+            icon: const Icon(Icons.vertical_align_bottom_rounded),
+          ),
+      ],
     );
-    final content = SizedBox(height: 48, child: list);
-    if (!_canScrollBefore && !_canScrollAfter) return content;
-    return ShaderMask(
-      blendMode: BlendMode.dstIn,
-      shaderCallback: (bounds) => LinearGradient(
-        colors: [
-          _canScrollBefore ? Colors.transparent : Colors.white,
-          Colors.white,
-          Colors.white,
-          _canScrollAfter ? Colors.transparent : Colors.white,
-        ],
-        stops: const [0, .07, .93, 1],
-      ).createShader(bounds),
-      child: content,
+  }
+}
+
+/// Chỉ đọc tin ghim khi bản xem trước được dựng. Tin trong trang mới nhất
+/// dùng dữ liệu listener sẵn có; tin cũ vẫn cập nhật xóa/ẩn qua listener riêng.
+class _PinnedMessagePreview extends StatefulWidget {
+  const _PinnedMessagePreview({
+    super.key,
+    required this.message,
+    required this.shouldWatch,
+    this.watchMessage,
+    this.currentUid,
+    this.onTap,
+    this.inList = false,
+  });
+
+  final Map<String, dynamic> message;
+  final bool shouldWatch;
+  final Stream<Map<String, dynamic>?> Function(String)? watchMessage;
+  final String? currentUid;
+  final ValueChanged<Map<String, dynamic>>? onTap;
+  final bool inList;
+
+  @override
+  State<_PinnedMessagePreview> createState() => _PinnedMessagePreviewState();
+}
+
+class _PinnedMessagePreviewState extends State<_PinnedMessagePreview> {
+  bool _received = false;
+  Map<String, dynamic>? _liveMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
+    final message = _received && widget.shouldWatch
+        ? _liveMessage
+        : widget.message;
+    final unavailable =
+        message == null ||
+        !SoulMessageActions.visibleTo(message, widget.currentUid);
+    final hasContent =
+        message?.containsKey('timestamp') == true ||
+        message?.containsKey('text') == true ||
+        message?.containsKey('imageUrl') == true;
+    final preview = unavailable
+        ? soulMessagePreview(context, null)
+        : hasContent
+        ? soulMessagePreview(context, message)
+        : context.tr('loading');
+    final chip = ActionChip(
+      avatar: Icon(Icons.push_pin_rounded, size: 16, color: colors.rose),
+      label: Text(
+        widget.inList ? preview : '${context.tr('p5_notif_pinned')} · $preview',
+        maxLines: widget.inList ? 2 : 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onPressed: widget.onTap == null || unavailable
+          ? null
+          : () => widget.onTap!({...widget.message, ...message}),
+      backgroundColor: colors.blush,
+      side: BorderSide(color: colors.line),
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+    );
+    if (widget.watchMessage == null || !widget.shouldWatch) return chip;
+    return SoulMergeLiveMessage(
+      messageId: widget.message['id'].toString(),
+      watch: (id) => widget.watchMessage!(id).transform(
+        StreamTransformer<
+          Map<String, dynamic>?,
+          Map<String, dynamic>?
+        >.fromHandlers(handleError: (_, _, sink) => sink.add(null)),
+      ),
+      onChanged: (_, value) {
+        if (!mounted) return;
+        setState(() {
+          _received = true;
+          _liveMessage = value;
+        });
+      },
+      child: chip,
     );
   }
 }
@@ -524,6 +656,22 @@ class _MergeChatHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tạo mục lục một lần cho mỗi lần dựng danh sách, không quét lịch sử
+    // lại ở từng bong bóng khi người dùng cuộn.
+    final photos = history
+        .where((entry) {
+          final url = entry['imageUrl']?.toString() ?? '';
+          return url.startsWith('https://') || url.startsWith('http://');
+        })
+        .toList(growable: false);
+    final photoUrls = photos
+        .map((entry) => entry['imageUrl'].toString())
+        .toList(growable: false);
+    final photoIndices = {for (var i = 0; i < photos.length; i++) photos[i]: i};
+    final messagesById = {
+      for (final entry in history)
+        if (entry['id'] != null) entry['id'].toString(): entry,
+    };
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -533,36 +681,39 @@ class _MergeChatHistory extends StatelessWidget {
         borderRadius: BorderRadius.circular(23),
         child: history.isEmpty && !isLoading && !loadFailed
             ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFE6ED),
-                        shape: BoxShape.circle,
+                child: SingleChildScrollView(
+                  primary: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFE6ED),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.favorite_border_rounded,
+                          size: 18,
+                          color: Color(0xFFE9577D),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.favorite_border_rounded,
-                        size: 18,
-                        color: Color(0xFFE9577D),
+                      const SizedBox(height: 6),
+                      Text(
+                        context.tr(
+                          searchQuery == null || searchQuery!.trim().isEmpty
+                              ? 'p4_soul_chat_empty'
+                              : 'p4_soul_search_no_results',
+                        ),
+                        style: SLTheme.quicksand(
+                          color: const Color(0xFF8D7A82),
+                          fontSize: 11.4,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      context.tr(
-                        searchQuery == null || searchQuery!.trim().isEmpty
-                            ? 'p4_soul_chat_empty'
-                            : 'p4_soul_search_no_results',
-                      ),
-                      style: SLTheme.quicksand(
-                        color: const Color(0xFF8D7A82),
-                        fontSize: 11.4,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )
             : RepaintBoundary(
@@ -617,33 +768,16 @@ class _MergeChatHistory extends StatelessWidget {
                                     (previous['timestamp'] as num? ?? 0))
                                 .abs() <
                             180000;
-                    final photos = history
-                        .where((entry) {
-                          final url = entry['imageUrl']?.toString() ?? '';
-                          return url.startsWith('https://') ||
-                              url.startsWith('http://');
-                        })
-                        .toList(growable: false);
-                    final photoIndex = photos.indexWhere(
-                      (entry) => identical(entry, message),
-                    );
+                    final photoIndex = photoIndices[message] ?? -1;
                     final replyId = message['replyTo']?.toString();
-                    Map<String, dynamic>? quote;
-                    for (final entry in history) {
-                      if (entry['id'] == replyId) {
-                        quote = entry;
-                        break;
-                      }
-                    }
+                    final quote = messagesById[replyId];
                     final bubble = _MergeMessageBubble(
                       key: ValueKey(message['id']),
                       isSelf: message['sender']?.toString() == myRole,
                       grouped: grouped,
                       onOpenPhoto: () => SoulMergePhotoViewer.show(
                         context,
-                        urls: photos
-                            .map((entry) => entry['imageUrl'].toString())
-                            .toList(growable: false),
+                        urls: photoUrls,
                         initialIndex: photoIndex < 0 ? 0 : photoIndex,
                         imageProviderBuilder: imageProviderBuilder,
                       ),
@@ -683,11 +817,7 @@ class _MergeChatHistory extends StatelessWidget {
                             ? null
                             : () => SoulMergePhotoViewer.show(
                                 context,
-                                urls: photos
-                                    .map(
-                                      (entry) => entry['imageUrl'].toString(),
-                                    )
-                                    .toList(growable: false),
+                                urls: photoUrls,
                                 initialIndex: photoIndex,
                                 imageProviderBuilder: imageProviderBuilder,
                               ),
@@ -784,14 +914,15 @@ class _MergeMessageBubble extends StatelessWidget {
             margin: EdgeInsets.only(
               top: grouped ? 2 : 12,
               bottom: 3,
-              left: isSelf ? 42 : 0,
-              right: isSelf ? 0 : 42,
+              left: isSelf ? 30 : 0,
+              right: isSelf ? 0 : 30,
             ),
+            constraints: isSticker ? null : const BoxConstraints(minHeight: 56),
             padding: isSticker
                 ? EdgeInsets.zero
                 : hasImage
                 ? const EdgeInsets.all(5)
-                : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                : const EdgeInsets.symmetric(horizontal: 17, vertical: 13),
             decoration: isSticker
                 ? null
                 : BoxDecoration(
@@ -854,9 +985,9 @@ class _MergeMessageBubble extends StatelessWidget {
                       text,
                       style: SLTheme.quicksand(
                         color: isSelf ? Colors.white : colors.ink,
-                        fontSize: 14,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        height: 1.25,
+                        height: 1.4,
                       ),
                     ),
                   ),
@@ -869,7 +1000,7 @@ class _MergeMessageBubble extends StatelessWidget {
                         color: isSelf
                             ? Colors.white.withValues(alpha: 0.78)
                             : colors.muted,
-                        fontSize: 9.5,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -889,30 +1020,37 @@ class _MergeMessageBubble extends StatelessWidget {
                     ),
                   ),
                 if (delivery != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 3),
+                  Container(
+                    margin: const EdgeInsets.only(top: 3),
+                    padding: isSticker
+                        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+                        : EdgeInsets.zero,
+                    decoration: isSticker
+                        ? BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: colors.line),
+                          )
+                        : null,
                     child: delivery == 'failed'
-                        ? InkWell(
-                            onTap: onRetry,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.refresh_rounded,
-                                  size: 13,
-                                  color: colors.rose,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  context.tr('p4_soul_message_retry'),
-                                  style: TextStyle(
-                                    color: colors.rose,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
+                        ? TextButton.icon(
+                            onPressed: onRetry,
+                            style: TextButton.styleFrom(
+                              foregroundColor: isSelf && !isSticker
+                                  ? Colors.white
+                                  : colors.rose,
+                              minimumSize: const Size(48, 48),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                            ),
+                            icon: const Icon(Icons.refresh_rounded, size: 16),
+                            label: Text(
+                              context.tr('p4_soul_message_retry'),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           )
                         : Text(
@@ -924,10 +1062,10 @@ class _MergeMessageBubble extends StatelessWidget {
                                   : 'p4_soul_message_sent',
                             ),
                             style: TextStyle(
-                              color: isSelf
-                                  ? Colors.white.withValues(alpha: .76)
-                                  : colors.muted,
-                              fontSize: 9.5,
+                              color: isSelf && !isSticker
+                                  ? Colors.white.withValues(alpha: .9)
+                                  : colors.ink,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -1063,6 +1201,7 @@ class _MergeComposer extends StatelessWidget {
     required this.onSend,
     this.focusNode,
     this.isSending = false,
+    this.compact = false,
   });
 
   final TextEditingController controller;
@@ -1072,6 +1211,7 @@ class _MergeComposer extends StatelessWidget {
   final VoidCallback onSend;
   final FocusNode? focusNode;
   final bool isSending;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -1120,7 +1260,7 @@ class _MergeComposer extends StatelessWidget {
                 focusNode: focusNode,
                 textCapitalization: TextCapitalization.sentences,
                 minLines: 1,
-                maxLines: 4,
+                maxLines: compact ? 2 : 4,
                 maxLength: 2000,
                 style: SLTheme.quicksand(
                   color: colors.ink,
@@ -1226,8 +1366,13 @@ class _ComposerAction extends StatelessWidget {
 }
 
 class _MergeReplyBanner extends StatelessWidget {
-  const _MergeReplyBanner({required this.preview, required this.onCancel});
+  const _MergeReplyBanner({
+    required this.preview,
+    required this.onCancel,
+    this.compact = false,
+  });
   final String preview;
+  final bool compact;
   final VoidCallback? onCancel;
   @override
   Widget build(BuildContext context) {
@@ -1247,17 +1392,18 @@ class _MergeReplyBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.tr('p4_soul_action_reply'),
-                  style: TextStyle(
-                    color: colors.rose,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
+                if (!compact)
+                  Text(
+                    context.tr('p4_soul_action_reply'),
+                    style: TextStyle(
+                      color: colors.rose,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
                   ),
-                ),
                 Text(
                   preview,
-                  maxLines: 2,
+                  maxLines: compact ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: colors.ink, fontSize: 12),
                 ),

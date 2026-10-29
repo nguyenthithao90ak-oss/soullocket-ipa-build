@@ -36,6 +36,7 @@ class _PetHousePainter extends CustomPainter {
     required this.touch,
     required this.actionable,
     this.look = const PetCareLook(),
+    this.outfits = const {},
     this.roomLook = const PetCareRoomLook(),
     this.foam = const [],
     this.holdPoint,
@@ -52,6 +53,26 @@ class _PetHousePainter extends CustomPainter {
     this.fridgeOpen = 0,
     this.dragTool,
     this.dragFood,
+    this.growth = 1,
+    this.baby = false,
+    this.together = 0,
+    this.mateCare = false,
+    this.mateMeal = 0,
+    this.mateFood = PetCareFood.carrot,
+    this.mateFeedFrom,
+    this.party = false,
+    this.growPulse = 0,
+    this.talk = 0,
+    this.listening = 0,
+    this.skit,
+    this.skitProgress = 0,
+    this.skitMineFirst = true,
+    this.sulk = 0,
+    this.roomPlay = const _PetRoomPlayFrame(),
+    this.toyChestOpen = false,
+    this.sitting = 0,
+    this.livingLight = 1,
+    this.gardenDoor = 0,
   });
 
   final _PetSceneMotion motion;
@@ -82,6 +103,7 @@ class _PetHousePainter extends CustomPainter {
   final Offset? touch;
   final bool actionable;
   final PetCareLook look;
+  final Map<PetCarePet, PetCareOutfit> outfits;
 
   /// Giấy tường/sàn/cửa sổ/màu nội thất của phòng đang xem.
   final PetCareRoomLook roomLook;
@@ -118,6 +140,51 @@ class _PetHousePainter extends CustomPainter {
   final PetCareTool? dragTool;
   final PetCareFood? dragFood;
 
+  /// Cỡ bé theo điểm gắn kết (1 = lớn hẳn), xem [petCareGrowth].
+  final double growth;
+
+  /// Bé sơ sinh: ngậm ti giả, đi lẫm chẫm.
+  final bool baby;
+
+  /// Bật "Cả hai": bé kia vào bồn tắm chung (0 → 1 lúc nhảy vào).
+  final double together;
+
+  /// Bé kia cùng được chăm trong lượt đang diễn (tắm chung, chơi chung).
+  final bool mateCare;
+
+  /// Bé kia đang ăn phần riêng [mateFood] (0..1, 0 khi không ăn), món bay
+  /// từ chỗ thả [mateFeedFrom].
+  final double mateMeal;
+  final PetCareFood mateFood;
+  final Offset? mateFeedFrom;
+
+  /// Tiệc sinh nhật: hai bé đội mũ tiệc.
+  final bool party;
+
+  /// Vừa lớn thêm: lấp lánh quanh hai bé (0..1).
+  final double growPulse;
+
+  /// Bé đang nhại giọng: độ há miệng 0..1.
+  final double talk;
+
+  /// Bé đang lắng nghe người chơi nói: độ to giọng 0..1 (sóng âm bên tai).
+  final double listening;
+
+  /// Tiểu cảnh hai bé đang diễn (null khi không có) và tiến độ 0..1.
+  final PetCareSkit? skit;
+  final double skitProgress;
+
+  /// Bé mình là bé khơi mào tiểu cảnh.
+  final bool skitMineFirst;
+
+  /// Bé đang dỗi sau tiểu cảnh: 0 không, 1 bé mình, 2 bé kia.
+  final int sulk;
+  final _PetRoomPlayFrame roomPlay;
+  final bool toyChestOpen;
+  final double sitting;
+  final double livingLight;
+  final double gardenDoor;
+
   static const _ink = Color(0xFF856C7A);
   static const _cream = Color(0xFFFFF8E8);
   static const _mint = Color(0xFFABD5C3);
@@ -132,7 +199,14 @@ class _PetHousePainter extends CustomPainter {
   bool get _active => progress > 0 && progress < 1;
   bool get _inPlace =>
       !walking &&
-      (position - _PetCareSceneState._destination(room, selectedPet)).distance <
+      (position -
+                  _PetCareSceneState._destination(
+                    room,
+                    selectedPet,
+                    together: together >= .5,
+                    growth: growth,
+                  ))
+              .distance <
           12;
   bool get _inBath => room == PetCareRoom.bathroom && _inPlace;
   bool get _inBed =>
@@ -153,6 +227,13 @@ class _PetHousePainter extends CustomPainter {
 
   /// Bộ màu nội thất; null giữ đúng màu gốc của từng món.
   PetCareTone? get _tone => PetCareRoomArt.tone(roomLook.furniture);
+
+  /// Bộ nội thất đang dùng: dáng/họa tiết riêng ngoài màu.
+  PetCareFurnitureSet get _set => PetCareFurnitureSet.of(roomLook.furniture);
+
+  /// Màu cho họa tiết bộ nội thất (bộ gốc lấy màu gốc của phòng).
+  PetCareTone get _setTone =>
+      _tone ?? PetCareTone.of(PetCareRoomArt.classicFurniture(room));
   Color _tint(Color classic, Color Function(PetCareTone tone) pick) {
     final tone = _tone;
     if (tone == null) return classic;
@@ -252,6 +333,8 @@ class _PetHousePainter extends CustomPainter {
     } else {
       // Bé đang ngủ thì nằm trên giường phòng ngủ: phòng khác không vẽ bé,
       // chỉ có chữ "z" bay lên ở chỗ bé hay đứng (biển chữ ở lớp chạm).
+      // Bạn ghé chơi đứng lùi về sau nên vẽ trước hai bé chủ nhà.
+      if (room == PetCareRoom.living) _guestPet(canvas);
       if (!partnerVitals.sleeping) _partnerPet(canvas);
       if (!vitals.sleeping) _pet(canvas);
       switch (room) {
@@ -267,14 +350,20 @@ class _PetHousePainter extends CustomPainter {
       _awayZees(canvas);
     }
     _affection(canvas);
+    _paintMateHearts(canvas);
     _paintFriendHug(canvas);
+    _paintSkitFx(canvas);
+    _paintRoomPlayFx(canvas);
+    _paintGrowSparkles(canvas);
     // Bếp đã có món nảy trên đĩa làm gợi ý, dấu "+" sẽ đè lên cằm bé.
     if (actionable &&
         !small &&
         !walking &&
         room != PetCareRoom.kitchen &&
+        room != PetCareRoom.living &&
         sleepBlend < .01 &&
         !vitals.sleeping &&
+        skit == null &&
         !(_active || playing || bathStage == 1 || bathStage == 2)) {
       final point = switch (room) {
         PetCareRoom.living => const Offset(299, 228),
@@ -360,24 +449,41 @@ class _PetHousePainter extends CustomPainter {
       Size(width, height),
       night: night || dark,
       wave: _wave,
+      garden: true,
     );
     c.restore();
   }
 
-  Offset get _partnerPosition => partnerSpot(room, selectedPet);
+  Offset get _partnerPosition => partnerSpot(
+    room,
+    selectedPet,
+    together: partnerVitals.sleeping ? 0 : together,
+    growth: growth,
+  );
 
   /// Chỗ đứng của bé còn lại, dùng chung cho hình vẽ và vùng chạm ôm nhau.
-  static Offset partnerSpot(PetCareRoom room, PetCarePet selectedPet) {
+  /// [together] đưa bé vào nửa trái bồn tắm khi tắm chung.
+  static Offset partnerSpot(
+    PetCareRoom room,
+    PetCarePet selectedPet, {
+    double together = 0,
+    double growth = 1,
+  }) {
     final onRight = selectedPet == PetCarePet.rabbit;
+    final seat = Offset(0, _PetCareSceneState._seatLift(room, growth));
     return switch (room) {
       // Hai bé cách nhau đủ rộng để mặt không đè lên nhau.
       PetCareRoom.living =>
         onRight ? const Offset(274, 260) : const Offset(86, 260),
       // Bàn ăn cho hai: mỗi bé ngồi sau một chiếc đĩa.
       PetCareRoom.kitchen =>
-        onRight ? const Offset(244, 256) : const Offset(140, 256),
+        (onRight ? const Offset(244, 256) : const Offset(140, 256)) - seat,
       // Bên phải là kệ xà phòng/khăn để kéo, nên bé kia đứng bên trái bồn.
-      PetCareRoom.bathroom => const Offset(70, 256),
+      PetCareRoom.bathroom => Offset.lerp(
+        const Offset(70, 256),
+        const Offset(136, 256) - seat,
+        together,
+      )!,
       // Đứng trước chân giường, không che đèn ngủ và đôi dép.
       PetCareRoom.bedroom => const Offset(80, 280),
     };
@@ -385,6 +491,9 @@ class _PetHousePainter extends CustomPainter {
 
   // ── Giấc ngủ: giường nhìn ngang, bé nằm nghiêng gối đầu bên phải ──────
   static const _lyingAngle = 1.18;
+
+  /// Bé lớn hẳn vẫn vừa giường: lúc nằm không to quá cỡ này.
+  double get _bedGrowth => math.min(growth, 1.04);
   static const _lyingShrink = .86;
 
   static double _roomScaleOf(PetCarePet pet) =>
@@ -399,8 +508,12 @@ class _PetHousePainter extends CustomPainter {
       );
 
   /// Điểm trên nét gốc của bé → độ lệch trong cảnh khi bé nằm hẳn.
-  static Offset _lyingOffset(PetCarePet pet, Offset sprite) {
-    final k = _spriteOf(pet) * _roomScaleOf(pet) * _lyingShrink;
+  static Offset _lyingOffset(
+    PetCarePet pet,
+    Offset sprite, {
+    double growth = 1,
+  }) {
+    final k = _spriteOf(pet) * _roomScaleOf(pet) * _lyingShrink * growth;
     final cos = math.cos(_lyingAngle);
     final sin = math.sin(_lyingAngle);
     return Offset(
@@ -420,8 +533,18 @@ class _PetHousePainter extends CustomPainter {
     return Offset.lerp(alone, shared, both)!;
   }
 
-  static Offset _sleepFeet(PetCarePet pet, double both) =>
-      _sleepHead(pet, both) - _lyingOffset(pet, const Offset(0, -48));
+  static Offset _sleepFeet(PetCarePet pet, double both, {double growth = 1}) =>
+      _sleepHead(pet, both) -
+      _lyingOffset(
+        pet,
+        Offset(
+          0,
+          HomeCompanionPainter.usesModel(false)
+              ? HomeCompanionMetrics.modelHeadY
+              : -48,
+        ),
+        growth: growth,
+      );
 
   /// Bé kia đang ngủ dịch về chỗ chung khi bé mình nhảy lên giường.
   double get _partnerBoth => _hopProgress;
@@ -436,67 +559,127 @@ class _PetHousePainter extends CustomPainter {
       _paintLying(
         c,
         partner,
-        _sleepFeet(partner, _partnerBoth) + _breath(partner),
+        _sleepFeet(partner, _partnerBoth, growth: _bedGrowth) +
+            _breath(partner),
         turn: 1,
         shrink: _lyingShrink,
         care: partnerVitals,
       );
       return;
     }
+    final pose = _partnerPose;
+    final petTouch = math.max(_touchAmount(partner), roomPlay.cuddle * .75);
+    if (pose?.hidden ?? false) return;
     final hug = _friendEnvelope;
-    var p = _partnerPosition;
+    var p = pose?.at ?? _partnerPosition;
     if (hug > 0) {
       p += Offset((position.dx - p.dx).sign * 14 * hug, 0);
     }
-    final bob = _wave * .85 - hug * 3 * math.sin(friend * math.pi * 4).abs();
+    // Cùng được chăm khi bật "Cả hai": nhai, nhảy vào bồn, chơi, nhảy mừng.
+    final mate = pose == null && hug <= 0 ? _mateMotion : _MateMotion.none;
+    final bob = pose != null
+        ? 0.0
+        : _wave * .85 -
+              hug * 3 * math.sin(friend * math.pi * 4).abs() -
+              mate.rise;
     c.save();
     c.translate(p.dx, p.dy + bob);
     c.rotate(
-      hug > 0
-          ? (position.dx > p.dx ? .09 : -.09) * hug
-          : action == PetCareAction.hug && !playing && _active
-          ? -_careEnvelope * .025
-          : 0,
+      (pose?.tilt ?? 0) +
+          (roomPlay.touchHead
+              ? petTouch * .06
+              : math.sin(seconds * 19) * .045 * petTouch) +
+          mate.tilt +
+          (hug > 0
+              ? (position.dx > p.dx ? .09 : -.09) * hug
+              : action == PetCareAction.hug && !playing && _active
+              ? -_careEnvelope * .025
+              : 0),
     );
-    final scale = small
-        ? 2.65
-        : partner == PetCarePet.rabbit
-        ? 2.5
-        : 2.3;
-    c.scale(scale, scale);
+    final scale =
+        (small
+            ? 2.65
+            : partner == PetCarePet.rabbit
+            ? 2.5
+            : 2.3) *
+        growth;
+    final squash = pose?.squash ?? 0;
+    c.scale(
+      scale * (1 + squash * .14) * mate.sx,
+      scale * (1 - squash * .22) * mate.sy,
+    );
     c.translate(-180, -260);
     motion
-      ..walking = false
-      ..hopping = false
-      ..walkWeight = 0
-      ..strideCycles = 0
-      ..cuddle = hug > 0
+      ..walking = pose?.walking ?? false
+      ..hopping =
+          (pose?.lift ?? 0) > .05 && !(pose?.walking ?? false) || mate.hopping
+      ..walkWeight = (pose?.walking ?? false) ? 1 : mate.walkWeight
+      ..strideCycles = pose?.stride ?? mate.stride
+      ..cuddle = petTouch > 0
+          ? petTouch * .8
+          : hug > 0
           ? hug * .7
+          : mate.cuddle > 0
+          ? mate.cuddle
           : action == PetCareAction.hug && !playing && _active
           ? _careEnvelope * .35
           : 0
-      ..lift = 0
-      ..cheering = false
-      ..cheer = 0
+      ..lift = pose?.lift ?? mate.lift
+      ..cheering = mate.cheer > 0
+      ..cheer = mate.cheer
       ..gameFacingRight = hug > 0
           ? position.dx > p.dx
-          : _partnerPosition.dx < 180
-      ..seconds = seconds * .78 + 1.8;
-    HomeCompanionPainter(
+          : pose?.facingRight ?? _mateFacingRight
+      ..seconds = seconds * .78 + 1.8
+      ..spin = roomPlay.spinPartner;
+    final renderer = HomeCompanionPainter(
       motion: motion,
       darkMode: dark,
       character: partner == PetCarePet.rabbit
           ? HomeCompanionCharacter.bunny
           : HomeCompanionCharacter.bear,
       showEffects: true,
-      care: hug > 0
-          ? partnerVitals.copyWith(
-              joy: 100,
-              food: math.max(60, partnerVitals.food),
-            )
-          : partnerVitals,
-    ).paint(c, const Size(360, 300));
+      petOutfit: outfits[partner],
+      care: _touchFace(
+        pose?.mood != null
+            ? _skitFace(partnerVitals, pose!.mood)
+            : hug > 0 || mate.happy
+            ? partnerVitals.copyWith(
+                joy: 100,
+                food: math.max(60, partnerVitals.food),
+              )
+            : partnerVitals,
+        partner,
+      ),
+      mouthOpen: mate.chewing ? .16 + mate.chew.abs() * .12 : mate.reach,
+      eating: mate.chewing ? 1 : 0,
+      hugging: hug > 0 ? hug : petTouch * .55,
+      baby: baby && !mate.chewing && pose?.mood != _SkitMood.crying,
+      bodyYaw: sulk == 2 ? 2.8 : null,
+      lookAt: holdPoint == null
+          ? null
+          : Offset(180 + holdPoint!.dx - p.dx, 260 + holdPoint!.dy - p.dy),
+    );
+    renderer.paint(c, const Size(360, 300));
+    final faceRight = motion.gameFacingRight;
+    if (!renderer.uses3D && mate.chewing) {
+      _paintChewMouth(c, partner, faceRight, mate.chew, t: mateMeal);
+    } else if (!renderer.uses3D && mate.reach > .05) {
+      // Há miệng chờ món đang được rê tới.
+      c.save();
+      c.translate(180, 260);
+      final k = _PetHousePainter._spriteOf(partner);
+      c.scale((faceRight ? 1 : -1) * k, k);
+      _paintMouthOpen(c, mate.reach, pet: partner);
+      c.restore();
+    } else if (!renderer.uses3D && baby && pose?.mood != _SkitMood.crying) {
+      _paintPacifier(c, partner, faceRight);
+    }
+    if (party) {
+      _paintPartyHat(c, partner, faceRight, model3D: renderer.uses3D);
+    }
     c.restore();
+    if (pose == null) _paintMateFx(c, p, partner);
   }
 
   /// Nhịp thở khi ngủ: đầu nhấp nhô rất nhẹ, mỗi bé lệch pha một chút.
@@ -515,11 +698,12 @@ class _PetHousePainter extends CustomPainter {
     required double shrink,
     required PetCareVitals care,
     bool facing = true,
+    double? size,
   }) {
     c.save();
     c.translate(feet.dx, feet.dy);
     c.rotate(_lyingAngle * turn);
-    final scale = _roomScaleOf(pet) * shrink;
+    final scale = _roomScaleOf(pet) * shrink * (size ?? _bedGrowth);
     c.scale(scale, scale);
     c.translate(-180, -260);
     motion
@@ -532,16 +716,85 @@ class _PetHousePainter extends CustomPainter {
       ..cheering = false
       ..cheer = 0
       ..gameFacingRight = facing
-      ..seconds = seconds * .5 + (pet == PetCarePet.rabbit ? 0 : 1.3);
-    HomeCompanionPainter(
+      ..seconds = seconds * .5 + (pet == PetCarePet.rabbit ? 0 : 1.3)
+      ..spin = CompanionSpinFrame.none;
+    final renderer = HomeCompanionPainter(
       motion: motion,
       darkMode: dark,
       character: pet == PetCarePet.rabbit
           ? HomeCompanionCharacter.bunny
           : HomeCompanionCharacter.bear,
       showEffects: true,
+      petOutfit: outfits[pet],
       care: care,
-    ).paint(c, const Size(360, 300));
+      baby: baby,
+      sitting: sitting,
+    );
+    renderer.paint(c, const Size(360, 300));
+    if (baby && !renderer.uses3D) _paintPacifier(c, pet, facing);
+    c.restore();
+  }
+
+  /// Lớn thêm một chút: sao vàng bay lên quanh hai bé đang thức.
+  void _paintGrowSparkles(Canvas c) {
+    if (growPulse <= 0 || small) return;
+    final spots = [
+      if (!vitals.sleeping) _minePose?.at ?? _petPoint,
+      if (!partnerVitals.sleeping) _partnerPose?.at ?? _partnerPosition,
+    ];
+    for (final (s, spot) in spots.indexed) {
+      for (var i = 0; i < 6; i++) {
+        final phase = (seconds * .9 + i / 6 + s * .3) % 1;
+        final angle = i * math.pi / 3 + s;
+        final p =
+            spot +
+            Offset(
+              math.cos(angle) * (30 + phase * 10) * growth,
+              (-50 - phase * 70 + math.sin(angle) * 14) * growth,
+            );
+        _star(
+          c,
+          p,
+          (3 + math.sin(phase * math.pi) * 3) * growth,
+          const Color(0xFFF4C34E).withValues(
+            alpha: (growPulse * math.sin(phase * math.pi)).clamp(0.0, 1.0),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Ti giả của bé sơ sinh, vẽ trong toạ độ hình bé (chân ở 180, 260);
+  /// khiên nhấp nhô như đang mút.
+  void _paintPacifier(Canvas c, PetCarePet pet, bool faceRight) {
+    final scale = _spriteOf(pet);
+    final suck = math.sin(seconds * 5 + (pet == PetCarePet.rabbit ? 0 : 1.4));
+    c.save();
+    c.translate(180, 260);
+    c.scale((faceRight ? 1 : -1) * scale, scale);
+    final center = Offset(1.7, -37.4 + suck * .25);
+    final shield = Rect.fromCenter(center: center, width: 10.5, height: 6.4);
+    _oval(c, shield.inflate(.8), Colors.white);
+    _oval(
+      c,
+      shield,
+      pet == PetCarePet.rabbit
+          ? const Color(0xFFF5A9C0)
+          : const Color(0xFF93CDE6),
+    );
+    _oval(
+      c,
+      Rect.fromCenter(center: center, width: 3.4, height: 2.6),
+      Colors.white.withValues(alpha: .9),
+    );
+    c.drawCircle(
+      center + Offset(0, 4.1 + suck * .15),
+      2.4,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1
+        ..color = const Color(0xFFF2BE4A),
+    );
     c.restore();
   }
 
@@ -549,7 +802,7 @@ class _PetHousePainter extends CustomPainter {
   /// bay vừa ngả người nằm xuống (thức dậy thì chạy ngược lại).
   void _petInBed(Canvas c) {
     final hop = _hopProgress;
-    final feet = _sleepFeet(selectedPet, _mineBoth);
+    final feet = _sleepFeet(selectedPet, _mineBoth, growth: _bedGrowth);
     final travel = Curves.easeInOutCubic.transform(hop);
     final lift = math.sin(hop * math.pi) * 46;
     final p =
@@ -564,6 +817,8 @@ class _PetHousePainter extends CustomPainter {
       shrink: 1 + (_lyingShrink - 1) * travel,
       care: vitals,
       facing: hop > .25 || facingRight,
+      // Đứng cỡ thật, nằm xuống thì vừa giường.
+      size: growth + (_bedGrowth - growth) * travel,
     );
   }
 
@@ -578,9 +833,46 @@ class _PetHousePainter extends CustomPainter {
   Offset get _mouth =>
       position +
       Offset(
-        (facingRight ? 1 : -1) * 1.7 * _characterScale * _roomPetScale,
-        -38.5 * _characterScale * _roomPetScale,
+        (facingRight ? 1 : -1) *
+            (HomeCompanionPainter.usesModel(false)
+                ? HomeCompanionMetrics.modelMouthX
+                : 1.7) *
+            _characterScale *
+            _roomPetScale,
+        (HomeCompanionPainter.usesModel(false)
+                ? HomeCompanionMetrics.modelMouthY
+                : -38.5) *
+            _characterScale *
+            _roomPetScale,
       );
+
+  /// Bé dỏng tai nghe người chơi nói: ba vòng sóng âm cạnh đầu, to theo giọng.
+  void _paintListening(Canvas c, Offset p) {
+    if (listening <= 0) return;
+    final side = facingRight ? 1.0 : -1.0;
+    final ear = p + Offset(side * 40, -118);
+    for (var i = 0; i < 3; i++) {
+      final phase = (seconds * 1.4 + i / 3) % 1;
+      final radius = 8 + phase * 18 + listening * 6;
+      final alpha = (1 - phase) * (.35 + listening * .55);
+      c.drawArc(
+        Rect.fromCircle(center: ear, radius: radius),
+        side > 0 ? -.7 : math.pi - .7,
+        1.4,
+        false,
+        Paint()
+          ..color = const Color(
+            0xFF8C7BC4,
+          ).withValues(alpha: alpha.clamp(0.0, 1.0))
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 2.6,
+      );
+    }
+  }
+
+  /// Miệng bé trong cảnh khi đã tính cỡ theo cấp (dùng ngoài khung vẽ bé).
+  Offset get _grownMouth => position + (_mouth - position) * growth;
 
   /// Vị trí vẽ bé đang thức: đi bộ trên sàn, xích lại khi ôm bạn.
   Offset get _petPoint {
@@ -590,8 +882,25 @@ class _PetHousePainter extends CustomPainter {
     return p;
   }
 
+  /// Bé đang thức: cả hình bé lẫn bọt/nước/hiệu ứng quanh người cùng phóng
+  /// theo cỡ [growth] quanh chân bé, nên mọi thứ vẫn khớp người bé.
   void _pet(Canvas c) {
-    final p = _petPoint;
+    if (_minePose?.hidden ?? false) return;
+    if (growth == 1) return _petBody(c);
+    final p = _minePose?.at ?? _petPoint;
+    c.save();
+    c.translate(p.dx, p.dy);
+    c.scale(growth);
+    c.translate(-p.dx, -p.dy);
+    _petBody(c);
+    c.restore();
+  }
+
+  void _petBody(Canvas c) {
+    final pose = _minePose;
+    final p = pose?.at ?? _petPoint;
+    final walking = pose?.walking ?? this.walking;
+    final facingRight = pose?.facingRight ?? this.facingRight;
     final hugging = action == PetCareAction.hug && !playing && _active;
     final feeding = action == PetCareAction.feed && _active;
     final playEnvelope = playing && _active ? _careEnvelope : 0.0;
@@ -606,7 +915,18 @@ class _PetHousePainter extends CustomPainter {
         ? 0.0
         : ((hold.dx - p.dx) / 220).clamp(-1.0, 1.0) * .07 * reach;
     final eager = reach * 2.5 * math.sin(seconds * 9).abs();
-    final wiggle = scrubbing ? math.sin(seconds * 16) * .035 : 0.0;
+    final petTouch = math.max(_touchAmount(selectedPet), roomPlay.cuddle * .45);
+    final touchLean = roomPlay.touchHead
+        ? petTouch *
+              ((roomPlay.touchPoint?.dx ?? p.dx) - p.dx).clamp(-30.0, 30.0) /
+              30 *
+              .07
+        : 0.0;
+    final wiggle = scrubbing
+        ? math.sin(seconds * 16) * .035
+        : roomPlay.touchHead
+        ? 0.0
+        : math.sin(seconds * 19) * .045 * petTouch;
     final jump = _danceMotion;
     final friendLean = (_partnerPosition.dx > p.dx ? .09 : -.09) * friendHug;
     _paintDanceBack(c, p);
@@ -636,9 +956,15 @@ class _PetHousePainter extends CustomPainter {
     );
     c.rotate(
       lean +
+          touchLean +
           wiggle +
           _shake +
           friendLean +
+          (pose?.tilt ?? 0) +
+          // Bé sơ sinh đi lẫm chẫm, lắc lư theo từng bước.
+          (baby && walking
+              ? math.sin((pose?.stride ?? strideCycles) * math.pi * 2) * .07
+              : 0) +
           (hugging
               ? _careEnvelope * .035
               : feeding
@@ -652,86 +978,92 @@ class _PetHousePainter extends CustomPainter {
         : selectedPet == PetCarePet.rabbit
         ? 2.85
         : 2.55;
+    final squash = pose?.squash ?? 0;
     c.scale(
-      scale * (1 + chew * .012 + reach * .03) * jump.sx,
-      scale * (1 - chew * .009 + reach * .03) * jump.sy,
+      scale * (1 + chew * .012 + reach * .03) * jump.sx * (1 + squash * .14),
+      scale * (1 - chew * .009 + reach * .03) * jump.sy * (1 - squash * .22),
     );
     c.translate(-180, -260);
     motion
       ..walking = walking
-      ..hopping = playEnvelope > 0 && !walking
+      ..hopping = (playEnvelope > 0 || (pose?.lift ?? 0) > .05) && !walking
       ..gameFacingRight = friendHug > 0
           ? _partnerPosition.dx > p.dx
           : facingRight
-      ..strideCycles = walking ? strideCycles : progress * .9
-      ..walkWeight = walking ? walkWeight : playEnvelope * .7
+      ..strideCycles = pose != null
+          ? pose.stride
+          : walking
+          ? strideCycles
+          : progress * .9
+      ..walkWeight = pose != null
+          ? (pose.walking ? 1 : 0)
+          : walking
+          ? walkWeight
+          : playEnvelope * .7
       ..seconds = seconds * .78
-      ..cuddle = hugging
+      ..cuddle = petTouch > 0
+          ? petTouch * .8
+          : hugging
           ? _careEnvelope * .65
           : friendHug > 0
           ? friendHug * .7
           : feeding
           ? _careEnvelope * .2
           : 0
-      ..lift = playEnvelope * math.sin(progress * math.pi) * 1.8
+      ..lift = pose?.lift ?? playEnvelope * math.sin(progress * math.pi) * 1.8
       ..cheering = dance > 0
-      ..cheer = dance;
+      ..cheer = dance
+      ..spin = roomPlay.spinMine;
     // Đổi biểu cảm qua dữ liệu hiển thị, không sửa nét vẽ bé dùng chung.
-    final face = _cheerful || friendHug > 0
+    final face = pose?.mood != null
+        ? _skitFace(vitals, pose!.mood)
+        : _cheerful || friendHug > 0
         ? vitals.copyWith(joy: 100, food: math.max(vitals.food, 60))
         : vitals;
-    HomeCompanionPainter(
+    final renderer = HomeCompanionPainter(
       motion: motion,
       darkMode: dark,
       character: selectedPet == PetCarePet.rabbit
           ? HomeCompanionCharacter.bunny
           : HomeCompanionCharacter.bear,
       showEffects: true,
-      care: face,
-    ).paint(c, const Size(360, 300));
+      petOutfit: outfits[selectedPet],
+      care: _touchFace(face, selectedPet),
+      mouthOpen: feeding
+          ? (progress > .25 && progress < .84 ? .18 + chew.abs() * .13 : 0)
+          : math.max(reach, talk),
+      eating: feeding ? _careEnvelope : 0,
+      hugging: math.max(friendHug, hugging ? _careEnvelope : petTouch * .55),
+      baby: baby && !feeding && pose?.mood != _SkitMood.crying,
+      bodyYaw: sulk == 1 ? 2.8 : null,
+      sitting: sitting,
+      lookAt: hold == null
+          ? (roomPlay.touchPoint == null
+                ? null
+                : Offset(
+                    180 + roomPlay.touchPoint!.dx - p.dx,
+                    260 + roomPlay.touchPoint!.dy - p.dy,
+                  ))
+          : Offset(180 + hold.dx - p.dx, 260 + hold.dy - p.dy),
+    );
+    renderer.paint(c, const Size(360, 300));
     final faceRight = motion.gameFacingRight;
-    if (reach > .05) {
+    // Há miệng chờ món ăn hoặc mấp máy theo giọng lúc nhại người chơi.
+    final mouthOpen = feeding ? 0.0 : math.max(reach, talk);
+    if (!renderer.uses3D && mouthOpen > .05) {
       c.save();
       c.translate(180, 260);
       c.scale((faceRight ? 1 : -1) * _characterScale, _characterScale);
-      _paintMouthOpen(c, reach);
+      _paintMouthOpen(c, mouthOpen);
       c.restore();
+    } else if (!renderer.uses3D &&
+        baby &&
+        !feeding &&
+        pose?.mood != _SkitMood.crying) {
+      _paintPacifier(c, selectedPet, faceRight);
     }
-    if (feeding && progress > .25 && progress < .84) {
-      c.save();
-      c.translate(180, 260);
-      c.scale((faceRight ? 1 : -1) * _characterScale, _characterScale);
-      _oval(
-        c,
-        const Rect.fromLTWH(-3.8, -41.2, 11, 6.7),
-        selectedPet == PetCarePet.rabbit
-            ? const Color(0xFFFFFAEF)
-            : const Color(0xFFF3D7B2),
-      );
-      final opening = progress < .45 ? 6.0 : 3 + chew.abs() * 1.8;
-      _oval(
-        c,
-        Rect.fromCenter(
-          center: const Offset(1.7, -38.6),
-          width: 7.5 + chew.abs(),
-          height: opening,
-        ),
-        const Color(0xFF79564E),
-      );
-      _oval(
-        c,
-        Rect.fromCenter(
-          center: const Offset(1.7, -37.1),
-          width: 4.5,
-          height: 2,
-        ),
-        const Color(0xFFEBA0AC),
-      );
-      _paintCheeks(
-        c,
-        progress > .46 && progress < .82 ? .6 + chew.abs() * .22 : 0,
-      );
-      c.restore();
+    if (!renderer.uses3D && feeding && progress > .25 && progress < .84) {
+      _paintChewMouth(c, selectedPet, faceRight, chew);
     }
     if (feeding) {
       c.save();
@@ -740,12 +1072,16 @@ class _PetHousePainter extends CustomPainter {
       _paintTasteFace(c);
       c.restore();
     }
+    if (party) {
+      _paintPartyHat(c, selectedPet, faceRight, model3D: renderer.uses3D);
+    }
     c.restore();
     _paintFoam(c, p);
     _paintDrips(c, p);
     _paintSpray(c, p);
     _paintCraving(c, p, reach);
     _paintDanceFront(c, p);
+    _paintListening(c, p);
     if (feeding) _paintTaste(c, p);
     if (vitals.isDirty && !_inBath) {
       for (var i = 0; i < 3; i++) {

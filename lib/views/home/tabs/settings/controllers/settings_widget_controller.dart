@@ -1,10 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../../models/widget_appearance.dart';
 
 class SettingsWidgetDraft {
   final String? draftWidgetThemeKey;
   final String widgetStyleKey;
   final bool showDiaryOnWidget;
   final bool widgetHeartAnimated;
+  final int widgetMotionIntervalMinutes;
   final String widgetHeartStyleKey;
   final String widgetHeartColorKey;
   final String widgetPreviewSizeKey;
@@ -18,6 +20,8 @@ class SettingsWidgetDraft {
     required this.widgetStyleKey,
     required this.showDiaryOnWidget,
     required this.widgetHeartAnimated,
+    this.widgetMotionIntervalMinutes =
+        WidgetAppearance.defaultMotionIntervalMinutes,
     required this.widgetHeartStyleKey,
     required this.widgetHeartColorKey,
     required this.widgetPreviewSizeKey,
@@ -53,6 +57,10 @@ class SettingsWidgetController {
     await prefs.setBool(
       'il_widget_heart_animated_$accountKey',
       draft.widgetHeartAnimated,
+    );
+    await prefs.setInt(
+      'il_widget_motion_interval_minutes_$accountKey',
+      WidgetAppearance.normalizeMotionInterval(draft.widgetMotionIntervalMinutes),
     );
     await prefs.setString(
       'il_widget_heart_style_$accountKey',

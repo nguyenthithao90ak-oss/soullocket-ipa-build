@@ -688,6 +688,7 @@ class _VoiceScreenState extends State<VoiceScreen>
               // server cũ bỏ qua các trường này và trả phiên Firebase Storage.
               'transport': 'r2',
               'size': size,
+              'uploadProtocolVersion': 2,
               'md5': md5Hex,
             },
             timeout: const Duration(seconds: 15),

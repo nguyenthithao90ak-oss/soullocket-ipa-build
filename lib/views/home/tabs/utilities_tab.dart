@@ -6,13 +6,13 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/sl_notice.dart';
+import '../../../utils/screen_activity_mixin.dart';
 import '../../../models/house_settings.dart';
 import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/house_service.dart';
@@ -33,7 +33,7 @@ class UtilitiesTab extends StatefulWidget {
 }
 
 class _UtilitiesTabState extends State<UtilitiesTab>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, ScreenActivityMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -58,6 +58,11 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   }
 
   // Không khai báo lại dispose() ở dưới nữa
+
+  @override
+  void onScreenActivityChanged(bool active) {
+    if (active) _adMob.preloadInterstitialAd();
+  }
 
   Future<void> _init() async {
     try {
@@ -260,7 +265,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final isPro = cachedPro ?? true;
     if (!isCurrentScope()) return false;
     if (!isPro && id != 'store') {
-      unawaited(_prepareUtilityAd(isCurrentScope: isCurrentScope));
+      // Giữ đúng điểm chuyển màn cho ad đã sẵn sàng. Màn mới chỉ mở sau
+      // callback đóng; bỏ lượt ngay nếu chưa tải được hoặc scope đã đổi.
+      await _prepareUtilityAd(isCurrentScope: isCurrentScope);
     }
 
     if (!isCurrentScope()) return false;
@@ -336,48 +343,63 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
         if (has2HourCooldownPassed && isUnderDailyLimit) {
           debugPrint('UtilityClickAd: Target reached! Showing click-count ad.');
-          final scheduled = _showInterstitialAdWithoutBlocking(isCurrentScope);
-          if (scheduled) {
-            await prefs
-                .setInt(
-                  'utility_click_ad_last_shown_time',
-                  now.millisecondsSinceEpoch,
-                )
-                .timeout(const Duration(seconds: 1));
-            await prefs
-                .setInt('utility_click_ad_shown_today_count', shownToday + 1)
-                .timeout(const Duration(seconds: 1));
-            _lastUtilityAdTime = now;
-          }
+          await _showReadyUtilityAd(
+            isCurrentScope,
+            onShown: () {
+              _lastUtilityAdTime = now;
+              unawaited(_recordUtilityAdShown(prefs, now, shownToday));
+            },
+          );
         }
       } else if ((_lastUtilityAdTime == null ||
               now.difference(_lastUtilityAdTime!) >
                   const Duration(minutes: 5)) &&
           !_adMob.hasRecentFullscreenAd()) {
-        if (_showInterstitialAdWithoutBlocking(isCurrentScope)) {
-          _lastUtilityAdTime = now;
-        }
+        await _showReadyUtilityAd(
+          isCurrentScope,
+          onShown: () => _lastUtilityAdTime = now,
+        );
       }
     } catch (error) {
       debugPrint('[Utilities] Bỏ qua quảng cáo khi chuẩn bị lỗi: $error');
     }
   }
 
-  bool _showInterstitialAdWithoutBlocking(bool Function() isCurrentScope) {
+  Future<void> _recordUtilityAdShown(
+    SharedPreferences prefs,
+    DateTime shownAt,
+    int shownToday,
+  ) async {
+    try {
+      await prefs.setInt(
+        'utility_click_ad_last_shown_time',
+        shownAt.millisecondsSinceEpoch,
+      ).timeout(const Duration(seconds: 1));
+      await prefs.setInt(
+        'utility_click_ad_shown_today_count',
+        shownToday + 1,
+      ).timeout(const Duration(seconds: 1));
+    } catch (error) {
+      debugPrint('[Utilities] Không lưu được lượt quảng cáo: $error');
+    }
+  }
+
+  Future<bool> _showReadyUtilityAd(
+    bool Function() isCurrentScope, {
+    required VoidCallback onShown,
+  }) async {
     if (!_adMob.canRequestAds ||
-        !_adMob.hasReadyInterstitialAd ||
         !isCurrentScope()) {
       return false;
     }
-    unawaited(
-      _adMob.showReadyInterstitialAd(isCurrent: isCurrentScope).catchError((
-        error,
-      ) {
-        debugPrint('[Utilities] Không hiển thị được quảng cáo: $error');
-        return false;
-      }),
+    if (!_adMob.hasReadyInterstitialAd) {
+      unawaited(_adMob.loadInterstitialAd());
+      return false;
+    }
+    return _adMob.showReadyInterstitialAd(
+      isCurrent: isCurrentScope,
+      onShown: onShown,
     );
-    return true;
   }
 
   Future<void> _warmUtilityEntitlement(String expectedUid) async {

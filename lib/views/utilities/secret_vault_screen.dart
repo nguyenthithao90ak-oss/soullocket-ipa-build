@@ -685,7 +685,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       if (mounted) {
         SLToast.error(
           context,
-          L10nService().format('vault_load_image_error', {'error': '$error'}),
+          context.tr('vault_load_image_error'),
         );
         _safeSetState(() => _isLoadingMorePhotos = false);
       }
@@ -1039,9 +1039,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           context,
           e is FirebaseFunctionsException && e.code == 'resource-exhausted'
               ? context.tr('vault_storage_limit')
-              : L10nService().format('vault_upload_error', {
-                  'error': AppErrorMapper.resolve(e).message,
-                }),
+              : L10nService().format('vault_upload_error'),
         );
       }
     } finally {

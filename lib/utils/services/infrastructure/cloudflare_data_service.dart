@@ -74,6 +74,8 @@ class CloudflareDataService {
     'memories',
     'capsules',
     'finances',
+    'finance-ledger',
+    'activity-history',
     'diary-reactions',
   };
 

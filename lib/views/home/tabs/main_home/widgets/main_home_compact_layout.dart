@@ -122,6 +122,7 @@ extension _MainHomeCompactLayout on _MainHomeTabState {
   Widget _buildCompactUpcoming({
     required String? startDate,
     required bool isSingle,
+    HomeDisplayStyle displayStyle = HomeDisplayStyle.current,
   }) {
     final houseId = (_houseId ?? '').trim();
     final uid = _auth.currentUser?.uid;
@@ -222,26 +223,37 @@ extension _MainHomeCompactLayout on _MainHomeTabState {
 
     final calendarFailed =
         !isSingle && _homeCalendarLoadState == HomeCalendarLoadState.failed;
+    final statusText = calendarFailed
+        ? context.tr(
+            items.isEmpty
+                ? 'home_upcoming_error'
+                : 'home_upcoming_cached_error',
+          )
+        : null;
+    final VoidCallback? onRetry = calendarFailed && houseId.isNotEmpty
+        ? () {
+            if (!mounted ||
+                _auth.currentUser?.uid != uid ||
+                _houseId != houseId) {
+              return;
+            }
+            _listenHomeCalendarEvents(houseId);
+          }
+        : null;
+    if (displayStyle != HomeDisplayStyle.current) {
+      return HomeDisplayUpcomingSection(
+        style: displayStyle,
+        items: items,
+        onSeeAll: _openMilestonesDetail,
+        statusText: statusText,
+        onRetry: onRetry,
+      );
+    }
     return HomeUpcomingCard(
       items: items,
       onSeeAll: _openMilestonesDetail,
-      statusText: calendarFailed
-          ? context.tr(
-              items.isEmpty
-                  ? 'home_upcoming_error'
-                  : 'home_upcoming_cached_error',
-            )
-          : null,
-      onRetry: calendarFailed && houseId.isNotEmpty
-          ? () {
-              if (!mounted ||
-                  _auth.currentUser?.uid != uid ||
-                  _houseId != houseId) {
-                return;
-              }
-              _listenHomeCalendarEvents(houseId);
-            }
-          : null,
+      statusText: statusText,
+      onRetry: onRetry,
     );
   }
 

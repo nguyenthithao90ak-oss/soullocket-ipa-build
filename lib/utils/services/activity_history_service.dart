@@ -1,6 +1,8 @@
 import 'package:soullocket_app/utils/locale_date_format.dart';
 import 'package:soullocket_app/utils/activity_history_restore_policy.dart';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -17,7 +19,8 @@ import 'l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/core/service_locator.dart';
 import 'notebook/notebook_d1_client.dart';
-import 'core/rtdb_settled_read.dart';
+import 'activity_history_remote.dart';
+import 'infrastructure/cloudflare_data_service.dart';
 
 class ActivityHistoryEntry {
   final String id;
@@ -226,16 +229,60 @@ class ActivityHistoryEntry {
 
 class ActivityHistoryService {
   static final ActivityHistoryService instance = ActivityHistoryService._();
-  ActivityHistoryService._();
+  ActivityHistoryService._()
+    : _uidForTesting = null,
+      _remoteForTesting = null,
+      _queueForTesting = null,
+      _onlineForTesting = null;
+
+  @visibleForTesting
+  ActivityHistoryService.forTesting({
+    required String? Function() currentUid,
+    ActivityHistoryRemote? remote,
+    LocalDatabaseService? queue,
+    bool Function()? isOnline,
+  }) : _uidForTesting = currentUid,
+       _remoteForTesting = remote,
+       _queueForTesting = queue,
+       _onlineForTesting = isOnline;
+  final String? Function()? _uidForTesting;
+  final ActivityHistoryRemote? _remoteForTesting;
+  final LocalDatabaseService? _queueForTesting;
+  final bool Function()? _onlineForTesting;
+  bool get _online =>
+      _onlineForTesting?.call() ?? ConnectivityService().isOnline;
+  int _epoch = 0;
+  int _mutations = 0;
+  Future<void> _cacheSerial = Future.value();
+  bool _webSyncing = false;
+
+  Future<T> _withCache<T>(Future<T> Function() action) {
+    final future = _cacheSerial.then((_) => action());
+    _cacheSerial = future.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return future;
+  }
+
+  late final ActivityHistoryRemote _remote =
+      _remoteForTesting ?? ActivityHistoryRemote();
+  late final LocalDatabaseService _queue =
+      _queueForTesting ?? LocalDatabaseService();
+  String? get _currentUid {
+    if (_uidForTesting != null) return _uidForTesting();
+    try {
+      return _auth.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static const _legacyKey = 'il_activity_history_v1';
   static const _legacySeqKey = 'il_activity_history_seq_v1';
-  static const _cachePrefix = 'il_activity_history_cache_v2_';
-  static const _seqPrefix = 'il_activity_history_seq_v2_';
+  static const _cachePrefix = 'il_activity_history_cache_v3_';
+  static const _seqPrefix = 'il_activity_history_seq_v3_';
   static const _migratedPrefix = 'il_activity_history_migrated_v2_';
-  static const _trimPrefix = 'il_activity_history_trim_v1_';
-  // Người đọc luôn chỉ giữ 20 mục mới nhất; dọn bớt trên server chỉ để nhánh không phình.
-  static const Duration _remoteTrimInterval = Duration(hours: 6);
   static const maxItems = 20;
   static const _max = maxItems;
   static const int restoreWindowMs = 3 * 24 * 60 * 60 * 1000;
@@ -249,53 +296,92 @@ class ActivityHistoryService {
 
   /// Đọc bản sao cục bộ mà không chờ Auth, RTDB hay đồng bộ nền.
   ///
-  /// Màn lịch sử dùng bước này trước khi gọi [_loadRemote] để nội dung gần
+  /// Màn lịch sử dùng bước này trước khi tải mạng để nội dung gần
   /// nhất xuất hiện ngay khi người dùng mở màn hình.
   Future<List<ActivityHistoryEntry>> loadCached({String? houseId}) async {
-    final resolvedHouseId = houseId?.trim() ?? '';
-    if (resolvedHouseId.isEmpty) {
-      return _loadLegacyLocalEntries();
-    }
-    final cached = await _loadCache(resolvedHouseId);
-    if (cached.isNotEmpty) return cached;
-    // Cache cũ không có scope không được hiện ở House khác khi mở màn hình.
-    final legacy = await _loadLegacyLocalEntries();
-    return legacy.where((entry) => entry.houseId == resolvedHouseId).toList();
+    final uid = _currentUid;
+    final house = houseId?.trim() ?? '';
+    if (uid == null || house.isEmpty) return [];
+    return _loadCache(house, ownerUid: uid);
   }
 
   Future<List<ActivityHistoryEntry>> loadAll({String? houseId}) async {
-    final resolvedHouseId = await _resolveHouseId(houseId);
-    if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
-      return _loadLegacyLocalEntries();
-    }
-
+    final uid = _currentUid;
+    if (uid == null) return [];
+    final house = await _resolveHouseId(houseId);
+    if (house == null || house.isEmpty || _currentUid != uid) return [];
+    final epoch = _epoch;
     try {
-      if (ConnectivityService().isOnline) {
-        final raw = await _readRemoteRaw(resolvedHouseId);
-        final remote = _remoteEntries(resolvedHouseId, raw);
-        await _trimRemote(resolvedHouseId, raw: raw);
-        final cache = await _loadCache(resolvedHouseId);
-        final merged = _normalizeEntries([
-          ...remote,
-          ...cache.where((entry) => entry.syncStatus != 'synced'),
-        ]);
-        // Kết quả rỗng hợp lệ cũng thay cache: lịch sử có thể đã được xóa
-        // từ máy kia. Chỉ giữ bản cũ khi đọc remote thất bại hoặc offline.
-        await _saveCache(resolvedHouseId, merged);
-        return merged;
+      if (_online) {
+        // Đọc queue trước và sau GET để không mất lệnh vừa được ACK trong lúc tải.
+        final before = await _pendingActivity(house, uid);
+        if (kIsWeb) await _drainWeb(house, uid);
+        final snapshot = await _remote.read(house);
+        if (_currentUid != uid) return [];
+        var entries = snapshot.entries
+            .map(
+              (item) => ActivityHistoryEntry.fromJson({
+                ...item,
+                'syncStatus': 'synced',
+              }),
+            )
+            .toList();
+        final after = await _pendingActivity(house, uid);
+        if (_currentUid != uid) return [];
+        final pending =
+            <String, Map<String, Object?>>{
+              for (final task in [...before, ...after])
+                task['operationId'].toString(): task,
+            }.values.toList()..sort(
+              (a, b) =>
+                  (a['createdAt'] as int).compareTo(b['createdAt'] as int),
+            );
+        final oldest =
+            DateTime.now().millisecondsSinceEpoch -
+            const Duration(days: 7).inMilliseconds;
+        for (final task in pending) {
+          if ((task['createdAt'] as int) < oldest) continue;
+          final data = jsonDecode(task['payload'] as String) as Map;
+          if (task['action'] == 'DELETE') {
+            final through =
+                (data['through'] as num?)?.toInt() ??
+                (task['createdAt'] as int);
+            entries.removeWhere((entry) => entry.ts <= through);
+          } else {
+            final entry = ActivityHistoryEntry.fromJson(
+              Map<String, dynamic>.from(data),
+            );
+            if (snapshot.includes(entry.toJson(), house) &&
+                entry.authorUid == uid) {
+              entries.removeWhere((other) => other.id == entry.id);
+              entries.add(entry.copyWith(syncStatus: 'pending'));
+            }
+          }
+        }
+        if (_epoch != epoch || _mutations > 0)
+          return _loadCache(house, ownerUid: uid);
+        final normalized = _normalizeEntries(entries);
+        await _saveCache(
+          house,
+          normalized,
+          ownerUid: uid,
+          expectedEpoch: epoch,
+        );
+        if (_currentUid != uid) return [];
+        return _epoch == epoch ? normalized : _loadCache(house, ownerUid: uid);
       }
     } catch (e) {
       debugPrint(
-        'ActivityHistory remote load failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('home_activity_history_load_error')).message}',
+        'ActivityHistory refresh failed: ${AppErrorMapper.resolve(e).kind.name}',
       );
+      if (e is ActivityScopeChanged || e is FirebaseAuthException) return [];
+      if ((e is FirebaseException && e.code == 'permission-denied') ||
+          (e is CloudflareDataException && [401, 403].contains(e.statusCode))) {
+        await _saveCache(house, [], ownerUid: uid);
+        return [];
+      }
     }
-
-    final cache = await _loadCache(resolvedHouseId);
-    if (cache.isNotEmpty) {
-      return cache;
-    }
-
-    return _loadLegacyLocalEntries();
+    return _currentUid == uid ? _loadCache(house, ownerUid: uid) : [];
   }
 
   Future<void> add(
@@ -318,11 +404,19 @@ class ActivityHistoryService {
     String placeholder = '',
     String key = '',
   }) async {
+    final uid = _currentUid;
+    if (uid == null) return;
     final resolvedHouseId = await _resolveHouseId(houseId);
+    if (_currentUid != uid) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final seq = await _nextSeq(resolvedHouseId);
-    final uid = _auth.currentUser?.uid ?? '';
-    final entryId = '${now}_${seq}_${role.trim()}';
+    if (_currentUid != uid) return;
+    final entryId =
+        now.toString() +
+        '_' +
+        seq.toString() +
+        '_' +
+        Random.secure().nextInt(1 << 32).toRadixString(16);
     final moduleKey = module.trim().toLowerCase();
     final entityTypeKey = entityType.trim().toLowerCase();
     final isSecretVaultEntry =
@@ -370,7 +464,7 @@ class ActivityHistoryService {
       key: key,
       houseId: resolvedHouseId ?? '',
       authorUid: uid,
-      syncStatus: ConnectivityService().isOnline ? 'synced' : 'pending',
+      syncStatus: 'pending',
     );
 
     if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
@@ -378,49 +472,47 @@ class ActivityHistoryService {
       return;
     }
 
-    await PresenceService().markActiveNow();
-
-    final next = await _appendCache(
-      resolvedHouseId,
-      entry,
-      replaceExisting: true,
-    );
-
-    final payload = entry.copyWith(syncStatus: 'synced').toJson()
-      ..remove('syncStatus');
-
-    if (ConnectivityService().isOnline) {
-      try {
-        await _entryRef(resolvedHouseId, entry.id).set(payload);
-        await _trimRemoteThrottled(resolvedHouseId);
-        await _saveCache(
-          resolvedHouseId,
-          next
-              .map(
-                (item) => item.id == entry.id
-                    ? item.copyWith(syncStatus: 'synced')
-                    : item,
-              )
-              .toList(),
-        );
-        return;
-      } catch (e) {
-        debugPrint(
-          'ActivityHistory direct sync failed: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('home_activity_sync_error')).message}',
-        );
-      }
+    if (_currentUid != uid) return;
+    final payload = entry.toJson()..remove('syncStatus');
+    // Lưu lệnh bền vững trước cache; retry giữ ID/body và UID gốc.
+    _epoch++;
+    _mutations++;
+    try {
+      await _enqueueActivity(
+        resolvedHouseId,
+        uid,
+        'SET',
+        payload,
+        now,
+        'activity_${entry.id}',
+      );
+      if (_currentUid != uid) return;
+      await _appendCache(
+        resolvedHouseId,
+        entry,
+        replaceExisting: true,
+        ownerUid: uid,
+      );
+    } finally {
+      _mutations--;
+      _epoch++;
     }
-
-    await LocalDatabaseService().enqueueSync(
-      'houses/$resolvedHouseId/activity_history/${entry.id}',
-      'SET',
-      jsonEncode(payload),
-      operationId: 'activity_${entry.id}',
-      entityType: 'activity_history',
-    );
+    if (kIsWeb && _online) unawaited(_drainWeb(resolvedHouseId, uid));
+    try {
+      await PresenceService().markActiveNow();
+    } catch (_) {}
   }
 
   Future<bool> restoreEntry(ActivityHistoryEntry entry) async {
+    final uid = _currentUid;
+    final house = await _resolveHouseId(null);
+    if (uid == null ||
+        _currentUid != uid ||
+        house != entry.houseId ||
+        (entry.restorePath.isNotEmpty &&
+            !entry.restorePath.startsWith('houses/${entry.houseId}/'))) {
+      return false;
+    }
     if (!entry.canRestore) {
       return false;
     }
@@ -565,92 +657,157 @@ class ActivityHistoryService {
   }
 
   Future<void> clear({String? houseId}) async {
-    final resolvedHouseId = await _resolveHouseId(houseId);
-    if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
-      final prefs =
-          OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
-      await prefs.remove(_legacyKey);
-      await prefs.remove(_legacySeqKey);
+    final uid = _currentUid;
+    if (uid == null) return;
+    final house = await _resolveHouseId(houseId);
+    if (house == null || house.isEmpty || _currentUid != uid) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final operation =
+        'activity_clear_' +
+        now.toString() +
+        '_' +
+        Random.secure().nextInt(1 << 32).toRadixString(16);
+    _epoch++;
+    _mutations++;
+    try {
+      await _enqueueActivity(
+        house,
+        uid,
+        'DELETE',
+        {'through': now},
+        now,
+        operation,
+      );
+      await _saveCache(house, [], ownerUid: uid);
+    } finally {
+      _mutations--;
+      _epoch++;
+    }
+    if (kIsWeb && _online) unawaited(_drainWeb(house, uid));
+  }
+
+  Future<void> _enqueueActivity(
+    String house,
+    String uid,
+    String action,
+    Map<String, dynamic> payload,
+    int issuedAt,
+    String operation,
+  ) async {
+    if (_currentUid != uid) throw const ActivityScopeChanged();
+    final path =
+        'houses/$house/activity_history${action == 'SET' ? '/${payload['id']}' : ''}';
+    if (!kIsWeb) {
+      await _queue.enqueueSync(
+        path,
+        action,
+        jsonEncode(payload),
+        operationId: operation,
+        entityType: 'activity_history',
+        expectedOwnerUid: uid,
+        issuedAt: issuedAt,
+      );
       return;
     }
+    await _withCache(() async {
+      final prefs = await SharedPreferences.getInstance();
+      if (_currentUid != uid) throw const ActivityScopeChanged();
+      final key = 'il_activity_outbox_v1_${uid.length}:$uid:$house';
+      final tasks = jsonDecode(prefs.getString(key) ?? '[]') as List;
+      tasks.removeWhere((task) => (task as Map)['operationId'] == operation);
+      tasks.add({
+        'path': path,
+        'action': action,
+        'payload': jsonEncode(payload),
+        'operationId': operation,
+        'createdAt': issuedAt,
+      });
+      await prefs.setString(key, jsonEncode(tasks));
+    });
+  }
 
-    await _saveCache(resolvedHouseId, const <ActivityHistoryEntry>[]);
-    final prefs =
-        OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    await prefs.remove(_seqKey(resolvedHouseId));
+  Future<List<Map<String, Object?>>> _pendingActivity(
+    String house,
+    String uid,
+  ) async {
+    if (_currentUid != uid) return [];
+    if (!kIsWeb) return _queue.pendingActivity(house);
+    final prefs = await SharedPreferences.getInstance();
+    if (_currentUid != uid) return [];
+    final key = 'il_activity_outbox_v1_${uid.length}:$uid:$house';
+    return (jsonDecode(prefs.getString(key) ?? '[]') as List)
+        .map((task) => Map<String, Object?>.from(task as Map))
+        .toList();
+  }
 
-    if (ConnectivityService().isOnline) {
-      await _db.ref('houses/$resolvedHouseId/activity_history').remove();
-      return;
+  Future<void> _drainWeb(String house, String uid) async {
+    if (_webSyncing || _currentUid != uid) return;
+    _webSyncing = true;
+    try {
+      final tasks = await _pendingActivity(house, uid);
+      for (final task in tasks) {
+        if (_currentUid != uid) return;
+        final data = Map<String, dynamic>.from(
+          jsonDecode(task['payload'] as String) as Map,
+        );
+        final clear = task['action'] == 'DELETE';
+        await _remote.send(
+          houseId: house,
+          action: clear ? 'clear' : 'append',
+          entry: clear ? null : data,
+          through: clear ? (data['through'] as num).toInt() : null,
+          issuedAt: task['createdAt'] as int,
+          operationId: task['operationId'] as String,
+          expectedUid: uid,
+        );
+        await _withCache(() async {
+          final prefs = await SharedPreferences.getInstance();
+          final key = 'il_activity_outbox_v1_${uid.length}:$uid:$house';
+          final remaining = jsonDecode(prefs.getString(key) ?? '[]') as List;
+          remaining.removeWhere(
+            (item) => (item as Map)['operationId'] == task['operationId'],
+          );
+          await prefs.setString(key, jsonEncode(remaining));
+        });
+      }
+    } catch (e) {
+      debugPrint(
+        'Activity outbox deferred: ${AppErrorMapper.resolve(e).kind.name}',
+      );
+    } finally {
+      _webSyncing = false;
     }
-
-    await LocalDatabaseService().enqueueSync(
-      'houses/$resolvedHouseId/activity_history',
-      'DELETE',
-      jsonEncode(<String, dynamic>{}),
-      operationId: 'activity_clear_$resolvedHouseId',
-      entityType: 'activity_history',
-    );
   }
 
   Future<void> migrateLegacyLocalData({String? houseId}) async {
-    final resolvedHouseId = await _resolveHouseId(houseId);
-    if (resolvedHouseId == null ||
-        resolvedHouseId.isEmpty ||
-        !ConnectivityService().isOnline) {
-      return;
-    }
-
+    final uid = _currentUid;
+    if (uid == null) return;
+    final house = await _resolveHouseId(houseId);
+    if (house == null || house.isEmpty || _currentUid != uid) return;
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    if (prefs.getBool('$_migratedPrefix$resolvedHouseId') == true) {
-      return;
-    }
-
-    final legacyEntries = await _loadLegacyLocalEntries();
-    if (legacyEntries.isEmpty) {
-      await prefs.setBool('$_migratedPrefix$resolvedHouseId', true);
-      return;
-    }
-
-    final remote = await _loadRemote(resolvedHouseId);
-    final merged = <ActivityHistoryEntry>[
-      ...remote,
-      ...legacyEntries.map(
-        (entry) => entry.copyWith(
-          id: entry.id.isNotEmpty
-              ? entry.id
-              : '${entry.ts}_${entry.seq}_legacy',
-          houseId: resolvedHouseId,
-          syncStatus: 'synced',
-        ),
-      ),
-    ];
-    final deduped = _normalizeEntries(merged);
-
-    final updates = <String, dynamic>{};
-    for (final entry in deduped) {
-      updates[entry.id] = entry.copyWith(syncStatus: 'synced').toJson()
-        ..remove('syncStatus');
-    }
-
-    if (updates.isNotEmpty) {
-      await _db.ref('houses/$resolvedHouseId/activity_history').update(updates);
-      await _trimRemote(resolvedHouseId);
-      await _saveCache(resolvedHouseId, deduped);
-      final maxSeq = deduped.fold<int>(
-        0,
-        (current, item) => item.seq > current ? item.seq : current,
+    final marker = _migratedPrefix + uid + ':' + house;
+    if (prefs.getBool(marker) == true) return;
+    // Không tự gán lịch sử chưa rõ chủ cho tài khoản đang đăng nhập.
+    final legacy = await _loadLegacyLocalEntries();
+    final owned = legacy
+        .where((entry) => entry.authorUid == uid && entry.houseId == house)
+        .toList();
+    for (final entry in owned) {
+      if (_currentUid != uid) return;
+      final payload = entry.toJson()..remove('syncStatus');
+      await _enqueueActivity(
+        house,
+        uid,
+        'SET',
+        payload,
+        entry.ts,
+        'activity_legacy_${entry.id}',
       );
-      await prefs.setInt(_seqKey(resolvedHouseId), maxSeq);
     }
-
-    await prefs.setBool('$_migratedPrefix$resolvedHouseId', true);
-    await prefs.remove(_legacyKey);
-    await prefs.remove(_legacySeqKey);
+    if (_currentUid == uid) await prefs.setBool(marker, true);
+    // Giữ kho legacy để đối soát các mục không đủ bằng chứng sở hữu.
   }
 
   String exportAsTxt(List<ActivityHistoryEntry> list) {
@@ -693,44 +850,18 @@ $rows
 </body></html>''';
   }
 
-  Future<List<ActivityHistoryEntry>> _loadRemote(String houseId) async {
-    return _remoteEntries(houseId, await _readRemoteRaw(houseId));
-  }
-
-  /// Đọc cả nhánh một lần; bước tải và bước dọn dùng chung kết quả này.
-  /// Đọc qua listener ngắn để bộ nhớ đệm RTDB tránh tải lại khi lịch sử không đổi.
-  Future<Map<dynamic, dynamic>?> _readRemoteRaw(String houseId) async {
-    final snapshot = await readQuerySettled(
-      _db.ref('houses/$houseId/activity_history'),
-    );
-    if (!snapshot.exists || snapshot.value == null) return null;
-    return Map<dynamic, dynamic>.from(snapshot.value as Map);
-  }
-
-  List<ActivityHistoryEntry> _remoteEntries(
-    String houseId,
-    Map<dynamic, dynamic>? raw,
-  ) {
-    if (raw == null) return const <ActivityHistoryEntry>[];
-    return _normalizeEntries(
-      raw.entries.map((entry) {
-        final map = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(entry.value as Map),
-        );
-        map['id'] ??= entry.key.toString();
-        map['houseId'] ??= houseId;
-        map['syncStatus'] = 'synced';
-        return ActivityHistoryEntry.fromJson(map);
-      }).toList(),
-    );
-  }
-
-  Future<List<ActivityHistoryEntry>> _loadCache(String houseId) async {
+  Future<List<ActivityHistoryEntry>> _loadCache(
+    String houseId, {
+    String? ownerUid,
+  }) async {
+    final uid = ownerUid ?? _currentUid;
+    if (uid == null || _currentUid != uid) return [];
     try {
       final prefs =
           OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
-      final raw = prefs.getString(_cacheKey(houseId));
+      if (_currentUid != uid) return [];
+      final raw = prefs.getString(_cacheKey(houseId, uid));
       if (raw == null || raw.isEmpty) {
         return const <ActivityHistoryEntry>[];
       }
@@ -776,13 +907,34 @@ $rows
 
   Future<void> _saveCache(
     String houseId,
-    List<ActivityHistoryEntry> list,
-  ) async {
+    List<ActivityHistoryEntry> list, {
+    String? ownerUid,
+    int? expectedEpoch,
+  }) => _withCache(
+    () => _saveCacheNow(
+      houseId,
+      list,
+      ownerUid: ownerUid,
+      expectedEpoch: expectedEpoch,
+    ),
+  );
+
+  Future<void> _saveCacheNow(
+    String houseId,
+    List<ActivityHistoryEntry> list, {
+    String? ownerUid,
+    int? expectedEpoch,
+  }) async {
+    final uid = ownerUid ?? _currentUid;
+    if (uid == null || _currentUid != uid) return;
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    if (_currentUid != uid ||
+        (expectedEpoch != null && expectedEpoch != _epoch))
+      return;
     await prefs.setString(
-      _cacheKey(houseId),
+      _cacheKey(houseId, uid),
       jsonEncode(
         _normalizeEntries(list).map((entry) => entry.toJson()).toList(),
       ),
@@ -793,16 +945,19 @@ $rows
     String houseId,
     ActivityHistoryEntry entry, {
     bool replaceExisting = false,
+    String? ownerUid,
   }) async {
-    final existing = await _loadCache(houseId);
-    final merged = <ActivityHistoryEntry>[
-      if (!replaceExisting) entry,
-      ...existing,
-      if (replaceExisting) entry,
-    ];
-    final normalized = _normalizeEntries(merged);
-    await _saveCache(houseId, normalized);
-    return normalized;
+    return _withCache(() async {
+      final existing = await _loadCache(houseId, ownerUid: ownerUid);
+      final merged = <ActivityHistoryEntry>[
+        if (!replaceExisting) entry,
+        ...existing,
+        if (replaceExisting) entry,
+      ];
+      final normalized = _normalizeEntries(merged);
+      await _saveCacheNow(houseId, normalized, ownerUid: ownerUid);
+      return normalized;
+    });
   }
 
   Future<void> _appendLegacyLocal(ActivityHistoryEntry entry) async {
@@ -829,76 +984,15 @@ $rows
       byId[resolvedId] = entry.copyWith(id: resolvedId);
     }
 
-    final values = byId.values.toList()..sort((a, b) => a.ts.compareTo(b.ts));
+    final values = byId.values.toList()
+      ..sort((a, b) {
+        final time = a.ts.compareTo(b.ts);
+        return time == 0 ? a.id.compareTo(b.id) : time;
+      });
     if (values.length > _max) {
       return values.sublist(values.length - _max);
     }
     return values;
-  }
-
-  /// Sau mỗi lần thêm chỉ dọn tối đa một lần mỗi [_remoteTrimInterval] cho mỗi nhà, vì dọn
-  /// cần tải cả nhánh. Không đọc được mốc dọn thì dọn như trước để nhánh không phình.
-  Future<void> _trimRemoteThrottled(String houseId) async {
-    try {
-      final prefs =
-          OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
-      final last = prefs.getInt('$_trimPrefix$houseId') ?? 0;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (now >= last && now - last < _remoteTrimInterval.inMilliseconds) {
-        return;
-      }
-    } catch (_) {
-      /* Dọn như trước khi không đọc được mốc. */
-    }
-    await _trimRemote(houseId);
-  }
-
-  Future<void> _markRemoteTrimmed(String houseId) async {
-    try {
-      final prefs =
-          OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
-      await prefs.setInt(
-        '$_trimPrefix$houseId',
-        DateTime.now().millisecondsSinceEpoch,
-      );
-    } catch (_) {
-      /* Mốc dọn chỉ để tiết kiệm lượt đọc; mất mốc thì lần sau dọn lại. */
-    }
-  }
-
-  Future<void> _trimRemote(String houseId, {Map<dynamic, dynamic>? raw}) async {
-    try {
-      final source = raw ?? await _readRemoteRaw(houseId);
-      if (source == null) return;
-      await _markRemoteTrimmed(houseId);
-
-      final list = source.entries.where((entry) => entry.value is Map).map((
-        entry,
-      ) {
-        final map = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(entry.value as Map),
-        );
-        map['id'] ??= entry.key.toString();
-        map['houseId'] ??= houseId;
-        return ActivityHistoryEntry.fromJson(map);
-      }).toList()..sort((a, b) => a.ts.compareTo(b.ts));
-
-      if (list.length <= _max) return;
-      final overflow = list.take(list.length - _max).toList();
-      final updates = <String, dynamic>{};
-      for (final entry in overflow) {
-        updates[entry.id] = null;
-      }
-      if (updates.isNotEmpty) {
-        await _db.ref('houses/$houseId/activity_history').update(updates);
-      }
-    } catch (e) {
-      debugPrint(
-        'ActivityHistory trim failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Cannot compress activity history.').message}',
-      );
-    }
   }
 
   Future<String?> _resolveHouseId(String? houseId) async {
@@ -907,7 +1001,7 @@ $rows
       return trimmed;
     }
 
-    final resolved = await _houseService.getCurrentHouseId(preferFresh: true);
+    final resolved = await _houseService.getCurrentHouseId();
     if (resolved != null && resolved.isNotEmpty) {
       return resolved;
     }
@@ -958,8 +1052,8 @@ $rows
     return next;
   }
 
-  String _cacheKey(String houseId) => '$_cachePrefix$houseId';
-  String _seqKey(String houseId) => '$_seqPrefix$houseId';
-  DatabaseReference _entryRef(String houseId, String entryId) =>
-      _db.ref('houses/$houseId/activity_history/$entryId');
+  String _cacheKey(String houseId, String uid) =>
+      _cachePrefix + uid.length.toString() + ':' + uid + ':' + houseId;
+  String _seqKey(String houseId) =>
+      _seqPrefix + (_currentUid ?? '') + ':' + houseId;
 }

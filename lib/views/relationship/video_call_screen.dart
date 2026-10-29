@@ -11,6 +11,9 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/call_setup_failure.dart';
 import '../../utils/services/call_media_session.dart';
+import '../../utils/services/call_audio_feedback.dart';
+import '../../utils/services/system_call_bridge.dart';
+import '../../utils/incoming_call_payload.dart';
 import 'call_surface.dart';
 import 'call_beauty_sheet.dart';
 import '../../utils/services/ad_suppression_guard.dart';
@@ -27,6 +30,14 @@ class VideoCallScreen extends StatefulWidget {
   final String? roomId;
   final Future<void> Function(String roomId)? onRoomCreated;
   final String callerName;
+  @visibleForTesting
+  final WebRTCService? serviceOverride;
+  @visibleForTesting
+  final Future<bool> Function()? vipStatusOverride;
+  @visibleForTesting
+  final Duration Function()? elapsedOverride;
+  @visibleForTesting
+  final RTCVideoRenderer Function()? rendererFactoryOverride;
 
   const VideoCallScreen({
     super.key,
@@ -38,17 +49,26 @@ class VideoCallScreen extends StatefulWidget {
     this.roomId,
     this.onRoomCreated,
     this.callerName = '',
+    this.serviceOverride,
+    this.vipStatusOverride,
+    this.elapsedOverride,
+    this.rendererFactoryOverride,
   });
 
   @override
   State<VideoCallScreen> createState() => _VideoCallScreenState();
 }
 
-class _VideoCallScreenState extends State<VideoCallScreen> {
+class _VideoCallScreenState extends State<VideoCallScreen>
+    with WidgetsBindingObserver {
   late final VoidCallback _releaseSoundQuiet;
-  final WebRTCService _webrtcService = WebRTCService();
-  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  final CallAudioFeedback _audioFeedback = CallAudioFeedback();
+  late final WebRTCService _webrtcService =
+      widget.serviceOverride ?? WebRTCService();
+  late final RTCVideoRenderer _localRenderer =
+      widget.rendererFactoryOverride?.call() ?? RTCVideoRenderer();
+  late final RTCVideoRenderer _remoteRenderer =
+      widget.rendererFactoryOverride?.call() ?? RTCVideoRenderer();
   bool _inCall = false;
   bool _ending = false;
   bool _endCallRequested = false;
@@ -57,6 +77,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Future<void>? _cleanupFuture;
   String? _permissionError;
   bool _isPreparing = true;
+  bool _localMediaReady = false;
   String? _roomId;
 
   // Trạng thái các nút chức năng
@@ -65,17 +86,28 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _isSpeakerOn = false;
   bool _cameraBusy = false;
   bool _switchBusy = false;
+  bool _speakerBusy = false;
+  bool _beautyOpen = false;
+  ModalBottomSheetRoute<void>? _beautyRoute;
+  bool _reconnecting = false;
   bool _usingFrontCamera = true;
   CallMediaSession? _media;
   Timer? _timeoutTimer;
+  Timer? _reconnectTimer;
   // ignore: unused_field
   StreamSubscription<DatabaseEvent>? _roomStatusSub;
+  StreamSubscription<IncomingCallRequest>? _systemCallSub;
+  bool? _systemMuted;
 
   // Timer + giới hạn cuộc gọi
   Timer? _elapsedTimer;
   int _elapsedSeconds = 0;
-  int _maxCallSeconds = 0;
+  int _maxCallSeconds = AppConfig.freeCallDurationMinutes * 60;
   bool _isVip = false;
+  final Stopwatch _callClock = Stopwatch();
+  final ValueNotifier<SoulCallStatus> _status = ValueNotifier(
+    const SoulCallStatus(''),
+  );
 
   @override
   void initState() {
@@ -84,25 +116,39 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     AdSuppressionGuard.instance.suppressAds();
     _isSpeakerOn = widget.isVideo;
     _isCameraOff = !widget.isVideo;
+    WidgetsBinding.instance.addObserver(this);
     _webrtcService.connectionState.addListener(_onConnectionState);
+    _webrtcService.mediaSessionState.addListener(_onMediaSessionReady);
+    _systemCallSub = SystemCallBridge.instance.events.listen((request) {
+      if (!mounted || _ending || request.roomId != (_roomId ?? widget.roomId)) return;
+      if (request.action == IncomingCallAction.end) {
+        unawaited(_endCall());
+      } else if (request.action == IncomingCallAction.mute) {
+        _systemMuted = request.data['muted'] == true;
+        _applySystemMute();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_ending) unawaited(_initRenderers());
+      if (mounted && !_ending) {
+        if (widget.roomId != null) unawaited(SystemCallBridge.instance.setIncomingVisible(true));
+        unawaited(_initRenderers());
+      }
     });
     _checkVip();
   }
 
   Future<void> _checkVip() async {
     try {
-      final isVip = await PurchaseService().isVip();
+      final isVip =
+          await (widget.vipStatusOverride?.call() ?? PurchaseService().isVip());
       if (mounted) {
-        setState(() {
-          _isVip = isVip;
-          if (isVip && AppConfig.vipCallDurationMinutes > 0) {
-            _maxCallSeconds = AppConfig.vipCallDurationMinutes * 60;
-          } else if (!isVip && AppConfig.freeCallDurationMinutes > 0) {
-            _maxCallSeconds = AppConfig.freeCallDurationMinutes * 60;
-          }
-        });
+        _isVip = isVip;
+        _maxCallSeconds =
+            (isVip
+                ? AppConfig.vipCallDurationMinutes
+                : AppConfig.freeCallDurationMinutes) *
+            60;
+        _refreshCallStatus();
       }
     } catch (error) {
       debugPrint(
@@ -112,22 +158,51 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   void _startElapsedTimer() {
+    if (_elapsedTimer != null) return;
+    _callClock.start();
+    _refreshCallStatus();
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) {
         _elapsedTimer?.cancel();
         return;
       }
-      setState(() {
-        _elapsedSeconds++;
-      });
-
-      if (_maxCallSeconds > 0 && _elapsedSeconds >= _maxCallSeconds) {
-        // Hết giờ — tự động kết thúc
-        _elapsedTimer?.cancel();
-        _showTimeUpSnack();
-        _endCall();
-      }
+      _updateElapsed();
     });
+  }
+
+  void _updateElapsed() {
+    if (!mounted || !_inCall || _ending) return;
+    // Stopwatch vẫn tính thời gian ở nền; không đếm thiếu khi timer bị hoãn.
+    _elapsedSeconds =
+        (widget.elapsedOverride?.call() ?? _callClock.elapsed).inSeconds;
+    _refreshCallStatus();
+    if (_maxCallSeconds > 0 && _elapsedSeconds >= _maxCallSeconds) {
+      _elapsedTimer?.cancel();
+      _showTimeUpSnack();
+      unawaited(_endCall());
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _updateElapsed();
+  }
+
+  void _refreshCallStatus() {
+    if (!mounted || _ending) return;
+    final text = _reconnecting
+        ? context.tr('p4_call_waiting')
+        : _inCall
+        ? (_maxCallSeconds > 0
+              ? '${_formatElapsed()} · ${_formatDuration(_remainingSeconds)}'
+              : _formatElapsed())
+        : context.tr(
+            _isPreparing ? 'relationship_angktni_e4af2e' : 'p4_call_waiting',
+          );
+    final warning = _isWarning || _reconnecting;
+    if (_status.value.text != text || _status.value.warning != warning) {
+      _status.value = SoulCallStatus(text, warning: warning);
+    }
   }
 
   void _showTimeUpSnack() {
@@ -170,6 +245,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   @override
   void dispose() {
     unawaited(_cleanupCall());
+    unawaited(_audioFeedback.dispose());
+    _status.dispose();
     super.dispose();
   }
 
@@ -202,6 +279,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         }
       }
       if (!mounted || _ending) return;
+      _timeoutTimer = Timer(const Duration(seconds: 45), () {
+        if (mounted && !_inCall && !_ending) {
+          SLNotice.showError(context, context.tr('p4_call_connection_failed'));
+          unawaited(_endCall());
+        }
+      });
       final rendererInitialization = _rendererInitialization ??=
           _initializeRenderers();
       await rendererInitialization;
@@ -224,14 +307,19 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         await _cleanupCall();
         return;
       }
+      // Micro và loa chỉ phụ thuộc media trên máy, không chờ preview/signaling.
+      setState(() => _localMediaReady = true);
+      _applySystemMute();
+      unawaited(_applyInitialSpeaker());
       if (widget.isVideo || kIsWeb) {
-        await _localRenderer.setSrcObject(stream: stream);
+        await _localRenderer
+            .setSrcObject(stream: stream)
+            .timeout(const Duration(seconds: 5));
         // Chỉ tắt tiếng preview sau khi đã gắn stream. Với cuộc gọi thoại
         // native, renderer không cần giữ stream local nên không đụng vào nó.
         _localRenderer.muted = true;
       }
       if (!mounted || _ending) return;
-      _webrtcService.toggleSpeaker(_isSpeakerOn);
 
       if (widget.roomId == null) {
         _roomId = await _webrtcService.createRoom(
@@ -242,29 +330,23 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           callerName: widget.callerName,
         );
         if (!mounted || _ending) return;
+        if (!_inCall) _audioFeedback.startRinging();
         if (widget.onRoomCreated != null && _roomId != null) {
           await widget.onRoomCreated!(_roomId!);
         }
       } else {
         _roomId = widget.roomId;
         await _webrtcService.joinRoom(widget.roomId!, _remoteRenderer);
+        if (mounted && !_ending) unawaited(SystemCallBridge.instance.mediaReady(widget.roomId!));
       }
 
       if (!mounted || _ending) return;
-      _media = _webrtcService.mediaSession;
-      _media?.cameraEnabled.addListener(_onMediaState);
-      _media?.remoteCameraEnabled.addListener(_onMediaState);
+      _onMediaSessionReady();
       setState(() {
         _isPreparing = false;
       });
 
-      if (widget.roomId == null) {
-        _timeoutTimer = Timer(const Duration(seconds: 45), () {
-          if (mounted && !_inCall && _roomId != null) {
-            _endCall();
-          }
-        });
-      }
+      _refreshCallStatus();
 
       if (_roomId != null) {
         _roomStatusSub = FirebaseDatabase.instance
@@ -308,14 +390,29 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     final state = _webrtcService.connectionState.value;
     if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
       _timeoutTimer?.cancel();
+      _reconnectTimer?.cancel();
+      if (_reconnecting) setState(() => _reconnecting = false);
       if (!_inCall) {
+        _audioFeedback.connected();
         setState(() {
           _inCall = true;
           _isPreparing = false;
         });
         _startElapsedTimer();
       }
-    } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
+      _refreshCallStatus();
+    } else if (state ==
+        RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
+      if (!_inCall || _reconnecting) return;
+      setState(() => _reconnecting = true);
+      _refreshCallStatus();
+      _reconnectTimer = Timer(const Duration(seconds: 15), () {
+        if (!mounted || _ending || !_reconnecting) return;
+        SLNotice.showError(context, context.tr('p4_call_connection_failed'));
+        unawaited(_endCall());
+      });
+    } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+        state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
       SLNotice.showError(context, context.tr('p4_call_connection_failed'));
       unawaited(_endCall());
     }
@@ -323,10 +420,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final callLabel = context.tr(
-      widget.isVideo ? 'p4_call_video_label' : 'p4_call_audio_label',
-    );
-    final mediaPadding = MediaQuery.paddingOf(context);
+    _refreshCallStatus();
 
     return PopScope(
       canPop: false,
@@ -375,46 +469,48 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   ),
                 ),
               )
-            : _buildCallBody(callLabel, mediaPadding),
+            : _buildCallBody(),
       ),
     );
   }
 
-  Widget _buildCallBody(String callLabel, EdgeInsets mediaPadding) {
+  Widget _buildCallBody() {
     final media = _media;
     final remoteVideo = media?.remoteCameraEnabled.value ?? widget.isVideo;
-    final controlsReady = !_isPreparing && !_ending;
+    final controlsReady = _localMediaReady && !_ending;
     return SoulCallSurface(
       name: widget.targetName,
       avatarUrl: widget.targetAvatarUrl,
       connected: _inCall,
-      status: _inCall
-          ? (_maxCallSeconds > 0
-                ? '${_formatElapsed()} · ${_formatDuration(_remainingSeconds)}'
-                : _formatElapsed())
-          : context.tr(
-              _isPreparing ? 'relationship_angktni_e4af2e' : 'p4_call_waiting',
-            ),
+      status: _status.value.text,
+      statusListenable: _status,
       warning: _isWarning,
-      cameraOn: !_isCameraOff,
+      cameraOn: _localMediaReady && !_isCameraOff,
       remoteCameraOn: _inCall && remoteVideo,
       micMuted: _isMicMuted,
       speakerOn: _isSpeakerOn,
       cameraBusy: _cameraBusy,
+      speakerBusy: _speakerBusy,
+      switchBusy: _switchBusy,
+      ending: _ending,
       beautyAmount: media?.skinBrightening ?? 0,
-      onCamera: controlsReady && media != null ? _toggleCamera : null,
+      onCamera: controlsReady && media != null && !_switchBusy
+          ? _toggleCamera
+          : null,
       onMic: controlsReady ? _toggleMic : null,
-      onSpeaker: controlsReady ? _toggleSpeaker : null,
+      onSpeaker: controlsReady && !_speakerBusy ? _toggleSpeaker : null,
       onSwitchCamera: controlsReady && !_cameraBusy && !_switchBusy
           ? _switchCamera
           : null,
-      onBeauty: controlsReady && !_cameraBusy ? _showBeauty : null,
+      onBeauty: controlsReady && !_cameraBusy && !_switchBusy && !_beautyOpen
+          ? _showBeauty
+          : null,
       onEnd: _endCall,
       remoteVideo: RTCVideoView(
         _remoteRenderer,
         objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
       ),
-      localVideo: _isCameraOff
+      localVideo: !_localMediaReady || _isCameraOff
           ? null
           : RTCVideoView(
               _localRenderer,
@@ -429,10 +525,44 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     setState(() => _isCameraOff = !(_media?.cameraEnabled.value ?? false));
   }
 
+  void _onMediaSessionReady() {
+    if (!mounted || _ending) return;
+    final media = _webrtcService.mediaSessionState.value;
+    if (identical(media, _media)) return;
+    _media?.cameraEnabled.removeListener(_onMediaState);
+    _media?.remoteCameraEnabled.removeListener(_onMediaState);
+    _media = media;
+    media?.cameraEnabled.addListener(_onMediaState);
+    media?.remoteCameraEnabled.addListener(_onMediaState);
+    setState(() {
+      if (media != null) _isCameraOff = !media.cameraEnabled.value;
+    });
+  }
+
   void _toggleMic() {
-    if (_ending) return;
-    setState(() => _isMicMuted = !_isMicMuted);
-    _webrtcService.toggleMic(_isMicMuted);
+    if (_ending || !_localMediaReady) return;
+    final next = !_isMicMuted;
+    try {
+      _webrtcService.toggleMic(next);
+      setState(() => _isMicMuted = next);
+      final roomId = widget.roomId;
+      if (roomId != null) unawaited(SystemCallBridge.instance.setMuted(roomId, next));
+      _audioFeedback.control(enabled: !next);
+    } catch (_) {
+      SLNotice.showError(context, context.tr('p4_call_media_unavailable'));
+    }
+  }
+
+  void _applySystemMute() {
+    final muted = _systemMuted;
+    if (muted == null || !_localMediaReady || _ending) return;
+    try {
+      _webrtcService.toggleMic(muted);
+      setState(() => _isMicMuted = muted);
+      _systemMuted = null;
+    } catch (_) {
+      // Giữ yêu cầu để áp dụng khi media sẵn sàng.
+    }
   }
 
   Future<void> _toggleCamera() async {
@@ -454,14 +584,15 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       }
       await media.setCameraEnabled(enable);
       if (!mounted || _ending) return;
-      await _localRenderer.setSrcObject(
-        stream: enable ? _webrtcService.localStream : null,
-      );
+      await _localRenderer
+          .setSrcObject(stream: enable ? _webrtcService.localStream : null)
+          .timeout(const Duration(seconds: 5));
       if (!mounted || _ending) return;
       setState(() {
         _isCameraOff = !enable;
         _usingFrontCamera = true;
       });
+      _audioFeedback.control(enabled: enable);
     } catch (error) {
       if (mounted && !_ending) {
         SLNotice.showError(
@@ -485,6 +616,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       await _webrtcService.switchCamera();
       if (mounted && !_ending) {
         setState(() => _usingFrontCamera = !_usingFrontCamera);
+        _audioFeedback.control(enabled: true);
       }
     } catch (_) {
       if (mounted && !_ending) {
@@ -495,21 +627,51 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     }
   }
 
-  void _toggleSpeaker() {
-    if (_ending) return;
-    setState(() => _isSpeakerOn = !_isSpeakerOn);
-    _webrtcService.toggleSpeaker(_isSpeakerOn);
+  Future<void> _applyInitialSpeaker() async {
+    try {
+      await _webrtcService.toggleSpeaker(_isSpeakerOn);
+    } catch (_) {
+      if (mounted && !_ending) {
+        SLNotice.showError(context, context.tr('p4_call_media_unavailable'));
+      }
+    }
+  }
+
+  Future<void> _toggleSpeaker() async {
+    if (_ending || !_localMediaReady || _speakerBusy) return;
+    final previous = _isSpeakerOn;
+    setState(() {
+      _speakerBusy = true;
+      _isSpeakerOn = !previous;
+    });
+    try {
+      await _webrtcService.toggleSpeaker(!previous);
+      if (mounted && !_ending) _audioFeedback.control(enabled: !previous);
+    } catch (_) {
+      if (mounted && !_ending) {
+        setState(() => _isSpeakerOn = previous);
+        SLNotice.showError(context, context.tr('p4_call_media_unavailable'));
+      }
+    } finally {
+      if (mounted && !_ending) setState(() => _speakerBusy = false);
+    }
   }
 
   Future<void> _showBeauty() async {
     final media = _media;
-    if (media == null || _isCameraOff || _ending) return;
+    if (media == null || _isCameraOff || _ending || _beautyOpen) return;
     if (!media.supportsBeauty) {
       SLNotice.showError(context, context.tr('call_beauty_unavailable'));
       return;
     }
-    await showModalBottomSheet<void>(
-      context: context,
+    setState(() => _beautyOpen = true);
+    final navigator = Navigator.of(context);
+    final route = ModalBottomSheetRoute<void>(
+      capturedThemes: InheritedTheme.capture(
+        from: context,
+        to: navigator.context,
+      ),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF26283B),
       shape: const RoundedRectangleBorder(
@@ -518,20 +680,49 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       builder: (_) => CallBeautySheet(
         amount: media.skinBrightening,
         onApply: (amount) async {
-          if (_ending || !mounted) return;
+          if (_ending || !mounted || !identical(media, _media)) {
+            throw StateError('call_media_cancelled');
+          }
           await media.setSkinBrightening(amount);
-          if (mounted && !_ending) setState(() {});
+          if (mounted && !_ending) {
+            setState(() {});
+            _audioFeedback.control(enabled: amount > 0);
+          }
         },
       ),
     );
+    _beautyRoute = route;
+    try {
+      await navigator.push(route);
+    } finally {
+      if (identical(_beautyRoute, route)) _beautyRoute = null;
+      if (mounted && !_ending) setState(() => _beautyOpen = false);
+    }
   }
 
   Future<void> _endCall() async {
     if (_endCallRequested) return;
     _endCallRequested = true;
+    unawaited(_audioFeedback.finish());
+    // Phản hồi ngay trong frame kế tiếp trong khi native đang nhả media.
+    setState(() => _ending = true);
     final route = ModalRoute.of(context);
     final navigator = Navigator.of(context);
-    await _cleanupCall();
+    final beautyRoute = _beautyRoute;
+    _beautyRoute = null;
+    if (beautyRoute != null && beautyRoute.isActive) {
+      navigator.removeRoute(beautyRoute);
+    }
+    try {
+      // Service tắt track và vô hiệu hóa phiên trước await đầu tiên. UI chỉ
+      // đợi ngắn cho native; cleanup tiếp tục giữ chỗ nếu driver trả lời chậm.
+      await _cleanupCall().timeout(
+        const Duration(milliseconds: 600),
+        onTimeout: () {},
+      );
+    } catch (error) {
+      debugPrint('Video call cleanup failed: $error');
+    }
     if (!mounted || route == null || !route.isActive) return;
     if (route.isCurrent) {
       navigator.pop();
@@ -551,9 +742,18 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   Future<void> _cleanupCallInternal() async {
     _ending = true;
+    unawaited(_systemCallSub?.cancel());
+    _systemCallSub = null;
+    final systemRoomId = _roomId ?? widget.roomId;
+    if (systemRoomId != null) unawaited(SystemCallBridge.instance.end(systemRoomId));
+    unawaited(SystemCallBridge.instance.setIncomingVisible(false));
+    WidgetsBinding.instance.removeObserver(this);
     _timeoutTimer?.cancel();
+    _reconnectTimer?.cancel();
     _elapsedTimer?.cancel();
+    _callClock.stop();
     _webrtcService.connectionState.removeListener(_onConnectionState);
+    _webrtcService.mediaSessionState.removeListener(_onMediaSessionReady);
     _media?.cameraEnabled.removeListener(_onMediaState);
     _media?.remoteCameraEnabled.removeListener(_onMediaState);
     final roomStatusSub = _roomStatusSub;

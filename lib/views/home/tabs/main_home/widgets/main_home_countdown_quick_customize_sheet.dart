@@ -27,11 +27,13 @@ class _CountdownQuickCustomizeSheetContentState
   double? _bgUploadProgress;
   String? _unlockingStyleKey;
   late Set<String> _unlockedStyles;
+  double _sheetDragDistance = 0;
 
   @override
   void initState() {
     super.initState();
     _unlockedStyles = Set<String>.from(widget.unlockedStyles);
+    if (!widget.isVip) AdMobService().preloadRewardedAd();
   }
 
   Widget buildOptionChip({
@@ -160,6 +162,7 @@ class _CountdownQuickCustomizeSheetContentState
       final expiry = await AdMobService().unlockCountdownStyleWithAd(
         option.value,
         quick: true,
+        isCurrent: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
       );
       if (!mounted) return;
       if (expiry != null) {
@@ -468,9 +471,11 @@ class _CountdownQuickCustomizeSheetContentState
     ];
     return CountdownStudioSection(
       title: context.tr('studio_text_color'),
+      icon: Icons.palette_outlined,
       child: Wrap(
-        spacing: 2,
-        runSpacing: 4,
+        spacing: 6,
+        runSpacing: 6,
+        alignment: WrapAlignment.start,
         children: [
           for (final hex in colors)
             CountdownStudioColorSwatch(
@@ -511,6 +516,8 @@ class _CountdownQuickCustomizeSheetContentState
       children: [
         CountdownStudioSection(
           title: title,
+          subtitle: description,
+          icon: icon,
           trailing: TextButton(
             onPressed: hasChanges ? onSave : null,
             child: Text(context.tr('home_lu_49fac1')),
@@ -518,6 +525,40 @@ class _CountdownQuickCustomizeSheetContentState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final preset in <double>[280, 400, 520])
+                    ChoiceChip(
+                      label: Text('${preset.round()} px'),
+                      selected: (displayValue - preset).abs() < 1,
+                      onSelected: (_) {
+                        final value = preset.clamp(
+                          200,
+                          UiPrefs.maxCountdownSizePx,
+                        );
+                        onChanged(value.toDouble());
+                        onChangedEnd(value.toDouble());
+                      },
+                      selectedColor: const Color(0xFFFBE1EA),
+                      backgroundColor: const Color(0xFFFFF8FB),
+                      side: BorderSide(
+                        color: (displayValue - preset).abs() < 1
+                            ? const Color(0xFFD85A82)
+                            : const Color(0xFFF0DDE4),
+                      ),
+                      labelStyle: TextStyle(
+                        color: (displayValue - preset).abs() < 1
+                            ? const Color(0xFFA64E6A)
+                            : const Color(0xFF725C65),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
               Slider(
                 min: 200,
                 max: UiPrefs.maxCountdownSizePx,
@@ -537,211 +578,213 @@ class _CountdownQuickCustomizeSheetContentState
             ],
           ),
         ),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          shape: const Border(),
-          collapsedShape: const Border(),
-          title: Text(
-            context.tr('home_nhnn_a07223'),
-            style: const TextStyle(fontSize: 14, color: Color(0xFF493D40)),
-          ),
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF9733EE).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.image_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr('ui_home_home_page_background_image_03ab7c'),
-                        style: SLTheme.quicksand(
-                          fontSize: 14.8,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF4A3640),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        context.tr(
-                          'ui_home_upload_or_remove_the_homepage_background_image_7e3019',
-                        ),
-                        style: SLTheme.quicksand(
-                          fontSize: 12.1,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF8E6F7E),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (_isUploadingBg) ...[
+        CountdownStudioSection(
+          title: context.tr('home_nhnn_a07223'),
+          icon: Icons.image_outlined,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFD81B60),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF9733EE).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.image_outlined,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      _bgUploadProgress != null
-                          ? L10nScope.of(context).format(
-                              'ui_home_uploading_value1_b346dd',
-                              {'value1': (_bgUploadProgress! * 100).toInt()},
-                            )
-                          : context.tr('ui_home_preparing_to_upload_97d135'),
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8E6F7E),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr(
+                            'ui_home_home_page_background_image_03ab7c',
+                          ),
+                          style: SLTheme.quicksand(
+                            fontSize: 14.8,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF4A3640),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          context.tr(
+                            'ui_home_upload_or_remove_the_homepage_background_image_7e3019',
+                          ),
+                          style: SLTheme.quicksand(
+                            fontSize: 12.1,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF8E6F7E),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ] else ...[
-              Row(
-                children: [
-                  if (hasBg) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: customBgUrl.trim(),
-                        width: 44,
-                        height: 44,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 400,
-                        placeholder: (context, url) => Container(
-                          color: const Color(0xFFFDE8F0),
-                          child: const Icon(
-                            Icons.image_outlined,
-                            size: 16,
-                            color: Color(0xFFD81B60),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: const Color(0xFFFDE8F0),
-                          child: const Icon(
-                            Icons.broken_image_outlined,
-                            size: 16,
-                            color: Color(0xFFD81B60),
-                          ),
+              const SizedBox(height: 12),
+              if (_isUploadingBg) ...[
+                Row(
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFFD81B60),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFF0DDE4)),
-                        foregroundColor: const Color(0xFF4A3640),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: _pickBgImage,
-                      icon: const Icon(
-                        Icons.upload_rounded,
-                        size: 16,
-                        color: Color(0xFFD81B60),
-                      ),
-                      label: Text(
-                        hasBg
-                            ? context.tr('diary_custom_sticker_replace')
-                            : context.tr('ui_home_upload_a_photo_3cd9bb'),
+                    Expanded(
+                      child: Text(
+                        _bgUploadProgress != null
+                            ? L10nScope.of(context).format(
+                                'ui_home_uploading_value1_b346dd',
+                                {'value1': (_bgUploadProgress! * 100).toInt()},
+                              )
+                            : context.tr('ui_home_preparing_to_upload_97d135'),
                         style: SLTheme.quicksand(
                           fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF8E6F7E),
                         ),
-                      ),
-                    ),
-                  ),
-                  if (hasBg) ...[
-                    const SizedBox(width: 10),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF2F7),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFF4D7E2)),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline_rounded,
-                          color: Color(0xFFD81B60),
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => SLAlertDialog(
-                              title: Text(context.tr('home_xanhnn_abd8b5')),
-                              content: Text(
-                                context.tr(
-                                  'ui_home_are_you_sure_you_want_to_remove_f452e2',
-                                ),
-                              ),
-                              actions: [
-                                SLDialogAction(
-                                  child: Text(context.tr('core_cancel')),
-                                  onPressed: () => Navigator.pop(ctx),
-                                ),
-                                SLDialogAction(
-                                  primary: true,
-                                  destructive: true,
-
-                                  child: Text(context.tr('p3_delete')),
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    _clearBgImage();
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
                       ),
                     ),
                   ],
-                ],
-              ),
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    if (hasBg) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: customBgUrl.trim(),
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 400,
+                          placeholder: (context, url) => Container(
+                            color: const Color(0xFFFDE8F0),
+                            child: const Icon(
+                              Icons.image_outlined,
+                              size: 16,
+                              color: Color(0xFFD81B60),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: const Color(0xFFFDE8F0),
+                            child: const Icon(
+                              Icons.broken_image_outlined,
+                              size: 16,
+                              color: Color(0xFFD81B60),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFF0DDE4)),
+                          foregroundColor: const Color(0xFF4A3640),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: _pickBgImage,
+                        icon: const Icon(
+                          Icons.upload_rounded,
+                          size: 16,
+                          color: Color(0xFFD81B60),
+                        ),
+                        label: Text(
+                          hasBg
+                              ? context.tr('diary_custom_sticker_replace')
+                              : context.tr('ui_home_upload_a_photo_3cd9bb'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (hasBg) ...[
+                      const SizedBox(width: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF2F7),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFF4D7E2)),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Color(0xFFD81B60),
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => SLAlertDialog(
+                                title: Text(context.tr('home_xanhnn_abd8b5')),
+                                content: Text(
+                                  context.tr(
+                                    'ui_home_are_you_sure_you_want_to_remove_f452e2',
+                                  ),
+                                ),
+                                actions: [
+                                  SLDialogAction(
+                                    child: Text(context.tr('core_cancel')),
+                                    onPressed: () => Navigator.pop(ctx),
+                                  ),
+                                  SLDialogAction(
+                                    primary: true,
+                                    destructive: true,
+
+                                    child: Text(context.tr('p3_delete')),
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      _clearBgImage();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ],
     );
@@ -781,6 +824,8 @@ class _CountdownQuickCustomizeSheetContentState
         final adSuccess = await adMob.showRewardedAd(
           ignoreCooldown: true,
           loadTimeout: const Duration(seconds: 12),
+          isCurrent: () =>
+              isCurrent() && (ModalRoute.of(context)?.isCurrent ?? true),
         );
         if (!mounted) return;
         if (!adSuccess) {
@@ -835,8 +880,9 @@ class _CountdownQuickCustomizeSheetContentState
       );
 
       uploadedUrl = url?.trim();
-      if (!mounted || !isCurrent())
+      if (!mounted || !isCurrent()) {
         throw StateError('Home media scope changed');
+      }
       if (url == null || url.trim().isEmpty) {
         homeState._showLatestSnackBar(
           context.tr('ui_home_background_image_download_failed_75884f'),
@@ -905,8 +951,9 @@ class _CountdownQuickCustomizeSheetContentState
     );
     if (!mounted ||
         widget.homeState._houseId != houseId ||
-        FirebaseAuth.instance.currentUser?.uid != uid)
+        FirebaseAuth.instance.currentUser?.uid != uid) {
       return;
+    }
     widget.homeState._showLatestSnackBar(
       context.tr('ui_home_removed_homepage_background_image_40e6e1'),
     );
@@ -934,64 +981,71 @@ class _CountdownQuickCustomizeSheetContentState
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF8A2387),
-                      Color(0xFFE94057),
-                      Color(0xFFF27121),
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF8A2387),
+                        Color(0xFFE94057),
+                        Color(0xFFF27121),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE94057).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFE94057).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  child: const Icon(
+                    Icons.star_border_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.star_border_rounded,
-                  color: Colors.white,
-                  size: 20,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('ui_home_display_decorative_icons_1b78b6'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTheme.quicksand(
+                          fontSize: 14.8,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF4A3640),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        context.tr(
+                          'ui_home_turn_on_off_decorative_icons_on_the_67ad77',
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: SLTheme.quicksand(
+                          fontSize: 12.1,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF8E6F7E),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr('ui_home_display_decorative_icons_1b78b6'),
-                    style: SLTheme.quicksand(
-                      fontSize: 14.8,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF4A3640),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.tr(
-                      'ui_home_turn_on_off_decorative_icons_on_the_67ad77',
-                    ),
-                    style: SLTheme.quicksand(
-                      fontSize: 12.1,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8E6F7E),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
           Switch(
             value: showIcon,
@@ -1009,15 +1063,29 @@ class _CountdownQuickCustomizeSheetContentState
   Widget buildTimerSection({
     required bool showTimer,
     required ValueChanged<bool> onToggle,
-  }) => SwitchListTile.adaptive(
-    contentPadding: EdgeInsets.zero,
-    title: Text(
-      context.tr('show_timer_home'),
-      style: const TextStyle(fontSize: 14, color: Color(0xFF493D40)),
+  }) => CountdownStudioSection(
+    title: context.tr('show_timer_home'),
+    icon: Icons.schedule_rounded,
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            context.tr('show_timer_home'),
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF725C65),
+            ),
+          ),
+        ),
+        Switch.adaptive(
+          value: showTimer,
+          activeTrackColor: const Color(0xFFF3B4C8),
+          activeThumbColor: const Color(0xFFA64E6A),
+          onChanged: onToggle,
+        ),
+      ],
     ),
-    value: showTimer,
-    activeTrackColor: const Color(0xFFA64E6A),
-    onChanged: onToggle,
   );
 
   Widget buildBackgroundSection({required String? customBgUrl}) {
@@ -1182,6 +1250,8 @@ class _CountdownQuickCustomizeSheetContentState
                       hasBg
                           ? context.tr('diary_custom_sticker_replace')
                           : context.tr('ui_home_upload_a_photo_3cd9bb'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
@@ -1392,15 +1462,55 @@ class _CountdownQuickCustomizeSheetContentState
             children: [
               Icon(icon, size: 18, color: textColor),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w900 : FontWeight.w800,
-                  color: textColor,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w900 : FontWeight.w800,
+                    color: textColor,
+                  ),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheetDragHandle({required bool dark}) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: (_) => _sheetDragDistance = 0,
+      onVerticalDragUpdate: (details) {
+        _sheetDragDistance += details.primaryDelta ?? 0;
+      },
+      onVerticalDragCancel: () => _sheetDragDistance = 0,
+      onVerticalDragEnd: (details) {
+        final velocity = details.primaryVelocity ?? 0;
+        final shouldClose =
+            _sheetDragDistance > 48 ||
+            (velocity > 520 && _sheetDragDistance > 0);
+        _sheetDragDistance = 0;
+        if (shouldClose && mounted) {
+          Navigator.of(widget.sheetContext).maybePop();
+        }
+      },
+      child: SizedBox(
+        width: double.infinity,
+        height: 36,
+        child: Center(
+          child: Container(
+            width: 38,
+            height: 4,
+            decoration: BoxDecoration(
+              color: dark ? const Color(0xFF6B5262) : const Color(0xFFE3C9D2),
+              borderRadius: BorderRadius.circular(999),
+            ),
           ),
         ),
       ),
@@ -1412,7 +1522,8 @@ class _CountdownQuickCustomizeSheetContentState
     final mediaQuery = MediaQuery.of(context);
 
     return SafeArea(
-      top: false,
+      top: true,
+      minimum: const EdgeInsets.only(top: 8),
       child: ValueListenableBuilder<UiPrefsState>(
         valueListenable: UiPrefs.notifier,
         builder: (context, uiState, _) {
@@ -1421,382 +1532,421 @@ class _CountdownQuickCustomizeSheetContentState
             orElse: () => widget.styleOptions.first,
           );
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              18,
-              12,
-              18,
-              max(mediaQuery.padding.bottom, 14.0) + 18,
+          final dark = Theme.of(context).brightness == Brightness.dark;
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * .94,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                color: dark ? const Color(0xFF17131B) : const Color(0xFFFFFAF4),
+                gradient: LinearGradient(
+                  colors: dark
+                      ? const [Color(0xFF17131B), Color(0xFF211B25)]
+                      : const [Color(0xFFFFFAF4), Color(0xFFFFF6F8)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  max(mediaQuery.padding.bottom, 14.0) + 22,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('home_tychnhvngm_09a3bd'),
-                            style: SLTheme.quicksand(
-                              fontSize: 23,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF493D40),
-                            ),
+                    _buildSheetDragHandle(dark: dark),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.tr('home_tychnhvngm_09a3bd'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w800,
+                                  color: dark
+                                      ? const Color(0xFFFFF5FA)
+                                      : const Color(0xFF493D40),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                context.tr('studio_hint'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: dark
+                                      ? const Color(0xFFC9B7C2)
+                                      : const Color(0xFF89766E),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            context.tr('studio_hint'),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              height: 1.4,
-                              color: Color(0xFF89766E),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: context.tr('close'),
-                      onPressed: () => Navigator.of(widget.sheetContext).pop(),
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        color: Color(0xFF89766E),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const AppHelpButton(articleId: 'personalize'),
-                CountdownStudioPreview(
-                  styleKey: selectedStyle.value,
-                  enableMotion: !uiState.liteMode,
-                  number: widget.homeState._calculateDays(),
-                  label: selectedStyle.label,
-                  caption: context.tr('p7_countdown_preview_title'),
-                  chooseLabel: context.tr('home_gdvangdem'),
-                  colorHex: uiState.countdownTextColor,
-                  sizeValue: _tempCountdownSize ?? uiState.countdownSizePx,
-                  onChoose: () => _showOptionsDialog(
-                    context.tr('home_gdvangdem'),
-                    widget.styleOptions,
-                    uiState.countdownStyleKey,
-                    (option) => widget.homeState._saveCountdownQuickUiPrefs(
-                      countdownStyleKey: option.value,
-                      prevalidatedUnlockedStyles: _unlockedStyles,
-                      isVip: widget.isVip,
-                    ),
-                  ),
-                ),
-                buildTextColorSection(
-                  selectedColorHex: uiState.countdownTextColor,
-                  onSelect: (hex) =>
-                      widget.homeState._saveCountdownQuickUiPrefs(
-                        countdownTextColor: hex,
-                        prevalidatedUnlockedStyles: _unlockedStyles,
-                        isVip: widget.isVip,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                buildSizeSection(
-                  title: context.tr('home_kthuocvongdem'),
-                  description: context.tr(
-                    'ui_home_drag_to_adjust_the_size_of_the_8cbd98',
-                  ),
-                  icon: Icons.photo_size_select_large_rounded,
-                  currentValue: uiState.countdownSizePx,
-                  tempValue: _tempCountdownSize,
-                  customBgUrl: uiState.customBackgroundUrl,
-                  onChanged: (value) {
-                    setState(() {
-                      _tempCountdownSize = value;
-                    });
-                  },
-                  onChangedEnd: (value) {
-                    setState(() {
-                      _tempCountdownSize = value;
-                    });
-                  },
-                  onSave: () async {
-                    if (_tempCountdownSize != null) {
-                      final sizeToSave = _tempCountdownSize!;
-
-                      await widget.homeState._saveCountdownQuickUiPrefs(
-                        countdownSizePx: sizeToSave,
-                        isVip: widget.isVip,
-                      );
-                      HapticFeedback.mediumImpact();
-                      if (mounted && context.mounted) {
-                        setState(() => _tempCountdownSize = null);
-                        widget.homeState._showLatestSnackBar(
-                          context.tr('legacy_saved_success'),
-                        );
-                      }
-                    }
-                  },
-                ),
-
-                buildTimerSection(
-                  showTimer: uiState.homeShowTimer,
-                  onToggle: (val) async {
-                    HapticFeedback.selectionClick();
-                    await UiPrefs.setHomeShowTimer(val);
-                  },
-                ),
-                const SizedBox(height: 12),
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  shape: const Border(),
-                  collapsedShape: const Border(),
-                  title: Text(
-                    context.tr('advanced'),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF493D40),
-                    ),
-                  ),
-                  children: [
-                    buildHomeLayoutSection(
-                      selectedLayout: uiState.homeLayoutKey,
-                      onSelect: (layoutKey) =>
-                          UiPrefs.setHomeLayoutKey(layoutKey),
-                    ),
-                    // --- Kiểu khung avatar ---
-                    buildCollapsedSection(
-                      title: L10nService().translate('home_kieukhungavatar'),
-                      description: context.tr(
-                        'ui_home_change_the_avatar_border_style_displayed_on_9f0976',
-                      ),
-                      icon: Icons.account_circle_rounded,
-                      options: [
-                        for (final key in KeepsakePalette.newStyleKeys)
-                          _CountdownQuickOption(
-                            label: context.tr('keepsake_' + key),
-                            value: key,
-                            icon: Icons.account_circle_outlined,
-                            accent: KeepsakePalette.of(key).accent,
-                          ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_khong_avatar_frame',
-                          ),
-                          value: 'off',
-                          icon: Icons.block_rounded,
-                          accent: const Color(0xFFBDBDBD),
                         ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_tron_avatar_frame',
+                        IconButton(
+                          tooltip: context.tr('close'),
+                          onPressed: () =>
+                              Navigator.of(widget.sheetContext).pop(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Color(0xFF89766E),
                           ),
-                          value: 'circle',
-                          icon: Icons.circle_rounded,
-                          accent: const Color(0xFF2563EB),
-                        ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_bogoc_avatar_frame',
-                          ),
-                          value: 'rounded',
-                          icon: Icons.rounded_corner_rounded,
-                          accent: const Color(0xFFEC4899),
-                        ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_squircle_avatar_frame',
-                          ),
-                          value: 'squircle',
-                          icon: Icons.crop_square_rounded,
-                          accent: const Color(0xFF8B5CF6),
-                        ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_ngoctrai_avatar_frame',
-                          ),
-                          value: 'pearl',
-                          icon: Icons.blur_circular_rounded,
-                          accent: const Color(0xFFD4A520),
-                        ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_thuytinh_avatar_frame',
-                          ),
-                          value: 'glass',
-                          icon: Icons.water_drop_rounded,
-                          accent: const Color(0xFF06B6D4),
                         ),
                       ],
-                      selectedValue: uiState.avatarFrameKey.isEmpty
-                          ? 'off'
-                          : uiState.avatarFrameKey,
-                      onSelect: (option) =>
+                    ),
+                    const SizedBox(height: 8),
+                    const AppHelpButton(articleId: 'personalize'),
+                    CountdownStudioPreview(
+                      styleKey: selectedStyle.value,
+                      enableMotion: !uiState.liteMode,
+                      number: widget.homeState._calculateDays(),
+                      label: selectedStyle.label,
+                      caption: context.tr('p7_countdown_preview_title'),
+                      chooseLabel: context.tr('home_gdvangdem'),
+                      colorHex: uiState.countdownTextColor,
+                      sizeValue: _tempCountdownSize ?? uiState.countdownSizePx,
+                      onChoose: () => _showOptionsDialog(
+                        context.tr('home_gdvangdem'),
+                        widget.styleOptions,
+                        uiState.countdownStyleKey,
+                        (option) => widget.homeState._saveCountdownQuickUiPrefs(
+                          countdownStyleKey: option.value,
+                          prevalidatedUnlockedStyles: _unlockedStyles,
+                          isVip: widget.isVip,
+                        ),
+                      ),
+                    ),
+                    buildTextColorSection(
+                      selectedColorHex: uiState.countdownTextColor,
+                      onSelect: (hex) =>
                           widget.homeState._saveCountdownQuickUiPrefs(
-                            avatarFrameKey: option.value,
+                            countdownTextColor: hex,
+                            prevalidatedUnlockedStyles: _unlockedStyles,
                             isVip: widget.isVip,
                           ),
                     ),
                     const SizedBox(height: 12),
-                    buildAvatarIconToggleSection(
-                      showIcon: uiState.showAvatarFrameIcon,
+                    buildSizeSection(
+                      title: context.tr('home_kthuocvongdem'),
+                      description: context.tr(
+                        'ui_home_drag_to_adjust_the_size_of_the_8cbd98',
+                      ),
+                      icon: Icons.photo_size_select_large_rounded,
+                      currentValue: uiState.countdownSizePx,
+                      tempValue: _tempCountdownSize,
+                      customBgUrl: uiState.customBackgroundUrl,
+                      onChanged: (value) {
+                        setState(() {
+                          _tempCountdownSize = value;
+                        });
+                      },
+                      onChangedEnd: (value) {
+                        setState(() {
+                          _tempCountdownSize = value;
+                        });
+                      },
+                      onSave: () async {
+                        if (_tempCountdownSize != null) {
+                          final sizeToSave = _tempCountdownSize!;
+
+                          await widget.homeState._saveCountdownQuickUiPrefs(
+                            countdownSizePx: sizeToSave,
+                            isVip: widget.isVip,
+                          );
+                          HapticFeedback.mediumImpact();
+                          if (mounted && context.mounted) {
+                            setState(() => _tempCountdownSize = null);
+                            widget.homeState._showLatestSnackBar(
+                              context.tr('legacy_saved_success'),
+                            );
+                          }
+                        }
+                      },
+                    ),
+
+                    buildTimerSection(
+                      showTimer: uiState.homeShowTimer,
                       onToggle: (val) async {
                         HapticFeedback.selectionClick();
-                        await UiPrefs.setShowAvatarFrameIcon(val);
+                        await UiPrefs.setHomeShowTimer(val);
                       },
                     ),
                     const SizedBox(height: 12),
-                    // --- Chất lượng đồ họa ---
-                    buildCollapsedSection(
-                      title: L10nService().translate('home_chatluongdohoa'),
-                      description: context.tr(
-                        'ui_home_customize_graphic_quality_and_display_effects_3251e4',
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      shape: const Border(),
+                      collapsedShape: const Border(),
+                      title: Text(
+                        context.tr('advanced'),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF493D40),
+                        ),
                       ),
-                      icon: Icons.high_quality_rounded,
-                      options: [
-                        _CountdownQuickOption(
-                          label: L10nService().translate('home_tudong_quality'),
-                          value: 'auto',
-                          icon: Icons.brightness_auto_rounded,
-                          accent: const Color(0xFF2563EB),
+                      children: [
+                        buildHomeLayoutSection(
+                          selectedLayout: uiState.homeLayoutKey,
+                          onSelect: (layoutKey) =>
+                              UiPrefs.setHomeLayoutKey(layoutKey),
                         ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_thapmuot_quality',
+                        // --- Kiểu khung avatar ---
+                        buildCollapsedSection(
+                          title: L10nService().translate(
+                            'home_kieukhungavatar',
                           ),
-                          value: 'low',
-                          icon: Icons.battery_saver_rounded,
-                          accent: const Color(0xFFFF5E7E),
-                        ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate(
-                            'home_trungbinh_quality',
+                          description: context.tr(
+                            'ui_home_change_the_avatar_border_style_displayed_on_9f0976',
                           ),
-                          value: 'balanced',
-                          icon: Icons.balance_rounded,
-                          accent: const Color(0xFFD97706),
+                          icon: Icons.account_circle_rounded,
+                          options: [
+                            for (final key in KeepsakePalette.newStyleKeys)
+                              _CountdownQuickOption(
+                                label: context.tr('keepsake_$key'),
+                                value: key,
+                                icon: Icons.account_circle_outlined,
+                                accent: KeepsakePalette.of(key).accent,
+                              ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_khong_avatar_frame',
+                              ),
+                              value: 'off',
+                              icon: Icons.block_rounded,
+                              accent: const Color(0xFFBDBDBD),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_tron_avatar_frame',
+                              ),
+                              value: 'circle',
+                              icon: Icons.circle_rounded,
+                              accent: const Color(0xFF2563EB),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_bogoc_avatar_frame',
+                              ),
+                              value: 'rounded',
+                              icon: Icons.rounded_corner_rounded,
+                              accent: const Color(0xFFEC4899),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_squircle_avatar_frame',
+                              ),
+                              value: 'squircle',
+                              icon: Icons.crop_square_rounded,
+                              accent: const Color(0xFF8B5CF6),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_ngoctrai_avatar_frame',
+                              ),
+                              value: 'pearl',
+                              icon: Icons.blur_circular_rounded,
+                              accent: const Color(0xFFD4A520),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_thuytinh_avatar_frame',
+                              ),
+                              value: 'glass',
+                              icon: Icons.water_drop_rounded,
+                              accent: const Color(0xFF06B6D4),
+                            ),
+                          ],
+                          selectedValue: uiState.avatarFrameKey.isEmpty
+                              ? 'off'
+                              : uiState.avatarFrameKey,
+                          onSelect: (option) =>
+                              widget.homeState._saveCountdownQuickUiPrefs(
+                                avatarFrameKey: option.value,
+                                isVip: widget.isVip,
+                              ),
                         ),
-                        _CountdownQuickOption(
-                          label: L10nService().translate('home_caodep_quality'),
-                          value: 'high',
-                          icon: Icons.bolt_rounded,
-                          accent: const Color(0xFF059669),
+                        const SizedBox(height: 12),
+                        buildAvatarIconToggleSection(
+                          showIcon: uiState.showAvatarFrameIcon,
+                          onToggle: (val) async {
+                            HapticFeedback.selectionClick();
+                            await UiPrefs.setShowAvatarFrameIcon(val);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        // --- Chất lượng đồ họa ---
+                        buildCollapsedSection(
+                          title: L10nService().translate('home_chatluongdohoa'),
+                          description: context.tr(
+                            'ui_home_customize_graphic_quality_and_display_effects_3251e4',
+                          ),
+                          icon: Icons.high_quality_rounded,
+                          options: [
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_tudong_quality',
+                              ),
+                              value: 'auto',
+                              icon: Icons.brightness_auto_rounded,
+                              accent: const Color(0xFF2563EB),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_thapmuot_quality',
+                              ),
+                              value: 'low',
+                              icon: Icons.battery_saver_rounded,
+                              accent: const Color(0xFFFF5E7E),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_trungbinh_quality',
+                              ),
+                              value: 'balanced',
+                              icon: Icons.balance_rounded,
+                              accent: const Color(0xFFD97706),
+                            ),
+                            _CountdownQuickOption(
+                              label: L10nService().translate(
+                                'home_caodep_quality',
+                              ),
+                              value: 'high',
+                              icon: Icons.bolt_rounded,
+                              accent: const Color(0xFF059669),
+                            ),
+                          ],
+                          selectedValue: uiState.graphicsQualityKey.isEmpty
+                              ? 'auto'
+                              : uiState.graphicsQualityKey,
+                          onSelect: (option) async {
+                            HapticFeedback.selectionClick();
+                            await UiPrefs.saveState(
+                              uiState.copyWith(
+                                graphicsQualityKey: option.value,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        // --- Ngôn ngữ ---
+                        buildCollapsedSection(
+                          title: L10nService().translate('home_ngonngu'),
+                          description: context.tr(
+                            'ui_home_change_the_application_s_display_language_68599c',
+                          ),
+                          icon: Icons.language_rounded,
+                          options: [
+                            _CountdownQuickOption(
+                              label: context.tr('lang_vi'),
+                              value: 'vi',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFFD81B60),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('lang_en'),
+                              value: 'en',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFF2563EB),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_zh'),
+                              value: 'zh',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFFDC2626),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_zh_TW'),
+                              value: 'zh-TW',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFF7C3AED),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_ja'),
+                              value: 'ja',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFFEA580C),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_ko'),
+                              value: 'ko',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFF0891B2),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_th'),
+                              value: 'th',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFF059669),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_id'),
+                              value: 'id',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFFD97706),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_es'),
+                              value: 'es',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFFB91C1C),
+                            ),
+                            _CountdownQuickOption(
+                              label: context.tr('language_fr'),
+                              value: 'fr',
+                              icon: Icons.flag_rounded,
+                              accent: const Color(0xFF1D4ED8),
+                            ),
+                          ],
+                          selectedValue: L10nService().localeCode,
+                          onSelect: (option) async {
+                            HapticFeedback.selectionClick();
+                            await Future.delayed(
+                              const Duration(milliseconds: 300),
+                            );
+                            await L10nService().setLocale(option.value);
+                          },
                         ),
                       ],
-                      selectedValue: uiState.graphicsQualityKey.isEmpty
-                          ? 'auto'
-                          : uiState.graphicsQualityKey,
-                      onSelect: (option) async {
-                        HapticFeedback.selectionClick();
-                        await UiPrefs.saveState(
-                          uiState.copyWith(graphicsQualityKey: option.value),
-                        );
-                      },
                     ),
-                    const SizedBox(height: 12),
-                    // --- Ngôn ngữ ---
-                    buildCollapsedSection(
-                      title: L10nService().translate('home_ngonngu'),
-                      description: context.tr(
-                        'ui_home_change_the_application_s_display_language_68599c',
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            Navigator.of(widget.sheetContext).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD81B60),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: Text(
+                          context.tr('core_done'),
+                          style: SLTheme.quicksand(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ),
-                      icon: Icons.language_rounded,
-                      options: [
-                        _CountdownQuickOption(
-                          label: context.tr('lang_vi'),
-                          value: 'vi',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFFD81B60),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('lang_en'),
-                          value: 'en',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFF2563EB),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_zh'),
-                          value: 'zh',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFFDC2626),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_zh_TW'),
-                          value: 'zh-TW',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFF7C3AED),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_ja'),
-                          value: 'ja',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFFEA580C),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_ko'),
-                          value: 'ko',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFF0891B2),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_th'),
-                          value: 'th',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFF059669),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_id'),
-                          value: 'id',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFFD97706),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_es'),
-                          value: 'es',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFFB91C1C),
-                        ),
-                        _CountdownQuickOption(
-                          label: context.tr('language_fr'),
-                          value: 'fr',
-                          icon: Icons.flag_rounded,
-                          accent: Color(0xFF1D4ED8),
-                        ),
-                      ],
-                      selectedValue: L10nService().localeCode,
-                      onSelect: (option) async {
-                        HapticFeedback.selectionClick();
-                        await Future.delayed(const Duration(milliseconds: 300));
-                        await L10nService().setLocale(option.value);
-                      },
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(widget.sheetContext).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD81B60),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: Text(
-                      context.tr('core_done'),
-                      style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           );
         },

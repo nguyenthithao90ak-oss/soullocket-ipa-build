@@ -353,8 +353,8 @@ class BreakupService {
             {'value1': _formatDateTime(request.deleteAt)},
           )
         : L10nService().format(
-            'breakup_sent_waiting',
-            {'value1': _formatDateOnly(request.expireAt)},
+            'breakup_notice_pending_short',
+            {'deadline': _formatDateTime(request.expireAt)},
           );
 
     return BreakupActionResult(
@@ -659,14 +659,6 @@ class BreakupService {
       default:
         return BreakupStatus.none;
     }
-  }
-
-  static String _formatDateOnly(int ms) {
-    if (ms <= 0) return UiCopy.text('copy_124547b8c7e0');
-    final dt = DateTime.fromMillisecondsSinceEpoch(ms);
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    return '$day/$month/${dt.year}';
   }
 
   static String _formatDateTime(int ms) {

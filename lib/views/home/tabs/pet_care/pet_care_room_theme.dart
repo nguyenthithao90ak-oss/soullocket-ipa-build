@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'pet_care_progress.dart';
 
+part 'pet_care_furniture_art.dart';
+
 /// Bộ ba màu cho một món nội thất: thân, mặt sáng và bóng đổ.
 @immutable
 class PetCareTone {
@@ -43,7 +45,7 @@ abstract final class PetCareRoomArt {
     PetCareRoomItem.furnitureLilac => PetCareTone.of(const Color(0xFFBCA6E3)),
     PetCareRoomItem.furnitureSky => PetCareTone.of(const Color(0xFF93C4EC)),
     PetCareRoomItem.furnitureHoney => PetCareTone.of(const Color(0xFFF0C46C)),
-    PetCareRoomItem.furnitureCocoa => PetCareTone.of(const Color(0xFFB48669)),
+    PetCareRoomItem.furnitureCocoa => PetCareTone.of(const Color(0xFFD9A57E)),
     _ => null,
   };
 
@@ -78,8 +80,8 @@ abstract final class PetCareRoomArt {
         const Color(0xFFFFF2F2),
       ),
       PetCareRoomItem.wallClouds => (
-        const Color(0xFFCFE8FA),
-        const Color(0xFFF0F8FF),
+        const Color(0xFFB4DAF6),
+        const Color(0xFFE4F3FF),
       ),
       PetCareRoomItem.wallLeaves => (
         const Color(0xFFE2F1DA),
@@ -137,43 +139,84 @@ abstract final class PetCareRoomArt {
       case PetCareRoomItem.wallClassic:
         _classicWall(c, rect, room, dark);
       case PetCareRoomItem.wallPolka:
-        _grid(c, rect, 26, 24, (p, odd) {
-          _circle(c, p, 3.4, const Color(0xFFF2AFC3).withValues(alpha: fade));
+        _grid(c, rect, 28, 26, (p, odd) {
+          if (odd) {
+            _circle(c, p, 4.4, Colors.white.withValues(alpha: .95 * fade));
+          } else {
+            _circle(c, p, 5.4, const Color(0xFFF4A3BB).withValues(alpha: fade));
+            _circle(
+              c,
+              p + const Offset(-1.7, -1.7),
+              1.6,
+              Colors.white.withValues(alpha: .6 * fade),
+            );
+          }
         });
+        _wainscot(
+          c,
+          rect,
+          const Color(0xFFFFFBF8),
+          const Color(0xFFF2A2BA),
+          dark,
+        );
       case PetCareRoomItem.wallStripe:
-        for (var x = rect.left - 8; x < rect.right + 24; x += 26) {
+        for (var x = rect.left - 10; x < rect.right + 26; x += 28) {
           c.drawRect(
-            Rect.fromLTWH(x, rect.top, 11, rect.height),
+            Rect.fromLTWH(x, rect.top, 14, rect.height),
             Paint()
-              ..color = const Color(0xFFF8D3A1).withValues(alpha: .62 * fade),
+              ..color = const Color(0xFFFFD3A3).withValues(alpha: .85 * fade),
           );
           _line(
             c,
-            Offset(x + 18, rect.top),
-            Offset(x + 18, rect.bottom),
-            const Color(0xFFF2B9C5).withValues(alpha: .5 * fade),
-            1.4,
+            Offset(x + 21, rect.top),
+            Offset(x + 21, rect.bottom),
+            const Color(0xFFF2A2B8).withValues(alpha: .85 * fade),
+            2.2,
           );
         }
+        _wainscot(
+          c,
+          rect,
+          const Color(0xFFBDE5D2),
+          const Color(0xFFFFF4E2),
+          dark,
+        );
       case PetCareRoomItem.wallHearts:
-        _grid(c, rect, 34, 32, (p, odd) {
+        _grid(c, rect, 34, 30, (p, odd) {
           _heart(
             c,
             p,
-            odd ? 4.2 : 5.4,
-            (odd ? const Color(0xFFF4BBCB) : const Color(0xFFEE9FB6))
-                .withValues(alpha: .8 * fade),
+            odd ? 5.6 : 7.4,
+            (odd ? const Color(0xFFF7B9CB) : const Color(0xFFEC8AA8))
+                .withValues(alpha: .95 * fade),
           );
         });
+        _wainscot(
+          c,
+          rect,
+          const Color(0xFFF7C4D2),
+          Colors.white,
+          dark,
+          lace: true,
+        );
       case PetCareRoomItem.wallClouds:
-        _grid(c, rect, 74, 58, (p, odd) {
+        _grid(c, rect, 82, 62, (p, odd) {
           _cloud(
             c,
-            p + Offset(odd ? 14 : 0, 0),
-            odd ? .26 : .34,
-            Colors.white.withValues(alpha: .82 * fade),
+            p + Offset(odd ? 18 : 0, 0),
+            odd ? .32 : .42,
+            Colors.white.withValues(alpha: .95 * fade),
           );
         });
+        // Viền mây bông chạy dọc chân tường.
+        for (var x = rect.left - 10; x < rect.right + 30; x += 34) {
+          _cloud(
+            c,
+            Offset(x, rect.bottom - 12),
+            .52,
+            Colors.white.withValues(alpha: .97 * fade),
+          );
+        }
       case PetCareRoomItem.wallLeaves:
         _grid(c, rect, 30, 30, (p, odd) {
           c.save();
@@ -182,39 +225,171 @@ abstract final class PetCareRoomArt {
           _oval(
             c,
             const Rect.fromLTWH(-3.2, -7.5, 6.4, 15),
-            (odd ? const Color(0xFF9CCB98) : const Color(0xFF7FB98A))
-                .withValues(alpha: .62 * fade),
+            (odd ? const Color(0xFFA9D3A0) : const Color(0xFF8CC293))
+                .withValues(alpha: .5 * fade),
           );
           c.restore();
         });
+        // Dây leo rủ từ trần xuống.
+        for (var i = 0; i < 7; i++) {
+          _vine(
+            c,
+            Offset(rect.left + 18 + i * 56.0, rect.top),
+            rect.height * (.24 + (i % 3) * .08),
+            i.isEven,
+            fade,
+          );
+        }
+        _wainscot(
+          c,
+          rect,
+          const Color(0xFFDDB992),
+          const Color(0xFFB98A62),
+          dark,
+        );
       case PetCareRoomItem.wallCheck:
         final band = Paint()
-          ..color = const Color(0xFFF2B4B4).withValues(alpha: .24 * fade);
+          ..color = const Color(0xFFEB8F98).withValues(alpha: .28 * fade);
         for (var x = rect.left; x < rect.right; x += 28) {
           c.drawRect(Rect.fromLTWH(x, rect.top, 14, rect.height), band);
         }
         for (var y = rect.top; y < rect.bottom; y += 28) {
           c.drawRect(Rect.fromLTWH(rect.left, y, rect.width, 14), band);
         }
+        _wainscot(
+          c,
+          rect,
+          const Color(0xFFFFFDFB),
+          const Color(0xFFE5838E),
+          dark,
+        );
       case PetCareRoomItem.wallStars:
+        // Trăng lưỡi liềm có quầng sáng, sao lấp lánh có quầng.
+        final moon = Offset(
+          rect.right - rect.width * .2,
+          rect.top + rect.height * .2,
+        );
+        _circle(c, moon, 30, const Color(0xFFFFE9A8).withValues(alpha: .1));
+        _circle(c, moon, 20, const Color(0xFFFFE6A0).withValues(alpha: .18));
+        _circle(c, moon, 12, const Color(0xFFFFE3A0));
+        _circle(c, moon + const Offset(5.5, -4.5), 10.5, top);
         _grid(c, rect, 38, 36, (p, odd) {
+          _circle(
+            c,
+            p,
+            odd ? 4.5 : 7,
+            const Color(0xFFFFE3A0).withValues(alpha: .13),
+          );
           _star(
             c,
             p,
-            odd ? 2.4 : 3.6,
-            const Color(0xFFFFE3A0).withValues(alpha: odd ? .7 : .95),
+            odd ? 2.8 : 4.4,
+            const Color(0xFFFFE3A0).withValues(alpha: odd ? .8 : 1),
           );
           _circle(
             c,
             p + const Offset(17, 11),
-            1,
-            Colors.white.withValues(alpha: .6),
+            1.1,
+            Colors.white.withValues(alpha: .7),
           );
         });
       default:
         break;
     }
     c.restore();
+  }
+
+  /// Ốp chân tường (panel nổi + thanh nẹp) cho các mẫu giấy dán tường mới:
+  /// nhìn ra một căn phòng được trang trí thật thay vì chỉ đổi màu nền.
+  static void _wainscot(
+    Canvas c,
+    Rect rect,
+    Color panel,
+    Color rail,
+    bool dark, {
+    bool lace = false,
+  }) {
+    final top = rect.bottom - 56;
+    c.drawRect(
+      Rect.fromLTRB(rect.left, top, rect.right, rect.bottom),
+      Paint()..color = _night(panel, dark),
+    );
+    for (var x = rect.left + 7; x < rect.right - 18; x += 58) {
+      final box = Rect.fromLTWH(x, top + 9, 46, 30);
+      _round(c, box, 5, Colors.white.withValues(alpha: dark ? .05 : .32));
+      c.drawRRect(
+        RRect.fromRectAndRadius(box, const Radius.circular(5)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.1
+          ..color = const Color(0xFF856C7A).withValues(alpha: .16),
+      );
+    }
+    if (lace) {
+      for (var x = rect.left; x < rect.right + 8; x += 8) {
+        _circle(c, Offset(x, top + 5), 4, _night(rail, dark));
+        _circle(c, Offset(x, top + 5.5), 1.2, _night(panel, dark));
+      }
+    }
+    _round(
+      c,
+      Rect.fromLTRB(rect.left - 2, top - 3, rect.right + 2, top + 5),
+      3,
+      _night(rail, dark),
+    );
+    _line(
+      c,
+      Offset(rect.left, top - 1.4),
+      Offset(rect.right, top - 1.4),
+      Colors.white.withValues(alpha: dark ? .15 : .55),
+      1,
+    );
+  }
+
+  /// Dây leo có lá, rủ từ [start] xuống [length].
+  static void _vine(
+    Canvas c,
+    Offset start,
+    double length,
+    bool flip,
+    double fade,
+  ) {
+    final side = flip ? 1.0 : -1.0;
+    final p0 = start;
+    final p1 = start + Offset(side * 12, length * .3);
+    final p2 = start + Offset(-side * 12, length * .66);
+    final p3 = start + Offset(side * 4, length);
+    Offset at(double t) {
+      final u = 1 - t;
+      return p0 * (u * u * u) +
+          p1 * (3 * u * u * t) +
+          p2 * (3 * u * t * t) +
+          p3 * (t * t * t);
+    }
+
+    _path(
+      c,
+      Path()
+        ..moveTo(p0.dx, p0.dy)
+        ..cubicTo(p1.dx, p1.dy, p2.dx, p2.dy, p3.dx, p3.dy),
+      const Color(0xFF6FA86E).withValues(alpha: .9 * fade),
+      width: 1.6,
+    );
+    for (var i = 1; i <= 6; i++) {
+      final p = at(i / 6.4);
+      c.save();
+      c.translate(p.dx, p.dy);
+      c.rotate(i.isEven ? .9 : -.9);
+      _oval(
+        c,
+        const Rect.fromLTWH(-3.4, -9, 6.8, 9),
+        (i.isEven ? const Color(0xFF7DBB7E) : const Color(0xFF9CCF8F))
+            .withValues(alpha: .95 * fade),
+      );
+      c.restore();
+    }
+    final tip = at(1);
+    _flower(c, tip + const Offset(0, 3), 2.6, _rose.withValues(alpha: fade));
   }
 
   static void _classicWall(Canvas c, Rect rect, PetCareRoom room, bool dark) {
@@ -276,8 +451,8 @@ abstract final class PetCareRoomArt {
         const Color(0xFFF8E6C8),
       ),
       PetCareRoomItem.floorChecker => (
-        const Color(0xFFF7D8DC),
-        const Color(0xFFFFF1EA),
+        const Color(0xFFF2B4C3),
+        const Color(0xFFF8C9D4),
       ),
       PetCareRoomItem.floorCarpet => (
         const Color(0xFFF0BCCB),
@@ -337,43 +512,80 @@ abstract final class PetCareRoomArt {
           _planks(c, rect, const Color(0xFFB58E7F), const Color(0xFFC29A84));
         }
       case PetCareRoomItem.floorOak:
-        _planks(c, rect, const Color(0xFFC49A6C), const Color(0xFFD3AE80));
+        _planks(
+          c,
+          rect,
+          const Color(0xFFA9784E),
+          const Color(0xFFB98557),
+          tint: true,
+        );
       case PetCareRoomItem.floorChecker:
         const size = 26.0;
         final tile = Paint()
-          ..color = const Color(0xFFFFFBF4).withValues(alpha: .85 * fade);
+          ..color = const Color(0xFFFFFBF6).withValues(alpha: .94 * fade);
         for (var row = 0; row * size < rect.height; row++) {
           for (var col = 0; col * size < rect.width + size; col++) {
+            final cell = Rect.fromLTWH(
+              rect.left + col * size,
+              rect.top + row * size,
+              size,
+              size,
+            );
             if ((row + col).isEven) {
-              c.drawRect(
-                Rect.fromLTWH(
-                  rect.left + col * size,
-                  rect.top + row * size,
-                  size,
-                  size,
-                ),
-                tile,
+              c.drawRect(cell, tile);
+            } else {
+              _heart(
+                c,
+                cell.center,
+                3.2,
+                Colors.white.withValues(alpha: .55 * fade),
               );
             }
           }
         }
       case PetCareRoomItem.floorCarpet:
-        _grid(c, rect, 18, 14, (p, odd) {
-          _circle(
-            c,
-            p,
-            odd ? 1.6 : 2.2,
-            Colors.white.withValues(alpha: .32 * fade),
-          );
+        _grid(c, rect, 24, 18, (p, odd) {
+          if (odd) {
+            _circle(c, p, 1.8, Colors.white.withValues(alpha: .4 * fade));
+          } else {
+            _heart(c, p, 3.6, Colors.white.withValues(alpha: .55 * fade));
+          }
         });
+        // Viền thảm dệt ren chạy dọc mép trong.
         _line(
           c,
-          Offset(rect.left, rect.top + 10),
-          Offset(rect.right, rect.top + 10),
-          Colors.white.withValues(alpha: .45 * fade),
-          2,
+          Offset(rect.left, rect.top + 9),
+          Offset(rect.right, rect.top + 9),
+          Colors.white.withValues(alpha: .75 * fade),
+          3,
         );
+        for (var x = rect.left; x < rect.right + 7; x += 7) {
+          _circle(
+            c,
+            Offset(x, rect.top + 12),
+            2.6,
+            Colors.white.withValues(alpha: .6 * fade),
+          );
+        }
       case PetCareRoomItem.floorMarble:
+        for (var y = rect.top + 30; y < rect.bottom; y += 34) {
+          _line(
+            c,
+            Offset(rect.left, y),
+            Offset(rect.right, y),
+            const Color(0xFFB9B2C4).withValues(alpha: .3 * fade),
+            1,
+          );
+        }
+        for (var x = rect.left + 20; x < rect.right; x += 46) {
+          _line(
+            c,
+            Offset(x, rect.top),
+            Offset(x, rect.bottom),
+            const Color(0xFFB9B2C4).withValues(alpha: .22 * fade),
+            1,
+          );
+        }
         for (var i = 0; i < 7; i++) {
           final x = rect.left + i * 62.0 - 20;
           _path(
@@ -382,58 +594,104 @@ abstract final class PetCareRoomArt {
               ..moveTo(x, rect.top)
               ..quadraticBezierTo(x + 26, rect.top + 30, x + 12, rect.top + 60)
               ..quadraticBezierTo(x - 6, rect.top + 92, x + 30, rect.bottom),
-            const Color(0xFFB9B2C4).withValues(alpha: .38 * fade),
-            width: 1.1,
+            (i.isEven ? const Color(0xFFE2B865) : const Color(0xFFADA4BB))
+                .withValues(alpha: (i.isEven ? .7 : .45) * fade),
+            width: i.isEven ? 1.4 : 1,
           );
         }
-        for (var y = rect.top + 34; y < rect.bottom; y += 34) {
-          _line(
-            c,
-            Offset(rect.left, y),
-            Offset(rect.right, y),
-            Colors.white.withValues(alpha: .7 * fade),
-            1,
-          );
-        }
+        // Vệt bóng loáng của mặt đá.
+        c.drawPath(
+          Path()
+            ..moveTo(rect.left + rect.width * .55, rect.top)
+            ..lineTo(rect.left + rect.width * .7, rect.top)
+            ..lineTo(rect.left + rect.width * .45, rect.bottom)
+            ..lineTo(rect.left + rect.width * .3, rect.bottom)
+            ..close(),
+          Paint()..color = Colors.white.withValues(alpha: .28 * fade),
+        );
       case PetCareRoomItem.floorGrass:
-        _grid(c, rect, 22, 16, (p, odd) {
+        _grid(c, rect, 16, 12, (p, odd) {
           for (var i = -1; i < 2; i++) {
             _line(
               c,
               p,
-              p + Offset(i * 2.5, -5.0 - (i == 0 ? 2 : 0)),
-              const Color(0xFF6FAE63).withValues(alpha: .55 * fade),
-              1.1,
+              p + Offset(i * 2.6, -6.0 - (i == 0 ? 2.5 : 0)),
+              (odd ? const Color(0xFF5E9E55) : const Color(0xFF7DBB6A))
+                  .withValues(alpha: .75 * fade),
+              1.2,
             );
           }
-          if (odd && (p.dx ~/ 22) % 3 == 0) {
-            _flower(c, p + const Offset(7, -4), 1.8, _cream);
-          }
+        });
+        _grid(c, rect, 30, 22, (p, odd) {
+          final k = (p.dx ~/ 30 + p.dy ~/ 22) % 4;
+          if (k == 3) return;
+          _flower(
+            c,
+            p + const Offset(9, -3),
+            2.4,
+            [
+              _cream,
+              const Color(0xFFF59BB5),
+              const Color(0xFFF7D26B),
+            ][k].withValues(alpha: fade),
+          );
         });
       case PetCareRoomItem.floorNight:
         _grid(c, rect, 30, 22, (p, odd) {
+          _circle(
+            c,
+            p,
+            odd ? 3.6 : 5.6,
+            const Color(0xFFFFE3A0).withValues(alpha: .14),
+          );
           _star(
             c,
             p,
-            odd ? 1.8 : 2.6,
-            const Color(0xFFFFE3A0).withValues(alpha: odd ? .55 : .8),
+            odd ? 2.2 : 3.4,
+            const Color(0xFFFFE3A0).withValues(alpha: odd ? .7 : .95),
           );
         });
+        for (var x = rect.left + 40; x < rect.right; x += 120) {
+          final moon = Offset(x, rect.top + rect.height * .55);
+          _circle(c, moon, 6, const Color(0xFFFFE3A0).withValues(alpha: .9));
+          _circle(c, moon + const Offset(3, -2), 5.4, front);
+        }
       default:
         break;
     }
     c.restore();
   }
 
-  static void _planks(Canvas c, Rect rect, Color seam, Color grain) {
+  static void _planks(
+    Canvas c,
+    Rect rect,
+    Color seam,
+    Color grain, {
+    bool tint = false,
+  }) {
     for (var row = 0; row * 26.0 < rect.height; row++) {
       final y = rect.top + 14 + row * 26.0;
+      if (tint) {
+        // Mỗi tấm ván một sắc gỗ, nhìn rõ từng tấm.
+        for (var col = -1; col < 5; col++) {
+          final x = rect.left + col * 84 + (row.isOdd ? 36.0 : 0.0);
+          c.drawRect(
+            Rect.fromLTWH(x, y - 26, 84, 26),
+            Paint()
+              ..color = ((row + col) % 3 == 0
+                  ? Colors.white.withValues(alpha: .16)
+                  : (row + col) % 3 == 1
+                  ? const Color(0xFFA9784E).withValues(alpha: .1)
+                  : Colors.transparent),
+          );
+        }
+      }
       _line(
         c,
         Offset(rect.left, y),
         Offset(rect.right, y),
-        seam.withValues(alpha: .23),
-        1,
+        seam.withValues(alpha: tint ? .42 : .23),
+        tint ? 1.3 : 1,
       );
       for (var col = 0; col < 5; col++) {
         final x = rect.left + col * 84 + (row.isOdd ? 36.0 : 0.0);
@@ -441,7 +699,7 @@ abstract final class PetCareRoomArt {
           c,
           Offset(x, y),
           Offset(x, y + 26),
-          seam.withValues(alpha: .17),
+          seam.withValues(alpha: tint ? .35 : .17),
           1,
         );
         _path(
@@ -449,9 +707,20 @@ abstract final class PetCareRoomArt {
           Path()
             ..moveTo(x + 12, y + 12)
             ..quadraticBezierTo(x + 27, y + 7, x + 42, y + 11),
-          grain.withValues(alpha: .2),
+          grain.withValues(alpha: tint ? .4 : .2),
           width: .7,
         );
+        if (tint && (row + col).isEven) {
+          _oval(
+            c,
+            Rect.fromCenter(
+              center: Offset(x + 58, y + 14),
+              width: 6,
+              height: 3,
+            ),
+            seam.withValues(alpha: .3),
+          );
+        }
       }
     }
   }
@@ -537,6 +806,7 @@ abstract final class PetCareRoomArt {
     Size size, {
     required bool night,
     double wave = 0,
+    bool garden = false,
   }) {
     final outer = windowPath(window, size);
     final bounds = outer.getBounds();
@@ -544,7 +814,15 @@ abstract final class PetCareRoomArt {
     c.translate(2, 4);
     c.drawPath(outer, Paint()..color = const Color(0x1A856C7A));
     c.restore();
-    c.drawPath(outer, Paint()..color = _cream);
+    final frame = windowFrame(window);
+    c.drawPath(outer, Paint()..color = frame);
+    c.drawPath(
+      outer,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = const Color(0xFF856C7A).withValues(alpha: .2),
+    );
     final inset = (1 - 14 / math.max(bounds.width, bounds.height)).clamp(
       .6,
       .95,
@@ -607,6 +885,24 @@ abstract final class PetCareRoomArt {
         Colors.white.withValues(alpha: .7),
       );
     }
+    if (garden) {
+      final horizon = paneBounds.height * .15;
+      c.drawOval(Rect.fromLTWH(paneBounds.left - 9, horizon, paneBounds.width + 18, paneBounds.height),
+        Paint()..color = night ? const Color(0xFF607F69) : const Color(0xFF9FBD87));
+      for (var i = 0; i < 4; i++) {
+        final x = paneBounds.left + i * paneBounds.width / 3;
+        c.drawLine(Offset(x, horizon + 9), Offset(x, horizon + 24),
+          Paint()..color = const Color(0xFFDFD6B2)..strokeWidth = 2.6);
+      }
+      c.drawLine(Offset(paneBounds.left, horizon + 15), Offset(paneBounds.right, horizon + 15),
+        Paint()..color = const Color(0xFFDFD6B2)..strokeWidth = 2);
+      for (final x in [-.25, .28]) {
+        final at = Offset(paneBounds.width * x, horizon + 24);
+        c.drawLine(at, at - const Offset(0, 24), Paint()..color = const Color(0xFF9E8A64)..strokeWidth = 3);
+        c.drawCircle(at - const Offset(0, 25), 13 * unit, Paint()..color = night ? const Color(0xFF59795A) : const Color(0xFF789F69));
+        c.drawCircle(at - const Offset(4, 27), 2.7 * unit, Paint()..color = const Color(0xFFE8A183));
+      }
+    }
     c.restore();
     final bar = Paint()
       ..color = _cream
@@ -634,6 +930,7 @@ abstract final class PetCareRoomArt {
       10,
     );
     _round(c, sill, 5, const Color(0xFFE1BCA4));
+    _windowTrim(c, window, bounds);
     if (window == PetCareRoomItem.windowBay) {
       _round(
         c,
@@ -649,6 +946,117 @@ abstract final class PetCareRoomArt {
           [_rose, _gold, _lilac, _rose][i],
         );
       }
+    }
+  }
+
+  /// Màu khung theo kiểu cửa sổ: tròn bạc hà, ô vuông gỗ mật ong, tim
+  /// hồng, sao vàng.
+  static Color windowFrame(PetCareRoomItem window) => switch (window) {
+    PetCareRoomItem.windowRound => const Color(0xFFA6D7C7),
+    PetCareRoomItem.windowBay => const Color(0xFFE4B587),
+    PetCareRoomItem.windowHeart => const Color(0xFFF4A8C0),
+    PetCareRoomItem.windowStar => const Color(0xFFF4CA66),
+    _ => _cream,
+  };
+
+  /// Đồ trang trí riêng của từng kiểu cửa sổ.
+  static void _windowTrim(Canvas c, PetCareRoomItem window, Rect bounds) {
+    switch (window) {
+      case PetCareRoomItem.windowRound:
+        // Cửa sổ tàu thủy: đinh tán quanh vành.
+        final d = math.min(bounds.width, bounds.height);
+        final ring = d / 2 - 3.6;
+        for (var i = 0; i < 8; i++) {
+          final a = i * math.pi / 4 + math.pi / 8;
+          final p = Offset(math.cos(a), math.sin(a)) * ring;
+          _circle(c, p, 2, const Color(0xFF7FB7A5));
+          _circle(c, p + const Offset(-.5, -.5), 1.1, _cream);
+        }
+      case PetCareRoomItem.windowBay:
+        // Mái hiên sọc kẹo có viền lượn.
+        final awning = Rect.fromLTWH(
+          bounds.left - 8,
+          bounds.top - 9,
+          bounds.width + 16,
+          13,
+        );
+        c.save();
+        final shape = Path()
+          ..moveTo(awning.left + 4, awning.top)
+          ..lineTo(awning.right - 4, awning.top)
+          ..lineTo(awning.right, awning.bottom);
+        const count = 6;
+        final step = awning.width / count;
+        for (var i = count; i > 0; i--) {
+          shape.quadraticBezierTo(
+            awning.left + (i - .5) * step,
+            awning.bottom + 8,
+            awning.left + (i - 1) * step,
+            awning.bottom,
+          );
+        }
+        shape.close();
+        c.clipPath(shape);
+        c.drawRect(awning.inflate(8), Paint()..color = _cream);
+        for (var i = 0; i < count; i += 2) {
+          c.drawRect(
+            Rect.fromLTWH(awning.left + i * step, awning.top, step, 22),
+            Paint()..color = _rose,
+          );
+        }
+        c.restore();
+      case PetCareRoomItem.windowHeart:
+        // Nơ hồng ở chỗ lõm trên đỉnh tim.
+        final s = math.min(bounds.width, bounds.height) / 20;
+        final knot = Offset(0, -6.4 * s - 1);
+        const bow = Color(0xFFE8608A);
+        for (final side in [-1.0, 1.0]) {
+          c.save();
+          c.translate(knot.dx, knot.dy);
+          c.rotate(side * .35);
+          _oval(
+            c,
+            Rect.fromCenter(
+              center: Offset(side * 8, -1),
+              width: 15,
+              height: 10,
+            ),
+            bow,
+          );
+          _oval(
+            c,
+            Rect.fromCenter(
+              center: Offset(side * 8, -1),
+              width: 7,
+              height: 4.5,
+            ),
+            const Color(0xFFF7A9C2),
+          );
+          c.restore();
+          _path(
+            c,
+            Path()
+              ..moveTo(knot.dx, knot.dy + 2)
+              ..lineTo(knot.dx + side * 6, knot.dy + 13)
+              ..lineTo(knot.dx + side * 2.5, knot.dy + 12),
+            bow,
+            width: 3,
+          );
+        }
+        _circle(c, knot, 3.6, const Color(0xFFD94D79));
+      case PetCareRoomItem.windowStar:
+        // Lấp lánh quanh khung sao.
+        for (final (p, r) in [
+          (Offset(bounds.left - 4, bounds.top + 8), 4.5),
+          (Offset(bounds.right + 3, bounds.top + 14), 3.6),
+          (Offset(bounds.right - 2, bounds.bottom - 6), 4.2),
+          (Offset(bounds.left + 4, bounds.bottom - 10), 3.2),
+        ]) {
+          _star(c, p, r, const Color(0xFFFFD970));
+          _circle(c, p, r * .35, Colors.white.withValues(alpha: .9));
+        }
+      default:
+        break;
     }
   }
 
@@ -862,43 +1270,18 @@ class _SwatchPainter extends CustomPainter {
         final tone =
             PetCareRoomArt.tone(item) ??
             PetCareTone.of(PetCareRoomArt.classicFurniture(room));
-        // Ghế nệm nhỏ đại diện cho bộ màu nội thất.
-        PetCareRoomArt._round(
+        // Món chính của phòng đang xem (sofa, ghế bếp, bồn tắm, giường)
+        // vẽ thu nhỏ kèm dáng riêng của bộ, để thấy rõ khác biệt khi mua.
+        canvas.save();
+        canvas.scale(.6);
+        PetCareFurnitureArt.miniature(
           canvas,
-          const Rect.fromLTWH(10, 16, 40, 24),
-          9,
-          tone.main,
+          room,
+          PetCareFurnitureSet.of(item),
+          tone,
+          dark: dark,
         );
-        PetCareRoomArt._round(
-          canvas,
-          const Rect.fromLTWH(13, 20, 16, 14),
-          6,
-          tone.light,
-        );
-        PetCareRoomArt._round(
-          canvas,
-          const Rect.fromLTWH(31, 20, 16, 14),
-          6,
-          tone.light,
-        );
-        PetCareRoomArt._round(
-          canvas,
-          const Rect.fromLTWH(7, 32, 46, 11),
-          5,
-          tone.shade,
-        );
-        PetCareRoomArt._round(
-          canvas,
-          const Rect.fromLTWH(12, 42, 4, 7),
-          2,
-          const Color(0xFF856C7A),
-        );
-        PetCareRoomArt._round(
-          canvas,
-          const Rect.fromLTWH(44, 42, 4, 7),
-          2,
-          const Color(0xFF856C7A),
-        );
+        canvas.restore();
     }
     canvas.restore();
     canvas.drawRRect(

@@ -21,10 +21,10 @@ Future<bool> requestAiDataConsent(
   final result = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => SLAlertDialog(
-      title: Text(context.tr('ai_data_consent_title')),
-      content: SingleChildScrollView(
-        child: Text(context.tr('ai_data_consent_body')),
-      ),
+      title: Text(context.tr(
+        accepted && manage ? 'ai_data_consent_manage' : 'ai_data_consent_title',
+      )),
+      content: Text(context.tr('ai_data_consent_body')),
       actions: [
         SLDialogAction(
           onPressed: () => Navigator.pop(dialogContext, false),

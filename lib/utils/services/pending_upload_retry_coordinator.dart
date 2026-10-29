@@ -39,6 +39,7 @@ class PendingUploadRetryCoordinator {
       final pendingUploads =
           await PendingUploadService.instance.listSummaries();
       for (final pending in pendingUploads) {
+        if (PendingUploadService.instance.currentUid != pending.ownerUid) break;
         if (pending.retryCount >= maxRetryPerItem) continue;
         final handler = _handlers[pending.category];
         if (handler == null) continue;
@@ -48,6 +49,7 @@ class PendingUploadRetryCoordinator {
             await PendingUploadService.instance.markFailed(
               pending.key,
               'Pending upload retry was not handled.',
+              expectedUid: pending.ownerUid,
             );
           }
         } catch (error) {
@@ -57,7 +59,10 @@ class PendingUploadRetryCoordinator {
               fallbackMessage: 'Không thể thử lại upload đang chờ.',
             ).message}',
           );
-          await PendingUploadService.instance.markFailed(pending.key, error);
+          if (PendingUploadService.instance.currentUid != pending.ownerUid) break;
+          await PendingUploadService.instance.markFailed(
+            pending.key, error, expectedUid: pending.ownerUid,
+          );
         }
       }
     } finally {

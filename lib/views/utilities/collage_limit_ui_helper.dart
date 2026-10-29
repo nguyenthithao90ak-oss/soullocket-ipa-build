@@ -7,6 +7,8 @@ import 'package:soullocket_app/utils/services/collage_limit_service.dart';
 class CollageLimitUiHelper {
   static Future<bool> checkLimitAndAskAd(BuildContext context) {
     return CollageLimitService().checkLimitAndAskAd(
+      isCurrent: () =>
+          context.mounted && (ModalRoute.of(context)?.isCurrent ?? true),
       onAskUserToWatchAd: (currentLimit, dailyLimit) async {
         if (!context.mounted) return false;
         return await showDialog<bool>(

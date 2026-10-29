@@ -29,11 +29,13 @@ import '../utils/app_error_mapper.dart';
 import '../widgets/sl_toast.dart';
 import 'app_entry/app_entry_access_resolver.dart';
 import 'app_entry/app_entry_home_asset_preparer.dart';
+import 'app_entry/widgets/account_session_route_guard.dart';
 import 'app_entry/app_entry_controller.dart';
 import 'app_entry/app_entry_deeplink_handler.dart';
 import 'app_entry/widgets/blocked_scaffold.dart';
 import 'app_entry/widgets/locked_scaffold.dart';
 import 'app_entry/widgets/loading_scaffold.dart';
+import 'app_entry/widgets/startup_app_open_gate.dart';
 import 'auth/auth_action_screen.dart';
 import 'auth/lock_appeal_screen.dart';
 import 'consent/consent_gate.dart';
@@ -64,6 +66,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   late final AppEntryDeeplinkHandler _deeplinkHandler;
   late final AppEntryHomeAssetPreparer _homeAssetPreparer;
   late final Stream<User?> _authStream;
+  late final Stream<String?> _routeUidStream;
 
   StreamSubscription? _maintenanceSub;
   bool _isMaintenance = false;
@@ -105,6 +108,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     _deeplinkHandler = AppEntryDeeplinkHandler();
     _homeAssetPreparer = AppEntryHomeAssetPreparer();
     _authStream = FirebaseAuth.instance.authStateChanges();
+    _routeUidStream = _authStream.map((user) => user?.uid);
 
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -406,12 +410,24 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     String houseId,
     String uid,
   ) {
+    // Khi đã có snapshot Home tin cậy trên máy, không giữ người dùng ở màn
+    // chờ quảng cáo mở app đủ 5 giây. Quảng cáo vẫn được thử trong cửa sổ
+    // ngắn; dữ liệu mới sẽ được listener cập nhật nền sau khi Home hiện.
+    final hasWarmHomeSnapshot =
+        OfflineCacheService.loadCacheSync('home_settings_$houseId') is Map;
     _prepareHomeAssets(houseId);
     _scheduleRestoreNotice(uid);
 
     _removeSplashOnce();
-    return ConsentGate(
+    return StartupAppOpenGate(
       key: ValueKey('house-session:$uid:$houseId'),
+      enabled: !kIsWeb && !_hasTriggeredInitialAppOpenAd,
+      prepareAd: _appEntryController.prepareStartupAppOpenAd,
+      showAd: _appEntryController.showStartupAppOpenAd,
+      loading: const LoadingScaffold(),
+      loadTimeout: hasWarmHomeSnapshot
+          ? const Duration(milliseconds: 1800)
+          : const Duration(seconds: 5),
       onReady: () async {
         LocalGuideSessionNotifier.instance.activate(uid: uid, houseId: houseId);
         unawaited(() async {
@@ -457,7 +473,17 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
   }
 
   Future<void> _handleAppResumed() async {
-    final result = await _appEntryController.handleAppResumed(context: context);
+    final result = await _appEntryController.handleAppResumed(
+      context: context,
+      canShowAppOpen: () =>
+          mounted &&
+          _hasTriggeredInitialAppOpenAd &&
+          _isAuthenticated &&
+          !_isMaintenance &&
+          !_isCheckingUpdate &&
+          _requiredUpdate == null &&
+          (ModalRoute.of(context)?.isCurrent ?? false),
+    );
     if (!mounted) return;
 
     final authState = result.authState;
@@ -562,6 +588,14 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    return AccountSessionRouteGuard(
+      uidChanges: _routeUidStream,
+      initialUid: FirebaseAuth.instance.currentUser?.uid,
+      child: _buildAppEntry(context),
+    );
+  }
+
+  Widget _buildAppEntry(BuildContext context) {
     _removeSplashOnce();
     // Kiểm tra bảo trì ở TOP LEVEL - tất cả user, mọi màn hình, không bypass được
     if (_isMaintenance) {
@@ -571,12 +605,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         showActions: false,
       );
     }
-    // Không dựng màn hình đăng nhập/Home trước khi biết bản cài có còn được
-    // phép sử dụng hay không. Nếu có bản mới, hộp thoại bắt buộc sẽ giữ người
-    // dùng ở đây cho tới khi họ mở cửa hàng và cập nhật.
-    if (_isCheckingUpdate || _requiredUpdate != null) {
-      return const LoadingScaffold();
-    }
+    // Kiểm tra phiên bản chạy nền sau frame đầu để không giữ người dùng ở màn
+    // chờ mạng. Nếu server yêu cầu cập nhật, _checkRequiredUpdate sẽ mở hộp
+    // thoại bắt buộc ngay khi nhận được kết quả.
     return _buildContent(context);
   }
 

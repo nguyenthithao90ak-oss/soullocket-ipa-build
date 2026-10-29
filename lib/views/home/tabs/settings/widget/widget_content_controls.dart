@@ -230,3 +230,59 @@ class WidgetContentToggle extends StatelessWidget {
     ),
   );
 }
+
+/// Bộ chọn thời gian có vùng chạm 48dp và xuống dòng khi chữ lớn.
+class WidgetMotionIntervalPicker extends StatelessWidget {
+  const WidgetMotionIntervalPicker({
+    super.key,
+    required this.selectedMinutes,
+    required this.title,
+    required this.optionLabel,
+    required this.onChanged,
+    this.isIos = false,
+  });
+
+  final int selectedMinutes;
+  final String title;
+  final String Function(int) optionLabel;
+  final ValueChanged<int> onChanged;
+  final bool isIos;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final options = isIos
+          ? WidgetAppearance.iosMotionIntervalOptions
+          : WidgetAppearance.motionIntervalOptions;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: SLSettingsText.caption(SLSettingsColors.inkSecondary)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final minutes in options)
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                  child: ChoiceChip(
+                    key: ValueKey('widget-motion-interval-$minutes'),
+                    label: Text(optionLabel(minutes)),
+                    selected: WidgetAppearance.normalizeMotionInterval(
+                      selectedMinutes, isIos: isIos,
+                    ) == minutes,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    visualDensity: VisualDensity.standard,
+                    onSelected: (selected) {
+                      if (selected) onChanged(minutes);
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}

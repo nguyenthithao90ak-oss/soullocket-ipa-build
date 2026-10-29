@@ -4,6 +4,9 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
+import 'companion_hand_spin.dart';
+import 'three_d/companion_3d_pose.dart';
+
 enum HomeCompanionPhase {
   idle,
   walking,
@@ -116,6 +119,37 @@ class HomeCompanionMotion extends ChangeNotifier {
   bool _settled = false;
   Offset? _pinnedPosition;
   Offset? _dragOrigin;
+
+  /// Bộ trộn hình ảnh riêng từng bé; không ghi vào tiến trình hoặc cloud.
+  final visual3D = Companion3DAnimator();
+  Offset? gazeTarget;
+  double get visualStride => stride * 2.5;
+
+  /// Xoay bé bằng tay (vuốt ngang trên bé); chỉ là hình ảnh trên máy.
+  final handSpin = CompanionHandSpin();
+  CompanionSpinFrame get handSpinFrame => handSpin.frameAt(elapsedSeconds);
+
+  void grabSpin() {
+    handSpin.grab(elapsedSeconds);
+    notifyListeners();
+  }
+
+  void spinBy(double dx) {
+    handSpin.dragBy(dx);
+    notifyListeners();
+  }
+
+  void releaseSpin(double velocity) {
+    handSpin.release(elapsedSeconds, velocity);
+    notifyListeners();
+  }
+
+  void lookAt(Offset? point) {
+    if (point != null && !_finiteOffset(point)) return;
+    if (gazeTarget == point) return;
+    gazeTarget = point;
+    notifyListeners();
+  }
 
   bool get isDragging => _dragOrigin != null;
 
@@ -505,8 +539,9 @@ class HomeCompanionMotion extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (_pinnedPosition != null) {
+    if (_pinnedPosition != null || handSpin.busyAt(_elapsed)) {
       // Thời gian vẫn chạy để bé thở/chớp mắt; chân không dịch chuyển.
+      // Đang được xoay bằng tay thì cũng đứng yên tại chỗ.
       notifyListeners();
       return;
     }

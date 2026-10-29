@@ -9,6 +9,7 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
       widgetStyleKey: _widgetStyleKey,
       showDiaryOnWidget: _showDiaryOnWidget,
       widgetHeartAnimated: _widgetHeartAnimated,
+      widgetMotionIntervalMinutes: _widgetMotionIntervalMinutes,
       widgetHeartStyleKey: _widgetHeartStyleKey,
       widgetHeartColorKey: _widgetHeartColorKey,
       widgetPreviewSizeKey: _widgetPreviewSizeKey,

@@ -103,10 +103,19 @@ abstract final class R2UploadPolicy {
         }
         continue;
       }
+      if (name == 'if-none-match' && value != '*') {
+        throw const FormatException('Invalid upload condition');
+      }
       if (_storageHeaders.contains(name)) headers[name] = value;
     }
     if (headers['content-type'] != contentType) {
       throw const FormatException('Upload content type mismatch');
+    }
+    final signed = (uploadUri.queryParameters['X-Amz-SignedHeaders'] ?? '')
+        .split(';');
+    if (headers.containsKey('if-none-match') !=
+        signed.contains('if-none-match')) {
+      throw const FormatException('Incomplete signed upload condition');
     }
     return headers;
   }
@@ -231,6 +240,7 @@ abstract final class R2UploadPolicy {
 
   static const _storageHeaders = {
     'content-type',
+    'if-none-match',
     'content-md5',
     'content-disposition',
     'cache-control',

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:live_activities/live_activities.dart';
 
+import '../../core/constants/app_config.dart';
+
 class LiveActivityService {
   static final LiveActivityService _instance = LiveActivityService._internal();
   factory LiveActivityService() => _instance;
@@ -16,7 +18,7 @@ class LiveActivityService {
   Future<void> init() async {
     if (!_supported) return;
     try {
-      await _liveActivities.init(appGroupId: 'group.com.soullocket.app');
+      await _liveActivities.init(appGroupId: AppConfig.iOSAppGroupId);
     } catch (e) {
       debugPrint('[LiveActivityService] Init error: $e');
     }

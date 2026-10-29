@@ -872,7 +872,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     List<String> suggestions = [];
     bool isSaving = false;
 
-    showDialog(
+    unawaited(showDialog(
       context: context,
       useRootNavigator: true,
       builder: (dialogContext) {
@@ -909,7 +909,11 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     final res = await _houseService.checkHouseIdAvailability(
                       clean,
                     );
-                    if (customId != clean) return;
+                    if (!dialogContext.mounted ||
+                        !context.mounted ||
+                        customId != clean) {
+                      return;
+                    }
 
                     setState(() {
                       isChecking = false;
@@ -925,7 +929,11 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       }
                     });
                   } catch (e) {
-                    if (customId != clean) return;
+                    if (!dialogContext.mounted ||
+                        !context.mounted ||
+                        customId != clean) {
+                      return;
+                    }
                     setState(() {
                       isChecking = false;
                       errorReason = context.tr('p6_server_connection_error');
@@ -969,12 +977,14 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     });
                   }
                 } else {
+                  if (!dialogContext.mounted || !context.mounted) return;
                   setState(() {
                     isSaving = false;
                     errorReason = context.tr('p6_house_id_change_failed');
                   });
                 }
               } catch (e) {
+                if (!dialogContext.mounted || !context.mounted) return;
                 setState(() {
                   isSaving = false;
                   errorReason = AppErrorMapper.resolve(e).message;
@@ -1225,6 +1235,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           },
         );
       },
-    );
+    ).whenComplete(() {
+      debounceTimer?.cancel();
+      customIdCtrl.dispose();
+    }));
   }
 }

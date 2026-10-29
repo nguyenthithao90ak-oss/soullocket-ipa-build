@@ -373,22 +373,31 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
         isPremium: true,
       ),
     ];
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFFFFFAF4),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) {
-        return _CountdownQuickCustomizeSheetContent(
-          styleOptions: styleOptions,
-          unlockedStyles: unlockedStyles,
-          isVip: isVip,
-          homeState: this,
-          sheetContext: sheetContext,
-        );
-      },
-    );
+    SLTheme.isCountdownCustomizeOpen.value = true;
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        enableDrag: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        builder: (sheetContext) {
+          return _CountdownQuickCustomizeSheetContent(
+            styleOptions: styleOptions,
+            unlockedStyles: unlockedStyles,
+            isVip: isVip,
+            homeState: this,
+            sheetContext: sheetContext,
+          );
+        },
+      );
+    } finally {
+      // Luôn mở lại vuốt tab, kể cả khi sheet bị đóng bằng kéo, nút Back hoặc
+      // route bị hủy khi app chuyển lifecycle.
+      SLTheme.isCountdownCustomizeOpen.value = false;
+    }
   }
 }

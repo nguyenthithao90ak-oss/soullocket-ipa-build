@@ -2,9 +2,15 @@ part of '../../love_insights_view.dart';
 
 extension _InsightMoodHabitCardsExt on LoveInsightsView {
   Widget _buildHabitCard(BuildContext context, LoveInsightData insight) {
-    final favoriteIcon = insight.diaryTotal > insight.albumTotal
+    final diaries = insight.albumTotalKnown
+        ? insight.diaryTotal
+        : insight.diaryMonth;
+    final memories = insight.albumTotalKnown
+        ? insight.albumTotal
+        : insight.albumMonth;
+    final favoriteIcon = diaries > memories
         ? Icons.menu_book_rounded
-        : insight.diaryTotal < insight.albumTotal
+        : diaries < memories
         ? Icons.photo_library_outlined
         : Icons.balance_rounded;
     return Container(

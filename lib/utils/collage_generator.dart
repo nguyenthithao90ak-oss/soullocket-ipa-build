@@ -123,8 +123,6 @@ Random _layoutRandom(CollageRenderOptions options, int salt) {
 
 class CollageGenerator {
   static String get watermark => UiCopy.text('app_name');
-  static final Map<String, ui.Image> _loadedStickerImages =
-      <String, ui.Image>{};
 
   static Future<Uint8List?> generateCollage(
     List<ui.Image> images,
@@ -141,7 +139,8 @@ class CollageGenerator {
           message: '',
         );
     final renderScale = options.renderScale;
-    await _loadStickerImages(options.stickers);
+    final stickerImages = await _loadStickerImages(options.stickers);
+    try {
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -157,6 +156,7 @@ class CollageGenerator {
       styleType,
       effectiveDecor,
       options,
+      stickerImages,
     );
     if (renderScale != 1.0) {
       canvas.restore();
@@ -180,6 +180,11 @@ class CollageGenerator {
     } finally {
       img?.dispose();
       picture.dispose();
+    }
+    } finally {
+      for (final image in stickerImages.values) {
+        image.dispose();
+      }
     }
   }
 
@@ -863,6 +868,7 @@ class CollageGenerator {
     double width,
     double height,
     List<String> selectedStickers,
+    Map<String, ui.Image> stickerImages,
     CollageDecor decor,
     CollageRenderOptions options,
   ) {
@@ -912,7 +918,7 @@ class CollageGenerator {
           ..strokeWidth = 1.4
           ..color = decor.primary.withValues(alpha: 0.10),
       );
-      final stickerImage = _loadedStickerImages[stickers[i]];
+      final stickerImage = stickerImages[stickers[i]];
       if (stickerImage != null) {
         final imageRatio = stickerImage.width / stickerImage.height;
         final drawHeight = size * 1.35;
@@ -945,28 +951,23 @@ class CollageGenerator {
     }
   }
 
-  static Future<void> _loadStickerImages(List<String> stickers) async {
-    final assetStickers = stickers
-        .where(
-          (sticker) =>
-              sticker.startsWith('assets/') &&
-              !_loadedStickerImages.containsKey(sticker),
-        )
-        .toList(growable: false);
-    for (final sticker in assetStickers) {
+  // Mỗi lượt render sở hữu ảnh riêng; không giữ native image suốt phiên hoặc
+  // dispose nhầm ảnh của lượt xuất đang chạy song song.
+  static Future<Map<String, ui.Image>> _loadStickerImages(List<String> stickers) async {
+    final images = <String, ui.Image>{};
+    for (final sticker in stickers.where((value) => value.startsWith('assets/')).toSet()) {
+      ui.Codec? codec;
       try {
-        final byteData = await rootBundle.load(sticker);
-        final codec = await ui.instantiateImageCodec(
-          byteData.buffer.asUint8List(),
-        );
-        final frame = await codec.getNextFrame();
-        _loadedStickerImages[sticker] = frame.image;
+        final bytes = await rootBundle.load(sticker);
+        codec = await ui.instantiateImageCodec(bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
+        images[sticker] = (await codec.getNextFrame()).image;
       } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/utils/collage_generator.dart: $error',
-        );
+        debugPrint('[Collage] Không đọc được sticker: $error');
+      } finally {
+        codec?.dispose();
       }
     }
+    return images;
   }
 
   static Rect _coverSourceRect(
@@ -1419,6 +1420,7 @@ class CollageGenerator {
     String style,
     CollageDecor decor,
     CollageRenderOptions options,
+    Map<String, ui.Image> stickerImages,
   ) {
     final page = _layoutPage(title, style, decor, options);
     _drawBackground(canvas, page.size.width, page.size.height, decor, options);
@@ -1560,6 +1562,7 @@ class CollageGenerator {
       page.size.width,
       page.size.height,
       options.stickers,
+      stickerImages,
       decor,
       options,
     );

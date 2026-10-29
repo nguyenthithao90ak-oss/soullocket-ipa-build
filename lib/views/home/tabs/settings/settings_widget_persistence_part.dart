@@ -2,40 +2,7 @@
 part of '../settings_tab.dart';
 
 extension _SettingsTabWidgetPersistence on _SettingsTabState {
-  int _widgetMemorySortValue(dynamic raw) {
-    if (raw is int) return raw;
-    if (raw is double) return raw.toInt();
-    if (raw is String) return int.tryParse(raw) ?? 0;
-    return 0;
-  }
-
-  List<String> _extractWidgetDiaryUrls(dynamic raw, {int limit = 5}) {
-    if (raw is! Map) return const <String>[];
-
-    final items = <MapEntry<int, String>>[];
-    raw.forEach((_, value) {
-      if (value is! Map) return;
-      final map = value.map((key, item) => MapEntry(key.toString(), item));
-      final imageUrl = (map['url'] ?? map['imageUrl'] ?? map['thumbUrl'] ?? '')
-          .toString()
-          .trim();
-      if (imageUrl.isEmpty) return;
-      final sortValue = _widgetMemorySortValue(
-        map['ts'] ?? map['date'] ?? map['updatedAt'],
-      );
-      items.add(MapEntry(sortValue, imageUrl));
-    });
-
-    items.sort((a, b) => b.key.compareTo(a.key));
-    final seen = <String>{};
-    return items
-        .map((item) => item.value)
-        .where((url) => seen.add(url))
-        .take(limit)
-        .toList(growable: false);
-  }
-
-  Future<List<String>> _loadWidgetDiaryUrls({int limit = 5}) async {
+  Future<List<String>?> _loadWidgetDiaryUrls({int limit = 12}) async {
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
       return const <String>[];
@@ -44,7 +11,10 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
       // Cùng truy vấn với Home: đọc qua listener ngắn để dùng lại bộ nhớ đệm RTDB.
       final snapshots = await Future.wait([
         readQuerySettled(
-          _dbRef.child('houses/$houseId/memories').limitToLast(24),
+          _dbRef
+              .child('houses/$houseId/memories')
+              .orderByChild('ts')
+              .limitToLast(24),
           timeout: const Duration(seconds: 4),
         ),
         readQuerySettled(
@@ -52,29 +22,32 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
           timeout: const Duration(seconds: 4),
         ),
       ]);
-      // Gộp cùng hai nguồn với Home để thay khung không làm mất ảnh nhật ký.
-      final merged = <String, dynamic>{};
-      for (var i = 0; i < snapshots.length; i++) {
-        final raw = snapshots[i].value;
-        if (raw is Map) raw.forEach((key, value) => merged['$i/$key'] = value);
-      }
-      return _extractWidgetDiaryUrls(merged, limit: limit);
+      return collectWidgetDiaryImageSources(
+        houseId: houseId,
+        snapshots: snapshots.map((snapshot) => snapshot.value),
+        limit: limit,
+      );
     } catch (_) {
-      return const <String>[];
+      // Lỗi mạng không có nghĩa album rỗng: giữ ảnh native đã đồng bộ.
+      return null;
     }
   }
 
   Future<void> _syncWidgetAppearanceDraft() async {
     if (kIsWeb) return;
+    final uid = _auth.currentUser?.uid;
+    final houseId = _houseId;
     final widgetThemeKey = _draftWidgetThemeKey ?? 'pink';
     final diaryImageUrls = _showDiaryOnWidget
         ? await _loadWidgetDiaryUrls()
         : const <String>[];
+    if (!mounted || _auth.currentUser?.uid != uid || _houseId != houseId) return;
     await WidgetService.updateWidgetAppearance(
       bgTheme: widgetThemeKey,
       widgetStyleKey: _widgetStyleKey,
       showDiaryOnWidget: _showDiaryOnWidget,
       heartAnimated: _widgetHeartAnimated,
+      heartMotionIntervalMinutes: _widgetMotionIntervalMinutes,
       heartStyleKey: _widgetHeartStyleKey,
       heartColorKey: _widgetHeartColorKey,
       diaryLayoutKey: _widgetDiaryLayoutKey,

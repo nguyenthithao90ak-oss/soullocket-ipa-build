@@ -31,6 +31,7 @@ class CountdownSpaceRequest {
   final String toHouseId;
   final String status;
   final int createdAt;
+  final int updatedAt;
   final Map<String, dynamic> snapshot;
 
   const CountdownSpaceRequest({
@@ -41,6 +42,7 @@ class CountdownSpaceRequest {
     required this.toHouseId,
     required this.status,
     required this.createdAt,
+    this.updatedAt = 0,
     required this.snapshot,
   });
 
@@ -58,6 +60,7 @@ class CountdownSpaceRequest {
       toHouseId: map['toHouseId']?.toString() ?? '',
       status: map['status']?.toString() ?? 'pending',
       createdAt: _toInt(map['createdAt']),
+      updatedAt: _toInt(map['updatedAt']),
       snapshot: _toMap(map['snapshot']),
     );
   }
@@ -70,6 +73,7 @@ class CountdownSpaceRequest {
     'toHouseId': toHouseId,
     'status': status,
     'createdAt': createdAt,
+    'updatedAt': updatedAt,
     'snapshot': snapshot,
   };
 }
@@ -184,11 +188,6 @@ class CountdownSpaceDeleteRequestInfo {
 }
 
 class CountdownSpaceService {
-  // Mỗi House chỉ được có tối đa 5 kết nối đang chiếm chỗ; request cũ đã
-  // accepted/declined không cần replay vô hạn cho các listener màn hình.
-  // Các lệnh preflight one-shot vẫn đọc đầy đủ để không bỏ sót request cũ.
-  static const int _pairedRecordQueryLimit = 50;
-
   static final CountdownSpaceService _instance =
       CountdownSpaceService._internal();
   factory CountdownSpaceService() => _instance;
@@ -293,7 +292,7 @@ class CountdownSpaceService {
           spaceId.isEmpty) {
         return CountdownSpaceRequestResult(
           success: false,
-          message: L10nService().translate('countdown_create_failed'),
+          message: _requestFailureMessage(responseData),
         );
       }
       return CountdownSpaceRequestResult(
@@ -430,7 +429,7 @@ class CountdownSpaceService {
     }
   }
 
-  Future<void> updateSnapshot({
+  Future<int?> updateSnapshot({
     required String spaceId,
     required Map<String, dynamic> snapshot,
   }) async {
@@ -444,6 +443,8 @@ class CountdownSpaceService {
       },
     );
     ensureWriteAcknowledged(response.data);
+    final updatedAt = _toInt(_toMap(response.data)['updatedAt']);
+    return updatedAt > 0 ? updatedAt : null;
   }
 
   /// Callable có thể trả success=false khi giao dịch không còn hợp lệ.
@@ -456,10 +457,11 @@ class CountdownSpaceService {
   Future<void> requestDeleteSpace(String spaceId) async {
     final normalizedSpaceId = spaceId.trim();
     if (normalizedSpaceId.isEmpty) return;
-    await CloudFunctionsHelper.callSecure<dynamic>(
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'requestCountdownSpaceDeleteSecure',
       payload: <String, dynamic>{'spaceId': normalizedSpaceId},
     );
+    ensureWriteAcknowledged(response.data);
   }
 
   Stream<List<CountdownSpaceRequest>> streamIncomingRequests(String houseId) {
@@ -467,7 +469,6 @@ class CountdownSpaceService {
         .ref('countdown_space_requests')
         .orderByChild('toHouseId')
         .equalTo(houseId.trim())
-        .limitToLast(_pairedRecordQueryLimit)
         .onValue
         .map((event) {
           if (event.snapshot.value == null) return [];
@@ -489,7 +490,6 @@ class CountdownSpaceService {
         .ref('countdown_space_requests')
         .orderByChild('fromHouseId')
         .equalTo(houseId.trim())
-        .limitToLast(_pairedRecordQueryLimit)
         .onValue
         .map((event) {
           if (event.snapshot.value == null) return [];
@@ -522,7 +522,7 @@ class CountdownSpaceService {
                   e as Map<String, dynamic>,
                 ),
               )
-              .where((space) => space.containsHouse(hId))
+              .where((space) => space.status == 'active' && space.containsHouse(hId))
               .toList();
           list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           yield list;
@@ -549,7 +549,9 @@ class CountdownSpaceService {
       list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
       final cacheJson = jsonEncode(list.map((e) => e.toJson()).toList());
-      LocalDatabaseService().setCacheEntry(cacheKey, cacheJson);
+      unawaited(LocalDatabaseService().setCacheEntry(cacheKey, cacheJson).catchError((Object error) {
+        debugPrint('[CountdownSpace] Không lưu được cache: $error');
+      }));
 
       return list;
     });
@@ -572,7 +574,7 @@ class CountdownSpaceService {
     required String currentHouseId,
   }) => rejectRequest(requestId);
 
-  Future<void> updatePendingRequestSnapshot({
+  Future<int?> updatePendingRequestSnapshot({
     required String requestId,
     required String fromHouseId,
     required Map<String, dynamic> snapshot,
@@ -587,13 +589,15 @@ class CountdownSpaceService {
       },
     );
     ensureWriteAcknowledged(response.data);
+    final updatedAt = _toInt(_toMap(response.data)['updatedAt']);
+    return updatedAt > 0 ? updatedAt : null;
   }
 
-  Future<void> updateSpaceSnapshot({
+  Future<int?> updateSpaceSnapshot({
     required String spaceId,
     required Map<String, dynamic> snapshot,
   }) async {
-    await updateSnapshot(spaceId: spaceId, snapshot: snapshot);
+    return updateSnapshot(spaceId: spaceId, snapshot: snapshot);
   }
 
   Future<CountdownSpaceRequestResult> requestDelete({
@@ -668,7 +672,7 @@ class CountdownSpaceService {
     final data = _toMap(snap.value);
     if (data['status'] != 'pending') return;
     final deleteAt = _toInt(data['deleteAt']);
-    if (DateTime.now().millisecondsSinceEpoch >= deleteAt) {
+    if (deleteAt > 0 && DateTime.now().millisecondsSinceEpoch >= deleteAt) {
       await acceptDelete(spaceId: spaceId, currentHouseId: currentHouseId);
     }
   }
@@ -829,7 +833,6 @@ class CountdownSpaceService {
             .ref(rootPath)
             .orderByChild(firstField)
             .equalTo(hId)
-            .limitToLast(_pairedRecordQueryLimit)
             .onValue
             .listen((event) {
               firstRecords = _toMap(event.snapshot.value);
@@ -840,7 +843,6 @@ class CountdownSpaceService {
             .ref(rootPath)
             .orderByChild(secondField)
             .equalTo(hId)
-            .limitToLast(_pairedRecordQueryLimit)
             .onValue
             .listen((event) {
               secondRecords = _toMap(event.snapshot.value);
@@ -864,6 +866,18 @@ class CountdownSpaceService {
       }
     });
     return result;
+  }
+
+  String _requestFailureMessage(Map<String, dynamic> response) {
+    const messageKeys = {
+      'countdown_already_connected',
+      'countdown_pending_request',
+      'countdown_limit_reached',
+    };
+    final key = response['messageKey']?.toString() ?? '';
+    if (messageKeys.contains(key)) return L10nService().translate(key);
+    final message = response['message']?.toString().trim() ?? '';
+    return message.isNotEmpty ? message : L10nService().translate('countdown_create_failed');
   }
 }
 

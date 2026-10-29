@@ -55,6 +55,7 @@ class CloudflareR2Service {
         'fileName': fileName,
         'contentType': contentType,
         'fileSize': fileSize,
+        'uploadProtocolVersion': 2,
       },
       timeout: const Duration(seconds: 30),
       requireAppCheck: true,

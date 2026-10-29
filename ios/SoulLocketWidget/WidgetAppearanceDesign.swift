@@ -3,6 +3,9 @@ import WidgetKit
 
 /// Cùng danh mục đã lưu và cùng SVG với Flutter/Android, không dùng font emoji.
 enum WidgetAppearanceDesign {
+    static let motionIntervalOptions: [Int] = [5, 15, 30]
+    static let defaultMotionIntervalMinutes = 5
+    static let heartKeys: [String] = ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","♥️","❣️","💕","💞","💓","💗","💖","💘","💝","💟","❤️‍🔥","❤️‍🩹","💌","💋","🫶","🫀","💫💗","✧♥︎","❥∞","🩷","🩶","🩵"]
     static let hearts: [String: String] = [
         "❤️": "widget_heart_red",
         "🧡": "widget_heart_orange",
@@ -36,7 +39,8 @@ enum WidgetAppearanceDesign {
         "🩶": "widget_heart_gray",
         "🩵": "widget_heart_cyan",
     ]
-    static let stickers: Set<String> = ["bears", "bunnies", "cats", "letter", "gift", "moon"]
+    static let stickerKeys: [String] = ["bears", "bunnies", "cats", "letter", "gift", "moon"]
+    static let stickers: Set<String> = Set(stickerKeys)
     static let frames: Set<String> = ["rounded", "heart", "polaroid"]
     static let layouts: Set<String> = ["single", "duo", "grid"]
     static let styles: Set<String> = ["classic", "countdown", "soulevent"]
@@ -59,6 +63,47 @@ enum WidgetAppearanceDesign {
     static func frame(_ key: String) -> String { frames.contains(key) ? key : "rounded" }
     static func layout(_ key: String) -> String { layouts.contains(key) ? key : "single" }
     static func style(_ key: String) -> String { styles.contains(key) ? key : "classic" }
+    static func normalizeMotionInterval(_ value: Int) -> Int {
+        motionIntervalOptions.contains(value) ? value : defaultMotionIntervalMinutes
+    }
+
+    static func motionBucket(at date: Date, minutes: Int) -> Int64 {
+        let interval = Double(normalizeMotionInterval(minutes) * 60)
+        return Int64(floor(date.timeIntervalSince1970 / interval))
+    }
+
+    private static func stableIndex(bucket: Int64, seed: Int, count: Int) -> Int {
+        guard count > 1 else { return 0 }
+        let tick = max(0, bucket)
+        if count == 2 { return Int((tick + Int64(seed & 1)) % Int64(count)) }
+        let cycle = tick / Int64(count)
+        var order = motionOrder(cycle: cycle, seed: seed, count: count)
+        // Đổi hai mẫu đầu không làm đổi mẫu cuối vòng có >= 3 phần tử.
+        if cycle > 0 && order[0] == motionOrder(cycle: cycle - 1, seed: seed, count: count).last! {
+            order.swapAt(0, 1)
+        }
+        return order[Int(tick % Int64(count))]
+    }
+
+    private static func motionOrder(cycle: Int64, seed: Int, count: Int) -> [Int] {
+        var state = ((cycle & 0x7fff_ffff) * 1_664_525 +
+            (Int64(seed) & 0x7fff_ffff) * 12_345 + 1_013_904_223) & 0x7fff_ffff
+        var order = Array(0..<count)
+        for index in stride(from: count - 1, through: 1, by: -1) {
+            state = (state * 1_664_525 + 1_013_904_223) & 0x7fff_ffff
+            order.swapAt(index, Int(state % Int64(index + 1)))
+        }
+        return order
+    }
+
+    static func animatedHeart(at date: Date, minutes: Int, seed: Int = 0) -> String {
+        return heartKeys[stableIndex(bucket: motionBucket(at: date, minutes: minutes), seed: seed, count: heartKeys.count)]
+    }
+
+    static func animatedSticker(at date: Date, minutes: Int, seed: Int = 0) -> String {
+        stickerKeys[stableIndex(bucket: motionBucket(at: date, minutes: minutes), seed: seed, count: stickerKeys.count)]
+    }
+
     // WidgetKit chỉ chuyển khung theo timeline; không dùng timer mỗi vài giây.
     static func alternate(at date: Date, enabled: Bool) -> Bool {
         enabled && Int(date.timeIntervalSince1970 / 1800).isMultiple(of: 2)

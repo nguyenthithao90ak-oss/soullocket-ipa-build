@@ -10,6 +10,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'activity_history_remote.dart';
 
 class SyncQueueSummary {
   final int pendingCount;
@@ -48,7 +49,8 @@ class LocalDatabaseService {
   LocalDatabaseService._internal()
     : _databaseFactory = null,
       _uidForTesting = null,
-      _sendForTesting = null;
+      _sendForTesting = null,
+      _activityRemoteForTesting = null;
 
   @visibleForTesting
   LocalDatabaseService.forTesting(
@@ -56,14 +58,17 @@ class LocalDatabaseService {
     DatabaseFactory? factory,
     String? Function()? currentUid,
     Future<void> Function(String path, String action, dynamic data)? send,
+    ActivityHistoryRemote Function()? activityRemote,
   }) : _db = database,
        _databaseFactory = factory,
        _uidForTesting = currentUid ?? (() => null),
-       _sendForTesting = send;
+       _sendForTesting = send,
+       _activityRemoteForTesting = activityRemote;
 
   final DatabaseFactory? _databaseFactory;
   final String? Function()? _uidForTesting;
   final Future<void> Function(String, String, dynamic)? _sendForTesting;
+  final ActivityHistoryRemote Function()? _activityRemoteForTesting;
   String? get _currentUid => _uidForTesting != null
       ? _uidForTesting()
       : FirebaseAuth.instance.currentUser?.uid;
@@ -473,8 +478,13 @@ class LocalDatabaseService {
     String payload, {
     String? operationId,
     String? entityType,
+    String? expectedOwnerUid,
+    int? issuedAt,
   }) async {
     final ownerUid = _currentUid;
+    if (expectedOwnerUid != null && ownerUid != expectedOwnerUid) {
+      throw const ActivityScopeChanged();
+    }
     if (ownerUid == null) throw StateError('Authentication required for sync');
     final db = await _requireDatabase();
     if (db == null) return;
@@ -508,7 +518,7 @@ class LocalDatabaseService {
       'status': _queueStatusPending,
       'retryCount': 0,
       'lastError': null,
-      'createdAt': now,
+      'createdAt': issuedAt ?? now,
       'syncedAt': null,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
 
@@ -550,6 +560,28 @@ class LocalDatabaseService {
     );
     _lastQueueSummary = summary;
     return summary;
+  }
+
+  /// Hàng đợi là nguồn của các mục chưa gửi; cache không tự khẳng định đã sync.
+  Future<List<Map<String, Object?>>> pendingActivity(String houseId) async {
+    final uid = _currentUid;
+    if (uid == null) return [];
+    final db = await _requireDatabase();
+    if (db == null || _currentUid != uid) return [];
+    final rows = await db.query(
+      'sync_queue',
+      where:
+          'ownerUid = ? AND status <> ? AND (path = ? OR substr(path,1,?) = ?)',
+      whereArgs: [
+        uid,
+        _queueStatusSynced,
+        'houses/$houseId/activity_history',
+        'houses/$houseId/activity_history/'.length,
+        'houses/$houseId/activity_history/',
+      ],
+      orderBy: 'createdAt ASC, timestamp ASC',
+    );
+    return _currentUid == uid ? rows : [];
   }
 
   Future<void> syncPendingData() async {
@@ -619,6 +651,31 @@ class LocalDatabaseService {
           }
           if (_sendForTesting != null) {
             await _sendForTesting(taskPath, action, data);
+          } else if (RegExp(
+            r'^houses/[^/]+/activity_history(?:/[^/]+)?$',
+          ).hasMatch(taskPath)) {
+            final parts = taskPath.split('/');
+            final remote =
+                _activityRemoteForTesting?.call() ?? ActivityHistoryRemote();
+            try {
+              if (!['SET', 'DELETE'].contains(action))
+                throw StateError('Invalid Activity queue action');
+              await remote.send(
+                houseId: parts[1],
+                action: action == 'DELETE' ? 'clear' : 'append',
+                entry: action == 'DELETE'
+                    ? null
+                    : Map<String, dynamic>.from(data as Map),
+                through: action == 'DELETE' && data is Map
+                    ? (data['through'] as num?)?.toInt()
+                    : null,
+                issuedAt: (task['createdAt'] as int?) ?? lastAttemptAt,
+                operationId: task['operationId']?.toString() ?? id,
+                expectedUid: ownerUid,
+              );
+            } finally {
+              remote.dispose();
+            }
           } else {
             switch (action) {
               case 'SET':

@@ -20,17 +20,37 @@ extension _MapPanelSectionsExt on _MapScreenState {
   }
 
   Widget _buildLocationAccessCard() {
-    return ValueListenableBuilder<_LiveUiSnapshot>(
-      valueListenable: _liveUiVN,
-      builder: (context, data, _) => MapAccessNotice(
-        access: _locationAccess,
-        busy: _isBootstrappingLocation,
-        hasLivePosition: data.myIsLive,
-        syncError: _gpsSyncError,
-        web: kIsWeb,
-        onAction: _handleLocationAction,
-        onSettings: kIsWeb ? null : _openLocationAppSettings,
-      ),
+    return Column(
+      children: [
+        ValueListenableBuilder<bool>(
+          valueListenable: _tileHealth,
+          builder: (context, failed, _) => !failed
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: MapInlineEmptyState(
+                    icon: Icons.cloud_off_outlined,
+                    accent: mapRose,
+                    title: context.tr('map_tiles_unavailable'),
+                    subtitle: context.tr('map_tiles_unavailable_body'),
+                    actionLabel: context.tr('map_refresh_retry'),
+                    onTap: _retryMapTiles,
+                  ),
+                ),
+        ),
+        ValueListenableBuilder<_LiveUiSnapshot>(
+          valueListenable: _liveUiVN,
+          builder: (context, data, _) => MapAccessNotice(
+            access: _locationAccess,
+            busy: _isBootstrappingLocation,
+            hasLivePosition: data.myIsLive,
+            syncError: _gpsSyncError,
+            web: kIsWeb,
+            onAction: _handleLocationAction,
+            onSettings: kIsWeb ? null : _openLocationAppSettings,
+          ),
+        ),
+      ],
     );
   }
 

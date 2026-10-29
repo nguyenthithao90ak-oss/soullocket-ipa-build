@@ -11,20 +11,93 @@ import 'soul_message_history.dart';
 import 'soul_message_actions.dart';
 import 'soul_message_content.dart';
 import 'soul_merge_role_stream.dart';
+import 'soul_merge_touch_session.dart';
+import 'core/rtdb_read_coalescer.dart';
 import 'package:soullocket_app/utils/services/core/presence_service.dart';
 
 class SoulMergeService {
-  final FirebaseDatabase _db = FirebaseDatabase.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final HouseService _houseService = HouseService();
+  SoulMergeService({
+    FirebaseDatabase? database,
+    FirebaseAuth? auth,
+    HouseService? houseService,
+    DateTime Function()? now,
+  }) : _db = database ?? FirebaseDatabase.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _houseService = houseService ?? HouseService(),
+       _now = now ?? DateTime.now,
+       _nameReads = RtdbReadCoalescer(
+         reuse: const Duration(minutes: 1),
+         now: now,
+       );
+
+  final FirebaseDatabase _db;
+  final FirebaseAuth _auth;
+  final HouseService _houseService;
+  final DateTime Function() _now;
+  final RtdbReadCoalescer _nameReads;
+  String? _nameScope;
   int _lastBumpSentAt = 0;
-  String? _interactivePresenceHouse;
-  String? _interactivePresenceRole;
+  String? _interactiveScope;
   bool _interactivePresenceOnline = false;
-  int _interactivePresenceCheckedAt = 0;
-  int _lastInteractiveSentAt = 0;
+  int? _interactivePresenceCheckedAt;
+  int? _lastInteractiveSentAt;
+  int? _lastInteractivePrunedAt;
+  bool _isSendingInteractive = false;
 
   Future<String?> getCurrentHouseId() => _houseService.getCurrentHouseId();
+
+  SoulMergeTouchSession createTouchSession({
+    required String houseId,
+    required String expectedUid,
+    required String role,
+  }) {
+    return SoulMergeTouchSession(
+      transport: FirebaseSoulMergeTouchTransport(_db, houseId),
+      uid: expectedUid,
+      role: role,
+      now: _now,
+      scopeStillCurrent: () => _auth.currentUser?.uid == expectedUid,
+      validateScope: () async {
+        if (_auth.currentUser?.uid != expectedUid ||
+            await getCurrentHouseId() != houseId) {
+          return false;
+        }
+        final prefs = await SharedPreferences.getInstance();
+        return _auth.currentUser?.uid == expectedUid &&
+            _normalizeRole(prefs.getString('il_role')?.trim()) == role &&
+            await getCurrentHouseId() == houseId &&
+            _auth.currentUser?.uid == expectedUid;
+      },
+    );
+  }
+
+  // Chỉ nhớ tên hiển thị ngắn hạn; không dùng cache này để quyết định quyền.
+  Future<String?> _readSoulName(String houseId, String role, String uid) async {
+    final scope = '$uid|$houseId';
+    if (_nameScope != scope) {
+      _nameScope = scope;
+      _nameReads.clear();
+    }
+    final key = role == 'user2' ? 'nameU2' : 'nameU1';
+    final namePath = 'houses/$houseId/settings/$key';
+    final raw = await _nameReads.read(
+      '$uid|$namePath',
+      () async => (await _db.ref(namePath).get()).value,
+    );
+    return raw is String ? raw.trim() : null;
+  }
+
+  /// Tên hai người dùng cho header/widget, không tải cả settings hoặc users.
+  Future<Map<String, String>> loadSoulNames(String houseId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null || houseId.isEmpty) return const {};
+    final names = await Future.wait([
+      _readSoulName(houseId, 'user1', uid),
+      _readSoulName(houseId, 'user2', uid),
+    ]);
+    if (_auth.currentUser?.uid != uid) return const {};
+    return {'user1': names[0] ?? '', 'user2': names[1] ?? ''};
+  }
 
   /// Report a physical bump event to Firebase using server time.
   /// Dùng role ('user1'/'user2') làm key thay vì uid vì 2 người dùng chung 1 uid.
@@ -40,10 +113,6 @@ class SoulMergeService {
 
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return;
-
-      final eventNow = DateTime.now().millisecondsSinceEpoch;
-      if (eventNow - _lastInteractiveSentAt < 180) return;
-      _lastInteractiveSentAt = eventNow;
 
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
@@ -90,6 +159,7 @@ class SoulMergeService {
     String? replyTo,
     String? expectedHouseId,
     String? expectedUid,
+    String? expectedRole,
     String? messageId,
     bool isRetry = false,
   }) async {
@@ -118,9 +188,11 @@ class SoulMergeService {
       }
 
       final prefs = await SharedPreferences.getInstance();
+      if (expectedRole != null) await prefs.reload();
       final role = _normalizeRole(prefs.getString('il_role'));
 
-      if (_auth.currentUser?.uid != user.uid ||
+      if ((expectedRole != null && expectedRole != role) ||
+          _auth.currentUser?.uid != user.uid ||
           await getCurrentHouseId() != houseId ||
           _auth.currentUser?.uid != user.uid) {
         throw StateError('Soul Merge scope changed');
@@ -168,22 +240,11 @@ class SoulMergeService {
       );
       final stickerId = SoulMessageContent.stickerId(imageUrl);
 
-      // Lấy tên đúng từ house settings theo role của người gửi
-      String myName = UiCopy.text('copy_145933221191');
+      var myName = user.displayName?.trim() ?? '';
+      if (myName.isEmpty) myName = UiCopy.text('copy_145933221191');
       try {
-        final settingsSnap = await _db.ref('houses/$houseId/settings').get();
-        if (settingsSnap.exists && settingsSnap.value is Map) {
-          final settings = settingsSnap.value as Map<dynamic, dynamic>;
-          final nameKey = role == 'user2' ? 'nameU2' : 'nameU1';
-          final nameFromSettings = (settings[nameKey] as String?)?.trim();
-          if (nameFromSettings != null && nameFromSettings.isNotEmpty) {
-            myName = nameFromSettings;
-          } else {
-            // fallback: displayName của Firebase Auth
-            final dn = user.displayName?.trim();
-            if (dn != null && dn.isNotEmpty) myName = dn;
-          }
-        }
+        final name = await _readSoulName(houseId, role, user.uid);
+        if (name != null && name.isNotEmpty) myName = name;
       } catch (error) {
         debugPrint('[SoulMergeService] Cannot resolve sender name: $error');
       }
@@ -205,6 +266,7 @@ class SoulMergeService {
               body: body,
               data: {
                 'type': 'soul_merge',
+                'screen': 'soul_merge',
                 'senderName': myName,
                 'stickerId': ?stickerId,
               },
@@ -341,12 +403,22 @@ class SoulMergeService {
           .orderByChild('pinnedAt')
           .limitToLast(50)
           .onValue
-          .asyncMap((event) async {
+          .map((event) {
             final pinned = <Map<String, dynamic>>[];
             for (final child in event.snapshot.children) {
               final raw = child.value;
-              if (child.key == null || raw is! Map) continue;
-              pinned.add({...Map<String, dynamic>.from(raw), 'id': child.key});
+              if (child.key == null ||
+                  !SoulMessageActions.validId(child.key!) ||
+                  raw is! Map) {
+                continue;
+              }
+              pinned.add({
+                'id': child.key,
+                'pinnedAt': raw['pinnedAt'] is num
+                    ? (raw['pinnedAt'] as num).toInt()
+                    : 0,
+                if (raw['pinnedBy'] is String) 'pinnedBy': raw['pinnedBy'],
+              });
             }
             pinned.sort(
               (a, b) => ((b['pinnedAt'] as num?)?.toInt() ?? 0).compareTo(
@@ -354,39 +426,9 @@ class SoulMergeService {
               ),
             );
 
-            // Metadata ghim nằm ngoài trang 20 không chứa nội dung tin nhắn,
-            // vì vậy strip ghim trước đây chỉ hiển thị bản xem trước rỗng.
-            // Hydrate một lần theo từng thay đổi danh sách ghim (tối đa 50
-            // reads), không mở listener riêng cho từng tin và vẫn giữ metadata
-            // nếu một lần đọc nội dung bị lỗi/mất mạng.
-            return Future.wait(
-              pinned.map((pin) async {
-                final messageId = pin['id']?.toString();
-                if (messageId == null ||
-                    !SoulMessageActions.validId(messageId)) {
-                  return pin;
-                }
-                try {
-                  final messageSnapshot = await _db
-                      .ref('houses/$resolvedHouseId/soul_merge/chat/$messageId')
-                      .get();
-                  final message = messageSnapshot.value;
-                  if (message is Map) {
-                    return <String, dynamic>{
-                      ...Map<String, dynamic>.from(message),
-                      ...pin,
-                      'id': messageId,
-                    };
-                  }
-                } catch (error) {
-                  debugPrint(
-                    '[SoulMergeService] Pinned message hydrate failed: '
-                    '${error.runtimeType}',
-                  );
-                }
-                return pin;
-              }),
-            );
+            // Nội dung chỉ được nghe khi preview đang hiển thị; không đọc lại
+            // toàn bộ 50 tin mỗi khi thêm hoặc bỏ một ghim.
+            return pinned;
           });
     });
   }
@@ -643,73 +685,96 @@ class SoulMergeService {
   Future<void> sendInteractiveEvent({
     required String type,
     String? url,
+    String? memoryId,
+    bool privateMedia = false,
     double? x,
     double? y,
   }) async {
+    // Hiệu ứng local vẫn phản hồi mọi lần chạm; đường mạng chỉ nhận một lượt.
+    if (_isSendingInteractive) return;
+    _isSendingInteractive = true;
     try {
       final user = _auth.currentUser;
       if (user == null) return;
-
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return;
-
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
+      if (_auth.currentUser?.uid != user.uid) return;
+
+      final scope = '${user.uid}|$houseId|$role';
+      if (_interactiveScope != scope) {
+        _interactiveScope = scope;
+        _lastInteractiveSentAt = null;
+        _lastInteractivePrunedAt = null;
+        _interactivePresenceCheckedAt = null;
+        _interactivePresenceOnline = false;
+      }
+      final now = _now().millisecondsSinceEpoch;
+      final lastSent = _lastInteractiveSentAt;
+      if (lastSent != null && now >= lastSent && now - lastSent < 350) return;
+      _lastInteractiveSentAt = now;
 
       final oppositeRole = role == 'user1' ? 'user2' : 'user1';
-      final now = DateTime.now().millisecondsSinceEpoch;
+      final checkedAt = _interactivePresenceCheckedAt;
       final presenceCacheValid =
-          _interactivePresenceHouse == houseId &&
-          _interactivePresenceRole == oppositeRole &&
-          now - _interactivePresenceCheckedAt < 2000;
+          checkedAt != null && now >= checkedAt && now - checkedAt < 2000;
       if (!presenceCacheValid) {
         final presenceSnap = await _db
             .ref('houses/$houseId/presence/$oppositeRole')
             .get();
-        final presenceData = presenceSnap.value as Map<dynamic, dynamic>?;
-        _interactivePresenceHouse = houseId;
-        _interactivePresenceRole = oppositeRole;
+        final raw = presenceSnap.value;
         _interactivePresenceCheckedAt = now;
         _interactivePresenceOnline = PresenceService.isPresenceOnline(
-          presenceData,
+          raw is Map ? raw : null,
+          nowMs: now,
         );
       }
 
-      // Nếu người kia offline, không ghi event tạm thời mà họ chắc chắn không
-      // thể nhận; cache presence 2 giây để chuỗi chạm không tạo nhiều lượt đọc.
-      if (!_interactivePresenceOnline) {
+      // Event tạm thời chỉ cần gửi khi người kia đang online.
+      if (!_interactivePresenceOnline ||
+          _auth.currentUser?.uid != user.uid ||
+          await getCurrentHouseId() != houseId ||
+          _auth.currentUser?.uid != user.uid) {
         return;
       }
-
       final ref = _db.ref('houses/$houseId/soul_merge/interactive_events');
       await ref.push().set({
         'type': type,
         'url': url ?? '',
+        if (memoryId != null && memoryId.trim().isNotEmpty)
+          'memoryId': memoryId.trim(),
+        if (privateMedia) 'privateMedia': true,
         'x': x ?? 0.0,
         'y': y ?? 0.0,
         'sender': role,
         'timestamp': ServerValue.timestamp,
       });
 
-      // Prune old events to keep lightweight
-      final snap = await ref.orderByChild('timestamp').limitToLast(21).get();
-      if (snap.exists && snap.value is Map) {
-        final events = Map<dynamic, dynamic>.from(snap.value as Map);
-        if (events.length > 20) {
-          final sortedKeys = events.keys.toList()
-            ..sort((a, b) {
-              final t1 = events[a]['timestamp'] as int? ?? 0;
-              final t2 = events[b]['timestamp'] as int? ?? 0;
-              return t1.compareTo(t2);
-            });
-          final keysToDelete = sortedKeys.sublist(0, sortedKeys.length - 20);
-          for (final key in keysToDelete) {
-            await ref.child(key.toString()).remove();
-          }
-        }
+      // Dọn theo nhịp, đọc tối đa 100 event cũ và xóa gộp một request.
+      // Lấy trang đầu để backlog cũ cũng được dọn dần, không bỏ sót mãi mãi.
+      final lastPruned = _lastInteractivePrunedAt;
+      if (lastPruned != null && now >= lastPruned && now - lastPruned < 10000) {
+        return;
       }
+      final snap = await ref.orderByChild('timestamp').limitToFirst(100).get();
+      if (_auth.currentUser?.uid != user.uid ||
+          await getCurrentHouseId() != houseId ||
+          _auth.currentUser?.uid != user.uid) {
+        return;
+      }
+      final events = snap.children.toList(growable: false);
+      if (events.length > 20) {
+        await ref.update({
+          for (final event in events.take(events.length - 20))
+            if (event.key != null) event.key!: null,
+        });
+      }
+      _lastInteractivePrunedAt = now;
     } catch (e) {
       debugPrint('[SoulMergeService] sendInteractiveEvent error: $e');
+    } finally {
+      _isSendingInteractive = false;
     }
   }
 
@@ -747,6 +812,8 @@ class SoulMergeService {
   /// Khởi chạy đồng bộ Widget Soul Merge chủ động
   Future<void> syncSoulMergeWidgetNow() async {
     try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return;
       final houseId = await _houseService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return;
 
@@ -754,35 +821,11 @@ class SoulMergeService {
       final myRole = _normalizeRole(prefs.getString('il_role'));
       final partnerRole = myRole == 'user1' ? 'user2' : 'user1';
 
-      // 1. Get Partner Name
-      final profileSnapshots = await Future.wait([
-        _db.ref('houses/$houseId/users').get(),
-        _db.ref('houses/$houseId/settings').get(),
-      ]);
-      final users = profileSnapshots[0].value as Map<dynamic, dynamic>?;
-      String partnerName = UiCopy.text('copy_145933221191');
-      if (users != null && users[partnerRole] != null) {
-        final partnerInfo = users[partnerRole] as Map<dynamic, dynamic>;
-        partnerName =
-            (partnerInfo['name'] as String?)?.trim() ??
-            UiCopy.text('copy_145933221191');
-        if (partnerName.isEmpty) partnerName = UiCopy.text('copy_145933221191');
-      }
-
-      // 2. Get house settings for names
-      final settingsData = profileSnapshots[1].value as Map<dynamic, dynamic>?;
-      final nameU1 = (settingsData?['nameU1'] as String?)?.trim();
-      final nameU2 = (settingsData?['nameU2'] as String?)?.trim();
-
-      // Helper lấy tên theo role
-      String nameForRole(String r) {
-        if (r == 'user2') {
-          return (nameU2 != null && nameU2.isNotEmpty)
-              ? nameU2
-              : UiCopy.text('copy_145933221191');
-        }
-        return (nameU1 != null && nameU1.isNotEmpty)
-            ? nameU1
+      final names = await loadSoulNames(houseId);
+      String nameForRole(String role) {
+        final name = names[role];
+        return name != null && name.isNotEmpty
+            ? name
             : UiCopy.text('copy_145933221191');
       }
 
@@ -819,6 +862,11 @@ class SoulMergeService {
         }
       }
 
+      if (_auth.currentUser?.uid != uid ||
+          await getCurrentHouseId() != houseId ||
+          _auth.currentUser?.uid != uid) {
+        return;
+      }
       // 4. Sync to Widget
       await WidgetService.syncSoulMergeWidgetData(
         message: message,

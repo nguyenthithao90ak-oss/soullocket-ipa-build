@@ -19,6 +19,7 @@ class DiaryComposer extends StatefulWidget {
   final ValueChanged<String> onMoodChanged;
   final TextEditingController composerController;
   final bool isPostingDiary;
+  final String? quotaStatus;
   final VoidCallback onSubmit;
   final CustomMoodStickerService? stickerService;
 
@@ -30,6 +31,7 @@ class DiaryComposer extends StatefulWidget {
     required this.onMoodChanged,
     required this.composerController,
     required this.isPostingDiary,
+    this.quotaStatus,
     required this.onSubmit,
     this.stickerService,
   });
@@ -277,6 +279,18 @@ class _DiaryComposerState extends State<DiaryComposer> {
             color: palette.muted,
           ),
         ),
+        if (widget.quotaStatus != null) ...[
+          const SizedBox(height: 5),
+          Text(
+            widget.quotaStatus!,
+            style: SLTheme.quicksand(
+              fontSize: 10.5,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              color: palette.rose,
+            ),
+          ),
+        ],
       ],
     );
     return LayoutBuilder(
@@ -596,6 +610,9 @@ class _DiaryComposerState extends State<DiaryComposer> {
             key: const ValueKey('diary-note-field'),
             focusNode: _focusNode,
             controller: widget.composerController,
+            keyboardType: TextInputType.multiline,
+            textInputAction: TextInputAction.newline,
+            onTapOutside: (_) => _focusNode.unfocus(),
             minLines: 3,
             maxLines: 6,
             maxLength: 5000,

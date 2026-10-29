@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'private_r2_put.dart';
+import 'firebase_signed_put_headers.dart';
 
 abstract final class StorageSignedAudioUpload {
   /// Phiên `transport: 'r2'` (server mới) ghi vào bucket R2 riêng tư; phiên còn lại
@@ -44,24 +45,12 @@ abstract final class StorageSignedAudioUpload {
         rawHeaders is! Map) {
       throw const FormatException('Invalid audio upload session');
     }
-    final headers = <String, String>{};
-    for (final entry in rawHeaders.entries) {
-      if (entry.key is! String || entry.value is! String) {
-        throw const FormatException('Invalid audio upload header');
-      }
-      final name = (entry.key as String).toLowerCase();
-      final value = entry.value as String;
-      if (RegExp(r'[\x00-\x1f\x7f]').hasMatch(name + value) ||
-          headers.containsKey(name)) {
-        throw const FormatException('Invalid audio upload header');
-      }
-      if (name == 'content-type' || name.startsWith('x-goog-meta-')) {
-        headers[name] = value;
-      }
-    }
-    if (headers['content-type'] != contentType) {
-      throw const FormatException('Audio upload content type mismatch');
-    }
+    final headers = FirebaseSignedPutHeaders.parse(
+      rawHeaders: rawHeaders,
+      contentType: contentType,
+      fileSize: bytes.length,
+      uploadUri: uri,
+    );
     final request = http.Request('PUT', uri)
       ..followRedirects = false
       ..headers.addAll(headers)

@@ -20,6 +20,7 @@ class SoulMergeInteractionStrip extends StatelessWidget {
     this.onAccessibleTap,
     this.heartPulse = 0,
     this.heartStyle = 'basic',
+    this.compact = false,
   });
 
   final ValueNotifier<double> scale;
@@ -35,6 +36,7 @@ class SoulMergeInteractionStrip extends StatelessWidget {
   final VoidCallback? onAccessibleTap;
   final int heartPulse;
   final String heartStyle;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +55,14 @@ class SoulMergeInteractionStrip extends StatelessWidget {
         : context.tr('p4_soul_touch_hint');
     return Container(
       key: const ValueKey('soul-merge-interaction-strip'),
-      constraints: const BoxConstraints(minHeight: 112),
+      constraints: BoxConstraints(minHeight: compact ? 56 : 128),
       margin: const EdgeInsets.symmetric(horizontal: 14),
-      padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 6, 10),
+      padding: EdgeInsetsDirectional.fromSTEB(
+        12,
+        compact ? 4 : 10,
+        6,
+        compact ? 4 : 10,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: AlignmentDirectional.centerStart,
@@ -91,7 +98,7 @@ class SoulMergeInteractionStrip extends StatelessWidget {
                             : const Duration(milliseconds: 100),
                         child: RepaintBoundary(
                           child: SizedBox.square(
-                            dimension: 90,
+                            dimension: compact ? 48 : 106,
                             child: SoulMergeTouchHeart(
                               pressed: value < 1,
                               partnerReady: isPartnerReady,
@@ -110,6 +117,8 @@ class SoulMergeInteractionStrip extends StatelessWidget {
                           children: [
                             Text(
                               title,
+                              maxLines: compact ? 1 : null,
+                              overflow: compact ? TextOverflow.ellipsis : null,
                               style: TextStyle(
                                 fontSize: 14,
                                 height: 1.25,
@@ -117,16 +126,18 @@ class SoulMergeInteractionStrip extends StatelessWidget {
                                 color: colors.ink,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              hint,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                height: 1.4,
-                                fontWeight: FontWeight.w500,
-                                color: colors.muted,
+                            if (!compact) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                hint,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                  color: colors.muted,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ),
@@ -139,6 +150,7 @@ class SoulMergeInteractionStrip extends StatelessWidget {
           if (photoUrls.isNotEmpty)
             IconButton(
               tooltip: context.tr('p4_soul_photo_open'),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               color: colors.rose,
               onPressed: () => SoulMergePhotoViewer.show(
                 context,

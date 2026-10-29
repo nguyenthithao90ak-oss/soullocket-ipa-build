@@ -1011,6 +1011,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ),
           _buildSettingsBackupStatusCard(),
           const SizedBox(height: 12),
+          MediaDataSettingsCard(key: ValueKey(_auth.currentUser?.uid)),
+          const SizedBox(height: 12),
           _buildRestoreDataGroupsCard(),
           const SizedBox(height: 12),
           _buildPrivacyCenterCard(),

@@ -50,6 +50,12 @@ import '../../utils/services/notification_service.dart';
 import '../../utils/services/role_utils.dart';
 import '../../utils/services/schedule_notif_service.dart';
 import '../../utils/services/webrtc_service.dart';
+import '../../utils/services/couple_call_signaling.dart';
+import '../../utils/incoming_call_payload.dart';
+import '../../utils/services/incoming_call_notifications.dart';
+import '../../utils/services/incoming_call_suppression.dart';
+import '../../utils/services/system_call_bridge.dart';
+import '../relationship/incoming_call_screen.dart';
 import '../../utils/services/widget_action_service.dart';
 import '../../utils/services/update_checker_service.dart';
 import '../../utils/services/local_action_throttle_service.dart';
@@ -90,6 +96,7 @@ import '../../utils/app_cache_manager.dart';
 import 'widgets/home_shell/soul_navigation_style.dart';
 import 'widgets/home_shell/navigation_restore_handle.dart';
 import 'widgets/home_shell/home_inactivity_reminder_dialog.dart';
+import 'widgets/home_shell/home_breakup_notice.dart';
 import '../../widgets/local_guide_companion.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
@@ -394,7 +401,9 @@ class _HomeScreenState extends State<HomeScreen>
   bool _didCheckNewUserWelcomeNotice = false;
   bool _didCheckFirstSetupGuide = false;
   bool _didCheckPendingDeviceNotice = false;
-  bool _isShowingBreakupEntryNotice = false;
+  final _breakupNoticeReady = ValueNotifier<bool>(false);
+  late final Stream<User?> _breakupNoticeAuthChanges = FirebaseAuth.instance
+      .authStateChanges();
   bool _isHouseUnpairedCache = false;
   final _houseService = HouseService();
   final _houseSettingsService = HouseSettingsService();
@@ -426,6 +435,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _musicController;
 
   StreamSubscription? _callSub;
+  StreamSubscription<Map<String, dynamic>>? _coupleCallSub;
   StreamSubscription? _pairingSub;
   StreamSubscription? _settingsSub;
   StreamSubscription<WidgetLaunchAction>? _widgetActionSub;
@@ -438,6 +448,14 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _appUpdateTimer;
   Timer? _inactivityTimer;
   Timer? _incomingCallAlertTimer;
+  Route<bool>? _incomingCallDialogRoute;
+  Future<void> Function(bool?)? _resolveIncomingCallRoute;
+  bool _incomingCallRequestAttached = false;
+  bool _openingIncomingCall = false;
+  String? _checkingIncomingRoom;
+  IncomingCallAction? _incomingActionDuringRead;
+  String? _incomingOpeningRoom;
+  String? _cancelIncomingOpen;
   int _incomingCallAlertSequence = 0;
   bool _isShowingInactivityDialog = false;
   bool _isCheckingScheduleNotifs = false;
@@ -448,6 +466,8 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isPrewarmingShellMedia = false;
   bool _allowStartupAnimations = false;
   Map<String, dynamic>? _incomingCall;
+  final Map<String, int> _incomingCallSeenAt = <String, int>{};
+  String? _incomingCallHouseId;
   String? _notificationBadgeHouseId;
 
   static const String _navCollapsedPrefsKey = 'il_home_nav_collapsed_v2';
@@ -654,10 +674,12 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     unawaited(_syncNotificationBadgeListener(forceRestart: true));
     await _maybeShowNewUserWelcomeNotice();
-    await _maybeShowBreakupEntryNotice();
     await _maybeShowFirstSetupGuide();
     await _maybeShowPendingDeviceNotice();
-    if (mounted) _pairingReminder.start();
+    if (mounted) {
+      _breakupNoticeReady.value = true;
+      _pairingReminder.start();
+    }
     unawaited(_checkScheduleNotifs());
     if (!mounted) return;
     precacheUtilityStickerList(context);
@@ -674,16 +696,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
     unawaited(_syncIncomingCallListener(houseId));
     unawaited(_checkExpiredProGracePeriod(houseId));
-    final startDateSnap = await FirebaseDatabase.instance
-        .ref('houses/$houseId/settings/startDate')
-        .get();
-    if (!mounted || !startDateSnap.exists || startDateSnap.value == null) {
-      return;
-    }
-    final startDate = DateTime.tryParse(startDateSnap.value.toString());
-    if (startDate != null) {
-      NotificationService().checkAnniversaryReminder(houseId, startDate);
-    }
+    // Nhắc kỷ niệm chỉ do _checkScheduleNotifs sở hữu và chống trùng ở server.
   }
 
   Widget _buildTabPage(int index) {
@@ -883,33 +896,86 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _syncIncomingCallListener(String houseId) async {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty || _callSub != null) {
+    if (normalizedHouseId.isEmpty) {
+      _detachIncomingCallListeners();
       return;
     }
+    if (_callSub != null && _incomingCallHouseId == normalizedHouseId) {
+      return;
+    }
+    _detachIncomingCallListeners();
+    _incomingCallHouseId = normalizedHouseId;
+    if (!_incomingCallRequestAttached) {
+      NotificationService().incomingCallRequest.addListener(
+        _consumeIncomingCallRequest,
+      );
+      _incomingCallRequestAttached = true;
+    }
+    _consumeIncomingCallRequest();
     final ownerUid = FirebaseAuth.instance.currentUser?.uid;
-    void onIncoming(roomId, callerId, data) {
+    void onIncoming(roomId, callerId, data) async {
+      final normalizedRoomId = roomId.toString().trim();
+      if (normalizedRoomId.isEmpty || data is! Map) return;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      _incomingCallSeenAt.removeWhere(
+        (_, seenAt) => now - seenAt > CoupleCallInvite.ringingSeconds * 1000,
+      );
+      // Paired inbox và query legacy có thể đưa cùng một room; chỉ mở một
+      // dialog/notification cho room đó trong thời gian đổ chuông.
+      if (_incomingCallSeenAt.containsKey(normalizedRoomId)) return;
+      final payload = Map<String, dynamic>.from(data);
+      final callerUid = payload['callerId']?.toString().trim() ?? '';
+      final calleeHouseId = payload['calleeId']?.toString().trim() ?? '';
+      final expiresAt = payload['localExpiresAt'];
+      if (payload['status'] != 'ringing' ||
+          calleeHouseId != normalizedHouseId ||
+          callerUid.isEmpty ||
+          callerUid == ownerUid ||
+          expiresAt is! int ||
+          expiresAt <= now) {
+        _incomingCallSeenAt.remove(normalizedRoomId);
+        return;
+      }
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        if (IncomingCallSuppression.isClosed(
+          prefs,
+          uid: ownerUid,
+          roomId: normalizedRoomId,
+        )) {
+          return;
+        }
+      } catch (error) {
+        debugPrint('Incoming call marker: ${error.runtimeType}');
+      }
       if (!mounted ||
           _incomingCall != null ||
+          _openingIncomingCall ||
+          _incomingCallHouseId != normalizedHouseId ||
           WebRTCService().isBusy ||
           FirebaseAuth.instance.currentUser?.uid != ownerUid) {
         return;
       }
+      _incomingCallSeenAt[normalizedRoomId] = now;
       _incomingCall = <String, dynamic>{
-        ...Map<String, dynamic>.from(data),
-        'roomId': roomId,
-        'callerId': callerId,
+        ...payload,
+        'roomId': normalizedRoomId,
+        'callerHouseId': callerId,
       };
       _startIncomingCallAlert();
       unawaited(_showIncomingCallDialog());
     }
 
-    if (_isHouseUnpairedCache) {
-      _callSub = WebRTCService().listenForIncomingCalls(
-        normalizedHouseId,
-        onIncoming,
-      );
-    } else {
-      _callSub = WebRTCService()
+    // Gọi khác House dùng query `/calls` đã có index. Gọi trong cùng House
+    // dùng thêm inbox riêng; cả hai đường được lọc và chống trùng bên trên.
+    // Giữ query legacy để nhận được người gọi đang dùng app cũ.
+    _callSub = WebRTCService().listenForIncomingCalls(
+      normalizedHouseId,
+      onIncoming,
+    );
+    if (!_isHouseUnpairedCache) {
+      _coupleCallSub = WebRTCService()
           .watchIncomingCoupleCalls(normalizedHouseId)
           .listen(
             (data) => onIncoming(data['roomId'], data['houseId'], data),
@@ -920,7 +986,161 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Future<void> _showIncomingCallDialog() async {
+  void _detachIncomingCallListeners() {
+    unawaited(_stopIncomingCallAlert());
+    unawaited(SystemCallBridge.instance.setIncomingVisible(false));
+    if (_incomingCallRequestAttached) {
+      NotificationService().incomingCallRequest.removeListener(
+        _consumeIncomingCallRequest,
+      );
+      _incomingCallRequestAttached = false;
+    }
+    _incomingCall = null;
+    final dialog = _incomingCallDialogRoute;
+    _incomingCallDialogRoute = null;
+    _resolveIncomingCallRoute = null;
+    if (dialog != null && dialog.isActive) {
+      dialog.navigator?.removeRoute(dialog);
+    }
+    WebRTCService().stopIncomingCallListener();
+    _callSub?.cancel();
+    _callSub = null;
+    _coupleCallSub?.cancel();
+    _coupleCallSub = null;
+    _incomingCallHouseId = null;
+    _incomingCallSeenAt.clear();
+    _checkingIncomingRoom = null;
+    _incomingActionDuringRead = null;
+  }
+
+  void _consumeIncomingCallRequest() {
+    final request = NotificationService().takeIncomingCallRequest();
+    if (request == null) return;
+    unawaited(_handleIncomingCallRequest(request));
+  }
+
+  Future<void> _handleIncomingCallRequest(IncomingCallRequest request) async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = _incomingCallHouseId;
+    if (!mounted ||
+        ownerUid == null ||
+        houseId == null ||
+        (request.data['accountUid'] != null &&
+            request.data['accountUid'] != ownerUid) ||
+        (request.data['houseId'] != null &&
+            request.data['houseId'] != houseId)) {
+      return;
+    }
+    if (_incomingOpeningRoom == request.roomId &&
+        (request.action == IncomingCallAction.end ||
+            request.action == IncomingCallAction.decline)) {
+      _cancelIncomingOpen = request.roomId;
+      return;
+    }
+    if (_incomingCall?['roomId'] == request.roomId) {
+      final route = _incomingCallDialogRoute;
+      if (route == null ||
+          !route.isActive ||
+          request.action == IncomingCallAction.open)
+        return;
+      if (request.action == IncomingCallAction.answer) {
+        unawaited(_resolveIncomingCallRoute?.call(true));
+      } else if (request.action == IncomingCallAction.decline ||
+          request.action == IncomingCallAction.end) {
+        unawaited(
+          _resolveIncomingCallRoute?.call(
+            request.action == IncomingCallAction.decline ? false : null,
+          ),
+        );
+      }
+      return;
+    }
+    if (_checkingIncomingRoom == request.roomId) {
+      if (request.action != IncomingCallAction.open) {
+        _incomingActionDuringRead = request.action;
+      }
+      return;
+    }
+    if (_incomingCall != null ||
+        _openingIncomingCall ||
+        WebRTCService().isBusy ||
+        request.action == IncomingCallAction.end ||
+        request.action == IncomingCallAction.mute) {
+      return;
+    }
+    _openingIncomingCall = true;
+    _checkingIncomingRoom = request.roomId;
+    try {
+      final incoming = await IncomingCallNotifications.readVerified(
+        request.data,
+      );
+      final action = _incomingActionDuringRead ?? request.action;
+      _checkingIncomingRoom = null;
+      _incomingActionDuringRead = null;
+      if (!mounted ||
+          incoming == null ||
+          FirebaseAuth.instance.currentUser?.uid != ownerUid ||
+          _incomingCallHouseId != houseId) {
+        await NotificationService().dismissIncomingCallNotification(
+          request.roomId,
+        );
+        await SystemCallBridge.instance.end(request.roomId);
+        return;
+      }
+      if (action == IncomingCallAction.open) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        if (!mounted ||
+            FirebaseAuth.instance.currentUser?.uid != ownerUid ||
+            _incomingCallHouseId != houseId) {
+          return;
+        }
+        if (IncomingCallSuppression.isClosed(
+          prefs,
+          uid: ownerUid,
+          roomId: request.roomId,
+        )) {
+          await NotificationService().dismissIncomingCallNotification(
+            request.roomId,
+          );
+          await SystemCallBridge.instance.end(request.roomId);
+          return;
+        }
+      }
+      _incomingCallSeenAt[request.roomId] =
+          DateTime.now().millisecondsSinceEpoch;
+      if (action == IncomingCallAction.end) {
+        await NotificationService().dismissIncomingCallNotification(
+          request.roomId,
+        );
+        await SystemCallBridge.instance.end(request.roomId);
+      } else if (action == IncomingCallAction.answer) {
+        await NotificationService().dismissIncomingCallNotification(
+          request.roomId,
+        );
+        _incomingCall = incoming;
+        unawaited(_showIncomingCallDialog(answerImmediately: true));
+      } else if (action == IncomingCallAction.decline) {
+        await NotificationService().dismissIncomingCallNotification(
+          request.roomId,
+        );
+        await SystemCallBridge.instance.end(request.roomId);
+        await _declineIncomingCall(incoming);
+      } else {
+        _incomingCall = incoming;
+        _startIncomingCallAlert();
+        unawaited(_showIncomingCallDialog());
+      }
+    } catch (error) {
+      await SystemCallBridge.instance.end(request.roomId);
+      debugPrint('Incoming notification action: ${error.runtimeType}');
+    } finally {
+      if (_checkingIncomingRoom == request.roomId) _checkingIncomingRoom = null;
+      _openingIncomingCall = false;
+    }
+  }
+
+  Future<void> _showIncomingCallDialog({bool answerImmediately = false}) async {
     final incoming = _incomingCall;
     if (!mounted || incoming == null) {
       return;
@@ -932,32 +1152,46 @@ class _HomeScreenState extends State<HomeScreen>
             .toString()
             .trim();
     final navigator = Navigator.of(context, rootNavigator: true);
-    final route = DialogRoute<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => SLAlertDialog(
-        title: Text(context.tr('home_cucgin_eff0b9')),
-        content: Text(
-          L10nService().format('home_incoming_call_from', {
-            'name': callerName.isEmpty
-                ? context.tr('home_ngigi_f1117f')
-                : callerName,
-          }),
+    late final MaterialPageRoute<bool> route;
+    final decisionReady = Completer<bool?>();
+    var resolving = false;
+    Future<void> resolveIncoming(bool? decision) async {
+      if (resolving || !route.isActive) return;
+      resolving = true;
+      unawaited(
+        NotificationService().dismissIncomingCallNotification(
+          incoming['roomId'].toString(),
         ),
-        actions: <Widget>[
-          SLDialogAction(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.tr('home_tchi_2119d8')),
-          ),
-          SLDialogAction(
-            primary: true,
+      );
+      if (decision == true) {
+        unawaited(
+          SystemCallBridge.instance.answer(incoming['roomId'].toString()),
+        );
+        decisionReady.complete(true);
+        return; // Giữ màn nhận che Home trong lúc kiểm chứng và chuẩn bị media.
+      }
+      // Bỏ quyền hiện qua khóa trước khi route rời đi; Home không được lộ ra
+      // trong thời gian kiểm tra mạng hoặc ghi thao tác từ chối.
+      await SystemCallBridge.instance.setIncomingVisible(false);
+      if (route.isActive) navigator.removeRoute(route, decision);
+      if (!decisionReady.isCompleted) decisionReady.complete(decision);
+    }
 
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.tr('home_nghemy_e08606')),
-          ),
-        ],
+    route = MaterialPageRoute<bool>(
+      fullscreenDialog: true,
+      settings: const RouteSettings(name: 'soul_merge_incoming_call'),
+      builder: (routeContext) => IncomingCallScreen(
+        callerName: callerName.isEmpty
+            ? routeContext.tr('home_ngigi_f1117f')
+            : callerName,
+        avatarUrl: incoming['callerAvatar']?.toString(),
+        isVideo: incoming['isVideo'] == true,
+        onAnswer: () => unawaited(resolveIncoming(true)),
+        onDecline: () => unawaited(resolveIncoming(false)),
       ),
     );
+    _incomingCallDialogRoute = route;
+    _resolveIncomingCallRoute = resolveIncoming;
     final statusSub = FirebaseDatabase.instance
         .ref('calls/${incoming['roomId']}/status')
         .onValue
@@ -965,19 +1199,48 @@ class _HomeScreenState extends State<HomeScreen>
           (event) {
             final status = event.snapshot.value;
             if (status != 'ringing' && route.isActive) {
-              navigator.removeRoute(route);
+              unawaited(resolveIncoming(null));
             }
           },
           onError: (Object error) {
-            if (route.isActive) navigator.removeRoute(route);
+            if (route.isActive) unawaited(resolveIncoming(null));
           },
         );
+    final remainingMs =
+        (incoming['localExpiresAt'] as int? ?? 0) -
+        DateTime.now().millisecondsSinceEpoch;
+    // Caller bị kill/mất mạng có thể không ghi ended; không đổ chuông vô hạn.
+    final expiry = Timer(
+      Duration(milliseconds: remainingMs.clamp(0, 45000)),
+      () {
+        if (route.isActive) unawaited(resolveIncoming(null));
+      },
+    );
     bool? accepted;
     try {
-      accepted = await navigator.push(route);
+      unawaited(
+        navigator.push(route).then((result) {
+          if (!decisionReady.isCompleted) decisionReady.complete(result);
+        }),
+      );
+      unawaited(SystemCallBridge.instance.setIncomingVisible(true));
+      if (answerImmediately) unawaited(resolveIncoming(true));
+      accepted = await decisionReady.future;
+      expiry.cancel();
+      // Dừng chuông trước khi tải dữ liệu hoặc mở màn gọi. Navigator.push của
+      // màn gọi chỉ hoàn tất khi cúp máy, không phải thời điểm đã bắt máy.
+      if (identical(_incomingCall, incoming)) {
+        await _stopIncomingCallAlert(answered: accepted == true);
+        _incomingCall = null;
+      }
       if (!mounted) return;
       if (accepted == true) {
-        await _acceptIncomingCall(incoming);
+        _openingIncomingCall = true;
+        try {
+          await _acceptIncomingCall(incoming, incomingRoute: route);
+        } finally {
+          _openingIncomingCall = false;
+        }
       } else if (accepted == false) {
         await _declineIncomingCall(incoming);
       }
@@ -987,9 +1250,23 @@ class _HomeScreenState extends State<HomeScreen>
       }
       debugPrint('Incoming call: ${AppErrorMapper.resolve(error).message}');
     } finally {
+      expiry.cancel();
+      if (identical(_incomingCallDialogRoute, route)) {
+        _incomingCallDialogRoute = null;
+        _resolveIncomingCallRoute = null;
+      }
       await statusSub.cancel();
-      _stopIncomingCallAlert();
-      _incomingCall = null;
+      if (identical(_incomingCall, incoming)) {
+        await _stopIncomingCallAlert();
+        _incomingCall = null;
+      }
+      if (route.isActive) {
+        await SystemCallBridge.instance.setIncomingVisible(false);
+        if (route.isActive) route.navigator?.removeRoute(route);
+      }
+      if (_incomingCall == null && !_openingIncomingCall) {
+        await SystemCallBridge.instance.setIncomingVisible(false);
+      }
     }
   }
 
@@ -1001,24 +1278,14 @@ class _HomeScreenState extends State<HomeScreen>
     unawaited(
       _showIncomingCallNotification(incoming, _incomingCallAlertSequence),
     );
-    unawaited(HapticFeedback.vibrate());
-    _incomingCallAlertTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (!mounted || _incomingCall == null) return;
-      _incomingCallAlertSequence++;
-      unawaited(
-        _showIncomingCallNotification(
-          _incomingCall!,
-          _incomingCallAlertSequence,
-        ),
-      );
-      unawaited(HapticFeedback.vibrate());
-    });
+    // Một notification lặp bằng hệ thống; không phát lại FSI mỗi ba giây.
   }
 
   Future<void> _showIncomingCallNotification(
     Map<String, dynamic> incoming,
     int sequence,
-  ) {
+  ) async {
+    if (!mounted || !identical(_incomingCall, incoming)) return;
     final callerName =
         (incoming['callerName'] ?? context.tr('home_ngigi_f1117f'))
             .toString()
@@ -1026,69 +1293,167 @@ class _HomeScreenState extends State<HomeScreen>
     final isVideo =
         incoming['isVideo'] == true ||
         incoming['isVideo']?.toString().toLowerCase() == 'true';
-    return NotificationService().showIncomingCallNotification(
-      roomId: (incoming['roomId'] ?? '').toString(),
-      callerName: callerName,
-      isVideo: isVideo,
-      sequence: sequence,
-    );
+    final roomId = (incoming['roomId'] ?? '').toString();
+    final systemShown = await SystemCallBridge.instance.reportIncoming({
+      'roomId': roomId,
+      'callerName': callerName,
+      'isVideo': isVideo,
+      'accountUid': FirebaseAuth.instance.currentUser?.uid,
+      'houseId': _incomingCallHouseId,
+      'localExpiresAt': incoming['localExpiresAt'],
+    });
+    if (!systemShown && mounted && identical(_incomingCall, incoming)) {
+      await NotificationService().showIncomingCallNotification(
+        roomId: roomId,
+        callerName: callerName,
+        isVideo: isVideo,
+        sequence: sequence,
+        accountUid: FirebaseAuth.instance.currentUser?.uid,
+        houseId: _incomingCallHouseId,
+        callerAvatar: incoming['callerAvatar']?.toString(),
+        localExpiresAt: incoming['localExpiresAt'] as int?,
+      );
+    }
+    // Plugin có thể hoàn tất sau khi người dùng đã bắt máy/từ chối.
+    if (!mounted || !identical(_incomingCall, incoming)) {
+      await NotificationService().dismissIncomingCallNotification(roomId);
+      if (!_openingIncomingCall) await SystemCallBridge.instance.end(roomId);
+    }
   }
 
-  void _stopIncomingCallAlert() {
+  Future<void> _stopIncomingCallAlert({bool answered = false}) async {
     final roomId = _incomingCall?['roomId']?.toString() ?? '';
     _incomingCallAlertTimer?.cancel();
     _incomingCallAlertTimer = null;
     if (roomId.trim().isNotEmpty) {
-      unawaited(
-        NotificationService().dismissIncomingCallNotification(roomId),
-      );
+      await NotificationService().dismissIncomingCallNotification(roomId);
+      if (!answered) await SystemCallBridge.instance.end(roomId);
     }
   }
 
-  Future<void> _acceptIncomingCall(Map<String, dynamic> incoming) async {
+  Future<void> _acceptIncomingCall(
+    Map<String, dynamic> incoming, {
+    Route<bool>? incomingRoute,
+  }) async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final expectedHouseId = _incomingCallHouseId;
+    if (ownerUid == null || expectedHouseId == null) return;
     final roomId = (incoming['roomId'] ?? '').toString().trim();
-    final callerHouseId = (incoming['houseId'] ?? incoming['callerId'] ?? '')
-        .toString()
-        .trim();
-    final callerName =
-        (incoming['callerName'] ?? context.tr('home_ngigi_f1117f'))
-            .toString()
-            .trim();
-    if (roomId.isEmpty || callerHouseId.isEmpty) {
-      return;
-    }
-    final myHouseId = (await _houseService.getCurrentHouseId() ?? '').trim();
-    if (!mounted || myHouseId.isEmpty) {
-      return;
-    }
-    final room = await FirebaseDatabase.instance.ref('calls/$roomId').get();
-    if (!mounted || (room.value as Map?)?['status'] != 'ringing') return;
-    await Navigator.of(context).push(
-      SLRoute(
-        builder: (_) => VideoCallScreen(
-          houseId: myHouseId,
-          targetHouseId: callerHouseId,
-          targetName: callerName.isEmpty
-              ? context.tr('home_ngigi_f1117f')
-              : callerName,
-          targetAvatarUrl: incoming['callerAvatar']?.toString(),
-          isVideo: incoming['isVideo'] == true,
-          roomId: roomId,
+    _incomingOpeningRoom = roomId;
+    _cancelIncomingOpen = null;
+    try {
+      final callerHouseId = (incoming['houseId'] ?? incoming['callerId'] ?? '')
+          .toString()
+          .trim();
+      final callerName =
+          (incoming['callerName'] ?? context.tr('home_ngigi_f1117f'))
+              .toString()
+              .trim();
+      if (roomId.isEmpty || callerHouseId.isEmpty) {
+        return;
+      }
+      final myHouseId =
+          (await _houseService.getCurrentHouseId().timeout(
+                    const Duration(seconds: 8),
+                  ) ??
+                  '')
+              .trim();
+      if (!mounted ||
+          _cancelIncomingOpen == roomId ||
+          myHouseId != expectedHouseId ||
+          _incomingCallHouseId != expectedHouseId ||
+          FirebaseAuth.instance.currentUser?.uid != ownerUid) {
+        return;
+      }
+      final room = await FirebaseDatabase.instance
+          .ref('calls/$roomId')
+          .get()
+          .timeout(const Duration(seconds: 8));
+      if (!mounted ||
+          _cancelIncomingOpen == roomId ||
+          _incomingCallHouseId != expectedHouseId ||
+          FirebaseAuth.instance.currentUser?.uid != ownerUid ||
+          DateTime.now().millisecondsSinceEpoch >=
+              (incoming['localExpiresAt'] as int? ?? 0) ||
+          room.value is! Map ||
+          (room.value as Map)['status'] != 'ringing' ||
+          (room.value as Map)['calleeId'] != expectedHouseId ||
+          (room.value as Map)['callerId'] != incoming['callerId'] ||
+          (room.value as Map)['timestamp'] != incoming['timestamp']) {
+        return;
+      }
+      if (WebRTCService().isBusy) return;
+      await SystemCallBridge.instance.answer(roomId);
+      if (!mounted ||
+          FirebaseAuth.instance.currentUser?.uid != ownerUid ||
+          _cancelIncomingOpen == roomId ||
+          _incomingCallHouseId != expectedHouseId) {
+        return;
+      }
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final completed = navigator.push(
+        PageRouteBuilder<void>(
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (_, _, _) => VideoCallScreen(
+            houseId: myHouseId,
+            targetHouseId: callerHouseId,
+            targetName: callerName.isEmpty
+                ? context.tr('home_ngigi_f1117f')
+                : callerName,
+            targetAvatarUrl: incoming['callerAvatar']?.toString(),
+            isVideo: incoming['isVideo'] == true,
+            roomId: roomId,
+          ),
         ),
-      ),
-    );
+      );
+      if (incomingRoute?.isActive == true)
+        navigator.removeRoute(incomingRoute!);
+      await completed;
+    } finally {
+      if (_cancelIncomingOpen == roomId) {
+        try {
+          await _declineIncomingCall(incoming);
+        } catch (error) {
+          debugPrint('Incoming call cancel: ${error.runtimeType}');
+        }
+      }
+      if (_incomingOpeningRoom == roomId) _incomingOpeningRoom = null;
+      await SystemCallBridge.instance.end(roomId);
+      await SystemCallBridge.instance.setIncomingVisible(false);
+    }
   }
 
   Future<void> _declineIncomingCall(Map<String, dynamic> incoming) async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final expectedHouseId = _incomingCallHouseId;
     final roomId = (incoming['roomId'] ?? '').toString().trim();
-    if (roomId.isEmpty) {
+    if (roomId.isEmpty || ownerUid == null || expectedHouseId == null) {
       return;
     }
-    await FirebaseDatabase.instance.ref('calls/$roomId').update({
-      'status': 'ended',
-      'endReason': 'declined',
-      'endedAt': ServerValue.timestamp,
-    });
+    await FirebaseDatabase.instance
+        .ref('calls/$roomId')
+        .runTransaction((current) {
+          if (FirebaseAuth.instance.currentUser?.uid != ownerUid ||
+              _incomingCallHouseId != expectedHouseId) {
+            return Transaction.abort();
+          }
+          if (current == null) return Transaction.success(null);
+          if (current is! Map ||
+              current['status'] != 'ringing' ||
+              current['calleeId'] != expectedHouseId ||
+              current['callerId'] != incoming['callerId'] ||
+              current['timestamp'] != incoming['timestamp']) {
+            return Transaction.abort();
+          }
+          return Transaction.success({
+            ...Map<String, dynamic>.from(current),
+            'status': 'ended',
+            'endReason': 'declined',
+            'endedAt': ServerValue.timestamp,
+          });
+        }, applyLocally: false)
+        .timeout(const Duration(seconds: 8));
   }
 
   int _countUnreadNotifications(Object? rawValue) {
@@ -1130,7 +1495,7 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.removeListener(_handleDuplicateRoleWarning);
-    _callSub?.cancel();
+    _detachIncomingCallListeners();
     _stopIncomingCallAlert();
     _pairingSub?.cancel();
     _settingsSub?.cancel();
@@ -1151,6 +1516,7 @@ class _HomeScreenState extends State<HomeScreen>
     _vipThemeRotateTimer?.cancel();
     _pageController.dispose();
     _activeTabIndexNotifier.dispose();
+    _breakupNoticeReady.dispose();
     _navCollapsedNotifier.dispose();
     _isBottomNavVisibleNotifier.dispose();
     _isUserTabSwipingNotifier.dispose();
@@ -1180,6 +1546,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
 
     switch (action) {
+      case WidgetLaunchAction.widgetSettings:
+        await slPush<void>(context, const SettingsTab(autoOpenWidget: true));
+        return;
       case WidgetLaunchAction.diary:
         await _switchToTab(1);
         return;
@@ -1333,7 +1702,6 @@ class _HomeScreenState extends State<HomeScreen>
       _syncMusicAnimationState();
       _syncVipThemeRotateTimer();
       _checkScheduleNotifs();
-      unawaited(_maybeShowBreakupEntryNotice());
       // Khởi động lại inactivity timer khi app resume
       _resetInactivityTimer();
     }
@@ -1605,16 +1973,23 @@ class _HomeScreenState extends State<HomeScreen>
       children: [
         NotificationListener<ScrollNotification>(
           onNotification: _handlePageScrollNotification,
-          child: _HomePreloadPageView(
-            controller: _pageController,
-            onPageChanged: _handlePageChanged,
-            dragStartBehavior: DragStartBehavior.start,
-            physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
-            children: List<Widget>.generate(
-              _navItems.length,
-              _tabPageForIndex,
-              growable: false,
-            ),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: SLTheme.isCountdownCustomizeOpen,
+            builder: (context, isCustomizeSheetOpen, _) {
+              return _HomePreloadPageView(
+                controller: _pageController,
+                onPageChanged: _handlePageChanged,
+                dragStartBehavior: DragStartBehavior.start,
+                physics: isCustomizeSheetOpen
+                    ? const NeverScrollableScrollPhysics()
+                    : const SLPagePhysics(parent: ClampingScrollPhysics()),
+                children: List<Widget>.generate(
+                  _navItems.length,
+                  _tabPageForIndex,
+                  growable: false,
+                ),
+              );
+            },
           ),
         ),
         ValueListenableBuilder<bool>(
@@ -1632,6 +2007,43 @@ class _HomeScreenState extends State<HomeScreen>
           builder: (context, activeIndex, _) {
             return SoulMergeSticker(activeIndex: activeIndex);
           },
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _breakupNoticeReady,
+            builder: (context, ready, _) => StreamBuilder<User?>(
+              stream: _breakupNoticeAuthChanges,
+              initialData: FirebaseAuth.instance.currentUser,
+              builder: (context, snapshot) => ValueListenableBuilder<int>(
+                valueListenable: _activeTabIndexNotifier,
+                builder: (context, index, _) {
+                  final uid = snapshot.data?.uid;
+                  return HomeBreakupNotice(
+                    active: ready && index == 0,
+                    scopeKey: uid == null ? '' : '$uid:$_homeReloadCounter',
+                    loadRequest: _loadHomeBreakupNotice,
+                    onManageRequest: (request) {
+                      if (request.expireAt > 0) {
+                        unawaited(
+                          slPush<void>(context, const PairingDashboardScreen()),
+                        );
+                      } else {
+                        unawaited(
+                          slPush<void>(
+                            context,
+                            const SettingsTab(autoOpenRelationship: true),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -1759,7 +2171,8 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  String _resolveThemeKey(String themeKey) => AppThemeSelection.resolve(themeKey);
+  String _resolveThemeKey(String themeKey) =>
+      AppThemeSelection.resolve(themeKey);
 
   String _resolveEffectKey(String effectKey, String resolvedThemeKey) {
     final raw = effectKey.trim();

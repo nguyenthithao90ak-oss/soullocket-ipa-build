@@ -30,6 +30,12 @@ const Map<String, String> _kUtilityDescriptionKeys = <String, String>{
   'vault': 'utilities_desc_vault',
   'diary_export': 'utilities_desc_diary_export',
   'store': 'utilities_desc_store',
+  'collage': 'utilities_daily_collage_subtitle',
+  'capsule': 'utilities_daily_capsule_subtitle',
+  'drawing': 'utilities_daily_drawing_subtitle',
+  'wheel': 'utilities_daily_wheel_subtitle',
+  'tarot': 'utilities_daily_tarot_subtitle',
+  'surprise_maker': 'utilities_daily_love_card_subtitle',
 };
 
 String? _descriptionFor(BuildContext context, UtilityApp app) {

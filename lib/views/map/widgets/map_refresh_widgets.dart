@@ -1301,7 +1301,8 @@ class MapAccessNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = MapPalette.of(context);
     final status = access.status;
-    final connected = access.canTrack && hasLivePosition && !syncError;
+    final connected = access.canTrack && hasLivePosition && !syncError &&
+        !access.approximate;
     final String titleKey;
     final String bodyKey;
     final String actionKey;
@@ -1313,13 +1314,19 @@ class MapAccessNotice extends StatelessWidget {
       icon = Icons.gps_not_fixed_rounded;
     } else if (status == MapLocationAccessStatus.serviceDisabled) {
       titleKey = 'map_refresh_service_off';
-      bodyKey = 'map_refresh_service_off_body';
-      actionKey = 'map_refresh_open_gps';
+      final ios = !web && Theme.of(context).platform == TargetPlatform.iOS;
+      bodyKey = ios
+          ? 'map_refresh_service_off_ios_body'
+          : 'map_refresh_service_off_body';
+      actionKey = ios ? 'map_refresh_open_settings' : 'map_refresh_open_gps';
       icon = Icons.location_disabled_outlined;
-    } else if (status == MapLocationAccessStatus.deniedForever) {
+    } else if (status == MapLocationAccessStatus.deniedForever ||
+        status == MapLocationAccessStatus.restricted) {
       titleKey = 'map_refresh_permission_blocked';
       bodyKey = web
           ? 'map_refresh_browser_body'
+          : status == MapLocationAccessStatus.restricted
+          ? 'map_refresh_permission_restricted_body'
           : 'map_refresh_permission_blocked_body';
       actionKey = web ? 'map_refresh_retry' : 'map_refresh_open_settings';
       icon = Icons.lock_outline_rounded;
@@ -1355,7 +1362,8 @@ class MapAccessNotice extends StatelessWidget {
     final waiting = status == MapLocationAccessStatus.ready && !syncError;
     final needsPermission =
         status == MapLocationAccessStatus.permissionRequired ||
-        status == MapLocationAccessStatus.deniedForever;
+        status == MapLocationAccessStatus.deniedForever ||
+        status == MapLocationAccessStatus.restricted;
     final baseAccent = connected
         ? mapSage
         : pending || waiting
@@ -1458,6 +1466,7 @@ class MapAccessNotice extends StatelessWidget {
                 ),
                 onPressed:
                     actionKey == 'map_refresh_open_settings' &&
+                        status != MapLocationAccessStatus.serviceDisabled &&
                         !web &&
                         onSettings != null
                     ? onSettings

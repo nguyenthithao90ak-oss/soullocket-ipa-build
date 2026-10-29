@@ -190,14 +190,18 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
   }
 
   Future<void> _promptPendingChatUploadRetryIfNeeded() async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
     if (_didPromptPendingChatRetry || !mounted) {
       return;
     }
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final pendingImage = await PendingUploadService.instance.load(
       _pendingChatImageUploadKey,
+      expectedUid: ownerUid,
     );
     final pendingBackground = await PendingUploadService.instance.load(
       _pendingChatBackgroundUploadKey,
+      expectedUid: ownerUid,
     );
     if (pendingImage == null && pendingBackground == null) {
       return;
@@ -222,13 +226,19 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
   }
 
   Future<void> _retryPendingChatUploads() async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final pendingImage = await PendingUploadService.instance.load(
       _pendingChatImageUploadKey,
+      expectedUid: ownerUid,
     );
     if (pendingImage != null) {
       final imagePath = pendingImage['imagePath']?.toString().trim() ?? '';
       if (imagePath.isEmpty) {
-        await PendingUploadService.instance.clear(_pendingChatImageUploadKey);
+        await PendingUploadService.instance.clear(
+          _pendingChatImageUploadKey,
+          expectedUid: ownerUid,
+        );
       } else {
         final file = XFile(imagePath);
         try {
@@ -241,12 +251,16 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
             '[SuppressedError] lib/views/chat/chat_detail/chat_detail_actions_part.dart: $error',
           );
         }
-        await PendingUploadService.instance.clear(_pendingChatImageUploadKey);
+        await PendingUploadService.instance.clear(
+          _pendingChatImageUploadKey,
+          expectedUid: ownerUid,
+        );
       }
     }
 
     final pendingBackground = await PendingUploadService.instance.load(
       _pendingChatBackgroundUploadKey,
+      expectedUid: ownerUid,
     );
     if (pendingBackground == null) {
       return;
@@ -255,6 +269,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     if (filePath.isEmpty) {
       await PendingUploadService.instance.clear(
         _pendingChatBackgroundUploadKey,
+        expectedUid: ownerUid,
       );
       return;
     }
@@ -263,12 +278,14 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       if (await file.length() <= 0) {
         await PendingUploadService.instance.clear(
           _pendingChatBackgroundUploadKey,
+          expectedUid: ownerUid,
         );
         return;
       }
     } catch (_) {
       await PendingUploadService.instance.clear(
         _pendingChatBackgroundUploadKey,
+        expectedUid: ownerUid,
       );
       return;
     }
@@ -282,9 +299,19 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
   }
 
   Future<void> _pickImage({XFile? presetImage}) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final houseId = widget.myHouseId;
+    final pendingKey = _pendingChatImageUploadKey;
+    bool isCurrent() =>
+        mounted &&
+        uid != null &&
+        FirebaseAuth.instance.currentUser?.uid == uid &&
+        widget.myHouseId == houseId;
+    if (!isCurrent()) return;
     if (!await SecurityService().guardAction(context, 'chat_send_image')) {
       return;
     }
+    if (!isCurrent()) return;
 
     try {
       final vipAccess = await PurchaseService().getVipAccessInfo();
@@ -309,6 +336,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     } catch (e) {
       debugPrint('Error checking chat image limit: $e');
     }
+    if (!isCurrent()) return;
 
     final XFile? image =
         presetImage ??
@@ -320,14 +348,14 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
             maxWidth: 1080,
           ),
         );
-    if (image == null) return;
+    if (image == null || !isCurrent()) return;
 
     if (mounted) setState(() => _isUploading = true);
     try {
-      await PendingUploadService.instance.save(
-        _pendingChatImageUploadKey,
-        <String, dynamic>{'imagePath': image.path},
-      );
+      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+        'imagePath': image.path,
+      }, expectedUid: uid);
+      if (!isCurrent()) return;
       final upload = await _storageService.uploadChatImage(
         widget.myHouseId,
         image,
@@ -335,7 +363,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         targetHouseId: _isInternal ? null : widget.targetHouseId,
       );
 
-      if (upload != null) {
+      if (upload != null && isCurrent()) {
         await _chatService.sendImageMessage(
           widget.myHouseId,
           upload: upload,
@@ -343,7 +371,8 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           targetHouseId: _isInternal ? null : widget.targetHouseId,
           senderRole: _currentRole,
         );
-        await PendingUploadService.instance.clear(_pendingChatImageUploadKey);
+        if (!isCurrent()) return;
+        await PendingUploadService.instance.clear(pendingKey, expectedUid: uid);
 
         try {
           final prefs = await SharedPreferences.getInstance();
@@ -356,7 +385,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         }
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!isCurrent()) return;
       _showNotice(
         context.tr('ui_chat_can_t_send_photos_at_this_time_a8440f'),
         error: true,
@@ -565,7 +594,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         'filePath': file.path,
         'currentBackgroundUrl': currentBackgroundUrl,
         'currentBackgroundStoragePath': currentBackgroundStoragePath,
-      });
+      }, expectedUid: ownerUid);
       if (!isCurrent()) return;
       uploadResult = await _storageService.uploadManagedImage(
         houseId,
@@ -614,7 +643,10 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
         );
         return;
       }
-      await PendingUploadService.instance.clear(pendingKey);
+      await PendingUploadService.instance.clear(
+        pendingKey,
+        expectedUid: ownerUid,
+      );
       await discardConfirmedCropImage(file);
       if (!isCurrent() || !mounted) return;
       _showNotice(context.tr('ui_chat_updated_chat_background_b3d37a'));

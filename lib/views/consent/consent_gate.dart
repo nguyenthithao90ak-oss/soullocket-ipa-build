@@ -31,6 +31,7 @@ Future<void> _openDoc(
 }
 
 class _ConsentGateState extends State<ConsentGate> {
+  static final _pendingDialogs = Expando<Future<_StartupConsentResult?>>();
   final ConsentService _consentService = ConsentService();
   bool _running = false;
 
@@ -54,8 +55,20 @@ class _ConsentGateState extends State<ConsentGate> {
         hasStartupConsent = await _consentService.hasValidConsent();
       }
       if (!hasStartupConsent) {
-        final result = await _showStartupConsentDialog();
-        if (result == null || !mounted) return;
+        if (!mounted) return;
+        // Đổi route đăng nhập/Home trong lúc dialog còn mở không được tạo
+        // thêm một bản Điều khoản trên cùng Navigator.
+        final navigator = Navigator.of(context, rootNavigator: true);
+        final pending = _pendingDialogs[navigator] ??=
+            _showStartupConsentDialog();
+        try {
+          await pending;
+        } finally {
+          if (identical(_pendingDialogs[navigator], pending)) {
+            _pendingDialogs[navigator] = null;
+          }
+        }
+        if (!mounted || !await _consentService.hasValidConsent()) return;
       }
 
       if (!mounted) return;

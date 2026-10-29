@@ -17,6 +17,7 @@ class HomeSharedNoteHeader extends StatefulWidget {
     required this.partnerName,
     this.service,
     this.uid,
+    this.textStyle,
   });
 
   final String houseId;
@@ -25,6 +26,9 @@ class HomeSharedNoteHeader extends StatefulWidget {
 
   /// Mặc định lấy UID đang đăng nhập; test truyền sẵn.
   final String? uid;
+
+  /// Các kiểu Home mới chỉ đổi typography, vẫn dùng luồng lưu/đọc cũ.
+  final TextStyle? textStyle;
 
   @override
   State<HomeSharedNoteHeader> createState() => _HomeSharedNoteHeaderState();
@@ -168,12 +172,14 @@ class _HomeSharedNoteHeaderState extends State<HomeSharedNoteHeader> {
                                   textAlign: TextAlign.center,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w600,
-                                    color: SLColors.textSecond,
-                                    height: 1.25,
-                                  ),
+                                  style:
+                                      widget.textStyle ??
+                                      SLTheme.quicksand(
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.w600,
+                                        color: SLColors.textSecond,
+                                        height: 1.25,
+                                      ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -203,13 +209,15 @@ class _HomeSharedNoteHeaderState extends State<HomeSharedNoteHeader> {
                           textAlign: TextAlign.center,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w700,
-                            color: SLColors.textPrimary,
-                            height: 1.2,
-                            letterSpacing: -0.3,
-                          ),
+                          style:
+                              widget.textStyle ??
+                              SLTheme.quicksand(
+                                fontSize: 23,
+                                fontWeight: FontWeight.w700,
+                                color: SLColors.textPrimary,
+                                height: 1.2,
+                                letterSpacing: -0.3,
+                              ),
                         ),
                       ),
                     );

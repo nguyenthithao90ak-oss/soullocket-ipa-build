@@ -3,13 +3,13 @@ import 'package:soullocket_app/widgets/sl_date_picker.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:soullocket_app/widgets/sl_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import '../../core/sl_theme.dart';
-import '../../utils/services/health_period_service.dart';
+import '../../utils/services/health_cycle_repository.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/calendar/calendar_civil_date.dart';
@@ -26,7 +26,7 @@ class HealthScreen extends StatefulWidget {
 }
 
 class _HealthScreenState extends State<HealthScreen> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  final HealthCycleStore _cycleStore = HealthCycleRepository();
 
   DateTime? _lastDate;
   int _length = 28;
@@ -34,30 +34,34 @@ class _HealthScreenState extends State<HealthScreen> {
   bool _hasConsent = false;
   bool _canEdit = false;
   bool _readDenied = false;
+  bool _networkError = false;
+  bool _legacyRestricted = false;
   bool _saving = false;
   late final String? _healthUid;
   // Dữ liệu sức khỏe riêng tư cho đến khi người dùng chủ động bật chia sẻ.
   bool _shareWithPartner = false;
   Map<String, dynamic>? _cycleWidgetData;
+  HealthCycleAccess? _cycleAccess;
   List<DateTime> _recentHistory = const [];
 
-  StreamSubscription<DatabaseEvent>? _healthSub;
+  StreamSubscription<HealthCycleAccess>? _healthSub;
 
   @override
   void initState() {
     super.initState();
     _healthUid = FirebaseAuth.instance.currentUser?.uid;
     _checkInitialConsent();
-    _loadHealthData();
   }
 
   Future<void> _checkInitialConsent() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
+      final consented = _healthUid != null &&
+          prefs.getBool(healthConsentKey(_healthUid, widget.houseId)) == true;
       setState(() {
-        _hasConsent = _healthUid != null &&
-            prefs.getBool(healthConsentKey(_healthUid, widget.houseId)) == true;
+        _hasConsent = consented;
       });
+      if (consented) _loadHealthData();
     }
   }
 
@@ -94,6 +98,7 @@ class _HealthScreenState extends State<HealthScreen> {
         setState(() {
           _hasConsent = true;
         });
+        _loadHealthData();
       }
       if (_cycleWidgetData != null) {
         unawaited(
@@ -110,53 +115,69 @@ class _HealthScreenState extends State<HealthScreen> {
   }
 
   void _loadHealthData() {
-    _healthSub = _dbRef
-        .child('houses/${widget.houseId}/health_cycle')
-        .onValue
-        .listen((event) {
-          if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
-          final raw = event.snapshot.value;
-          final visible = canDisplayHealthData(raw, _healthUid);
-          _cycleWidgetData = visible ? Map<String, dynamic>.from(raw as Map) : null;
-          setState(() {
-            _canEdit = raw == null || (raw is Map && raw['ownerUid'] == _healthUid);
-            _readDenied = raw != null && !visible;
-            if (!visible) {
-              _lastDate = null;
-              _recentHistory = const [];
-              _shareWithPartner = false;
-            }
-          });
-          if (_hasConsent) {
-            unawaited(
-              WidgetService.updateCycleWidgetData(houseId: widget.houseId, cycleData: _cycleWidgetData),
-            );
-          }
-          if (visible && raw is Map) {
-            final data = Map<String, dynamic>.from(raw);
-            if (mounted) {
-              setState(() {
-                if (data['lastDate'] != null) {
-                  _lastDate = DateTime.tryParse(data['lastDate']);
-                }
-                _length = data['length'] ?? 28;
-                _periodDays = data['periodDays'] ?? 5;
-                _shareWithPartner = data['shareWithPartner'] == true;
-                _recentHistory = _parseRecentHistory(data['history']);
-              });
-            }
-          }
-        }, onError: (Object error) {
-          if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
-          setState(() {
-            _readDenied = true;
-            _canEdit = false;
-            _lastDate = null;
-            _recentHistory = const [];
-            _cycleWidgetData = null;
-          });
-          unawaited(WidgetService.updateCycleWidgetData(houseId: widget.houseId, cycleData: null));
+    _healthSub?.cancel();
+    _healthSub = _cycleStore.watch(widget.houseId).listen((access) {
+      if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
+      final data = access.data;
+      _cycleAccess = access;
+      final visible = data != null;
+      _cycleWidgetData = visible ? Map<String, dynamic>.from(data) : null;
+      setState(() {
+        _canEdit = access.canEdit;
+        _readDenied = false;
+        _networkError = false;
+        _legacyRestricted = access.hasRestrictedLegacy;
+        if (!visible) {
+          _lastDate = null;
+          _recentHistory = const [];
+          _shareWithPartner = false;
+        }
+      });
+      if (_hasConsent) {
+        unawaited(
+          WidgetService.updateCycleWidgetData(
+            houseId: widget.houseId,
+            cycleData: _cycleWidgetData,
+          ),
+        );
+      }
+      if (data != null) {
+        if (data['lastDate'] != null) {
+          _lastDate = DateTime.tryParse(data['lastDate'].toString());
+        } else {
+          _lastDate = null;
+        }
+        final rawLength = data['length'];
+        final rawPeriodDays = data['periodDays'];
+        setState(() {
+          _length = rawLength is num ? rawLength.toInt() : int.tryParse('$rawLength') ?? 28;
+          _periodDays = rawPeriodDays is num
+              ? rawPeriodDays.toInt()
+              : int.tryParse('$rawPeriodDays') ?? 5;
+          _shareWithPartner = data['shareWithPartner'] == true;
+          _recentHistory = _parseRecentHistory(data['history']);
         });
+      }
+    }, onError: (Object error, StackTrace stack) {
+      if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
+      final denied = error is FirebaseException &&
+          const {'permission-denied', 'permission_denied'}.contains(error.code);
+      setState(() {
+        _readDenied = denied;
+        _networkError = !denied;
+        _legacyRestricted = false;
+        _canEdit = false;
+        _lastDate = null;
+        _recentHistory = const [];
+        _cycleWidgetData = null;
+      });
+      unawaited(
+        WidgetService.updateCycleWidgetData(
+          houseId: widget.houseId,
+          cycleData: null,
+        ),
+      );
+    });
   }
 
   List<DateTime> _parseRecentHistory(dynamic rawHistory) {
@@ -215,13 +236,13 @@ class _HealthScreenState extends State<HealthScreen> {
       'updatedAt': ServerValue.timestamp,
     };
     try {
-    // Lưu cài đặt và lịch sử trong cùng thao tác, không báo thành công khi lưu dở.
-    await HealthPeriodService().logPeriodStart(
-      widget.houseId,
-      savedDate,
-      shareWithPartner: _shareWithPartner,
-      cycleData: cycleData,
-    );
+    // Repository chọn hồ sơ riêng theo UID; dữ liệu legacy chỉ được ghi khi
+    // owner đã được xác minh từ chính bản ghi đó.
+    final currentAccess = _cycleAccess;
+    if (currentAccess == null || !currentAccess.canEdit) {
+      throw StateError('Hồ sơ sức khỏe chưa sẵn sàng để lưu.');
+    }
+    await _cycleStore.save(widget.houseId, currentAccess, cycleData);
 
     if (!mounted || FirebaseAuth.instance.currentUser?.uid != _healthUid) return;
     // Chỉ cập nhật giao diện trong đúng phiên đã bắt đầu thao tác.
@@ -362,12 +383,10 @@ class _HealthScreenState extends State<HealthScreen> {
                         SLSpacing.h16,
                         if (!_hasConsent)
                           _buildConsentButton()
-                        else if (_readDenied)
-                          Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(context.tr('err_permission_denied')),
-                          )
+                        else if (_readDenied || _networkError)
+                          _buildHealthLoadError()
                         else ...[
+                          if (_legacyRestricted) _buildLegacyRestrictedNotice(),
                           _buildMainDashboard(cycleData),
                           SLSpacing.h24,
                           if (_canEdit) Padding(
@@ -414,6 +433,67 @@ class _HealthScreenState extends State<HealthScreen> {
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHealthLoadError() {
+    final message = _readDenied
+        ? context.tr('err_permission_denied')
+        : context.tr('err_default_network');
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Icon(
+            _readDenied ? Icons.lock_outline : Icons.cloud_off_outlined,
+            size: 42,
+            color: HealthCyclePalette.of(context).accent(const Color(0xFFD81B60)),
+          ),
+          const SizedBox(height: 12),
+          Text(message, textAlign: TextAlign.center),
+          if (_networkError) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _loadHealthData,
+              icon: const Icon(Icons.refresh),
+              label: Text(context.tr('core_retry')),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegacyRestrictedNotice() {
+    final palette = HealthCyclePalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: palette.soft(const Color(0xFFFFF4E5)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: palette.border(const Color(0xFFFFD7A0))),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline, color: palette.accent(const Color(0xFFB26A00))),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                context.tr('p3_health_set_start_prompt'),
+                style: SLTheme.quicksand(
+                  color: palette.text(const Color(0xFF7A4A00)),
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

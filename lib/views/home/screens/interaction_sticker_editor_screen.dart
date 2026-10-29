@@ -102,7 +102,7 @@ class _InteractionStickerEditorScreenState
           SoulLocketStickerCatalog.originalReferenceFor(sticker.id),
       ],
     ),
-    for (final pack in livingStickerPacks.where(
+    for (final pack in livingStickerPickerPacks.where(
       (pack) => !const {'novelty', 'hearts', 'couple'}.contains(pack.id),
     ))
       _StickerLibraryGroup(
@@ -138,7 +138,7 @@ class _InteractionStickerEditorScreenState
       labelKey: 'interaction_sticker_category_all',
       icon: Icons.grid_view_rounded,
       accent: const Color(0xFF2A9D8F),
-      references: _referencesOf(SoulLocketStickerCatalog.all),
+      references: _referencesOf(SoulLocketStickerCatalog.active),
     ),
   ];
 

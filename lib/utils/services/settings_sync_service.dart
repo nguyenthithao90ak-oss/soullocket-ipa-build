@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'offline_cache_service.dart';
+import '../../models/widget_appearance.dart';
 
 class SettingsBackupStatus {
   final bool hasCloudBackup;
@@ -33,7 +35,12 @@ class SettingsSyncService {
       'il_settings_restore_notice_pending';
   static const String restoreNoticeUidPrefKey =
       'il_settings_restore_notice_uid';
+  // Lựa chọn giao diện trên máy phải sống qua đăng xuất, kể cả backup lỗi.
+  // Không dùng khóa chung để theme của tài khoản trước lọt sang tài khoản sau.
+  static String _localThemeKey(String uid) =>
+      'il_account_theme_v1_${base64Url.encode(utf8.encode(uid))}';
   static const List<String> _legacySecretKeys = ['il_imgbb_api_key'];
+  static const List<String> _localAccountKeys = ['il_home_companion_wardrobe_v1'];
   static const List<String> _legacyCloudSensitiveKeys = [
     'il_app_lock_enabled',
     'il_lock_scope_app',
@@ -112,6 +119,9 @@ class SettingsSyncService {
     'il_widget_heart_animated',
     'il_widget_use_custom_event',
   ];
+  static const List<String> _widgetIntKeys = [
+    'il_widget_motion_interval_minutes',
+  ];
   static final SettingsSyncService _instance = SettingsSyncService._internal();
   factory SettingsSyncService() => _instance;
   SettingsSyncService._internal()
@@ -119,6 +129,8 @@ class SettingsSyncService {
       _currentUid = (() => FirebaseAuth.instance.currentUser?.uid),
       _prefs = _loadPrefs,
       _reloadUiPrefs = UiPrefs.reload,
+       _pauseUiWrites = UiPrefs.pauseAccountWrites,
+       _resumeUiWrites = UiPrefs.resumeAccountWrites,
       _debounce = const Duration(seconds: 2);
 
   @visibleForTesting
@@ -128,16 +140,22 @@ class SettingsSyncService {
     required Future<SharedPreferences> Function() preferences,
     required Future<void> Function() reloadPreferences,
     Duration debounceDuration = const Duration(seconds: 2),
+    Future<void> Function()? pauseUiWrites,
+    void Function()? resumeUiWrites,
   }) : _db = database,
        _currentUid = uidProvider,
        _prefs = preferences,
        _reloadUiPrefs = reloadPreferences,
+        _pauseUiWrites = pauseUiWrites ?? (() async {}),
+        _resumeUiWrites = resumeUiWrites ?? (() {}),
        _debounce = debounceDuration;
 
   final DatabaseReference _db;
   final String? Function() _currentUid;
   final Future<SharedPreferences> Function() _prefs;
   final Future<void> Function() _reloadUiPrefs;
+  final Future<void> Function() _pauseUiWrites;
+  final void Function() _resumeUiWrites;
   final Duration _debounce;
   Timer? _backupDebounceTimer;
   Completer<void>? _backupCompleter;
@@ -155,6 +173,7 @@ class SettingsSyncService {
   static Iterable<String> get _widgetKeys => [
     ..._widgetStringKeys,
     ..._widgetBoolKeys,
+    ..._widgetIntKeys,
   ];
   static Future<SharedPreferences> _loadPrefs() async =>
       OfflineCacheService.getPrefsSync() ??
@@ -240,6 +259,11 @@ class SettingsSyncService {
     }
     if ((widget ? _widgetBoolKeys : _boolKeys).contains(key)) {
       return value is bool;
+    }
+    if (widget && _widgetIntKeys.contains(key)) {
+      return value is num && value.isFinite &&
+          value == value.toInt() &&
+          WidgetAppearance.motionIntervalOptions.contains(value.toInt());
     }
     if (_numberKeys.contains(key)) {
       return value is num && value.isFinite && value > 0 && value <= 4096;
@@ -349,7 +373,8 @@ class SettingsSyncService {
         if (!_validValue(key, value, widget: true)) {
           throw _failure('invalid-backup');
         }
-        result[scopedKey] = value;
+        result[scopedKey] = _widgetIntKeys.contains(key)
+            ? (value as num).toInt() : value;
       }
     }
     final meta = raw['_meta'];
@@ -402,7 +427,11 @@ class SettingsSyncService {
     return _serialize(() => _restore(uid, generation));
   }
 
-  Future<SettingsRestoreResult> _restore(String uid, int generation) async {
+  Future<SettingsRestoreResult> _restore(
+    String uid,
+    int generation, {
+    bool preserveLocalTheme = false,
+  }) async {
     _guard(uid, generation);
     _guardCloudWrite(uid);
     final houseId = await _resolveHouseId(uid, generation);
@@ -440,6 +469,12 @@ class SettingsSyncService {
       restoreNoticePendingPrefKey,
       restoreNoticeUidPrefKey,
     };
+    // Đăng nhập lại cùng tài khoản có thể gặp backup cũ khi lần đổi theme
+    // gần nhất chưa lên mạng. Khôi phục thủ công vẫn áp dụng bản cloud.
+    if (preserveLocalTheme &&
+        (prefs.getString('il_theme_key') ?? '').trim().isNotEmpty) {
+      keys.remove('il_theme_key');
+    }
     final previous = {for (final key in keys) key: prefs.get(key)};
     try {
       for (final key in keys) {
@@ -482,12 +517,16 @@ class SettingsSyncService {
     _generation++;
     _cancelPendingBackup();
     final generation = _generation;
+    var preserveLocalTheme = false;
     await _serialize(() async {
+      _guard(uid, generation);
+      await _pauseUiWrites();
       _guard(uid, generation);
       final prefs = await _prefs();
       _guard(uid, generation);
       final localOwner =
           prefs.getString(ownerUidPrefKey) ?? prefs.getString('il_auth_uid');
+      preserveLocalTheme = localOwner == uid;
       if (localOwner != uid) {
         await _clearPrefs(prefs, uid, generation);
         _guard(uid, generation);
@@ -496,15 +535,31 @@ class SettingsSyncService {
       _guard(uid, generation);
       await _writePref(prefs, ownerUidPrefKey, uid);
       _guard(uid, generation);
+      if ((prefs.getString('il_theme_key') ?? '').trim().isEmpty) {
+        final rememberedTheme = prefs.getString(_localThemeKey(uid));
+        if (rememberedTheme != null && rememberedTheme.trim().isNotEmpty) {
+          await _writePref(prefs, 'il_theme_key', rememberedTheme);
+          _guard(uid, generation);
+          preserveLocalTheme = true;
+          await _reloadUiPrefs();
+          _guard(uid, generation);
+        }
+      }
     });
     try {
-      await restoreSettingsFromCloud(uid);
+      await _serialize(() => _restore(
+        uid,
+        generation,
+        preserveLocalTheme: preserveLocalTheme,
+      ));
     } catch (error) {
       _guard(uid, generation);
       debugPrint(
         '[SettingsSyncService] Optional sign-in restore failed: $error',
       );
     }
+    _guard(uid, generation);
+    _resumeUiWrites();
   }
 
   Future<bool> consumePendingRestoreNotice(String uid) async {
@@ -529,6 +584,7 @@ class SettingsSyncService {
     final generation = _generation;
     final uid = _currentUid();
     return _serialize(() async {
+      await _pauseUiWrites();
       final prefs = await _prefs();
       await _clearPrefs(prefs, uid, generation);
       if (reloadUiPrefs) await _reloadUiPrefs();
@@ -542,8 +598,17 @@ class SettingsSyncService {
   ) async {
     final owner =
         prefs.getString(ownerUidPrefKey) ?? prefs.getString('il_auth_uid');
+    if (_generation != generation || _currentUid() != uid) {
+      throw _failure('unauthenticated');
+    }
+    final localTheme = prefs.getString('il_theme_key');
+    if (owner != null && owner.isNotEmpty &&
+        localTheme != null && localTheme.trim().isNotEmpty) {
+      await _writePref(prefs, _localThemeKey(owner), localTheme);
+    }
     final keys = <String>{
       ..._syncKeys,
+      ..._localAccountKeys,
       ..._widgetKeys,
       ..._legacySecretKeys,
       ownerUidPrefKey,

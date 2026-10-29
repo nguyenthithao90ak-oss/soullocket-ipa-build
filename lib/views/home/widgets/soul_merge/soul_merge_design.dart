@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/soul_merge_mark.dart';
@@ -18,6 +19,32 @@ class SoulMergeColors {
   Color get blush => dark ? const Color(0xFF44303C) : const Color(0xFFFCECEB);
   Color get sent => dark ? const Color(0xFF995166) : const Color(0xFFB95D73);
 }
+
+/// Làm dịu vùng đọc tin mà vẫn giữ được ảnh nền của cặp đôi.
+class SoulMergeBackgroundScrim extends StatelessWidget {
+  const SoulMergeBackgroundScrim({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            colors.background.withValues(alpha: colors.dark ? .24 : .30),
+            colors.background.withValues(alpha: .48),
+            colors.background.withValues(alpha: .76),
+          ],
+          stops: const [0, .45, 1],
+        ),
+      ),
+    );
+  }
+}
+
+enum _SoulMergeHeaderAction { video, search, settings }
 
 class SoulMergeHeader extends StatelessWidget {
   static double contentHeight(BuildContext context) {
@@ -53,87 +80,174 @@ class SoulMergeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SoulMergeColors(context);
-    return Material(
-      color: colors.surface,
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          height: contentHeight(context),
-          padding: const EdgeInsetsDirectional.only(start: 4, end: 6),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: colors.line)),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                tooltip: context.tr('p4_back'),
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
-                color: colors.ink,
-              ),
-              if (MediaQuery.sizeOf(context).width >= 350) ...[
-                _SoulMergeHeaderAvatar(url: avatarUrl, onTap: onAvatarTap),
-                const SizedBox(width: 9),
-              ],
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    final displayName = partnerName.trim();
+    final hasPartnerName = displayName.isNotEmpty && displayName != '…';
+    return IconButtonTheme(
+      data: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size.square(48),
+          visualDensity: VisualDensity.standard,
+          tapTargetSize: MaterialTapTargetSize.padded,
+        ),
+      ),
+      child: Material(
+        color: colors.surface,
+        child: SafeArea(
+          bottom: false,
+          child: Container(
+            height: contentHeight(context),
+            padding: const EdgeInsetsDirectional.only(start: 4, end: 6),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: colors.line)),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final largeText =
+                    MediaQuery.textScalerOf(context).scale(17) > 22;
+                final compact = constraints.maxWidth < 400 || largeText;
+                return Row(
                   children: [
-                    Text(
-                      context.tr('p4_soul_title'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: colors.ink,
+                    IconButton(
+                      tooltip: context.tr('p4_back'),
+                      onPressed: onBack,
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 19,
+                      ),
+                      color: colors.ink,
+                    ),
+                    if (constraints.maxWidth >= 360 && !largeText) ...[
+                      _SoulMergeHeaderAvatar(
+                        url: avatarUrl,
+                        onTap: onAvatarTap,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            hasPartnerName
+                                ? displayName
+                                : context.tr('p4_soul_title'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: colors.ink,
+                            ),
+                          ),
+                          if (hasPartnerName) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              context.tr('p4_soul_title'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: colors.rose,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      partnerName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    if (showCallActions)
+                      IconButton(
+                        tooltip: context.tr('p4_soul_voice_call'),
+                        onPressed: onVoiceCall,
+                        icon: const Icon(Icons.call_rounded, size: 21),
+                        style: IconButton.styleFrom(
+                          backgroundColor: colors.blush,
+                        ),
                         color: colors.rose,
                       ),
-                    ),
+                    if (!compact && showCallActions)
+                      IconButton(
+                        tooltip: context.tr('p4_soul_video_call'),
+                        onPressed: onVideoCall,
+                        icon: const Icon(Icons.videocam_rounded, size: 23),
+                        color: colors.rose,
+                      ),
+                    if (!compact && onSearch != null)
+                      IconButton(
+                        tooltip: context.tr('p4_soul_search_hint'),
+                        onPressed: onSearch,
+                        icon: const Icon(Icons.search_rounded, size: 22),
+                        color: colors.rose,
+                      ),
+                    if (compact)
+                      PopupMenuButton<_SoulMergeHeaderAction>(
+                        key: const ValueKey('soul-merge-options'),
+                        tooltip: context.tr('settings'),
+                        color: colors.surface,
+                        iconColor: colors.muted,
+                        icon: const Icon(Icons.more_horiz_rounded, size: 23),
+                        onSelected: (action) {
+                          switch (action) {
+                            case _SoulMergeHeaderAction.video:
+                              onVideoCall();
+                            case _SoulMergeHeaderAction.search:
+                              onSearch?.call();
+                            case _SoulMergeHeaderAction.settings:
+                              onOptions();
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          if (showCallActions)
+                            PopupMenuItem(
+                              value: _SoulMergeHeaderAction.video,
+                              child: ListTile(
+                                leading: Icon(
+                                  Icons.videocam_rounded,
+                                  color: colors.rose,
+                                ),
+                                title: Text(context.tr('p4_soul_video_call')),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          if (onSearch != null)
+                            PopupMenuItem(
+                              value: _SoulMergeHeaderAction.search,
+                              child: ListTile(
+                                leading: Icon(
+                                  Icons.search_rounded,
+                                  color: colors.rose,
+                                ),
+                                title: Text(context.tr('p4_soul_search_hint')),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: _SoulMergeHeaderAction.settings,
+                            child: ListTile(
+                              leading: Icon(
+                                Icons.tune_rounded,
+                                color: colors.rose,
+                              ),
+                              title: Text(context.tr('settings')),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      IconButton(
+                        key: const ValueKey('soul-merge-options'),
+                        tooltip: context.tr('settings'),
+                        onPressed: onOptions,
+                        icon: const Icon(Icons.more_horiz_rounded, size: 23),
+                        color: colors.muted,
+                      ),
                   ],
-                ),
-              ),
-              if (showCallActions) ...[
-                IconButton(
-                  tooltip: context.tr('p4_soul_voice_call'),
-                  onPressed: onVoiceCall,
-                  icon: const Icon(Icons.call_rounded, size: 21),
-                  style: IconButton.styleFrom(backgroundColor: colors.blush),
-                  color: colors.rose,
-                ),
-                IconButton(
-                  tooltip: context.tr('p4_soul_video_call'),
-                  onPressed: onVideoCall,
-                  icon: const Icon(Icons.videocam_rounded, size: 23),
-                  color: colors.rose,
-                ),
-              ],
-              if (onSearch != null && MediaQuery.sizeOf(context).width >= 380)
-                IconButton(
-                  tooltip: context.tr('p4_soul_search_hint'),
-                  onPressed: onSearch,
-                  icon: const Icon(Icons.search_rounded, size: 22),
-                  color: colors.rose,
-                ),
-              IconButton(
-                key: const ValueKey('soul-merge-options'),
-                tooltip: context.tr('settings'),
-                onPressed: onOptions,
-                icon: const Icon(Icons.more_horiz_rounded, size: 23),
-                color: colors.muted,
-              ),
-            ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -153,12 +267,19 @@ class _SoulMergeHeaderAvatar extends StatelessWidget {
     final avatar = ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: normalized.startsWith('https://')
-          ? Image.network(
-              normalized,
+          ? CachedNetworkImage(
+              imageUrl: normalized,
               width: 38,
               height: 38,
+              memCacheWidth: (38 * MediaQuery.devicePixelRatioOf(context))
+                  .ceil()
+                  .clamp(1, 192)
+                  .toInt(),
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const SoulMergeMark(size: 38),
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder: (_, _) => const SoulMergeMark(size: 38),
+              errorWidget: (_, _, _) => const SoulMergeMark(size: 38),
             )
           : const SoulMergeMark(size: 38),
     );
@@ -169,7 +290,7 @@ class _SoulMergeHeaderAvatar extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
-        child: avatar,
+        child: SizedBox.square(dimension: 48, child: Center(child: avatar)),
       ),
     );
   }

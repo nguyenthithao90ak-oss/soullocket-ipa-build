@@ -206,9 +206,40 @@ class LoveInsightsView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          if (insight.isStale) ...[
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                context.tr('insight_cached_notice'),
+                key: const ValueKey('insight-cached-notice'),
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: _InsightStyle.muted(context),
+                ),
+              ),
+            ),
+            SLSpacing.h12,
+          ],
           _buildHeaderCard(context, insight),
           SLSpacing.h16,
           _buildDailyTipCard(context, insight),
+          SLSpacing.h16,
+          Container(
+            key: const ValueKey('insight-week-summary'),
+            padding: const EdgeInsets.all(18),
+            decoration: _softCardDecoration(context),
+            child: _buildCardTitle(
+              context,
+              icon: Icons.date_range_rounded,
+              title: context.tr('insight_week_summary_title'),
+              subtitle: L10nService().format('insight_week_summary_body', {
+                'memories': insight.memoriesWeek,
+                'activeDays': insight.activeDaysWeek,
+              }),
+              accent: const Color(0xFF80709E),
+            ),
+          ),
           SLSpacing.h16,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
@@ -340,10 +371,16 @@ class LoveInsightsView extends StatelessWidget {
   }
 
   String _favoriteActivityLabel(LoveInsightData insight) {
-    if (insight.diaryTotal > insight.albumTotal) {
+    final diaries = insight.albumTotalKnown
+        ? insight.diaryTotal
+        : insight.diaryMonth;
+    final memories = insight.albumTotalKnown
+        ? insight.albumTotal
+        : insight.albumMonth;
+    if (diaries > memories) {
       return L10nService().translate('insight_habit_diary');
     }
-    if (insight.diaryTotal < insight.albumTotal) {
+    if (diaries < memories) {
       return L10nService().translate('insight_habit_album');
     }
     return L10nService().translate('insight_habit_balance');

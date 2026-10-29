@@ -1,244 +1,383 @@
-part of '../soul_merge_screen.dart';
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+import '../../../../utils/services/soul_merge_memories.dart';
+import '../../../ui_prefs.dart';
+import '../../tabs/diary/widgets/private_diary_image.dart';
+import 'particle_explosion_part.dart';
+import 'soul_merge_design.dart';
+
+class SoulMergeMemoryLayout {
+  static Size cardSize(Size available) {
+    final height = math.min(278.0, math.max(0.0, available.height - 44));
+    final width = math.min(
+      (available.width * .54).clamp(166.0, 222.0),
+      height / 1.26,
+    );
+    return Size(width, width * 1.26);
+  }
+
+  static Offset position(
+    Size available,
+    Size card,
+    int slot, {
+    Offset? anchor,
+  }) {
+    const padding = 18.0;
+    final x = [
+      available.width / 2 - card.width / 2,
+      padding,
+      available.width - card.width - padding,
+    ][slot % 3];
+    final y = [18.0, 30.0, 42.0][slot % 3];
+    return Offset(
+      (anchor == null ? x : anchor.dx - card.width / 2).clamp(
+        padding,
+        math.max(padding, available.width - card.width - padding),
+      ),
+      (anchor == null ? y : anchor.dy - card.height / 2).clamp(
+        18.0,
+        math.max(18.0, available.height - card.height - 22),
+      ),
+    );
+  }
+}
 
 class ExplodingPhoto {
-  final String url;
-  final String text;
-  final String type; // 'photo' | 'text'
-  final String mood;
-  final String dateStr;
-  final Offset position;
-  final double angle;
-  final double targetScale;
-  final UniqueKey id = UniqueKey();
-
   ExplodingPhoto({
-    required this.url,
-    this.text = '',
-    this.type = 'photo',
-    this.mood = '💖',
-    this.dateStr = '',
+    required this.memory,
     required this.position,
-    required this.angle,
-    required this.targetScale,
+    required this.size,
+    this.angle = 0,
   });
+  final SoulMergeMemory memory;
+  final Offset position;
+  final Size size;
+  final double angle;
+  final UniqueKey id = UniqueKey();
 }
 
 class ExplodingPhotoWidget extends StatefulWidget {
+  const ExplodingPhotoWidget({
+    super.key,
+    required this.photo,
+    this.imageProvider,
+  });
+  static const duration = Duration(milliseconds: 3500);
   final ExplodingPhoto photo;
-  const ExplodingPhotoWidget({super.key, required this.photo});
+  final ImageProvider? imageProvider;
 
   @override
   State<ExplodingPhotoWidget> createState() => _ExplodingPhotoWidgetState();
 }
 
 class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  late final AnimationController _controller;
+  bool _foreground = true;
+  bool _animate = false;
+  bool _visible = true;
 
   @override
   void initState() {
     super.initState();
+    _foreground =
+        WidgetsBinding.instance.lifecycleState == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500),
+      duration: ExplodingPhotoWidget.duration,
     );
+    WidgetsBinding.instance.addObserver(this);
+    UiPrefs.notifier.addListener(_onMotionChanged);
+  }
 
-    // Popping entrance and fading exit
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: widget.photo.targetScale)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 30, // Popping entrance in first 30% of time
-      ),
-      TweenSequenceItem(
-        tween: ConstantTween<double>(widget.photo.targetScale),
-        weight: 50, // Holds size
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: widget.photo.targetScale, end: 0.5)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 20, // Shrinks out at the end
-      ),
-    ]).animate(_controller);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotion();
+  }
 
-    _opacityAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 15,
-      ),
-      TweenSequenceItem(
-        tween: ConstantTween<double>(1.0),
-        weight: 65,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 20,
-      ),
-    ]).animate(_controller);
+  void _onMotionChanged() {
+    if (mounted) setState(_syncMotion);
+  }
 
-    _controller.forward();
+  void _syncMotion() {
+    _visible = _foreground && TickerMode.valuesOf(context).enabled;
+    _animate = UiPrefs.resolveEffectProfile(
+      state: UiPrefs.notifier.value,
+      isWeb: kIsWeb,
+      pauseAnimations: !_visible || MediaQuery.disableAnimationsOf(context),
+    ).animationEnabled;
+    if (_animate) {
+      if (!_controller.isAnimating && !_controller.isCompleted) {
+        _controller.forward();
+      }
+    } else {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    if (mounted) setState(_syncMotion);
   }
 
   @override
   void dispose() {
+    UiPrefs.notifier.removeListener(_onMotionChanged);
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_visible) return const SizedBox.shrink();
+    final photo = widget.photo;
     return Positioned(
-      left: widget.photo.position.dx,
-      top: widget.photo.position.dy,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Opacity(
-            opacity: _opacityAnimation.value,
-            child: Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Transform.rotate(
-                angle: widget.photo.angle,
-                child: child,
-              ),
+      left: photo.position.dx,
+      top: photo.position.dy,
+      width: photo.size.width,
+      height: photo.size.height,
+      child: IgnorePointer(
+        child: RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _controller,
+            child: SoulMergeMemoryCard(
+              memory: photo.memory,
+              imageProvider: widget.imageProvider,
             ),
-          );
-        },
-        child: widget.photo.type == 'text'
-            ? Container(
-                width: 150,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+            builder: (context, child) {
+              final t = _animate ? _controller.value : .4;
+              final enter = Curves.easeOutBack.transform(
+                (t / .18).clamp(0.0, 1.0),
+              );
+              final exit = Curves.easeInCubic.transform(
+                ((t - .82) / .18).clamp(0.0, 1.0),
+              );
+              return Opacity(
+                opacity: ((t / .10).clamp(0.0, 1.0) * (1 - exit)).clamp(
+                  0.0,
+                  1.0,
+                ),
+                child: CustomPaint(
+                  painter: _animate
+                      ? SoulMergeMemoryBurstPainter(
+                          progress: (t / .30).clamp(0.0, 1.0),
+                          dark: Theme.of(context).brightness == Brightness.dark,
+                        )
+                      : null,
+                  child: Transform.translate(
+                    offset: Offset(
+                      0,
+                      _animate ? 16 * (1 - enter) - 12 * exit : 0,
                     ),
-                  ],
-                  border: Border.all(
-                    color: const Color(0xFFFF4F93).withValues(alpha: 0.25),
-                    width: 1.2,
+                    child: Transform.rotate(
+                      angle: _animate ? photo.angle * enter : 0,
+                      child: Transform.scale(
+                        scale: _animate ? .72 + enter * .28 - exit * .06 : 1,
+                        child: child,
+                      ),
+                    ),
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(widget.photo.mood,
-                            style: const TextStyle(fontSize: 14)),
-                        if (widget.photo.dateStr.isNotEmpty)
-                          Text(
-                            widget.photo.dateStr,
-                            style: SLTheme.quicksand(
-                              color: Colors.black54,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.photo.text,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        color: Colors.black87,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : Container(
-                width: 140,
-                height: 170,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.photo.url,
-                          fit: BoxFit.cover,
-                          memCacheWidth: 400,
-                          placeholder: (context, url) => Container(
-                            color: Colors.purple.shade50,
-                            child: const Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.purple),
-                                ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.purple.shade100,
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image_rounded,
-                                color: Colors.purple,
-                              ),
-                            ),
-                          ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Thẻ lớn dùng toàn bộ kích thước layout; không còn thu nhỏ xuống 45%.
+class SoulMergeMemoryCard extends StatelessWidget {
+  const SoulMergeMemoryCard({
+    super.key,
+    required this.memory,
+    this.imageProvider,
+  });
+  final SoulMergeMemory memory;
+  final ImageProvider? imageProvider;
+
+  Widget _placeholder(SoulMergeColors colors) => ColoredBox(
+    color: colors.blush,
+    child: Center(
+      child: Icon(
+        Icons.favorite_rounded,
+        size: 38,
+        color: colors.rose.withValues(alpha: .55),
+      ),
+    ),
+  );
+
+  Widget _image(SoulMergeColors colors) {
+    if (imageProvider != null) {
+      return Image(image: imageProvider!, fit: BoxFit.cover);
+    }
+    if (memory.privateMedia) {
+      return PrivateDiaryImage(
+        key: ValueKey('soul-memory-image:${memory.memoryId}'),
+        houseId: memory.houseId,
+        memoryId: memory.memoryId,
+        cacheWidth: 640,
+        retainCacheWidth: 1600,
+        reuseAnyCachedSize: true,
+        loadingBackgroundColor: colors.blush,
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: memory.imageUrl,
+      memCacheWidth: 640,
+      fit: BoxFit.cover,
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
+      placeholderFadeInDuration: Duration.zero,
+      placeholder: (_, _) => _placeholder(colors),
+      errorWidget: (_, _, _) => _placeholder(colors),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SoulMergeColors(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          key: const ValueKey('soul-merge-memory-card'),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(19),
+            border: Border.all(color: colors.line),
+            boxShadow: [
+              BoxShadow(
+                color: colors.rose.withValues(alpha: .20),
+                blurRadius: 24,
+                offset: const Offset(0, 9),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: .07),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(memory.hasPhoto ? 9 : 17),
+            child: memory.hasPhoto
+                ? Column(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: SizedBox.expand(child: _image(colors)),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.favorite_rounded,
-                          color: Color(0xFFFF4F93),
-                          size: 12,
-                        ),
-                        if (widget.photo.dateStr.isNotEmpty) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.photo.dateStr,
-                            style: SLTheme.quicksand(
-                              color: Colors.black54,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(height: 9),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.favorite_rounded,
+                            size: 15,
+                            color: colors.rose,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              memory.text.isEmpty
+                                  ? memory.dateStr
+                                  : memory.text,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.ink,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            memory.mood,
+                            style: const TextStyle(fontSize: 23),
+                          ),
+                          const Spacer(),
+                          Flexible(
+                            child: Text(
+                              memory.dateStr,
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colors.muted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final lineHeight =
+                                MediaQuery.textScalerOf(context).scale(16) *
+                                1.4;
+                            final lines = math.max(
+                              1,
+                              (constraints.maxHeight / lineHeight).floor(),
+                            );
+                            return Text(
+                              memory.text,
+                              maxLines: lines,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.ink,
+                                fontSize: 16,
+                                height: 1.4,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+        Positioned(
+          top: -4,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Transform.rotate(
+              angle: -.06,
+              child: Container(
+                width: 46,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: colors.rose.withValues(alpha: .20),
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: colors.rose.withValues(alpha: .08)),
                 ),
               ),
-      ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

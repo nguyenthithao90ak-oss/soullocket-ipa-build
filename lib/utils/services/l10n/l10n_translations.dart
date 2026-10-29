@@ -2,13 +2,28 @@ part of '../l10n_service.dart';
 
 abstract final class _L10nStaticData {
   static const Map<String, String> _vi = {
-    'pet_care_title': 'Trạm Mây Lệch 7°',
+    'pet_care_title': 'Trạm Mây – Chăm bé',
     'pet_care_drag_hint': 'Kéo đồ đến bé',
     'pet_care_scrub_hint': 'Xoa nhẹ rồi thả',
     'pet_care_rinse_hint': 'Xịt nước khắp người bé',
     'pet_care_shop_tab_room': 'Phòng',
     'pet_care_shop_tab_bath': 'Đồ tắm',
     'pet_care_shop_tab_dance': 'Điệu nhảy',
+    'pet_care_shop_tab_wardrobe': 'Trang phục',
+    'pet_care_wardrobe_hint':
+        'Mua một lần, mặc riêng cho từng bé. Trang phục và nhu cầu của hai bé cùng cập nhật trên Home.',
+    'pet_care_outfit_bare': 'Bộ gốc',
+    'pet_care_outfit_cloud': 'Mây bông',
+    'pet_care_outfit_strawberry': 'Dâu sữa',
+    'pet_care_outfit_honey': 'Ong mật',
+    'pet_care_outfit_sailor': 'Thủy thủ',
+    'pet_care_outfit_raincoat': 'Áo mưa',
+    'pet_care_outfit_pajamas': 'Ngủ ngon',
+    'pet_care_outfit_royal': 'Hoàng gia',
+    'pet_care_outfit_wearing': 'Đang mặc',
+    'pet_care_outfit_wear': 'Mặc cho bé',
+    'home_companion_setting_subtitle':
+        'Chạm bé để chơi. Nhấn giữ để mở Trạm Mây, chăm bé và đổi trang phục. Thỏ vẫn giúp quét bụi.',
     'pet_care_shop_soap': 'Xà phòng',
     'pet_care_shop_shower': 'Vòi sen',
     'pet_care_shop_towel': 'Khăn tắm',
@@ -68,7 +83,7 @@ abstract final class _L10nStaticData {
     'pet_care_room_slot_wall': 'Giấy dán tường',
     'pet_care_room_slot_floor': 'Sàn nhà',
     'pet_care_room_slot_window': 'Cửa sổ',
-    'pet_care_room_slot_furniture': 'Màu nội thất',
+    'pet_care_room_slot_furniture': 'Bộ nội thất',
     'pet_care_room_item_wallClassic': 'Giấy tường gốc',
     'pet_care_room_item_wallPolka': 'Chấm bi hồng',
     'pet_care_room_item_wallStripe': 'Sọc kẹo',
@@ -89,13 +104,13 @@ abstract final class _L10nStaticData {
     'pet_care_room_item_windowBay': 'Cửa sổ chậu hoa',
     'pet_care_room_item_windowHeart': 'Cửa sổ trái tim',
     'pet_care_room_item_windowStar': 'Cửa sổ ngôi sao',
-    'pet_care_room_item_furnitureClassic': 'Màu gốc',
-    'pet_care_room_item_furniturePeach': 'Đào ngọt',
-    'pet_care_room_item_furnitureMint': 'Bạc hà mát',
-    'pet_care_room_item_furnitureLilac': 'Tím oải hương',
-    'pet_care_room_item_furnitureSky': 'Xanh trời',
-    'pet_care_room_item_furnitureHoney': 'Vàng mật ong',
-    'pet_care_room_item_furnitureCocoa': 'Nâu ca cao',
+    'pet_care_room_item_furnitureClassic': 'Bộ gốc',
+    'pet_care_room_item_furniturePeach': 'Bánh kem dâu',
+    'pet_care_room_item_furnitureMint': 'Rừng lá xanh',
+    'pet_care_room_item_furnitureLilac': 'Công chúa',
+    'pet_care_room_item_furnitureSky': 'Mây bông',
+    'pet_care_room_item_furnitureHoney': 'Ong mật',
+    'pet_care_room_item_furnitureCocoa': 'Mèo con',
     'pet_care_prop_livingWindow': 'Rèm cửa sổ',
     'pet_care_prop_kitchenWindow': 'Rèm cửa sổ',
     'pet_care_prop_bathWindow': 'Rèm cửa sổ',
@@ -121,17 +136,22 @@ abstract final class _L10nStaticData {
     'pet_care_prop_books': 'Kệ sách',
     'pet_care_prop_slippers': 'Dép bông',
     'pet_care_earn_title': 'Kiếm Hạt Ấm',
-    'pet_care_earn_hint': 'Hạt dùng mua món ăn, đồ trang trí phòng và hiệu ứng cho bé',
+    'pet_care_earn_hint':
+        'Hạt dùng mua món ăn, đồ trang trí phòng và hiệu ứng cho bé',
     'pet_care_earn_ad': 'Xem quảng cáo',
     'pet_care_earn_ad_detail': '+{seeds} hạt mỗi lần · hôm nay {count}/{max}',
     'pet_care_earn_find': 'Tìm hạt giấu trong phòng',
-    'pet_care_earn_find_detail': 'Chạm đồ vật đang lấp lánh · hôm nay {count}/{max}',
+    'pet_care_earn_find_detail':
+        'Chạm đồ vật đang lấp lánh · hôm nay {count}/{max}',
     'pet_care_earn_game': 'Trò hứng sao',
-    'pet_care_earn_game_detail': '{points} điểm = 1 hạt · hôm nay {count}/{max} hạt',
+    'pet_care_earn_game_detail':
+        '{points} điểm = 1 hạt · hôm nay {count}/{max} hạt',
     'pet_care_earn_friend': 'Hai bé ôm nhau',
-    'pet_care_earn_friend_detail': 'Chạm vào bé còn lại · +{seeds} hạt mỗi ngày',
+    'pet_care_earn_friend_detail':
+        'Chạm vào bé còn lại · +{seeds} hạt mỗi ngày',
     'pet_care_earn_gift': 'Quà chăm bé mỗi ngày',
-    'pet_care_ad_limit': 'Hôm nay đã nhận đủ hạt từ quảng cáo rồi, mai quay lại nha',
+    'pet_care_ad_limit':
+        'Hôm nay đã nhận đủ hạt từ quảng cáo rồi, mai quay lại nha',
     'pet_care_ad_cooldown': 'Đợi chút rồi xem tiếp nha',
     'pet_care_ad_dismissed': 'Xem hết quảng cáo mới nhận được hạt nha',
     'pet_care_ad_unavailable': 'Chưa có quảng cáo lúc này, thử lại sau nhé',
@@ -139,7 +159,8 @@ abstract final class _L10nStaticData {
     'pet_care_seed_found': 'Tìm thấy một hạt!',
     'pet_care_friend_hug': 'Hai bé ôm nhau thật chặt',
     'pet_care_friend_hug_action': 'Ôm bé kia',
-    'pet_care_game_hint': 'Kéo bé qua lại để hứng sao, tim và hạt. Né mây giông nha!',
+    'pet_care_game_hint':
+        'Kéo bé qua lại để hứng sao, tim và hạt. Né mây giông nha!',
     'pet_care_game_start': 'Chơi',
     'pet_care_game_again': 'Chơi lại',
     'pet_care_game_done': 'Giỏi quá!',
@@ -148,20 +169,57 @@ abstract final class _L10nStaticData {
     'pet_care_game_reward': 'Nhận hạt từ trò chơi',
     'pet_care_woke_bubble': 'Bé dậy rồi, mình chơi tiếp nhé!',
     'pet_care_partner_synced': 'Người ấy vừa ghé chăm hai bé 💕',
-    'pet_care_sync_merged': 'Đã nối Trạm Mây với người ấy: hai bé, Hạt và đồ đã mua giờ là của chung.',
-    'pet_care_shared_note': 'Hai bé, hũ Hạt và đồ trang trí là của chung, tự đồng bộ giữa hai máy khi có mạng. Lượt quảng cáo và Hạt mini game tính riêng từng người. Hạt Ấm không phải điểm thưởng của app.',
+    'pet_care_sync_merged':
+        'Đã nối Trạm Mây với người ấy: hai bé, Hạt và đồ đã mua giờ là của chung.',
+    'pet_care_shared_note':
+        'Hai bé, đồ trang trí và Hạt Ấm dùng chung, đồng bộ khi có mạng. Lượt quảng cáo và Hạt từ trò Hứng sao tính riêng từng người. Hạt Ấm khác với điểm đổi thưởng của app.',
     'pet_care_ad_double': 'Xem quảng cáo nhân đôi Hạt',
     'pet_care_ad_double_short': 'Nhận x2',
     'pet_care_ad_double_reward': 'Nhân đôi rồi! Hạt đã vào hũ ✦',
-    'pet_care_gift_double_offer': 'Xem một quảng cáo để nhận thêm {seeds} Hạt Ấm nữa nhé?',
-    'pet_care_earn_gift_double_detail': 'Đã nhận quà · xem quảng cáo nhận thêm {seeds} hạt',
+    'pet_care_gift_double_offer':
+        'Xem một quảng cáo để nhận thêm {seeds} Hạt Ấm nữa nhé?',
+    'pet_care_earn_gift_double_detail':
+        'Đã nhận quà · xem quảng cáo nhận thêm {seeds} hạt',
     'pet_care_ad_revive': 'Xem quảng cáo hồi sức',
     'pet_care_earn_revive': 'Hồi sức cho bé',
-    'pet_care_earn_revive_detail': 'Bé mệt hoặc đang ngủ thì khỏe lại ngay · hôm nay {count}/{max}',
+    'pet_care_earn_revive_detail':
+        'Bé mệt hoặc đang ngủ thì khỏe lại ngay · hôm nay {count}/{max}',
     'pet_care_revive_bubble': 'Khỏe re rồi! Chơi tiếp thôi!',
     'pet_care_sleeping_away': '{pet} đang ngủ ở phòng ngủ',
     'pet_care_sleeping_away_tap': 'Chạm để sang phòng ngủ',
-    'pet_care_subtitle': 'một căn phòng không chịu đứng thẳng',
+    'pet_care_talk': 'Nói cho bé nhại lại',
+    'pet_care_talk_note': 'Giọng chỉ phát lại trên máy, không lưu hay gửi đi',
+    'pet_care_talk_permission':
+        'Cần quyền micro để bé nghe bạn nói. Bật trong Cài đặt của máy nhé.',
+    'pet_care_talk_silent': 'Bé chưa nghe rõ, nói to hơn một chút nha',
+    'pet_care_talk_muted': 'Bật âm thanh để nghe bé nhại lại nha',
+    'pet_care_stage_baby': 'Sơ sinh',
+    'pet_care_stage_kid': 'Bé con',
+    'pet_care_stage_teen': 'Bé lớn',
+    'pet_care_stage_adult': 'Trưởng thành',
+    'pet_care_birthday_title': 'Chúc mừng sinh nhật!',
+    'pet_care_birthday_age': 'Thỏ và Gấu lên {age} tuổi rồi!',
+    'pet_care_birthday_blow': 'Chạm bánh để thổi nến',
+    'pet_care_birthday_open': 'Mở quà',
+    'pet_care_birthday_gift': '+{seeds} Hạt Ấm quà sinh nhật',
+    'pet_care_birthday_done': 'Tuyệt quá!',
+    'pet_care_milestones': 'Cột mốc lớn lên',
+    'pet_care_milestones_hint': 'Mỗi lần chăm bé được điểm gắn kết. Đủ điểm là hai bé lên tuổi, có tiệc sinh nhật và quà.',
+    'pet_care_milestone_born': 'Chào đời',
+    'pet_care_milestone_birthday': 'Sinh nhật {age} tuổi',
+    'pet_care_milestone_stage': 'Thành {stage}',
+    'pet_care_milestone_need': 'Cần {points} điểm gắn kết',
+    'pet_care_milestone_next': 'Còn {points} điểm gắn kết nữa tới sinh nhật {age} tuổi',
+    'pet_care_milestone_max': 'Hai bé đã lớn hết cỡ rồi!',
+    'pet_care_milestone_claimed': 'Đã mở quà',
+    'pet_care_milestone_party': 'Mở tiệc sinh nhật',
+    'pet_care_age': '{age} tuổi',
+    'pet_care_together_feed_bubble':
+        'Hai bé cùng ăn ngon lành, no căng cả hai bụng',
+    'pet_care_together_bath_bubble': 'Tắm chung một bồn, hai cục bông thơm tho',
+    'pet_care_together_play_bubble':
+        'Hai bé cùng nhảy theo bóng, vui quá trời!',
+    'pet_care_subtitle': 'Cho bé ăn, tắm, chơi và ôm để nhận Hạt Ấm.',
     'pet_care_short_hint': 'Tắm, cho ăn và ôm bé một chút để nhận Hạt Ấm ✦',
     'pet_care_open': 'Vào phòng',
     'pet_care_intro_bubble': 'Bé đang chờ một chút chăm sóc dịu dàng',
@@ -189,7 +247,7 @@ abstract final class _L10nStaticData {
     'pet_care_decor_planet': 'Hành tinh đi lạc',
     'pet_care_decor_garden': 'Vườn lá tí hon',
     'pet_care_local_note':
-        'Tiến trình lưu riêng theo tài khoản và nhà trên máy này, chưa đồng bộ với người ấy. Các chỉ số thay đổi theo thời gian. Hạt Ấm không phải điểm thưởng của app.',
+        'Hai bé, đồ trang trí và Hạt Ấm dùng chung, đồng bộ khi có mạng. Lượt quảng cáo và Hạt từ trò Hứng sao tính riêng từng người. Hạt Ấm khác với điểm đổi thưởng của app.',
     'pet_care_save_error':
         'Chưa lưu được. Tiến trình chưa thay đổi; bạn thử lại nhé.',
     'pet_care_scope_error':
@@ -234,7 +292,7 @@ abstract final class _L10nStaticData {
     'pet_care_own_rabbit': 'Thỏ là bé của bạn',
     'pet_care_own_bear': 'Gấu là bé của bạn',
     'pet_care_partner_locked':
-        'Bạn chỉ chăm bé của mình. Bé của người ấy cần người ấy tự chăm; tính năng giúp nhau sẽ được thêm sau.',
+        'Hai bé và đồ dùng là của chung. Bạn có thể chăm bé đang sẵn sàng; thay đổi sẽ đồng bộ khi có mạng.',
     'pet_care_partner_reminder': 'Nhắc người ấy chăm bé',
     'pet_care_reminder_local':
         'Hãy nhắn người ấy vào chăm bé nhé. Ở phiên bản này chưa có gửi nhắc tự động hay chăm hộ.',
@@ -243,12 +301,28 @@ abstract final class _L10nStaticData {
     'pet_care_bath_dry': 'Lau khô',
     'pet_care_bath_step': 'Bước {step}/3',
     'pet_care_tap_ball': 'Chạm bóng để chơi',
+    'pet_care_pet_stroke_hint': 'Chạm hoặc vuốt bé để cưng nựng',
+    'pet_care_toy_chest': 'Hòm đồ chơi',
+    'pet_care_toy_chest_hint': 'Mở hòm đồ chơi để chơi Hứng sao',
+    'pet_care_living_play_hint':
+        'Chạm bóng để chơi · Vuốt bé để cưng · Mở hòm đồ chơi để chơi Hứng sao',
+    'pet_care_pet_touch_label': 'Cưng nựng {pet}',
+    'pet_care_toy_chest_close': 'Đóng hòm đồ chơi',
+    'pet_care_guest_arrive_kuromi':
+        'Mèo Mây ghé chơi nè! Chạm để mời bé ăn bánh nhé',
+    'pet_care_guest_arrive_melody':
+        'Chuột Phô Mai ghé chơi nè! Chạm để mời bé ăn bánh nhé',
+    'pet_care_guest_gift': 'Bạn nhỏ cảm ơn bánh ngon và tặng bạn 3 Hạt!',
+    'pet_care_guest_thanks': 'Bạn nhỏ cảm ơn bánh ngon!',
+    'pet_care_guest_bye': 'Bạn nhỏ về nhà rồi, hẹn lần sau ghé tiếp!',
+    'pet_care_guest_label': '{pet} đang ghé chơi',
+    'pet_care_guest_treat_hint': 'Chạm để mời bánh, vuốt ngang để xoay bé',
+    'pet_care_guest_pet_hint': 'Chạm để cưng, vuốt ngang để xoay bé',
     'pet_care_sleeping_hint':
         'Bé đang ngủ. Đánh thức bé trước khi chơi hoặc chăm nhé.',
     'pet_care_full_hint': 'Bé đã no rồi, để dành món ngon cho lát nữa nhé.',
     'pet_care_not_enough_seeds': 'Chưa đủ Hạt Ấm cho món này',
-    'pet_care_room_action_hint':
-        'Chạm đồ dùng trong phòng hoặc dùng nút bên dưới',
+    'pet_care_room_action_hint': 'Chạm đồ dùng trong phòng để tương tác',
     'pet_care_my_pet': 'Bé của mình',
     'pet_care_partner_pet': 'Bé của người ấy',
     'pet_care_customize': 'Trang trí & nâng cấp',
@@ -258,7 +332,7 @@ abstract final class _L10nStaticData {
     'pet_care_no_role':
         'Chưa xác định được giới tính của bạn. Hãy kiểm tra Cài đặt trước khi chăm bé.',
     'pet_care_partner_local_hint':
-        'Trạng thái trên máy này, chưa đồng bộ với người ấy.',
+        'Trạng thái sẽ đồng bộ với người ấy khi có mạng.',
     'auth_fallback_reset_link_send':
         'Không gửi được link khôi phục: hãy kiểm tra email, kết nối mạng và cấu hình Firebase Auth.',
     'auth_fallback_verification_code_send': 'Không gửi được mã xác nhận.',
@@ -456,6 +530,14 @@ abstract final class _L10nStaticData {
     // === Finance ===
 
     // === Diary ===
+    'diary_quota_daily_reached':
+        'Bạn đã dùng hết {limit} bài tâm sự hôm nay. Ngày mai bạn có thể đăng lại nhé.',
+    'diary_quota_total_reached':
+        'Nhật ký chung đã đạt tối đa {limit} bài đang lưu. Hãy xóa bớt bài cũ để viết tiếp.',
+    'diary_quota_reached':
+        'Bạn đã đạt giới hạn bài tâm sự. Hãy thử lại sau hoặc xóa bớt bài cũ.',
+    'diary_quota_status':
+        'Hôm nay còn {dailyRemaining}/{dailyLimit} bài · Tổng còn {totalRemaining}/{totalLimit} bài',
 
     // === Secret Vault ===
 
@@ -751,17 +833,33 @@ abstract final class _L10nStaticData {
   };
 
   static const Map<String, String> _en = {
-    'pet_care_title': 'Cloud Station 7°',
+    'pet_care_title': 'Cloud Station · Pet care',
     'pet_care_drag_hint': 'Drag an item to your pet',
     'pet_care_scrub_hint': 'Rub gently, then release',
     'pet_care_rinse_hint': 'Spray water all over your pet',
     'pet_care_shop_tab_room': 'Rooms',
     'pet_care_shop_tab_bath': 'Bath',
     'pet_care_shop_tab_dance': 'Dances',
+    'pet_care_shop_tab_wardrobe': 'Outfits',
+    'pet_care_wardrobe_hint':
+        'Buy once, dress each pet separately. Both pets’ outfits and needs also update on Home.',
+    'pet_care_outfit_bare': 'Original outfit',
+    'pet_care_outfit_cloud': 'Cloud Puff',
+    'pet_care_outfit_strawberry': 'Strawberry Milk',
+    'pet_care_outfit_honey': 'Honeybee',
+    'pet_care_outfit_sailor': 'Sailor',
+    'pet_care_outfit_raincoat': 'Raincoat',
+    'pet_care_outfit_pajamas': 'Sleep Tight',
+    'pet_care_outfit_royal': 'Royal',
+    'pet_care_outfit_wearing': 'Wearing',
+    'pet_care_outfit_wear': 'Dress pet',
+    'home_companion_setting_subtitle':
+        'Tap a pet to play. Hold to open Cloud Station, care for your pets and change their outfits. Bunny still helps sweep the dust.',
     'pet_care_shop_soap': 'Soap',
     'pet_care_shop_shower': 'Shower',
     'pet_care_shop_towel': 'Towel',
-    'pet_care_shop_dance_hint': 'Your pet does the chosen dance after each care',
+    'pet_care_shop_dance_hint':
+        'Your pet does the chosen dance after each care',
     'pet_care_style_equipped': 'In use',
     'pet_care_style_use': 'Use',
     'pet_care_style_bought': 'Bought! Give it a try ✦',
@@ -809,7 +907,8 @@ abstract final class _L10nStaticData {
     'pet_care_food_kind_sweet': 'Sweets',
     'pet_care_food_kind_drink': 'Drinks',
     'pet_care_fridge': 'Fridge',
-    'pet_care_fridge_hint': 'Pick a dish for the shelf, then drag it to your pet\'s mouth',
+    'pet_care_fridge_hint':
+        'Pick a dish for the shelf, then drag it to your pet\'s mouth',
     'pet_care_favorite': 'Favorite food',
     'pet_care_free': 'Free',
     'pet_care_buy': 'Buy',
@@ -817,7 +916,7 @@ abstract final class _L10nStaticData {
     'pet_care_room_slot_wall': 'Wallpaper',
     'pet_care_room_slot_floor': 'Floor',
     'pet_care_room_slot_window': 'Window',
-    'pet_care_room_slot_furniture': 'Furniture color',
+    'pet_care_room_slot_furniture': 'Furniture set',
     'pet_care_room_item_wallClassic': 'Original wallpaper',
     'pet_care_room_item_wallPolka': 'Pink polka dots',
     'pet_care_room_item_wallStripe': 'Candy stripes',
@@ -838,13 +937,13 @@ abstract final class _L10nStaticData {
     'pet_care_room_item_windowBay': 'Flower box window',
     'pet_care_room_item_windowHeart': 'Heart window',
     'pet_care_room_item_windowStar': 'Star window',
-    'pet_care_room_item_furnitureClassic': 'Original colors',
-    'pet_care_room_item_furniturePeach': 'Sweet peach',
-    'pet_care_room_item_furnitureMint': 'Cool mint',
-    'pet_care_room_item_furnitureLilac': 'Lavender',
-    'pet_care_room_item_furnitureSky': 'Sky blue',
-    'pet_care_room_item_furnitureHoney': 'Honey yellow',
-    'pet_care_room_item_furnitureCocoa': 'Cocoa brown',
+    'pet_care_room_item_furnitureClassic': 'Original set',
+    'pet_care_room_item_furniturePeach': 'Strawberry cake',
+    'pet_care_room_item_furnitureMint': 'Leafy forest',
+    'pet_care_room_item_furnitureLilac': 'Little princess',
+    'pet_care_room_item_furnitureSky': 'Fluffy cloud',
+    'pet_care_room_item_furnitureHoney': 'Honey bee',
+    'pet_care_room_item_furnitureCocoa': 'Kitty cat',
     'pet_care_prop_livingWindow': 'Window curtains',
     'pet_care_prop_kitchenWindow': 'Window curtains',
     'pet_care_prop_bathWindow': 'Window curtains',
@@ -874,13 +973,16 @@ abstract final class _L10nStaticData {
     'pet_care_earn_ad': 'Watch an ad',
     'pet_care_earn_ad_detail': '+{seeds} seeds each time · today {count}/{max}',
     'pet_care_earn_find': 'Find hidden seeds',
-    'pet_care_earn_find_detail': 'Tap things that sparkle · today {count}/{max}',
+    'pet_care_earn_find_detail':
+        'Tap things that sparkle · today {count}/{max}',
     'pet_care_earn_game': 'Star catch game',
-    'pet_care_earn_game_detail': '{points} points = 1 seed · today {count}/{max} seeds',
+    'pet_care_earn_game_detail':
+        '{points} points = 1 seed · today {count}/{max} seeds',
     'pet_care_earn_friend': 'Pets\' hug',
     'pet_care_earn_friend_detail': 'Tap the other pet · +{seeds} seeds a day',
     'pet_care_earn_gift': 'Daily care gift',
-    'pet_care_ad_limit': 'You\'ve collected today\'s ad seeds. Come back tomorrow!',
+    'pet_care_ad_limit':
+        'You\'ve collected today\'s ad seeds. Come back tomorrow!',
     'pet_care_ad_cooldown': 'Wait a moment before the next ad',
     'pet_care_ad_dismissed': 'Watch the whole ad to get seeds',
     'pet_care_ad_unavailable': 'No ad right now. Try again later',
@@ -888,7 +990,8 @@ abstract final class _L10nStaticData {
     'pet_care_seed_found': 'Found a seed!',
     'pet_care_friend_hug': 'The two pets share a big hug',
     'pet_care_friend_hug_action': 'Hug the other pet',
-    'pet_care_game_hint': 'Drag your pet left and right to catch stars, hearts and seeds. Dodge the storm clouds!',
+    'pet_care_game_hint':
+        'Drag your pet left and right to catch stars, hearts and seeds. Dodge the storm clouds!',
     'pet_care_game_start': 'Play',
     'pet_care_game_again': 'Again',
     'pet_care_game_done': 'Great job!',
@@ -897,20 +1000,57 @@ abstract final class _L10nStaticData {
     'pet_care_game_reward': 'Seeds earned from the game',
     'pet_care_woke_bubble': 'Nap\'s over, time to play!',
     'pet_care_partner_synced': 'Your partner just looked after the pets 💕',
-    'pet_care_sync_merged': 'Linked with your partner: both pets, seeds and purchases are now shared.',
-    'pet_care_shared_note': 'Both pets, the seed jar and decorations are shared and sync between your two phones when online. Ad views and mini game seeds count per person. Warm Seeds are not app reward points.',
+    'pet_care_sync_merged':
+        'Linked with your partner: both pets, seeds and purchases are now shared.',
+    'pet_care_shared_note':
+        'Both pets, the seed jar and decorations are shared and sync between your two phones when online. Ad views and mini game seeds count per person. Warm Seeds are not app reward points.',
     'pet_care_ad_double': 'Watch an ad to double seeds',
     'pet_care_ad_double_short': 'Get x2',
     'pet_care_ad_double_reward': 'Doubled! The seeds are in the jar ✦',
     'pet_care_gift_double_offer': 'Watch an ad for {seeds} more Warm Seeds?',
-    'pet_care_earn_gift_double_detail': 'Gift claimed · watch an ad for {seeds} more seeds',
+    'pet_care_earn_gift_double_detail':
+        'Gift claimed · watch an ad for {seeds} more seeds',
     'pet_care_ad_revive': 'Watch an ad to recharge',
     'pet_care_earn_revive': 'Recharge your pet',
-    'pet_care_earn_revive_detail': 'A tired or sleeping pet is full of energy again · today {count}/{max}',
+    'pet_care_earn_revive_detail':
+        'A tired or sleeping pet is full of energy again · today {count}/{max}',
     'pet_care_revive_bubble': 'All charged up! Let\'s play!',
     'pet_care_sleeping_away': '{pet} is asleep in the bedroom',
     'pet_care_sleeping_away_tap': 'Tap to go to the bedroom',
-    'pet_care_subtitle': 'a room that refuses to stand straight',
+    'pet_care_talk': 'Talk and your pet repeats',
+    'pet_care_talk_note':
+        'Your voice is only played back on this phone, never saved or sent',
+    'pet_care_talk_permission':
+        'Microphone access is needed so your pet can hear you. Turn it on in your phone\'s Settings.',
+    'pet_care_talk_silent':
+        'Your pet didn\'t catch that. Try speaking a bit louder',
+    'pet_care_talk_muted': 'Turn the sound on to hear your pet repeat you',
+    'pet_care_stage_baby': 'Newborn',
+    'pet_care_stage_kid': 'Little one',
+    'pet_care_stage_teen': 'Growing up',
+    'pet_care_stage_adult': 'All grown up',
+    'pet_care_birthday_title': 'Happy birthday!',
+    'pet_care_birthday_age': 'Bunny and Bear are turning {age}!',
+    'pet_care_birthday_blow': 'Tap the cake to blow out the candles',
+    'pet_care_birthday_open': 'Open gift',
+    'pet_care_birthday_gift': '+{seeds} Warm Seeds birthday gift',
+    'pet_care_birthday_done': 'Yay!',
+    'pet_care_milestones': 'Growing-up milestones',
+    'pet_care_milestones_hint': 'Every bit of care earns bond points. Enough points and your pets turn a year older, with a party and a gift.',
+    'pet_care_milestone_born': 'Born',
+    'pet_care_milestone_birthday': 'Turning {age}',
+    'pet_care_milestone_stage': 'Becomes: {stage}',
+    'pet_care_milestone_need': 'Needs {points} bond points',
+    'pet_care_milestone_next': '{points} more bond points until turning {age}',
+    'pet_care_milestone_max': 'Your pets are all grown up!',
+    'pet_care_milestone_claimed': 'Opened',
+    'pet_care_milestone_party': 'Throw the birthday party',
+    'pet_care_age': 'Age {age}',
+    'pet_care_together_feed_bubble': 'Two happy tummies, munching side by side',
+    'pet_care_together_bath_bubble': 'One tub, two fresh little clouds',
+    'pet_care_together_play_bubble':
+        'Both pets bounce after the ball. So much fun!',
+    'pet_care_subtitle': 'Feed, bathe, play and hug to earn Warm Seeds.',
     'pet_care_short_hint': 'Bathe, feed and hug the pets to earn Warm Seeds ✦',
     'pet_care_open': 'Open room',
     'pet_care_intro_bubble': 'Your little one is waiting for some gentle care',
@@ -939,7 +1079,7 @@ abstract final class _L10nStaticData {
     'pet_care_decor_planet': 'Lost little planet',
     'pet_care_decor_garden': 'Tiny leaf garden',
     'pet_care_local_note':
-        'Progress is saved per account and home on this device, not synced with your partner. Needs change over time. Warm Seeds are not app reward points.',
+        'Both pets, decorations and Warm Seeds are shared and sync when online. Ad views and Hugs & Stars seeds count per person. Warm Seeds are separate from the app reward points.',
     'pet_care_save_error':
         'Could not save. Progress is unchanged; please try again.',
     'pet_care_scope_error':
@@ -993,12 +1133,30 @@ abstract final class _L10nStaticData {
     'pet_care_bath_dry': 'Dry off',
     'pet_care_bath_step': 'Step {step}/3',
     'pet_care_tap_ball': 'Tap the ball to play',
+    'pet_care_pet_stroke_hint': 'Tap or stroke your pet to show affection',
+    'pet_care_toy_chest': 'Toy chest',
+    'pet_care_toy_chest_hint': 'Open the toy chest to play Star Catch',
+    'pet_care_living_play_hint':
+        'Tap the ball to play · Stroke your pet · Open the toy chest to play Star Catch',
+    'pet_care_pet_touch_label': 'Pet {pet}',
+    'pet_care_toy_chest_close': 'Close toy chest',
+    'pet_care_guest_arrive_kuromi':
+        'Cloud Cat dropped by to play! Tap to offer a cookie',
+    'pet_care_guest_arrive_melody':
+        'Cheese Mouse dropped by to play! Tap to offer a cookie',
+    'pet_care_guest_gift':
+        'Your little guest loved the cookie and gave you 3 seeds!',
+    'pet_care_guest_thanks': 'Your little guest loved the cookie!',
+    'pet_care_guest_bye': 'Your little guest went home. See you next visit!',
+    'pet_care_guest_label': '{pet} is visiting',
+    'pet_care_guest_treat_hint':
+        'Tap to offer a cookie, swipe sideways to spin',
+    'pet_care_guest_pet_hint': 'Tap to cuddle, swipe sideways to spin',
     'pet_care_sleeping_hint':
         'Your pet is asleep. Wake them before playing or caring for them.',
     'pet_care_full_hint': 'Your pet is full. Save this treat for later.',
     'pet_care_not_enough_seeds': 'Not enough Warm Seeds for this treat',
-    'pet_care_room_action_hint':
-        'Tap furniture in the room or use the buttons below',
+    'pet_care_room_action_hint': 'Tap furniture in the room to interact',
     'pet_care_my_pet': 'My little one',
     'pet_care_partner_pet': 'My partner’s little one',
     'pet_care_customize': 'Decorate & upgrade',
@@ -1008,7 +1166,7 @@ abstract final class _L10nStaticData {
     'pet_care_no_role':
         'Your gender has not been identified. Please check Settings before caring for a pet.',
     'pet_care_partner_local_hint':
-        'Status on this device only; not synced with your partner.',
+        'Progress syncs with your partner when online.',
     'auth_fallback_reset_link_send':
         'Could not send the recovery link. Check your email, internet connection, and Firebase Auth configuration.',
     'auth_fallback_verification_code_send':
@@ -1193,6 +1351,14 @@ abstract final class _L10nStaticData {
     // === Finance ===
 
     // === Diary ===
+    'diary_quota_daily_reached':
+        'You have used all {limit} diary posts for today. You can post again tomorrow.',
+    'diary_quota_total_reached':
+        'The shared diary has reached its maximum of {limit} saved posts. Delete an older post to continue.',
+    'diary_quota_reached':
+        'You have reached the diary post limit. Try again later or delete an older post.',
+    'diary_quota_status':
+        '{dailyRemaining}/{dailyLimit} posts left today · {totalRemaining}/{totalLimit} posts saved',
 
     // === Secret Vault ===
 

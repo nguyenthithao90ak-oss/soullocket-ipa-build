@@ -1194,7 +1194,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
         actions: [
           if (_isPro == true) ...[
           IconButton(
-            tooltip: context.tr('ai_data_consent_title'),
+            tooltip: context.tr('ai_data_consent_manage'),
             icon: const Icon(Icons.privacy_tip_outlined),
             onPressed: _sessionUid == null ? null : () => requestAiDataConsent(
               context, uid: _sessionUid, manage: true,

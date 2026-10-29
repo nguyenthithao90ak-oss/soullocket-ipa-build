@@ -28,35 +28,6 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
     return '✨ 0';
   }
 
-  int _widgetMemoryOrderValueImpl(dynamic raw) {
-    if (raw is int) return raw;
-    if (raw is double) return raw.toInt();
-    if (raw is String) return int.tryParse(raw) ?? 0;
-    return 0;
-  }
-
-  List<({int order, String url})> _widgetDiaryImageEntriesFromRawImpl(
-    dynamic raw,
-  ) {
-    if (raw is! Map) return const <({int order, String url})>[];
-
-    final items = <({int order, String url})>[];
-    raw.forEach((_, value) {
-      if (value is! Map) return;
-      final map = value.map((key, item) => MapEntry(key.toString(), item));
-      final imageUrl = (map['url'] ?? map['imageUrl'] ?? map['thumbUrl'] ?? '')
-          .toString()
-          .trim();
-      if (imageUrl.isEmpty) return;
-      final order = _widgetMemoryOrderValueImpl(
-        map['ts'] ?? map['date'] ?? map['updatedAt'],
-      );
-      items.add((order: order, url: imageUrl));
-    });
-
-    return items;
-  }
-
   /// Trả về `null` khi đọc lỗi để lần sau thử lại; danh sách rỗng là kết quả hợp lệ.
   Future<List<String>?> _loadWidgetDiaryImageUrlsImpl(String houseId) async {
     try {
@@ -64,6 +35,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final memoriesFuture = readQuerySettled(
         _dbRef
             .child('houses/$houseId/memories')
+            .orderByChild('ts')
             .limitToLast(_widgetDiaryFetchLimit),
         timeout: const Duration(seconds: 4),
       );
@@ -75,16 +47,11 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       );
 
       final snapshots = await Future.wait([memoriesFuture, diaryFuture]);
-      final merged = <({int order, String url})>[
-        ..._widgetDiaryImageEntriesFromRawImpl(snapshots[0].value),
-        ..._widgetDiaryImageEntriesFromRawImpl(snapshots[1].value),
-      ]..sort((a, b) => b.order.compareTo(a.order));
-
-      final seen = <String>{};
-      return merged
-          .map((item) => item.url)
-          .where((url) => seen.add(url))
-          .toList(growable: false);
+      return collectWidgetDiaryImageSources(
+        houseId: houseId,
+        snapshots: snapshots.map((snapshot) => snapshot.value),
+        limit: WidgetService.maxDiaryImagesForWidget,
+      );
     } catch (error) {
       debugPrint('[MainHome] Cannot collect widget memory images: $error');
       return null;
@@ -97,6 +64,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       String widgetStyleKey,
       bool showDiaryOnWidget,
       bool heartAnimated,
+      int heartMotionIntervalMinutes,
       String heartStyleKey,
       String heartColorKey,
       String diaryLayoutKey,
@@ -149,6 +117,11 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         prefs.getBool('il_widget_heart_animated_$accountKey') ??
         prefs.getBool('il_widget_heart_animated') ??
         true;
+    final heartMotionIntervalMinutes = WidgetAppearance.normalizeMotionInterval(
+      prefs.getInt('il_widget_motion_interval_minutes_$accountKey') ??
+          prefs.getInt('il_widget_motion_interval_minutes'),
+      isIos: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS,
+    );
     final displayMode = WidgetService.normalizeWidgetDisplayMode(
       showDiaryOnWidget: showDiaryOnWidget,
       heartAnimated: heartAnimated,
@@ -162,6 +135,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       ),
       showDiaryOnWidget: displayMode.showDiaryOnWidget,
       heartAnimated: displayMode.heartAnimated,
+      heartMotionIntervalMinutes: heartMotionIntervalMinutes,
       heartStyleKey: WidgetService.normalizeHeartStyleKey(
         prefs.getString('il_widget_heart_style_$accountKey') ??
             prefs.getString('il_widget_heart_style'),
@@ -341,20 +315,25 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final dobU2 = settings['dobU2']?.toString() ?? '';
       // Chỉ đọc lại Nhật ký khi cài đặt widget đổi hoặc chưa đọc thành công lần nào;
       // cập nhật trạng thái online dùng lại kết quả cũ (kể cả danh sách rỗng).
-      final List<String> diaryImageUrls;
+      final List<String>? diaryImageUrls;
       if (!appearance.showDiaryOnWidget) {
         diaryImageUrls = const <String>[];
       } else if (includeDiaryMedia || !_widgetDiaryImageUrlsLoaded) {
         final loaded = await _loadWidgetDiaryImageUrlsImpl(houseId);
-        if (_houseId != houseId) return;
+        if (!mounted ||
+            _houseId != houseId ||
+            accountKey != _widgetAccountKeyImpl(houseId)) {
+          return;
+        }
         if (loaded != null) _widgetDiaryImageUrlsLoaded = true;
-        diaryImageUrls = loaded ?? _cachedWidgetDiaryImageUrls;
+        diaryImageUrls = loaded ??
+            (_widgetDiaryImageUrlsLoaded ? _cachedWidgetDiaryImageUrls : null);
       } else {
         diaryImageUrls = _cachedWidgetDiaryImageUrls;
       }
       if (!_isTabActive) return;
       if (appearance.showDiaryOnWidget) {
-        _cachedWidgetDiaryImageUrls = diaryImageUrls;
+        if (diaryImageUrls != null) _cachedWidgetDiaryImageUrls = diaryImageUrls;
       } else {
         _cachedWidgetDiaryImageUrls = const <String>[];
         _widgetDiaryImageUrlsLoaded = false;
@@ -407,6 +386,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'widgetStyleKey': appearance.widgetStyleKey,
         'showDiaryOnWidget': appearance.showDiaryOnWidget,
         'heartAnimated': appearance.heartAnimated,
+        'heartMotionIntervalMinutes': appearance.heartMotionIntervalMinutes,
         'heartStyleKey': appearance.heartStyleKey,
         'heartColorKey': appearance.heartColorKey,
         'diaryLayoutKey': appearance.diaryLayoutKey,
@@ -417,7 +397,9 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         'battery1': partnerBattery,
         'isCharging': partnerIsCharging,
       });
-      if (_lastLoveWidgetSignature == widgetSignature) {
+      // Lượt làm mới ảnh vẫn kiểm tra file native: hệ điều hành/người dùng
+      // có thể đã dọn cache dù danh sách ID ảnh không đổi.
+      if (_lastLoveWidgetSignature == widgetSignature && !includeDiaryMedia) {
         return;
       }
 
@@ -440,6 +422,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         widgetStyleKey: appearance.widgetStyleKey,
         showDiaryOnWidget: appearance.showDiaryOnWidget,
         heartAnimated: appearance.heartAnimated,
+        heartMotionIntervalMinutes: appearance.heartMotionIntervalMinutes,
         heartStyleKey: appearance.heartStyleKey,
         heartColorKey: appearance.heartColorKey,
         diaryLayoutKey: appearance.diaryLayoutKey,
@@ -457,7 +440,9 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       );
       await WidgetService.syncSoulEventWidgetData(houseId: houseId);
       await SoulMergeService().syncSoulMergeWidgetNow();
-      _lastLoveWidgetSignature = widgetSignature;
+      if (!appearance.showDiaryOnWidget || diaryImageUrls != null) {
+        _lastLoveWidgetSignature = widgetSignature;
+      }
     } catch (error) {
       debugPrint('[MainHome] Widget synchronization failed: $error');
     }

@@ -16,7 +16,12 @@ import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_qr_scann
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_quick_connect_sheet.dart';
 
 class PairingEnterCodeSheet extends StatefulWidget {
-  const PairingEnterCodeSheet({super.key});
+  const PairingEnterCodeSheet({super.key, this.service, this.onPaired});
+
+  final PairingService? service;
+
+  /// Mặc định phát âm thanh ghép nối; test truyền hàm rỗng.
+  final Future<void> Function()? onPaired;
 
   @override
   State<PairingEnterCodeSheet> createState() => _PairingEnterCodeSheetState();
@@ -35,6 +40,8 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   String? _errorMsg;
   String _status = 'input';
 
+  PairingService get _service => widget.service ?? PairingService.instance;
+  bool get _isBusy => _isLoading || _isFinalizing;
   String _t(String key) => context.tr(key);
 
   @override
@@ -53,9 +60,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
 
   Future<void> _restoreState() async {
     try {
-      final request = await PairingService.instance
-          .getMyPendingOrAcceptedRequest()
-          .timeout(_requestTimeout);
+      final request = await _service.getMyPendingOrAcceptedRequest().timeout(
+        _requestTimeout,
+      );
       if (!mounted || request == null) {
         return;
       }
@@ -93,9 +100,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _errorMsg = null;
     });
     try {
-      final status = await PairingService.instance
-          .sendPairingRequest(code)
-          .timeout(_requestTimeout);
+      // Service quản lý deadline 75 giây và chuẩn bị Auth/App Check.
+      // Không cắt Future ghi ở UI: request trên server vẫn có thể đang chạy.
+      final status = await _service.sendPairingRequest(code);
       if (!mounted) {
         return;
       }
@@ -124,9 +131,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
 
   void _listenToStatus({String? code, String? houseId}) {
     _statusSub?.cancel();
-    _statusSub = PairingService.instance.listenToMyRequestStatus().listen((
-      status,
-    ) {
+    _statusSub = _service.listenToMyRequestStatus().listen((status) {
       if (!mounted) {
         return;
       }
@@ -160,19 +165,20 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _errorMsg = null;
     });
     try {
-      await PairingService.instance
-          .finalizeMerge(
-            code: code,
-            targetHouseId: houseId,
-          )
-          .timeout(_requestTimeout);
+      await _service.finalizeMerge(code: code, targetHouseId: houseId);
       if (!mounted) {
         return;
       }
       setState(() => _status = 'success');
       if (!_pairingSoundPlayed) {
         _pairingSoundPlayed = true;
-        unawaited(SoundService().playPaired());
+        unawaited(
+          (widget.onPaired ?? SoundService().playPaired)().catchError((
+            Object error,
+          ) {
+            debugPrint('[PairingEnterCode] Cannot play sound: $error');
+          }),
+        );
       }
       await Future<void>.delayed(const Duration(milliseconds: 1900));
       if (mounted) {
@@ -194,14 +200,12 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   }
 
   Future<void> _cancelRequest() async {
-    if (_isLoading) {
+    if (_isBusy) {
       return;
     }
     setState(() => _isLoading = true);
     try {
-      await PairingService.instance
-          .cancelMyRequest()
-          .timeout(_requestTimeout);
+      await _service.cancelMyRequest().timeout(_requestTimeout);
       if (mounted) {
         setState(() {
           _status = 'input';
@@ -265,10 +269,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   Widget build(BuildContext context) {
     return PairingCuteDialogFrame(
       cardKey: const ValueKey<String>('pairing-enter-card'),
-      canPop: !_isLoading,
+      canPop: !_isBusy,
       showClose: _status != 'success',
       closeTooltip: _t('pairing_ui_close'),
-      onClose: _isLoading ? null : () => Navigator.of(context).pop(),
+      onClose: _isBusy ? null : () => Navigator.of(context).pop(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/ad_suppression_guard.dart';
 import '../../utils/services/sound_service.dart';
+import 'watch_together_voice_call.dart';
 import 'package:soullocket_app/views/home/tabs/short_video_cached_video_controller.dart'
     if (dart.library.html) 'package:soullocket_app/views/home/tabs/short_video_cached_video_controller_web.dart';
 
@@ -57,6 +59,8 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   int _videoLoadGeneration = 0;
   bool _isHost = false;
   bool _isApplyingRemoteSync = false;
+  bool _sharing = false;
+  int _shareGeneration = 0;
   int? _lastSyncedPositionBucket;
   bool? _lastSyncedIsPlaying;
   late final String _syncClientId;
@@ -68,13 +72,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   // Voice Call State
   final WebRTCService _webrtc = WebRTCService();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
-  final ValueNotifier<bool> _isCallingVN = ValueNotifier<bool>(false);
+  late final WatchVoiceCallController _voiceCall;
   final ValueNotifier<bool> _micMutedVN = ValueNotifier<bool>(false);
   Future<void>? _rendererInitialization;
-  Future<void>? _cleanupFuture;
-  bool _voiceCallBusy = false;
-  bool _voiceCallOwned = false;
-  int _voiceCallGeneration = 0;
+  bool _rendererDisposed = false;
 
   @override
   void initState() {
@@ -86,7 +87,26 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
 
     final rendererInitialization = _initializeRemoteRenderer();
     _rendererInitialization = rendererInitialization;
-    unawaited(rendererInitialization);
+    unawaited(
+      rendererInitialization.catchError((Object error) {
+        debugPrint(
+          'WatchTogether renderer init failed: ${AppErrorMapper.resolve(error).message}',
+        );
+      }),
+    );
+    _voiceCall = WatchVoiceCallController(
+      transport: WatchVoiceRtcTransport(
+        service: _webrtc,
+        renderer: _remoteRenderer,
+        rendererInitialization: rendererInitialization,
+        myHouseId: widget.myHouseId,
+        targetHouseId: widget.targetHouseId,
+        database: FirebaseDatabase.instance,
+      ),
+      myHouseId: widget.myHouseId,
+      targetHouseId: widget.targetHouseId,
+      onEnded: _onVoiceCallEnded,
+    );
     if (!kIsWeb) {
       _webViewController = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -139,58 +159,39 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   @override
   void dispose() {
     _videoLoadGeneration++;
+    _shareGeneration++;
     _releaseSoundQuiet();
     AdSuppressionGuard.instance.resumeAds();
     _localSyncDebounce?.cancel();
     _watchSubscription?.cancel();
     _urlController.dispose();
     _progressVN.dispose();
+    _isLoadingVN.dispose();
+    _micMutedVN.dispose();
 
     _videoPlayerController?.removeListener(_handleVideoPlayerSyncTick);
     _videoPlayerController?.dispose();
     _loadingVideoController?.dispose();
-    unawaited(_cleanupWebRtc());
+    final voiceCleanup = _voiceCall.end();
+    _voiceCall.dispose();
+    unawaited(voiceCleanup.whenComplete(_disposeRemoteRenderer));
     super.dispose();
   }
 
-  Future<void> _initializeRemoteRenderer() async {
-    try {
-      await _remoteRenderer.initialize();
-    } catch (error) {
-      debugPrint(
-        'WatchTogether renderer init failed: ${AppErrorMapper.resolve(error).message}',
-      );
-    }
-  }
+  Future<void> _initializeRemoteRenderer() => _remoteRenderer.initialize();
 
-  Future<void> _cleanupWebRtc() {
-    final existing = _cleanupFuture;
-    if (existing != null) return existing;
-
-    final cleanup = _cleanupWebRtcInternal();
-    _cleanupFuture = cleanup;
-    return cleanup;
-  }
-
-  Future<void> _cleanupWebRtcInternal() async {
-    Future<void> releaseRenderer() async {
-      final rendererInitialization = _rendererInitialization;
-      if (rendererInitialization != null) {
-        try {
-          await rendererInitialization;
-        } catch (_) {
-          // Hàm dispose an toàn bên dưới vẫn xử lý được renderer khởi tạo dở.
-        }
+  Future<void> _disposeRemoteRenderer() async {
+    if (_rendererDisposed) return;
+    _rendererDisposed = true;
+    final rendererInitialization = _rendererInitialization;
+    if (rendererInitialization != null) {
+      try {
+        await rendererInitialization;
+      } catch (_) {
+        // Hàm dispose an toàn bên dưới vẫn xử lý được renderer khởi tạo dở.
       }
-      await disposeVideoRendererSafely(_remoteRenderer);
     }
-
-    if (_voiceCallOwned || _isCallingVN.value) {
-      await _webrtc.hangUp(beforeMediaRelease: releaseRenderer);
-      _voiceCallOwned = false;
-    } else {
-      await releaseRenderer();
-    }
+    await disposeVideoRendererSafely(_remoteRenderer);
   }
 
   String get _sharedRoomId {
@@ -464,6 +465,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
   }
 
   Future<void> _shareCurrentUrl() async {
+    if (!mounted || _sharing) return;
     final normalized = _normalizeUrl(_urlController.text);
     if (normalized == null) {
       _showSnack(
@@ -473,89 +475,107 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
       return;
     }
 
-    _isHost = true;
-    _resetPlaybackSyncCache();
-    await _watchRef.set({
-      'url': normalized,
-      'sharedBy': widget.myHouseId,
-      'isPlaying': false,
-      'positionSec': 0.0,
-      'updatedAt': ServerValue.timestamp,
-      'originClientId': _syncClientId,
-    });
-    await _chatService.sendWatchInvite(
-      widget.myHouseId,
-      widget.targetHouseId,
-      url: normalized,
-    );
-    await _loadUrl(normalized);
-    if (!mounted) return;
-    _showSnack(
-      L10nScope.of(context).format(
-        'ui_chat_invited_value1_to_watch_together_0a1b58',
-        {'value1': widget.targetName},
-      ),
-    );
-  }
-
-  Future<void> _toggleVoiceCall() async {
-    if (!mounted || _voiceCallBusy) return;
-    _voiceCallBusy = true;
-    final generation = ++_voiceCallGeneration;
+    _sharing = true;
+    final generation = ++_shareGeneration;
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    bool current() =>
+        mounted &&
+        generation == _shareGeneration &&
+        ownerUid != null &&
+        FirebaseAuth.instance.currentUser?.uid == ownerUid;
     try {
-      if (_isCallingVN.value) {
-        await _cleanupWebRtc();
-        if (!mounted || generation != _voiceCallGeneration) return;
-        _isCallingVN.value = false;
-        _micMutedVN.value = false;
-        _showSnack(context.tr('ui_chat_voice_call_ended_2efe56'));
-        return;
-      }
-      final rendererInitialization = _rendererInitialization;
-      if (rendererInitialization != null) await rendererInitialization;
-      if (!mounted || generation != _voiceCallGeneration) return;
-      if (_webrtc.isBusy) {
-        _showSnack(context.tr('p4_call_busy'), isError: true);
-        return;
-      }
-      _webrtc.reserveCall();
-      _voiceCallOwned = true;
-      await _webrtc.openUserMedia(includeVideo: false);
-      if (!mounted || generation != _voiceCallGeneration) {
-        await _cleanupWebRtc();
-        return;
-      }
-
-      final roomRef = _dbRef.child('calls/$_sharedRoomId');
-      final snap = await roomRef.get();
-      if (snap.exists && snap.child('offer').exists) {
-        await _webrtc.joinRoom(_sharedRoomId, _remoteRenderer);
-      } else {
-        await _webrtc.createRoom(_remoteRenderer, targetHouseId: _sharedRoomId);
-      }
-
-      if (!mounted || generation != _voiceCallGeneration) {
-        await _cleanupWebRtc();
-        return;
-      }
-      _isCallingVN.value = true;
-      _showSnack(context.tr('ui_chat_voice_call_connected_3df07c'));
-    } catch (e) {
-      await _cleanupWebRtc();
-      if (mounted) {
+      if (!current()) return;
+      await _watchRef
+          .set({
+            'url': normalized,
+            'sharedBy': widget.myHouseId,
+            'isPlaying': false,
+            'positionSec': 0.0,
+            'updatedAt': ServerValue.timestamp,
+            'originClientId': _syncClientId,
+          })
+          .timeout(const Duration(seconds: 12));
+      if (!current()) return;
+      _isHost = true;
+      _resetPlaybackSyncCache();
+      await _chatService
+          .sendWatchInvite(
+            widget.myHouseId,
+            widget.targetHouseId,
+            url: normalized,
+          )
+          .timeout(const Duration(seconds: 12));
+      if (!current()) return;
+      await _loadUrl(normalized);
+      if (!mounted || !current()) return;
+      _showSnack(
+        L10nScope.of(context).format(
+          'ui_chat_invited_value1_to_watch_together_0a1b58',
+          {'value1': widget.targetName},
+        ),
+      );
+    } catch (error) {
+      debugPrint(
+        'WatchTogether share failed: ${AppErrorMapper.resolve(error).message}',
+      );
+      if (mounted && current()) {
         _showSnack(
-          context.tr('ui_chat_voice_calls_cannot_be_connected_at_this_d2d44c'),
+          context.tr(
+            'ui_chat_unable_to_synchronize_shared_viewing_room_471db9',
+          ),
           isError: true,
         );
       }
     } finally {
-      _voiceCallBusy = false;
+      if (generation == _shareGeneration) _sharing = false;
     }
   }
 
+  Future<void> _toggleVoiceCall() async {
+    if (!mounted) return;
+    if (_voiceCall.active) {
+      await _voiceCall.end();
+    } else {
+      await _voiceCall.start();
+    }
+  }
+
+  void _onVoiceCallEnded(WatchVoiceEndReason reason) {
+    if (!mounted) return;
+    _micMutedVN.value = false;
+    final key = switch (reason) {
+      WatchVoiceEndReason.busy => 'p4_call_busy',
+      WatchVoiceEndReason.timeout => 'p4_call_setup_timeout',
+      WatchVoiceEndReason.failed => 'p4_call_connection_failed',
+      _ => 'ui_chat_voice_call_ended_2efe56',
+    };
+    _showSnack(
+      context.tr(key),
+      isError:
+          reason == WatchVoiceEndReason.busy ||
+          reason == WatchVoiceEndReason.timeout ||
+          reason == WatchVoiceEndReason.failed,
+    );
+  }
+
+  String _voiceStatusText(WatchVoicePhase phase) => switch (phase) {
+    WatchVoicePhase.connected => context.tr(
+      'ui_chat_on_a_voice_call_please_talk_directly_3d3bff',
+    ),
+    WatchVoicePhase.preparing => L10nScope.of(context).format(
+      'p4_call_initializing',
+      {'type': context.tr('p4_call_audio_label')},
+    ),
+    WatchVoicePhase.connecting => L10nScope.of(
+      context,
+    ).format('p4_call_connecting', {'type': context.tr('p4_call_audio_label')}),
+    WatchVoicePhase.ending => context.tr('p4_call_end'),
+    _ => context.tr('p4_call_waiting'),
+  };
+
   void _toggleMic() {
     _micMutedVN.value = !_micMutedVN.value;
-    _webrtc.toggleMic(_micMutedVN.value);
+    _voiceCall.mute(_micMutedVN.value);
   }
 
   String? _normalizeUrl(String raw) {
@@ -677,9 +697,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
             ),
           ),
         ),
-        floatingActionButton: ValueListenableBuilder<bool>(
-          valueListenable: _isCallingVN,
-          builder: (context, isCalling, child) {
+        floatingActionButton: ValueListenableBuilder<WatchVoicePhase>(
+          valueListenable: _voiceCall,
+          builder: (context, phase, child) {
+            final isCalling = phase != WatchVoicePhase.idle;
             return FloatingActionButton.extended(
               onPressed: _toggleVoiceCall,
               backgroundColor: isCalling ? Colors.red : const Color(0xFF2E7D32),
@@ -729,9 +750,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
           ),
         ),
       ),
-      floatingActionButton: ValueListenableBuilder<bool>(
-        valueListenable: _isCallingVN,
-        builder: (context, isCalling, child) {
+      floatingActionButton: ValueListenableBuilder<WatchVoicePhase>(
+        valueListenable: _voiceCall,
+        builder: (context, phase, child) {
+          final isCalling = phase != WatchVoicePhase.idle;
           return FloatingActionButton.extended(
             onPressed: _toggleVoiceCall,
             backgroundColor: isCalling ? Colors.red : const Color(0xFF2E7D32),
@@ -839,9 +861,10 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                       ),
                     ],
                   ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _isCallingVN,
-                    builder: (context, isCalling, child) {
+                  ValueListenableBuilder<WatchVoicePhase>(
+                    valueListenable: _voiceCall,
+                    builder: (context, phase, child) {
+                      final isCalling = phase != WatchVoicePhase.idle;
                       if (!isCalling) return const SizedBox.shrink();
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,9 +891,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                                 SLSpacing.w8,
                                 Expanded(
                                   child: Text(
-                                    context.tr(
-                                      'ui_chat_on_a_voice_call_please_talk_directly_3d3bff',
-                                    ),
+                                    _voiceStatusText(phase),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w700,
                                       color: Colors.green.shade800,

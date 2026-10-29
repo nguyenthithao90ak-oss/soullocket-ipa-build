@@ -264,6 +264,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
   }
 
   Widget _buildMapSurfaceSection() {
+    final tileGeneration = _tileLayerGeneration;
     if (_mapInitError != null) {
       return Positioned.fill(child: _buildMapFallbackSection());
     }
@@ -309,7 +310,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               _isMapReady = true;
               _mapInitError = null;
               triggerMapStateUpdate();
-              _mapReadyTimeout?.cancel();
+              _scheduleMapReadyWatchdog();
               Future<void>.delayed(
                 const Duration(milliseconds: 350),
                 _focusCameraNearMe,
@@ -321,7 +322,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           ),
           children: [
             fm.TileLayer(
-              key: ValueKey(_useMapboxTiles),
+              key: ValueKey('$_useMapboxTiles/$tileGeneration'),
               urlTemplate: _useMapboxTiles
                   ? AppConfig.mapboxTileUrl
                   : AppConfig.openStreetMapTileUrl,
@@ -334,6 +335,18 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               retinaMode: false,
               keepBuffer: 2,
               panBuffer: 1,
+              evictErrorTileStrategy: fm.EvictErrorTileStrategy.dispose,
+              errorTileCallback: (tile, _, _) => _recordTileResult(
+                tile.coordinates,
+                true,
+                tileGeneration,
+              ),
+              tileBuilder: (context, tileWidget, tile) {
+                if (tile.loadFinishedAt != null && !tile.loadError) {
+                  _recordTileResult(tile.coordinates, false, tileGeneration);
+                }
+                return tileWidget;
+              },
             ),
             if (_useMapboxTiles)
               const fm.RichAttributionWidget(

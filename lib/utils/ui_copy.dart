@@ -7,7 +7,7 @@ abstract final class UiCopy {
   static String text(String key, [Map<String, Object?> params = const {}]) {
     final l10n = L10nService();
     final translated = l10n.translate(key);
-    final fallback = _uiCopyFallback[key];
+    final fallback = _uiCopyDisplayFallback[key] ?? _uiCopyFallback[key];
     final template = translated != key
         ? translated
         : fallback?[l10n.localeCode == 'vi' ? 'vi' : 'en'] ?? key;
@@ -18,7 +18,9 @@ abstract final class UiCopy {
       [Map<String, Object?> params = const {}]) {
     // Giữ hợp đồng các caller cũ truyền isEnglish trước khi locale đã init.
     if (isEnglish && L10nService().localeCode == 'vi') {
-      return _format(_uiCopyFallback[key]?['en'] ?? key, params);
+      return _format(
+          (_uiCopyDisplayFallback[key] ?? _uiCopyFallback[key])?['en'] ?? key,
+          params); 
     }
     return text(key, params);
   }

@@ -57,6 +57,7 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       return false;
     }
 
+    adMobService.preloadRewardedAd();
     final shouldWatchAd =
         await showDialog<bool>(
           context: context,
@@ -90,7 +91,9 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
       return false;
     }
 
-    final watched = await adMobService.showRewardedAd();
+    final watched = await adMobService.showRewardedAd(
+      isCurrent: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
+    );
     if (watched) {
       await _storeRewardedSaveCooldown();
       return true;

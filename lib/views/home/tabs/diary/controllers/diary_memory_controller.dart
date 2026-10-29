@@ -32,6 +32,7 @@ import '../../../../../utils/services/purchase_service.dart';
 import '../../../../../utils/services/security_service.dart';
 import '../../../../../utils/services/storage/storage_service.dart';
 import '../utils/diary_memory_upload_commit.dart';
+import '../utils/diary_notification_key.dart';
 import '../utils/diary_memory_older_pages.dart';
 import '../../../../../utils/services/core/rtdb_settled_read.dart';
 import 'diary_feed_controller.dart';
@@ -86,17 +87,17 @@ class DiaryMemoryController extends ChangeNotifier {
 
   final DatabaseReference _dbRef;
   final StorageService _storageService;
-  final PrivateMediaUrlService _privateMediaUrlService =
-      PrivateMediaUrlService(
-        batchRequests: true,
-        cacheCompletedUrls: true,
-        maximumCacheEntries: 60,
-      );
+  final PrivateMediaUrlService _privateMediaUrlService = PrivateMediaUrlService(
+    batchRequests: true,
+    cacheCompletedUrls: true,
+    maximumCacheEntries: 60,
+  );
   final MapPinLimitService _mapPinLimitService = MapPinLimitService();
 
   final ValueNotifier<int> selectionTickVN = ValueNotifier<int>(0);
 
   String? _currentHouseId;
+  String? _memoryScopeUid;
   String? _cachedHouseIdForMemories;
   Query? _memoriesQuery;
   Stream<DatabaseEvent>? _memoriesStream;
@@ -124,6 +125,7 @@ class DiaryMemoryController extends ChangeNotifier {
   String? _pendingUploadMessage;
   final Map<String, XFile> _pendingFiles = {};
   final Map<String, Map<String, dynamic>> _stagedUploads = {};
+  String? _pendingUploadBatchId;
   String? _pendingOwner;
   String? _pendingHouse;
   bool _preparingUpload = false;
@@ -198,6 +200,8 @@ class DiaryMemoryController extends ChangeNotifier {
       jsonEncode(<String, dynamic>{
         'houseId': houseId.trim(),
         'uid': _pendingOwner,
+        if (_pendingUploadBatchId != null)
+          'notificationBatchId': _pendingUploadBatchId,
         'staged': _stagedUploads,
         'paths': normalizedPaths,
       }),
@@ -211,6 +215,7 @@ class DiaryMemoryController extends ChangeNotifier {
     await prefs.remove(_pendingUploadPrefsKey);
     _stagedUploads.clear();
     _pendingFiles.clear();
+    _pendingUploadBatchId = null;
     if (_pendingUploadPaths.isEmpty && _pendingUploadMessage == null) {
       return;
     }
@@ -252,6 +257,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (savedHouseId != houseId || decoded['uid'] != uid) {
         _stagedUploads.clear();
         _pendingFiles.clear();
+        _pendingUploadBatchId = null;
         if (_pendingUploadPaths.isNotEmpty || _pendingUploadMessage != null) {
           _setPendingUploadState(const <String>[], message: null);
         }
@@ -303,10 +309,28 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
 
+      final savedBatchId = decoded['notificationBatchId']?.toString().trim();
+      _pendingUploadBatchId =
+          savedBatchId != null &&
+              RegExp(r'^[A-Za-z0-9_:-]{1,128}$').hasMatch(savedBatchId)
+          ? savedBatchId
+          : diaryMemoryBatchIdentity(
+              uid: uid ?? '',
+              houseId: houseId,
+              paths: recoverablePaths,
+            );
+
       _setPendingUploadState(
         recoverablePaths,
         message: L10nService().translate('home_lnuploadkn_c9bdf8'),
       );
+      if (savedBatchId == null || savedBatchId != _pendingUploadBatchId) {
+        await _savePendingUploadState(
+          houseId: houseId,
+          paths: recoverablePaths,
+          message: L10nService().translate('home_lnuploadkn_c9bdf8'),
+        );
+      }
     } catch (_) {
       await _clearPendingUploadState();
     }
@@ -336,7 +360,11 @@ class DiaryMemoryController extends ChangeNotifier {
     final houseId = _currentHouseId?.trim() ?? '';
     if (remaining.isEmpty || houseId.isEmpty) {
       if (persist) {
-        await _clearPendingUploadState();
+        // Giữ batch ID trong bộ nhớ cho đến khi notification queue ACK; nếu
+        // queue lỗi sau khi server đã nhận, lượt retry vẫn dùng cùng khóa.
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(_pendingUploadPrefsKey);
+        _setPendingUploadState(const <String>[], message: null, notify: false);
       } else {
         _setPendingUploadState(remaining, message: null, notify: false);
       }
@@ -400,18 +428,23 @@ class DiaryMemoryController extends ChangeNotifier {
 
   void syncHouseId(String? houseId) {
     final normalized = _normalizeHouseId(houseId);
-    if (_currentHouseId == normalized && _memoriesStream != null) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (_currentHouseId == normalized &&
+        _memoryScopeUid == uid &&
+        _memoriesStream != null) {
       return;
     }
     if (_currentHouseId != null && _currentHouseId != normalized) {
       unawaited(PrivateImageDiskCache.clearIfInitialized());
     }
     _currentHouseId = normalized;
+    _memoryScopeUid = uid;
     _mediaScopeGeneration++;
     _privateMediaUrlService.clear();
     _pendingUrlResolves.clear();
     _pendingFiles.clear();
     _stagedUploads.clear();
+    _pendingUploadBatchId = null;
     _setPendingUploadState(const [], notify: false);
     _lastMemoriesCacheSignature = null;
     _resetMemoriesPagination();
@@ -1368,9 +1401,7 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
       showSnackBar(
-        L10nService().format('diary_delete_photo_error', {
-          'error': AppErrorMapper.resolve(e).message,
-        }),
+        L10nService().format('diary_delete_photo_error'),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1455,9 +1486,7 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
       showSnackBar(
-        L10nService().format('diary_save_image_error', {
-          'error': AppErrorMapper.resolve(e).message,
-        }),
+        L10nService().format('diary_save_image_error'),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1525,9 +1554,7 @@ class DiaryMemoryController extends ChangeNotifier {
         return;
       }
       showSnackBar(
-        L10nService().format('diary_save_image_error', {
-          'error': AppErrorMapper.resolve(e).message,
-        }),
+        L10nService().format('diary_save_image_error'),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1670,9 +1697,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
       showSnackBar(
-        L10nService().format('diary_delete_photo_error', {
-          'error': AppErrorMapper.resolve(e).message,
-        }),
+        L10nService().format('diary_delete_photo_error'),
         backgroundColor: const Color(0xFFE53935),
       );
     }
@@ -1989,11 +2014,14 @@ class DiaryMemoryController extends ChangeNotifier {
           presetImages ??
           (canUploadVideo
               ? await (AppConfig.privateMemoryUploadEnabled
-                  ? _storageService.pickMemoryMedia(
-                  limit: limitToPick,
-                  preserveOriginal: true,
-                )
-                  : _storageService.pickMedia(limit: limitToPick, preserveOriginal: true))
+                    ? _storageService.pickMemoryMedia(
+                        limit: limitToPick,
+                        preserveOriginal: true,
+                      )
+                    : _storageService.pickMedia(
+                        limit: limitToPick,
+                        preserveOriginal: true,
+                      ))
               : await _storageService.pickImages(
                   limit: limitToPick,
                   preserveOriginal: true,
@@ -2031,6 +2059,28 @@ class DiaryMemoryController extends ChangeNotifier {
       }
       _pendingOwner = uid;
       _pendingHouse = houseId;
+      final selectedBatchId = diaryMemoryBatchIdentity(
+        uid: uid,
+        houseId: houseId,
+        paths: images.map((file) => file.path),
+      );
+      final pendingPaths = _pendingUploadPaths
+          .map((path) => path.trim())
+          .where((path) => path.isNotEmpty)
+          .toSet();
+      final currentImagePaths = images
+          .map((file) => file.path.trim())
+          .where((path) => path.isNotEmpty)
+          .toSet();
+      final isRetryOfPendingBatch =
+          _pendingUploadBatchId != null &&
+          pendingPaths.length == currentImagePaths.length &&
+          pendingPaths.containsAll(currentImagePaths);
+      if (!isRetryOfPendingBatch) {
+        // Nếu người dùng thêm ảnh mới vào lượt đang chờ, tạo khóa mới để
+        // thông báo của lượt mới không bị gộp với lần retry trước.
+        _pendingUploadBatchId = selectedBatchId;
+      }
       _isUploadingMemories = true;
       notifyListeners();
 
@@ -2072,7 +2122,7 @@ class DiaryMemoryController extends ChangeNotifier {
           guardController.resolveCurrentUser(),
           locationFuture,
         ]);
-      if (!context.mounted) return;
+        if (!context.mounted) return;
 
         final user = postPickResults[0] as User?;
         if (user == null) {
@@ -2123,6 +2173,7 @@ class DiaryMemoryController extends ChangeNotifier {
             : AppConfig.diaryImageUploadQuality;
 
         var uploadedCount = 0;
+        String? firstImageMemoryId;
         final errorMessages = <String>[];
         var sessionImageBytes = 0;
         var sessionVideoBytes = 0;
@@ -2132,7 +2183,8 @@ class DiaryMemoryController extends ChangeNotifier {
         for (final image in images) {
           if (!scopeIsCurrent()) break;
           final path = image.path.trim();
-          final isLivePhoto = _stagedUploads[path]?['isLivePhoto'] == true ||
+          final isLivePhoto =
+              _stagedUploads[path]?['isLivePhoto'] == true ||
               StorageService.isLivePhotoFile(image);
           try {
             var staged = _stagedUploads[path];
@@ -2149,7 +2201,10 @@ class DiaryMemoryController extends ChangeNotifier {
                   16,
                   (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
                 ).join();
-                staged = {'privateRequestId': requestId, if (isLivePhoto) 'isLivePhoto': true};
+                staged = {
+                  'privateRequestId': requestId,
+                  if (isLivePhoto) 'isLivePhoto': true,
+                };
                 _stagedUploads[path] = staged;
                 requestIsFresh = true;
               }
@@ -2160,7 +2215,7 @@ class DiaryMemoryController extends ChangeNotifier {
                 paths: _pendingUploadPaths,
               );
               if (!scopeIsCurrent()) break;
-              await _storageService.uploadPrivateMemory(
+              final receipt = await _storageService.uploadPrivateMemory(
                 houseId: houseId,
                 requestId: staged['privateRequestId'] as String,
                 file: image,
@@ -2184,6 +2239,9 @@ class DiaryMemoryController extends ChangeNotifier {
                 },
               );
               if (!scopeIsCurrent()) break;
+              if (firstImageMemoryId == null && !isVideo(image)) {
+                firstImageMemoryId = receipt.memoryId;
+              }
               uploadedCount++;
               await _removePendingUploadedImages([image], persist: false);
               continue;
@@ -2191,7 +2249,9 @@ class DiaryMemoryController extends ChangeNotifier {
             if (staged?['privateRequestId'] != null) {
               throw StateError('Private upload cannot use legacy commit');
             }
-            if (isLivePhoto) throw StateError('Live Photo requires private upload');
+            if (isLivePhoto) {
+              throw StateError('Live Photo requires private upload');
+            }
             if (staged == null) {
               final result = await _uploadSingleMemoryPhoto(
                 houseId: houseId,
@@ -2261,6 +2321,9 @@ class DiaryMemoryController extends ChangeNotifier {
               increment: ServerValue.increment,
             );
             if (!scopeIsCurrent()) break;
+            if (firstImageMemoryId == null && payload['type'] != 'video') {
+              firstImageMemoryId = staged['id']?.toString();
+            }
             if (committed) {
               final bytes = (payload['fileSize'] as num?)?.toInt() ?? 0;
               if (payload['type'] == 'video') {
@@ -2299,7 +2362,22 @@ class DiaryMemoryController extends ChangeNotifier {
               'author': authorName,
               'count': uploadedCount,
             }),
-            data: {'screen': 'diary', 'type': 'new_memory'},
+            data: {
+              'screen': 'diary',
+              'type': 'new_memory',
+              // Chỉ đưa ID ảnh đầu tiên; không gửi URL riêng tư lên FCM.
+              if (firstImageMemoryId != null &&
+                  firstImageMemoryId.trim().isNotEmpty)
+                'memoryId': firstImageMemoryId.trim(),
+            },
+            idempotencyKey: diaryMemoryBatchNotificationIdempotencyKey(
+              _pendingUploadBatchId ??
+                  diaryMemoryBatchIdentity(
+                    uid: uid,
+                    houseId: houseId,
+                    paths: images.map((file) => file.path),
+                  ),
+            ),
           );
         }
 

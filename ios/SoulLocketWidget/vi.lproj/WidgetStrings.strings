@@ -17,7 +17,7 @@
 "sleep_duration" = "{hours} giờ {minutes} phút";
 "comm_ngy_41ec10" = "ngày";
 "core_presence_online" = "Đang hoạt động";
-"home_angoffline_bbb3d5" = "Đang offline";
+"home_angoffline_bbb3d5" = "Chưa kết nối";
 "home_cpi_d525b0" = "Cặp đôi";
 "home_knim_4f6aeb" = "Kỷ niệm";
 "home_lchchung_ac8882" = "Lịch chung";
@@ -31,9 +31,9 @@
 "p7_event_widget_desc" = "Hiển thị sự kiện sắp tới và số ngày còn lại.";
 "p8_events_days_remaining_label" = "NGÀY NỮA";
 "p8_events_title" = "Sự kiện của hai bạn";
-"settings_widget_desc_mobile" = "Tạo các widget để đếm ngày yêu nhau, ảnh kỷ niệm, kiểu trái tim, màu sắc, bố cục và ghim chúng vào màn hình chính một cách nhanh chóng.";
+"settings_widget_desc_mobile" = "Chọn ảnh kỷ niệm, kiểu đếm ngày, màu sắc và bố cục, rồi thêm tiện ích ra màn hình chính.";
 "util_health_enable_cycle_tracking" = "Vui lòng kích hoạt tính năng\ngiám sát chu kỳ.";
-"widget_home_desc" = "Widget sẽ được thêm vào màn hình chính của bạn để xem nhanh.";
+"widget_home_desc" = "Thêm tiện ích vào màn hình chính để xem nhanh thông tin của hai bạn.";
 "widget_sync_empty" = "Mở app để đồng bộ nội dung.";
 "p8_events_today_upper" = "HÔM NAY";
 "p8_events_empty_title" = "Chưa có sự kiện nào";
@@ -65,7 +65,7 @@
 "widget_cycle_sample" = "Hiểu cơ thể – Yêu bản thân";
 "widget_sample_event" = "Kỷ niệm";
 "widget_quick_heart_title" = "Thả tim nhanh";
-"widget_quick_heart_description" = "Thả tim cho người ấy ngay từ widget.";
+"widget_quick_heart_description" = "Thả tim cho người ấy ngay từ tiện ích màn hình chính.";
 "widget_quick_action" = "Hành động";
 "widget_sleep_sample_duration" = "7 giờ 35 phút";
 "cycle_ui_until_next_period" = "Đến kỳ tiếp theo";
@@ -83,5 +83,5 @@
 "cycle_ui_fertility_high" = "Cao";
 "cycle_ui_sample" = "Dữ liệu mẫu";
 "app_name" = "SoulLocket: Đếm ngày yêu đôi";
-"widget_name" = "Widget cặp đôi";
+"widget_name" = "Tiện ích màn hình chính cặp đôi";
 "security_overlay_touch_warning" = "Hãy tắt ứng dụng phủ màn hình rồi thử lại.";

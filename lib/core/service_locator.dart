@@ -18,7 +18,9 @@ import 'package:get_it/get_it.dart';
 import '../utils/services/map_place_search_service.dart';
 import '../utils/services/app_referral_service.dart';
 import '../utils/services/games/soul_block_memory_service.dart';
+import '../utils/services/soul_merge_memories.dart';
 import '../utils/services/market_service.dart';
+import '../utils/services/media_data_preferences.dart';
 import '../utils/services/calendar_reminder_service.dart';
 import '../utils/services/habit_reminder_service.dart';
 import 'package:soullocket_app/utils/services/companion_rewards_service.dart';
@@ -31,11 +33,14 @@ import 'package:soullocket_app/utils/services/home_drawing_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/notification_installation_service.dart';
+import 'package:soullocket_app/utils/services/system_call_bridge.dart';
 import 'package:soullocket_app/utils/services/soul_event_reminder_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/cloudflare_data_service.dart';
 import 'package:soullocket_app/utils/services/notebook/notebook_d1_client.dart';
+import '../utils/services/finance/finance_d1_client.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/sound_service.dart';
@@ -55,6 +60,8 @@ void setupLocator() {
     dispose: (service) => service.dispose(),
   );
   locator.registerFactory(() => SoulBlockMemoryService());
+  locator.registerFactory(() => FinanceD1Client());
+  locator.registerFactory(() => SoulMergeMemories());
   locator.registerLazySingleton(() => MarketService.instance);
   locator.registerLazySingleton(
     () => CompanionRewardsService(),
@@ -77,6 +84,8 @@ void setupLocator() {
 
   // ── Realtime / Presence ─────────────────────────────────────────────────
   locator.registerLazySingleton(() => PresenceService());
+  locator.registerLazySingleton(() => NotificationInstallationService());
+  locator.registerLazySingleton(() => SystemCallBridge.instance);
   locator.registerLazySingleton(() => NotificationService());
   locator.registerLazySingleton(() => SoulEventReminderService.instance);
   locator.registerLazySingleton(() => CalendarReminderService.instance);
@@ -84,6 +93,7 @@ void setupLocator() {
   locator.registerLazySingleton(() => LocationService());
 
   // ── Storage & Cache ─────────────────────────────────────────────────────
+  locator.registerLazySingleton(() => MediaDataPreferences.instance);
   locator.registerLazySingleton(() => StorageService());
   locator.registerLazySingleton(
     () => CloudflareDataService(),

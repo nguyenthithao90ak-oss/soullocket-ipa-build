@@ -111,6 +111,11 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
           prefs.getBool('il_widget_heart_animated_$accountKey') ??
           prefs.getBool('il_widget_heart_animated') ??
           true;
+      _widgetMotionIntervalMinutes = WidgetAppearance.normalizeMotionInterval(
+        prefs.getInt('il_widget_motion_interval_minutes_$accountKey') ??
+            prefs.getInt('il_widget_motion_interval_minutes'),
+        isIos: !kIsWeb && Platform.isIOS,
+      );
       final widgetDisplayMode = WidgetService.normalizeWidgetDisplayMode(
         showDiaryOnWidget: _showDiaryOnWidget,
         heartAnimated: _widgetHeartAnimated,

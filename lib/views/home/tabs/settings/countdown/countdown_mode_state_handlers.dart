@@ -149,8 +149,6 @@ extension _CountdownModeIndependentScreenStatePart
     final nextIncoming = <String, CountdownSpaceRequestInfo>{};
     final outgoingStatuses = <String, String>{};
     final nextSnapshots = <String, _CountdownSpaceSnapshot>{};
-    final pendingSnapshotsToSync =
-        <CountdownSpaceRequestInfo, _CountdownSpaceSnapshot>{};
     final activeRequestIds = requests
         .map((request) => request.requestId)
         .toSet();
@@ -182,7 +180,7 @@ extension _CountdownModeIndependentScreenStatePart
         nextSnapshots[otherHouseId] = _snapshotFromSerializedMap(
           request.snapshot,
           scope: otherHouseId,
-        );
+        ).copyWith(updatedAtMs: request.updatedAt > 0 ? request.updatedAt : request.createdAt);
         continue;
       }
 
@@ -195,7 +193,7 @@ extension _CountdownModeIndependentScreenStatePart
       nextSnapshots[otherHouseId] = _snapshotFromSerializedMap(
         request.snapshot,
         scope: otherHouseId,
-      );
+      ).copyWith(updatedAtMs: request.updatedAt > 0 ? request.updatedAt : request.createdAt);
     }
 
     _safeSetState(() {
@@ -206,6 +204,8 @@ extension _CountdownModeIndependentScreenStatePart
         ..clear()
         ..addAll(nextIncoming);
       nextSnapshots.forEach((houseId, snapshot) {
+        if (_sharedSpaces.containsKey(houseId)) return;
+        _rememberRemoteSpaceSnapshot(houseId, snapshot);
         if (_isIncomingSnapshotNewer(houseId, snapshot)) {
           _spaceSnapshots[houseId] = snapshot;
         }
@@ -246,10 +246,12 @@ extension _CountdownModeIndependentScreenStatePart
         continue;
       }
       nextSharedSpaces[otherHouseId] = space;
-      nextSnapshots[otherHouseId] = _snapshotFromSerializedMap(
+      final snapshot = _snapshotFromSerializedMap(
         space.snapshot,
         scope: otherHouseId,
       );
+      // Thứ tự do server quyết định; giờ trên máy người gửi có thể lệch xa.
+      nextSnapshots[otherHouseId] = snapshot.copyWith(updatedAtMs: space.updatedAt);
     }
 
     _safeSetState(() {
@@ -257,6 +259,7 @@ extension _CountdownModeIndependentScreenStatePart
         ..clear()
         ..addAll(nextSharedSpaces);
       nextSnapshots.forEach((houseId, snapshot) {
+        _rememberRemoteSpaceSnapshot(houseId, snapshot);
         if (_isIncomingSnapshotNewer(houseId, snapshot)) {
           _spaceSnapshots[houseId] = snapshot;
         }
@@ -293,8 +296,6 @@ extension _CountdownModeIndependentScreenStatePart
     }
 
     final nextDeleteRequests = <String, CountdownSpaceDeleteRequestInfo>{};
-    final expiredSpaceIds = <String>{};
-    final now = DateTime.now().millisecondsSinceEpoch;
     final sortedRequests = requests.toList()
       ..sort((a, b) => b.requestedAt.compareTo(a.requestedAt));
 
@@ -308,9 +309,6 @@ extension _CountdownModeIndependentScreenStatePart
         continue;
       }
       nextDeleteRequests[otherHouseId] = request;
-      if (request.deleteAt > 0 && now >= request.deleteAt) {
-        expiredSpaceIds.add(request.spaceId);
-      }
     }
 
     _safeSetState(() {
@@ -320,14 +318,6 @@ extension _CountdownModeIndependentScreenStatePart
     });
 
     _scheduleCountdownDeleteEvaluation(nextDeleteRequests.values);
-    for (final spaceId in expiredSpaceIds) {
-      unawaited(
-        _countdownSpaceService.evaluateDeleteRequest(
-          spaceId: spaceId,
-          currentHouseId: _selfSpaceHouseId,
-        ),
-      );
-    }
   }
 
   void _scheduleCountdownDeleteEvaluation(
@@ -362,14 +352,24 @@ extension _CountdownModeIndependentScreenStatePart
   }
 
   Future<void> _evaluateCountdownDeleteRequests() async {
+    if (_evaluatingSpaceDeletes || !mounted) return;
+    _evaluatingSpaceDeletes = true;
     final spaceIds = _deleteSpaceRequests.values
+        .where((request) => request.deleteAt > 0 && request.deleteAt <= DateTime.now().millisecondsSinceEpoch)
         .map((request) => request.spaceId)
         .toList(growable: false);
-    for (final spaceId in spaceIds) {
-      await _countdownSpaceService.evaluateDeleteRequest(
-        spaceId: spaceId,
-        currentHouseId: _selfSpaceHouseId,
-      );
+    try {
+      for (final spaceId in spaceIds) {
+        if (!mounted) return;
+        await _countdownSpaceService.evaluateDeleteRequest(
+          spaceId: spaceId,
+          currentHouseId: _selfSpaceHouseId,
+        );
+      }
+    } catch (error) {
+      _recordSpaceStreamError('deletes', error);
+    } finally {
+      _evaluatingSpaceDeletes = false;
     }
   }
 
@@ -482,16 +482,17 @@ extension _CountdownModeIndependentScreenStatePart
         }
         if (!saved) throw StateError('countdown-local-save');
       }
+      int? serverUpdatedAt;
       if (scope != _selfSpaceHouseId && _selfSpaceHouseId != 'local_self') {
         final shared = _sharedSpaceFor(scope);
         final pending = _pendingRequestFor(scope);
         if (shared != null) {
-          await _countdownSpaceService.updateSpaceSnapshot(
+          serverUpdatedAt = await _countdownSpaceService.updateSpaceSnapshot(
             spaceId: shared.spaceId,
             snapshot: _snapshotToSerializedMap(snapshot),
           );
         } else if (pending != null) {
-          await _countdownSpaceService.updatePendingRequestSnapshot(
+          serverUpdatedAt = await _countdownSpaceService.updatePendingRequestSnapshot(
             requestId: pending.requestId,
             fromHouseId: _selfSpaceHouseId,
             snapshot: _snapshotToSerializedMap(snapshot),
@@ -501,9 +502,19 @@ extension _CountdownModeIndependentScreenStatePart
         }
       }
       if (identical(_unsyncedSpaceSnapshots[scope], snapshot)) {
-        await prefs.remove(journalKey);
+        if (!await prefs.remove(journalKey)) throw StateError('countdown-draft-clear');
         _unsyncedSpaceSnapshots.remove(scope);
-        _spaceSnapshots[scope] = snapshot;
+        var saved = scope == _selfSpaceHouseId
+            ? snapshot
+            : snapshot.copyWith(updatedAtMs: serverUpdatedAt ?? 0);
+        final remote = _latestRemoteSpaceSnapshots[scope];
+        // Listener có thể đến trước response của callable. Áp lại bản mới
+        // nhất sau ACK để không bỏ mất chỉnh sửa vừa đến từ máy bên kia.
+        if (serverUpdatedAt != null && remote != null && remote.updatedAtMs >= serverUpdatedAt) {
+          saved = remote;
+        }
+        _spaceSnapshots[scope] = saved;
+        if (mounted && _scopeKey == scope) _safeSetState(() => _applySnapshot(saved));
       }
       return true;
     } catch (error) {
@@ -819,12 +830,29 @@ extension _CountdownModeIndependentScreenStatePart
   String get _pendingSpaceAvatarUploadKey =>
       '${_CountdownModeIndependentScreenState._pendingSpaceAvatarUploadKeyPrefix}${_selfSpaceHouseId.trim()}_$_scopeKey';
 
+  String? _currentAuthUidOrNull() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } on FirebaseException catch (error) {
+      // Widget test và cold-start có thể chạy trước Firebase.initializeApp().
+      // Đây chỉ là nhắc upload đang chờ, không được làm hỏng màn đếm ngày.
+      debugPrint('[CountdownSpace] Auth chưa sẵn sàng: ${error.code}');
+      return null;
+    } catch (error) {
+      debugPrint('[CountdownSpace] Không đọc được Auth: $error');
+      return null;
+    }
+  }
+
   Future<void> _promptPendingSpaceAvatarRetryIfNeeded() async {
+    final ownerUid = _currentAuthUidOrNull();
     if (_didPromptPendingSpaceAvatarRetry || !mounted) {
       return;
     }
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final pending = await PendingUploadService.instance.load(
       _pendingSpaceAvatarUploadKey,
+      expectedUid: ownerUid,
     );
     if (pending == null || !mounted) {
       return;
@@ -849,25 +877,37 @@ extension _CountdownModeIndependentScreenStatePart
   }
 
   Future<void> _retryPendingSpaceAvatarUpload() async {
+    final ownerUid = _currentAuthUidOrNull();
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final pending = await PendingUploadService.instance.load(
       _pendingSpaceAvatarUploadKey,
+      expectedUid: ownerUid,
     );
     if (pending == null || !mounted) {
       return;
     }
     final filePath = pending['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(_pendingSpaceAvatarUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingSpaceAvatarUploadKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     final file = XFile(filePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(_pendingSpaceAvatarUploadKey);
+        await PendingUploadService.instance.clear(
+          _pendingSpaceAvatarUploadKey,
+          expectedUid: ownerUid,
+        );
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance.clear(_pendingSpaceAvatarUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingSpaceAvatarUploadKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     await _changeSpaceAvatar(
@@ -891,14 +931,17 @@ extension _CountdownModeIndependentScreenStatePart
     if (_uploadingAvatarRole != null) {
       return;
     }
-    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final ownerUid = _currentAuthUidOrNull();
     bool isCurrent() =>
         mounted &&
         scope == _scopeKey &&
         _uploadHouseId == houseId &&
         ownerUid != null &&
-        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+        _currentAuthUidOrNull() == ownerUid;
     final avatarChangeFailedTemplate = context.tr('p7_avatar_change_failed');
+    final avatarChangeUploadFailedMessage = context.tr(
+      'home_khngticava_73ea14',
+    );
     if (!isCurrent()) return;
     _safeSetState(() {
       _uploadingAvatarRole = role;
@@ -908,6 +951,9 @@ extension _CountdownModeIndependentScreenStatePart
       XFile? file =
           presetFile ?? await _storageService.pickImage(preserveOriginal: true);
       if (file == null || !isCurrent()) {
+        return;
+      }
+      if (!mounted) {
         return;
       }
       if (presetFile == null) {
@@ -923,7 +969,7 @@ extension _CountdownModeIndependentScreenStatePart
       await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
         'role': role,
         'filePath': file.path,
-      });
+      }, expectedUid: ownerUid);
       if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
         houseId,
@@ -935,7 +981,7 @@ extension _CountdownModeIndependentScreenStatePart
       );
       if (!isCurrent() || url == null || url.trim().isEmpty) {
         if (isCurrent()) {
-          _showMessage(context.tr('home_khngticava_73ea14'));
+          _showMessage(avatarChangeUploadFailedMessage);
         }
         return;
       }
@@ -948,7 +994,10 @@ extension _CountdownModeIndependentScreenStatePart
         }
       });
       if (await _saveLocalSettings() && isCurrent()) {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: ownerUid,
+        );
         await discardConfirmedCropImage(file);
       }
     } catch (e) {
@@ -1187,12 +1236,17 @@ extension _CountdownModeIndependentScreenStatePart
       );
 
       if (!requestResult.success) {
+        // Giữ lại lý do cụ thể từ service (đã được localize ở client) để
+        // người dùng biết mã không tồn tại, đã ghép hoặc đã đủ giới hạn.
+        final message = requestResult.message.trim().isEmpty
+            ? fallbackMessage
+            : requestResult.message.trim();
         if (showFeedback) {
-          _showMessage(fallbackMessage);
+          _showMessage(message);
         }
         return _CountdownSpaceAddResult(
           success: false,
-          message: fallbackMessage,
+          message: message,
         );
       }
 
@@ -1206,7 +1260,8 @@ extension _CountdownModeIndependentScreenStatePart
       _safeSetState(() {
         _optimisticPendingSpaceHouseIds.add(resolvedTargetHouseId);
         _spaceSnapshots[resolvedTargetHouseId] =
-            _spaceSnapshots[_selfSpaceHouseId] ?? _captureCurrentSnapshot();
+            (_spaceSnapshots[_selfSpaceHouseId] ?? _captureCurrentSnapshot())
+                .copyWith(updatedAtMs: 0);
         _rebuildVisibleSpaces();
       });
       await _saveSpaceRegistry();
@@ -1496,9 +1551,10 @@ extension _CountdownModeIndependentScreenStatePart
         (_incomingSpaceRequests[houseId.trim()]?.fromHouseName ?? '').trim();
     if (incomingLabel.isNotEmpty) return incomingLabel;
     if (houseId == _selfSpaceHouseId) {
-      return _nameU1.trim().isEmpty
+      final name = _spaceSnapshotFor(_selfSpaceHouseId).nameU1.trim();
+      return name.isEmpty
           ? context.tr('home_khnggianca_3f6e45')
-          : _nameU1.trim();
+          : name;
     }
     return houseId.length > 14 ? '${houseId.substring(0, 14)}…' : houseId;
   }
@@ -1519,8 +1575,15 @@ extension _CountdownModeIndependentScreenStatePart
     return _deleteSpaceRequests[houseId.trim()];
   }
 
-  bool get _hasReachedSpaceLimit =>
-      _spaceHouseIds.length >= _CountdownModeIndependentScreenState._maxSpaces;
+  bool get _hasReachedSpaceLimit {
+    // `_spaceHouseIds` luôn có cả thẻ Không gian riêng của mình. Giới hạn
+    // áp dụng cho số không gian ghép với nhà khác, nên không được tính thẻ
+    // riêng vào 5 kết nối mà backend cho phép.
+    final connectedCount = _spaceHouseIds
+        .where((houseId) => houseId != _selfSpaceHouseId)
+        .length;
+    return connectedCount >= _CountdownModeIndependentScreenState._maxSpaces;
+  }
 
   String _spaceLimitMessage() {
     return context

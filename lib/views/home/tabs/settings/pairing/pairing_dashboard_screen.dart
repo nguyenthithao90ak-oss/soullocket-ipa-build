@@ -1,6 +1,7 @@
 import 'package:soullocket_app/widgets/sl_image_crop_file.dart';
 import 'package:soullocket_app/widgets/sl_feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/breakup_notice_copy.dart';
 import 'package:soullocket_app/widgets/sl_settings_kit.dart';
 import 'package:soullocket_app/widgets/getting_started_guide.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -763,6 +764,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        scrollable: true,
         title: Text(title),
         content: Text(message),
         actions: [
@@ -793,7 +795,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     if (houseId == null || uid == null || _breakupBusy) return;
     final confirmed = await _confirmBreakupAction(
       title: _t('home_chiatayxad_3b2b07'),
-      message: _t('home_bnsptoyucu_809644'),
+      message: BreakupNoticeCopy.requestConfirmation(isSingle: false),
       confirmLabel: _t('home_xcnhngiyuc_81446c'),
     );
     if (!confirmed || !mounted) return;
@@ -838,8 +840,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     if (houseId == null || uid == null || _breakupBusy) return;
     final confirmed = await _confirmBreakupAction(
       title: _t('home_bnkiaangch_b287d3'),
-      message: _t('home_bnsptoyucu_809644'),
-      confirmLabel: _t('home_xcnhn_1e2eb2'),
+      message: BreakupNoticeCopy.approveConfirmation,
+      confirmLabel: _t('breakup_approve_now'),
     );
     if (!confirmed || !mounted) return;
     setState(() => _breakupBusy = true);

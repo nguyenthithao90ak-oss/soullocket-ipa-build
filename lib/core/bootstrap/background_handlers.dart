@@ -1,25 +1,26 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/incoming_call_notifications.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
+import 'package:soullocket_app/views/home/widgets/soul_merge/bubble_chat_controller.dart';
+import 'package:soullocket_app/views/home/widgets/soul_merge/firebase_bubble_chat_transport.dart';
+import 'package:soullocket_app/views/home/widgets/soul_merge/soul_bubble_app.dart';
+import 'package:soullocket_app/utils/soul_bubble_overlay.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FCM Background Message Handler
@@ -34,6 +35,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Hiển thị bong bóng tâm hồn / chat nếu app ở background
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
+    if (type == 'soul_merge_call' || screen == 'soul_merge_call') {
+      await IncomingCallNotifications.handleBackgroundPush(message.data);
+      return;
+    }
     if (type == 'soul_merge' ||
         screen == 'soul_merge' ||
         type == 'chat' ||
@@ -46,7 +51,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
               message.data['text'] ??
               UiCopy.text('copy_ed5fd66064f8');
           final senderName =
-              message.data['senderName']?.toString() ?? UiCopy.text('copy_145933221191');
+              message.data['senderName']?.toString() ??
+              UiCopy.text('copy_145933221191');
           await WidgetService.syncSoulMergeWidgetData(
             message: text.toString(),
             senderName: senderName,
@@ -56,22 +62,35 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         }
       }
       try {
-        final granted = await FlutterOverlayWindow.isPermissionGranted();
-        if (granted) {
-          final active = await FlutterOverlayWindow.isActive();
-          if (!active) {
-            await FlutterOverlayWindow.showOverlay(
-              enableDrag: true,
-              height: 100,
-              width: 100,
-              alignment: OverlayAlignment.centerRight,
-              overlayTitle: UiCopy.text('copy_2ae0a531a5df'),
-              overlayContent: UiCopy.text('copy_2beace08a4bf'),
+        if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        bool allowed() =>
+            FirebaseAuth.instance.currentUser?.uid == uid &&
+            prefs.getString('il_auth_uid') == uid &&
+            SoulBubbleOverlay.acceptsPush(
+              message.data,
+              uid: uid,
+              houseId: prefs.getString('il_house_id'),
+              enabledUid: prefs.getString(SoulBubbleOverlay.uidKey),
+              enabledHouse: prefs.getString(SoulBubbleOverlay.houseKey),
+              enabled: prefs.getBool(SoulBubbleOverlay.enabledKey) == true,
+              preference: prefs.getBool,
+              now: DateTime.now(),
             );
+        if (allowed() &&
+            await FlutterOverlayWindow.isPermissionGranted() &&
+            !await FlutterOverlayWindow.isActive()) {
+          if (FirebaseAuth.instance.currentUser?.uid != uid) return;
+          await L10nService().init();
+          await prefs.reload();
+          if (allowed() && !await FlutterOverlayWindow.isActive()) {
+            await SoulBubbleOverlay.show();
           }
         }
-      } catch (e) {
-        debugPrint('Error showing overlay in background: $e');
+      } catch (error) {
+        debugPrint('[Overlay] Background start skipped:  ${error.runtimeType}');
       }
     }
   } catch (error, stackTrace) {
@@ -102,80 +121,42 @@ void overlayMain() async {
     debugPrint('[Overlay] Firebase init error: $e');
   }
 
-  String? houseId;
-  String? role;
-  String? partnerName;
-  try {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/overlay_sync.json');
-      if (await file.exists()) {
-        final data = jsonDecode(await file.readAsString());
-        houseId = data['houseId']?.toString();
-        role = data['role']?.toString();
-        partnerName = data['partnerName']?.toString();
-      }
-    } catch (error) {
-      debugPrint('[Overlay] Local sync file read skipped: $error');
-    }
-
-    if (houseId == null || houseId.isEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.reload(); // Đảm bảo lấy dữ liệu mới nhất từ isolate chính
-      houseId =
-          prefs.getString('overlay_house_id') ?? prefs.getString('il_house_id');
-      role =
-          prefs.getString('overlay_role') ??
-          prefs.getString('il_role') ??
-          'user1';
-      partnerName = prefs.getString('overlay_partner_name');
-    }
-
-    if (houseId == null || houseId.isEmpty) {
-      try {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid != null) {
-          final snap = await FirebaseDatabase.instance.ref('users/$uid').get();
-          final userData = snap.value as Map?;
-          if (userData != null) {
-            houseId = userData['houseId']?.toString();
-            role = userData['role']?.toString() ?? 'user1';
-          }
-        }
-      } catch (e) {
-        debugPrint('[Overlay] Fallback Firebase fetch error: $e');
-      }
-    }
-
-    if (partnerName == null || partnerName.isEmpty) {
-      // Đọc tên partner từ settings nếu có
-      try {
-        final houseIdLocal = houseId;
-        if (houseIdLocal != null && houseIdLocal.isNotEmpty) {
-          final snap = await FirebaseDatabase.instance
-              .ref('houses/$houseIdLocal/settings')
-              .child(role == 'user2' ? 'nameU1' : 'nameU2')
-              .get();
-          partnerName = snap.value?.toString();
-        }
-      } catch (error) {
-        debugPrint('[Overlay] Partner name lookup skipped: $error');
-      }
-    }
-  } catch (e) {
-    debugPrint('[Overlay] prefs read error: $e');
-  }
-
+  // Engine nổi có isolate riêng; nạp catalog trước khi dựng giao diện.
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.reload();
+  final l10n = L10nService();
+  await l10n.init();
   runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: FloatingBubbleWidget(
-        initialHouseId: houseId,
-        initialRole: role ?? 'user1',
-        initialPartnerName: partnerName ?? UiCopy.text('copy_145933221191'),
-      ),
+    SoulBubbleApp(
+      l10n: l10n,
+      themeKey: prefs.getString('il_theme_key') ?? 'theme-default',
+      home: const _SoulBubbleSession(),
     ),
   );
+}
+
+/// Bootstrap sở hữu controller; giao diện không tự tạo Firebase/service.
+class _SoulBubbleSession extends StatefulWidget {
+  const _SoulBubbleSession();
+
+  @override
+  State<_SoulBubbleSession> createState() => _SoulBubbleSessionState();
+}
+
+class _SoulBubbleSessionState extends State<_SoulBubbleSession> {
+  late final _chat = SoulBubbleChatController(
+    transport: FirebaseSoulBubbleChatTransport(),
+  );
+
+  @override
+  Widget build(BuildContext context) =>
+      FloatingBubbleWidget(chatController: _chat);
+
+  @override
+  void dispose() {
+    _chat.dispose();
+    super.dispose();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -179,6 +179,18 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       }
     }
 
+    // Bố cục mới gom các lựa chọn theo đúng thứ tự người dùng cần làm:
+    // chọn loại → xem trước → tùy chỉnh → thêm vào màn hình. Phần UI cũ bên
+    // dưới được giữ lại tạm thời để không làm mất các callback/logic đồng bộ
+    // trong lúc chuyển đổi, nhưng không còn được dựng.
+    return _buildSimpleWidgetPanel(
+      config: config,
+      selectedTemplate: selectedTemplate,
+      onPin: handlePinWidget,
+      onRefresh: handleRefreshWidget,
+      hideBackButton: hideBackButton,
+    );
+
     final isStandalone = Navigator.of(context).canPop();
 
     return WidgetStudioPanel(
@@ -268,6 +280,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
             ),
           ],
+          WidgetStudioDisclosure(
+            title: context.tr('widget_utility'),
+            subtitle: context.tr('widget_preview_resize_hint'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
           const SizedBox(height: 14),
           _buildWidgetSectionCard(
             icon: Icons.palette_outlined,
@@ -453,6 +471,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
             ),
           ],
+
+              ],
+            ),
+          ),
           const SizedBox(height: 14),
           _buildWidgetSectionCard(
             icon: Icons.add_to_home_screen_rounded,
@@ -571,6 +593,366 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             ),
           )
           .toList(growable: false),
+    );
+  }
+
+  Widget _buildSimpleWidgetPanel({
+    required _WidgetPanelConfig config,
+    required WidgetStudioTemplate selectedTemplate,
+    required Future<void> Function() onPin,
+    required Future<void> Function() onRefresh,
+    required bool hideBackButton,
+  }) {
+    final isStandalone = Navigator.of(context).canPop();
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    final descriptionKey = isIos || kIsWeb
+        ? 'settings_widget_desc_web'
+        : 'settings_widget_desc_mobile';
+
+    Widget compactExpansion({
+      required String title,
+      String? subtitle,
+      required Widget child,
+      Widget? leading,
+    }) {
+      return Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(top: 8),
+          leading: leading,
+          title: Text(
+            title,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: SLSettingsColors.ink,
+            ),
+          ),
+          subtitle: subtitle == null
+              ? null
+              : Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: SLSettingsColors.inkSecondary,
+                  ),
+                ),
+          children: [child],
+        ),
+      );
+    }
+
+    final selectedTheme = config.smartThemeLabel;
+    final selectedSize = config.previewSizeOptions
+        .firstWhere(
+          (item) => item.$2 == _widgetPreviewSizeKey,
+          orElse: () => config.previewSizeOptions.first,
+        )
+        .$1;
+
+    return WidgetStudioPanel(
+      title: context.tr('widget_utility'),
+      onBack: !hideBackButton && isStandalone
+          ? () => Navigator.of(context).pop()
+          : null,
+      onClose: !isStandalone ? () => _togglePanel('widget') : null,
+      leading: ValueListenableBuilder<UiPrefsState>(
+        valueListenable: UiPrefs.notifier,
+        builder: (context, ui, _) =>
+            SoulLocketBrandMark(styleKey: ui.brandMarkKey, size: 22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AppHelpButton(articleId: 'widget'),
+          WidgetStudioSection(
+            icon: Icons.touch_app_rounded,
+            accent: SLSettingsColors.teal,
+            title: context.tr('settings_widget_label'),
+            subtitle: context.tr(descriptionKey),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WidgetUtilityGallery(
+                  sizeKey: _widgetPreviewSizeKey,
+                  themeKey: _draftWidgetThemeKey ?? 'pink',
+                  animated: _widgetHeartAnimated,
+                  selectedId: selectedTemplate.id,
+                  onChanged: (id) =>
+                      unawaited(_handleWidgetPanelTabChanged(id)),
+                  previewBuilder: (_) => _buildWidgetPreview(),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.photo_size_select_small_rounded,
+                      size: 18,
+                      color: SLSettingsColors.teal,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        selectedSize,
+                        style: SLTheme.quicksand(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: SLSettingsColors.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                WidgetStudioSegmentedControl(
+                  selectedId: _widgetPreviewSizeKey,
+                  onChanged: (key) {
+                    setState(() => _widgetPreviewSizeKey = key);
+                    unawaited(_persistWidgetPrefs());
+                  },
+                  items: config.previewSizeOptions
+                      .map(
+                        (item) => WidgetStudioTab(
+                          id: item.$2,
+                          label: item.$1,
+                          icon: item.$2 == 'small'
+                              ? Icons.crop_square
+                              : item.$2 == 'large'
+                              ? Icons.fullscreen
+                              : Icons.aspect_ratio,
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.tr(
+                    isIos ? 'ios_widget_pin_guide' : 'widget_preview_resize_hint',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    color: SLSettingsColors.inkSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          WidgetStudioSection(
+            icon: Icons.palette_outlined,
+            accent: SLSettingsColors.coral,
+            title: context.tr('theme_widget_bg'),
+            subtitle: selectedTheme,
+            child: compactExpansion(
+              title: selectedTheme,
+              subtitle: context.tr('theme_widget_bg'),
+              leading: Icon(
+                Icons.palette_outlined,
+                color: SLSettingsColors.coral,
+                size: 20,
+              ),
+              child: _buildWidgetThemeSwatchGrid(config),
+            ),
+          ),
+          if (selectedTemplate.usesCoupleStyle) ...[
+            const SizedBox(height: 12),
+            WidgetStudioSection(
+              icon: Icons.favorite_rounded,
+              accent: SLSettingsColors.rose,
+              title: context.tr('home_tritimvnid_67f35f'),
+              subtitle: context.tr('widget_center_selection_hint'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  WidgetContentToggle(
+                    icon: Icons.auto_awesome_rounded,
+                    title: context.tr('widget_gentle_motion'),
+                    subtitle: context.tr(
+                      isIos ? 'widget_ios_motion_hint' : 'widget_motion_keeps_choice',
+                    ),
+                    value: _widgetHeartAnimated,
+                    accent: SLSettingsColors.violet,
+                    onChanged: (value) => unawaited(
+                      _updateWidgetAppearanceDraft(
+                        () => _widgetHeartAnimated = value,
+                      ),
+                    ),
+                  ),
+                  if (_widgetHeartAnimated) ...[
+                    const SizedBox(height: 10),
+                    WidgetMotionIntervalPicker(
+                      selectedMinutes: _widgetMotionIntervalMinutes,
+                      isIos: isIos,
+                      title: context.tr('widget_motion_interval_title'),
+                      optionLabel: (minutes) => context
+                          .tr('widget_motion_interval_option')
+                          .replaceAll('{minutes}', minutes.toString()),
+                      onChanged: (minutes) => unawaited(
+                        _updateWidgetAppearanceDraft(
+                          () => _widgetMotionIntervalMinutes = minutes,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  compactExpansion(
+                    title: context.tr('home_kiutritim_87a57e'),
+                    subtitle: context.tr('widget_center_selection_hint'),
+                    leading: const Icon(
+                      Icons.favorite_border_rounded,
+                      color: SLSettingsColors.rose,
+                    ),
+                    child: _buildWidgetHeartStylePicker(),
+                  ),
+                  compactExpansion(
+                    title: context.tr('widget_sticker_collection'),
+                    subtitle: context.tr('widget_sticker_choice_hint'),
+                    leading: const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: SLSettingsColors.violet,
+                    ),
+                    child: _buildWidgetStickerPicker(),
+                  ),
+                  compactExpansion(
+                    title: context.tr('widget_show_diary_photos'),
+                    subtitle: context.tr('widget_photo_sync_hint'),
+                    leading: const Icon(
+                      Icons.photo_library_outlined,
+                      color: SLSettingsColors.sky,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        WidgetContentToggle(
+                          icon: Icons.photo_outlined,
+                          title: context.tr('widget_show_diary_photos'),
+                          subtitle: context.tr('widget_diary_content_hint'),
+                          value: _showDiaryOnWidget,
+                          accent: SLSettingsColors.sky,
+                          onChanged: (value) => unawaited(
+                            _handleWidgetDiaryVisibilityChanged(value),
+                          ),
+                        ),
+                        if (_showDiaryOnWidget) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            context.tr('widget_photo_layout'),
+                            style: SLTheme.quicksand(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w900,
+                              color: SLSettingsColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          WidgetPhotoLayoutPicker(
+                            selectedKey: _widgetDiaryLayoutKey,
+                            labels: {
+                              for (final option in config.diaryLayoutOptions)
+                                option.$2: option.$1,
+                            },
+                            onChanged: (value) => unawaited(
+                              _updateWidgetAppearanceDraft(
+                                () => _widgetDiaryLayoutKey = value,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            context.tr('widget_photo_frame'),
+                            style: SLTheme.quicksand(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w900,
+                              color: SLSettingsColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          WidgetPhotoFramePicker(
+                            selectedKey: _widgetPhotoFrameKey,
+                            labels: {
+                              'rounded': context.tr('widget_frame_rounded'),
+                              'heart': context.tr('widget_frame_heart'),
+                              'polaroid': context.tr('widget_frame_polaroid'),
+                            },
+                            onChanged: (value) => unawaited(
+                              _updateWidgetAppearanceDraft(
+                                () => _widgetPhotoFrameKey = value,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          WidgetStudioSection(
+            icon: Icons.add_to_home_screen_rounded,
+            accent: SLSettingsColors.teal,
+            title: isIos
+                ? context.tr('settings_widget_label')
+                : context.tr('android_real_widget'),
+            subtitle: context.tr('add_widget_desc'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final updateButton = _buildGradientBtn(
+                      label: context.tr('update_widget'),
+                      gradient: const [],
+                      icon: Icons.refresh_rounded,
+                      variant: isIos
+                          ? SLSettingsButtonVariant.primary
+                          : SLSettingsButtonVariant.tonal,
+                      onTap: onRefresh,
+                    );
+                    if (isIos) return updateButton;
+                    final addButton = _buildGradientBtn(
+                      label: context.tr('add_widget'),
+                      gradient: const [],
+                      icon: Icons.add_to_home_screen_rounded,
+                      onTap: onPin,
+                    );
+                    if (constraints.maxWidth < 330) {
+                      return Column(
+                        children: [
+                          addButton,
+                          const SizedBox(height: 8),
+                          updateButton,
+                        ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        Expanded(child: addButton),
+                        const SizedBox(width: 10),
+                        Expanded(child: updateButton),
+                      ],
+                    );
+                  },
+                ),
+                if (isIos) ...[
+                  const SizedBox(height: 10),
+                  SLSettingsNotice(
+                    tone: SLSettingsTone.info,
+                    title: context.tr('home_hngdnios_522391'),
+                    message: context.tr('widget_ios_guide'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

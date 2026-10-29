@@ -333,6 +333,9 @@ class PairingConnectedView extends StatelessWidget {
         uid.isNotEmpty &&
         request!.requestedByUid.trim() == uid;
     final isPartnerPending = isActive && request!.isPending && !isRequester;
+    final canApprove = isPartnerPending &&
+        (request.expireAt <= 0 ||
+            request.expireAt > DateTime.now().millisecondsSinceEpoch);
     final canWithdraw = isRequester &&
         SettingsRelationshipActions.canWithdrawBreakup(
           request,
@@ -341,7 +344,7 @@ class PairingConnectedView extends StatelessWidget {
 
     final title = !isActive
         ? context.tr('breakup')
-        : isPartnerPending
+        : canApprove
         ? context.tr('home_bnkiaangch_b287d3')
         : SettingsRelationshipActions.breakupStatusTitle(
             request: request,
@@ -349,8 +352,6 @@ class PairingConnectedView extends StatelessWidget {
           );
     final description = !isActive
         ? context.tr('breakup_delete_house')
-        : isPartnerPending
-        ? '${context.tr('breakup_pending')}\n${SettingsRelationshipActions.breakupStatusDescription(request: request, isSingle: false)}'
         : SettingsRelationshipActions.breakupStatusDescription(
             request: request,
             isSingle: false,
@@ -366,12 +367,11 @@ class PairingConnectedView extends StatelessWidget {
         loading: breakupBusy,
         onPressed: breakupBusy ? null : onRequestBreakup,
       );
-    } else if (isPartnerPending) {
+    } else if (canApprove) {
       action = SLSettingsButton(
-        label: context.tr('home_xcnhn_1e2eb2'),
-        icon: Icons.check_rounded,
-        variant: SLSettingsButtonVariant.tonal,
-        color: colors.sage,
+        label: context.tr('breakup_approve_now'),
+        icon: Icons.delete_forever_outlined,
+        variant: SLSettingsButtonVariant.danger,
         isDark: colors.dark,
         loading: breakupBusy,
         onPressed: breakupBusy ? null : onApproveBreakup,

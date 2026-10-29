@@ -7,69 +7,157 @@ extension _PetCareRooms on _PetHousePainter {
   static const _night = Color(0xFF1C1A3A);
 
   void _livingBack(Canvas c, double extension) {
-    // Bộ sofa giống bánh mochi; gối tựa là đồ vật chạm được.
-    _shadow(c, const Rect.fromLTWH(123, 192, 176, 22));
-    _round(
-      c,
-      const Rect.fromLTWH(127, 132, 172, 70),
-      25,
-      _tone == null && dark
-          ? const Color(0xFF9E798F)
-          : _tint(const Color(0xFFE8AFBE), (t) => t.main),
-    );
-    _round(
-      c,
-      const Rect.fromLTWH(137, 141, 73, 48),
-      17,
-      _tint(const Color(0xFFF1C2CD), (t) => t.light),
-    );
-    _round(
-      c,
-      const Rect.fromLTWH(214, 141, 73, 48),
-      17,
-      _tint(const Color(0xFFE9B4C6), (t) => Color.lerp(t.light, t.main, .4)!),
-    );
-    _round(
-      c,
-      const Rect.fromLTWH(124, 173, 178, 31),
-      14,
-      _tint(const Color(0xFFD794AC), (t) => t.shade),
-    );
-    for (final x in const [114.0, 287.0]) {
-      _round(
-        c,
-        Rect.fromLTWH(x, 159, 25, 48),
-        12,
-        _tint(const Color(0xFFE9AABD), (t) => t.main),
-      );
+    // Mảng ốp thấp tạo chiều sâu, vẫn dùng giấy tường và bộ đồ đã mua.
+    final panel = dark ? const Color(0xFF474E54) : const Color(0xFFD6E5DD);
+    _round(c, const Rect.fromLTWH(-3, 105, 366, 91), 3, panel);
+    for (var x = 14.0; x < 360; x += 37) {
+      _round(c, Rect.fromLTWH(x, 117, 29, 66), 5,
+        Color.lerp(panel, dark ? Colors.black : Colors.white, .12)!);
+      _line(c, Offset(x + 2, 119), Offset(x + 27, 119),
+        Colors.white.withValues(alpha: .24), 1.3);
     }
-    _round(c, const Rect.fromLTWH(140, 201, 9, 13), 3, _PetHousePainter._ink);
-    _round(c, const Rect.fromLTWH(276, 201, 9, 13), 3, _PetHousePainter._ink);
-    // Kệ treo: đài nhạc là đồ vật, chậu hoa nhỏ đứng cuối kệ.
-    _round(c, const Rect.fromLTWH(262, 70, 72, 8), 4, const Color(0xFFD6AF9D));
+    _round(c, const Rect.fromLTWH(-3, 102, 366, 7), 2,
+      dark ? const Color(0xFF69766F) : const Color(0xFFF5F0DF));
+    // Ánh nắng nghiêng từ cửa sổ xuống sàn, không che vật thể.
+    _path(c, Path()..moveTo(38, 93)..lineTo(106, 93)
+      ..lineTo(281, 281)..lineTo(137, 296)..close(),
+      const Color(0xFFFFF5CB).withValues(alpha: dark ? .03 : .16));
+    final main = _tint(const Color(0xFFC98771), (t) => t.main);
+    final light = _tint(const Color(0xFFE6AC92), (t) => t.light);
+    final shade = _tint(const Color(0xFFAD6F60), (t) => t.shade);
+    _shadow(c, const Rect.fromLTWH(86, 200, 224, 24));
+    for (final x in [107.0, 280.0]) {
+      _round(c, Rect.fromLTWH(x, 195, 9, 20), 3, const Color(0xFF815C46));
+      _line(c, Offset(x + 2, 199), Offset(x + 2, 211),
+        const Color(0xFFC79A6C), 1.4);
+    }
+    _round(c, const Rect.fromLTWH(95, 125, 204, 76), 27, shade);
+    c.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(96, 122, 201, 73),
+      const Radius.circular(25)), Paint()..shader = LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [light, main]).createShader(const Rect.fromLTWH(96, 122, 201, 73)));
+    for (final x in [104.0, 201.0]) {
+      _round(c, Rect.fromLTWH(x, 132, 88, 44), 16, light);
+      _line(c, Offset(x + 13, 137), Offset(x + 73, 137),
+        Colors.white.withValues(alpha: .22), 1.5);
+      for (final dx in [28.0, 59.0]) {
+        _circle(c, Offset(x + dx, 154), 2, main.withValues(alpha: .7));
+      }
+    }
+    _round(c, const Rect.fromLTWH(93, 177, 207, 27), 12, shade);
+    _round(c, const Rect.fromLTWH(99, 171, 195, 20), 9, main);
+    _line(c, const Offset(105, 174), const Offset(286, 174),
+      light.withValues(alpha: .9), 2);
+    _line(c, const Offset(196, 177), const Offset(196, 189),
+      shade.withValues(alpha: .6), 1.3);
+    for (final x in [84.0, 285.0]) {
+      _round(c, Rect.fromLTWH(x, 156, 26, 49), 12, shade);
+      _round(c, Rect.fromLTWH(x - 1, 151, 26, 44), 12, main);
+      _round(c, Rect.fromLTWH(x + 3, 153, 18, 10), 6, light);
+    }
+    final set = _set;
+    if (set != PetCareFurnitureSet.classic) {
+      final tone = _setTone;
+      for (final x in [104.0, 201.0]) {
+        PetCareFurnitureArt.panel(c, RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, 132, 88, 44), const Radius.circular(16)),
+          set, tone, dark: dark);
+      }
+      PetCareFurnitureArt.edgeTrim(c, const Rect.fromLTWH(106, 122, 178, 72),
+        set, tone, dark: dark);
+      PetCareFurnitureArt.rimTrim(c, const Rect.fromLTWH(100, 177, 192, 6),
+        set, tone, dark: dark);
+      for (final x in [106.0, 280.0]) {
+        PetCareFurnitureArt.foot(c, Rect.fromLTWH(x, 199, 12, 17),
+          set, tone, dark: dark);
+      }
+    }
+    _shadow(c, const Rect.fromLTWH(70, 246, 225, 57));
+    _oval(c, const Rect.fromLTWH(67, 243, 227, 59),
+      dark ? const Color(0xFF78897E) : const Color(0xFFA8C9B7));
+    _oval(c, const Rect.fromLTWH(73, 245, 216, 50),
+      dark ? const Color(0xFF8C9B89) : const Color(0xFFD3DFC4));
+    c.drawOval(const Rect.fromLTWH(84, 250, 192, 37), Paint()
+      ..color = const Color(0xFFF9F1D7).withValues(alpha: .65)
+      ..style = PaintingStyle.stroke..strokeWidth = 1.4);
+    for (var i = 0; i < 15; i++) {
+      final x = 88 + i * 12.5;
+      _line(c, Offset(x, 291), Offset(x - 2, 297),
+        const Color(0xFFE2D8BB), 1);
+    }
+    // Kệ và chậu hoa vẫn ở đúng vùng chạm của đài.
+    _shadow(c, const Rect.fromLTWH(260, 74, 77, 9));
+    _round(c, const Rect.fromLTWH(262, 70, 72, 8), 3, const Color(0xFFB68B69));
+    _line(c, const Offset(266, 71), const Offset(330, 71),
+      const Color(0xFFE6C2A2), 2);
     _flower(c, const Offset(323, 48), 5, _PetHousePainter._rose);
     _round(c, const Rect.fromLTWH(316, 58, 15, 13), 5, _PetHousePainter._cream);
-    _line(
-      c,
-      const Offset(323, 49),
-      const Offset(323, 59),
-      _PetHousePainter._mint,
-      2,
-    );
-    _rug(c, const Offset(174, 263), 1.15, _PetHousePainter._cream);
+    _line(c, const Offset(323, 49), const Offset(323, 59),
+      _PetHousePainter._mint, 2);
+  }
+
+
+  void _gardenBackDoor(Canvas c) {
+    const frame = Rect.fromLTWH(308, 87, 46, 121);
+    _shadow(c, const Rect.fromLTWH(303, 203, 55, 11));
+    _round(c, frame, 8, const Color(0xFFB49D78));
+    _round(c, const Rect.fromLTWH(313, 92, 36, 111), 5, const Color(0xFFBFD6A2));
+    _oval(c, const Rect.fromLTWH(310, 133, 45, 51), const Color(0xFF96B77C));
+    _path(c, Path()..moveTo(325, 202)..lineTo(344, 202)..lineTo(332, 155)..lineTo(328, 155)..close(), const Color(0xFFE5D6AB));
+    for (var i = 0; i < 3; i++) {
+      _line(c, Offset(314, 130 + i * 10.0), Offset(349, 130 + i * 10.0), const Color(0xFFD8D9AD), 1.8);
+    }
+    final width = 36 * (1 - gardenDoor * .77);
+    final shift = gardenDoor * 11;
+    _path(c, Path()..moveTo(313, 92)..lineTo(313 + width, 92 + shift)
+      ..lineTo(313 + width, 203 + shift * .15)..lineTo(313, 203)..close(),
+      Color.lerp(const Color(0xFF9BB59D), const Color(0xFF75947F), gardenDoor)!);
+    if (gardenDoor < .65) {
+      _round(c, Rect.fromLTWH(317, 98, width - 8, 46), 4, const Color(0xFFBDD6C0));
+      _line(c, const Offset(317, 123), Offset(313 + width - 4, 123 + shift * .5), const Color(0xFFE2E6C8), 2);
+      _round(c, Rect.fromLTWH(317, 157, width - 8, 33), 3, const Color(0x6686A78B));
+    }
+    _circle(c, Offset(313 + width - 5, 154 + shift * .4), 2.3, const Color(0xFFFFDEA0));
+    _round(c, const Rect.fromLTWH(303, 202, 56, 6), 2, const Color(0xFFD6C7A5));
+    _oval(c, const Rect.fromLTWH(313, 213, 39, 10), const Color(0xFFB9B79A));
+  }
+
+  void _livingLamp(Canvas c) {
+    if (livingLight > .01) {
+      const glow = Rect.fromLTWH(27, 99, 104, 119);
+      c.drawOval(glow, Paint()..shader = RadialGradient(
+        colors: [const Color(0xFFFFDB8B).withValues(alpha: .24 * livingLight),
+          const Color(0x00FFDB8B)]).createShader(glow));
+    }
+    _shadow(c, const Rect.fromLTWH(60, 205, 44, 9));
+    _oval(c, const Rect.fromLTWH(63, 205, 39, 8), const Color(0xFF997650));
+    _line(c, const Offset(82, 112), const Offset(82, 207),
+      const Color(0xFF997650), 4);
+    _line(c, const Offset(81, 115), const Offset(81, 202),
+      const Color(0xFFEACF96), 1.1);
+    final shade = Path()..moveTo(65, 85)..quadraticBezierTo(82, 80, 99, 85)
+      ..lineTo(108, 117)..quadraticBezierTo(82, 125, 56, 117)..close();
+    final bounds = shade.getBounds();
+    c.drawPath(shade, Paint()..shader = LinearGradient(
+      colors: [Color.lerp(const Color(0xFFB7A48D), const Color(0xFFFFF0B5), livingLight)!,
+        Color.lerp(const Color(0xFF8D8272), const Color(0xFFEEC779), livingLight)!])
+        .createShader(bounds));
+    _oval(c, const Rect.fromLTWH(56, 113, 52, 10),
+      Color.lerp(const Color(0xFFA08D75), const Color(0xFFFFE4A0), livingLight)!);
+    _line(c, const Offset(102, 120), const Offset(102, 142),
+      const Color(0xFF9F7852), 1.2);
+    _circle(c, const Offset(102, 144), 3.4,
+      livingLight > .5 ? const Color(0xFFFFD16C) : const Color(0xFF8A9BAA));
   }
 
   void _livingFront(Canvas c) {
-    final playingNow = playing && _active;
-    final roll = playingNow
-        ? math.pow(math.sin(progress * math.pi), 2).toDouble()
-        : 0.0;
-    final x = 282 - roll * 64;
-    final y = 259 - roll * math.sin(progress * math.pi * 2).abs() * 16;
-    _shadow(c, Rect.fromCenter(center: Offset(x, 274), width: 36, height: 8));
+    final playingNow = roomPlay.active;
+    final x = roomPlay.ball.dx;
+    final y = roomPlay.ball.dy;
+    _shadow(c, Rect.fromCenter(center: Offset(x, 294), width: 36, height: 8));
     c.save();
     c.translate(x, y);
-    c.rotate(-.2 - roll * 3.5);
+    c.rotate(roomPlay.rotation);
     _circle(c, Offset.zero, 18, const Color(0xFFFFD79A));
     final left = Path()
       ..moveTo(0, -18)
@@ -95,9 +183,6 @@ extension _PetCareRooms on _PetHousePainter {
     );
     _circle(c, const Offset(-7, -9), 4, Colors.white.withValues(alpha: .55));
     c.restore();
-    _round(c, const Rect.fromLTWH(39, 258, 46, 12), 5, _PetHousePainter._lilac);
-    _round(c, const Rect.fromLTWH(43, 254, 43, 6), 3, _PetHousePainter._cream);
-    _star(c, const Offset(61, 250), 9, _PetHousePainter._gold);
     if (playingNow) {
       for (var i = 0; i < 5; i++) {
         _star(
@@ -165,6 +250,29 @@ extension _PetCareRooms on _PetHousePainter {
       5,
       _PetHousePainter._cream,
     );
+    final set = _set;
+    if (set != PetCareFurnitureSet.classic) {
+      final tone = _setTone;
+      for (var i = 0; i < 3; i++) {
+        PetCareFurnitureArt.panel(
+          c,
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(102 + i * 79.0, 172, 72, 27),
+            const Radius.circular(5),
+          ),
+          set,
+          tone,
+          dark: dark,
+        );
+      }
+      PetCareFurnitureArt.rimTrim(
+        c,
+        const Rect.fromLTWH(92, 162, 254, 7),
+        set,
+        tone,
+        dark: dark,
+      );
+    }
     if (_level > 0) {
       // Lò vi sóng nhỏ dưới cửa sổ.
       _round(
@@ -194,38 +302,82 @@ extension _PetCareRooms on _PetHousePainter {
       c,
       const Rect.fromLTWH(164, 203, 53, 40),
       16,
-      const Color(0xFFD2AD91),
+      _tint(const Color(0xFFD2AD91), (t) => t.main),
     );
     _round(
       c,
       const Rect.fromLTWH(174, 210, 33, 27),
       10,
-      const Color(0xFFEBCDB1),
+      _tint(const Color(0xFFEBCDB1), (t) => t.light),
     );
     _round(
       c,
       const Rect.fromLTWH(163, 243, 56, 13),
       5,
-      const Color(0xFFBC947E),
+      _tint(const Color(0xFFBC947E), (t) => t.shade),
     );
+    if (set != PetCareFurnitureSet.classic) {
+      PetCareFurnitureArt.boardTop(
+        c,
+        const Rect.fromLTWH(170, 204, 41, 39),
+        set,
+        _setTone,
+        size: 34,
+        dark: dark,
+      );
+    }
   }
 
   void _kitchenFront(Canvas c) {
     _shadow(c, const Rect.fromLTWH(102, 277, 181, 15));
+    final set = _set;
+    final tone = _setTone;
     for (final x in const [126.0, 248.0]) {
-      _round(c, Rect.fromLTWH(x, 244, 10, 40), 4, const Color(0xFFB18B7B));
+      _round(
+        c,
+        Rect.fromLTWH(x, 244, 10, 40),
+        4,
+        _tint(const Color(0xFFB18B7B), (t) => t.shade),
+      );
+      PetCareFurnitureArt.foot(
+        c,
+        Rect.fromLTWH(x - 1, 270, 12, 16),
+        set,
+        tone,
+        dark: dark,
+      );
     }
     _round(
       c,
       const Rect.fromLTWH(113, 230, 160, 25),
       9,
-      const Color(0xFFCBA58C),
+      _tint(const Color(0xFFCBA58C), (t) => t.main),
+    );
+    PetCareFurnitureArt.panel(
+      c,
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(113, 230, 160, 25),
+        const Radius.circular(9),
+      ),
+      set,
+      tone,
+      dark: dark,
     );
     _round(
       c,
       const Rect.fromLTWH(105, 219, 177, 24),
       12,
-      const Color(0xFFFFEDD0),
+      _tint(
+        const Color(0xFFFFEDD0),
+        (t) => Color.lerp(t.light, Colors.white, .45)!,
+      ),
+    );
+    PetCareFurnitureArt.rimTrim(
+      c,
+      const Rect.fromLTWH(107, 235, 173, 7),
+      set,
+      tone,
+      dark: dark,
     );
     // Bàn cho hai: đĩa của bé mình có món đang chọn, đĩa bé kia để trống.
     final plate = _PetCareSceneState.plateFor(selectedPet);
@@ -249,54 +401,23 @@ extension _PetCareRooms on _PetHousePainter {
       width: 2,
     );
     final onPlate = plate + const Offset(0, -17);
+    final mateOnPlate = partnerPlate + const Offset(0, -17);
     if (action == PetCareAction.feed && _active && !walking) {
-      final reach = Curves.easeOutCubic.transform((progress / .36).clamp(0, 1));
-      final mouth = _mouth;
-      final point = Offset.lerp(feedFrom ?? onPlate, mouth, reach)!;
-      final remaining = progress < .48
-          ? 1.0
-          : progress < .68
-          ? .72
-          : .42;
-      if (progress < .86) {
-        c.save();
-        c.translate(point.dx, point.dy);
-        c.rotate(-.18 + math.sin(progress * math.pi * 8) * .08 * _careEnvelope);
-        _food(c, food, Offset.zero, .8 * remaining, bitten: progress > .48);
-        c.restore();
-      }
-      // Hai nhịp cắn rõ, vụn rơi ngắn rồi lóe sao khi ăn xong.
-      for (var bite = 0; bite < 2; bite++) {
-        final t = ((progress - .46 - bite * .22) / .22).clamp(0.0, 1.0);
-        if (t <= 0 || t >= 1) continue;
-        for (var i = 0; i < 5; i++) {
-          final side = i.isEven ? -1.0 : 1.0;
-          _circle(
-            c,
-            mouth +
-                Offset(
-                  side * (8 + t * (16 + i * 3)),
-                  -8 * math.sin(t * math.pi) + t * 26 + i * 2,
-                ),
-            (2.8 - t * 2).clamp(.5, 3),
-            _PetHousePainter._gold.withValues(alpha: 1 - t),
-          );
-        }
-      }
-      if (progress > .8) {
-        final t = ((progress - .8) / .2).clamp(0.0, 1.0);
-        for (var i = 0; i < 4; i++) {
-          _star(
-            c,
-            mouth + Offset((i - 1.5) * 22, -28 - t * 28 + i % 2 * 9),
-            3 + math.sin(t * math.pi) * 3,
-            _PetHousePainter._gold.withValues(alpha: 1 - t),
-          );
-        }
-      }
-    } else if (!(dragTool == PetCareTool.food && dragFood == food)) {
+      _paintMeal(c, feedFrom ?? onPlate, _grownMouth);
+    } else if (!(dragTool == PetCareTool.food && dragFood == food) &&
+        !_plateStolen) {
       // Món nảy nhẹ mỗi lúc để gợi ý: nhấc món trên đĩa kéo tới miệng bé.
       _food(c, food, onPlate - Offset(0, _invite(1.4) * 5), .76);
+    }
+    // Bé kia ăn phần riêng song song, không chờ bé mình.
+    if (_mateEating) {
+      _paintMeal(
+        c,
+        mateFeedFrom ?? mateOnPlate,
+        _mateMouth,
+        t: mateMeal,
+        dish: mateFood,
+      );
     }
     if (_level > 0) {
       final vase = Offset(mid, 205);
@@ -314,6 +435,64 @@ extension _PetCareRooms on _PetHousePainter {
         _PetHousePainter._mint,
         2,
       );
+    }
+  }
+
+  /// Món bay từ đĩa tới miệng, hai nhịp cắn rơi vụn rồi lóe sao.
+  void _paintMeal(
+    Canvas c,
+    Offset from,
+    Offset mouth, {
+    double? t,
+    PetCareFood? dish,
+  }) {
+    final progress = t ?? this.progress;
+    final food = dish ?? this.food;
+    final envelope = Curves.easeInOutSine.transform(
+      math.min(progress / .2, (1 - progress) / .22).clamp(0, 1),
+    );
+    final reach = Curves.easeOutCubic.transform((progress / .36).clamp(0, 1));
+    final point = Offset.lerp(from, mouth, reach)!;
+    final remaining = progress < .48
+        ? 1.0
+        : progress < .68
+        ? .72
+        : .42;
+    if (progress < .86) {
+      c.save();
+      c.translate(point.dx, point.dy);
+      c.rotate(-.18 + math.sin(progress * math.pi * 8) * .08 * envelope);
+      _food(c, food, Offset.zero, .8 * remaining, bitten: progress > .48);
+      c.restore();
+    }
+    // Hai nhịp cắn rõ, vụn rơi ngắn rồi lóe sao khi ăn xong.
+    for (var bite = 0; bite < 2; bite++) {
+      final t = ((progress - .46 - bite * .22) / .22).clamp(0.0, 1.0);
+      if (t <= 0 || t >= 1) continue;
+      for (var i = 0; i < 5; i++) {
+        final side = i.isEven ? -1.0 : 1.0;
+        _circle(
+          c,
+          mouth +
+              Offset(
+                side * (8 + t * (16 + i * 3)),
+                -8 * math.sin(t * math.pi) + t * 26 + i * 2,
+              ),
+          (2.8 - t * 2).clamp(.5, 3),
+          _PetHousePainter._gold.withValues(alpha: 1 - t),
+        );
+      }
+    }
+    if (progress > .8) {
+      final t = ((progress - .8) / .2).clamp(0.0, 1.0);
+      for (var i = 0; i < 4; i++) {
+        _star(
+          c,
+          mouth + Offset((i - 1.5) * 22, -28 - t * 28 + i % 2 * 9),
+          3 + math.sin(t * math.pi) * 3,
+          _PetHousePainter._gold.withValues(alpha: 1 - t),
+        );
+      }
     }
   }
 
@@ -535,13 +714,25 @@ extension _PetCareRooms on _PetHousePainter {
     }
     // Thành bồn che chân, không che mặt và biểu cảm.
     _shadow(c, const Rect.fromLTWH(111, 260, 177, 15));
+    final set = _set;
+    final tone = _setTone;
     for (final x in const [126.0, 255.0]) {
-      _round(
-        c,
-        Rect.fromLTWH(x, 252, 10, 17),
-        4,
-        _tint(const Color(0xFF8BAFAC), (t) => t.shade),
-      );
+      if (set == PetCareFurnitureSet.classic) {
+        _round(
+          c,
+          Rect.fromLTWH(x, 252, 10, 17),
+          4,
+          _tint(const Color(0xFF8BAFAC), (t) => t.shade),
+        );
+      } else {
+        PetCareFurnitureArt.foot(
+          c,
+          Rect.fromLTWH(x - 2, 252, 14, 18),
+          set,
+          tone,
+          dark: dark,
+        );
+      }
     }
     _round(
       c,
@@ -561,12 +752,40 @@ extension _PetCareRooms on _PetHousePainter {
       5.5,
       _PetHousePainter._cream,
     );
-    _heart(
-      c,
-      const Offset(198, 245),
-      7,
-      _tint(const Color(0xFF8DBBB3), (t) => t.shade),
-    );
+    if (set == PetCareFurnitureSet.classic) {
+      _heart(
+        c,
+        const Offset(198, 245),
+        7,
+        _tint(const Color(0xFF8DBBB3), (t) => t.shade),
+      );
+    } else {
+      PetCareFurnitureArt.panel(
+        c,
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(113, 233, 166, 22),
+          const Radius.circular(11),
+        ),
+        set,
+        tone,
+        dark: dark,
+      );
+      PetCareFurnitureArt.rimTrim(
+        c,
+        const Rect.fromLTWH(99, 223, 194, 11),
+        set,
+        tone,
+        dark: dark,
+      );
+      PetCareFurnitureArt.emblem(
+        c,
+        const Offset(198, 245),
+        10,
+        set,
+        tone,
+        dark: dark,
+      );
+    }
     _propDuck(c);
     if (bathStage == 3 && _inBath && action == PetCareAction.bath && _active) {
       final x = 191 + math.sin(progress * math.pi * 7) * 17 * _careEnvelope;
@@ -614,7 +833,19 @@ extension _PetCareRooms on _PetHousePainter {
   void _bedroomBack(Canvas c, double extension) {
     final frame = _tint(const Color(0xFFC6A4B0), (t) => t.main);
     final panel = _tint(const Color(0xFFDCC2CC), (t) => t.light);
+    final set = _set;
+    final tone = _setTone;
     _shadow(c, const Rect.fromLTWH(60, 252, 232, 20));
+    if (set == PetCareFurnitureSet.princess) {
+      PetCareFurnitureArt.canopy(
+        c,
+        const Offset(271, 88),
+        70,
+        112,
+        tone,
+        dark: dark,
+      );
+    }
     // Đầu giường cao, bo tròn, có nút bọc nệm.
     final head = RRect.fromRectAndCorners(
       const Rect.fromLTRB(258, 128, 288, 262),
@@ -628,16 +859,34 @@ extension _PetCareRooms on _PetHousePainter {
       head.deflate(5).shift(const Offset(0, 2)),
       Paint()..color = panel,
     );
-    for (var i = 0; i < 4; i++) {
-      _circle(
+    if (set == PetCareFurnitureSet.classic) {
+      for (var i = 0; i < 4; i++) {
+        _circle(
+          c,
+          Offset(273, 150 + i * 18.0),
+          2.2,
+          _PetHousePainter._cream.withValues(alpha: .8),
+        );
+      }
+      _circle(c, const Offset(273, 126), 6, frame);
+      _circle(c, const Offset(271.5, 124.5), 2, panel);
+    } else {
+      PetCareFurnitureArt.panel(
         c,
-        Offset(273, 150 + i * 18.0),
-        2.2,
-        _PetHousePainter._cream.withValues(alpha: .8),
+        head.deflate(5).shift(const Offset(0, 2)),
+        set,
+        tone,
+        dark: dark,
+      );
+      PetCareFurnitureArt.boardTop(
+        c,
+        const Rect.fromLTWH(258, 128, 30, 134),
+        set,
+        tone,
+        size: 36,
+        dark: dark,
       );
     }
-    _circle(c, const Offset(273, 126), 6, frame);
-    _circle(c, const Offset(271.5, 124.5), 2, panel);
     // Mặt nệm nhìn hơi từ trên xuống: bé nằm lên dải này.
     _round(
       c,
@@ -697,7 +946,9 @@ extension _PetCareRooms on _PetHousePainter {
       if (cover <= 0) return;
       final lift = Offset(0, -4 - (math.sin(seconds * 1.6 + phase) + 1) * .9);
       Offset at(double x, double y) =>
-          feet + _PetHousePainter._lyingOffset(pet, Offset(x, y)) + lift;
+          feet +
+          _PetHousePainter._lyingOffset(pet, Offset(x, y), growth: _bedGrowth) +
+          lift;
       // Ngón chân → hông → lưng → vai → gáy.
       final points = [
         at(-14, 6) - const Offset(34, 0),
@@ -734,14 +985,14 @@ extension _PetCareRooms on _PetHousePainter {
     if (_partnerSleeping) {
       add(
         _partner,
-        _PetHousePainter._sleepFeet(_partner, _partnerBoth),
+        _PetHousePainter._sleepFeet(_partner, _partnerBoth, growth: _bedGrowth),
         1,
         _partner == PetCarePet.rabbit ? 0 : 1.7,
       );
     }
     add(
       selectedPet,
-      _PetHousePainter._sleepFeet(selectedPet, _mineBoth),
+      _PetHousePainter._sleepFeet(selectedPet, _mineBoth, growth: _bedGrowth),
       _coverProgress,
       selectedPet == PetCarePet.rabbit ? 0 : 1.7,
     );
@@ -843,9 +1094,28 @@ extension _PetCareRooms on _PetHousePainter {
       );
     }
     _round(c, const Rect.fromLTRB(70, 242, 286, 256), 6, shade);
+    final set = _set;
+    final tone = _setTone;
     _blanket(c);
+    PetCareFurnitureArt.rimTrim(
+      c,
+      const Rect.fromLTRB(84, 244, 258, 254),
+      set,
+      tone,
+      dark: dark,
+    );
     for (final x in const [80.0, 266.0]) {
-      _round(c, Rect.fromLTWH(x, 254, 11, 14), 3, shade);
+      if (set == PetCareFurnitureSet.classic) {
+        _round(c, Rect.fromLTWH(x, 254, 11, 14), 3, shade);
+      } else {
+        PetCareFurnitureArt.foot(
+          c,
+          Rect.fromLTWH(x - 1, 253, 13, 16),
+          set,
+          tone,
+          dark: dark,
+        );
+      }
     }
     // Thành chân giường thấp bên trái.
     final foot = RRect.fromRectAndCorners(
@@ -860,8 +1130,26 @@ extension _PetCareRooms on _PetHousePainter {
       foot.deflate(5).shift(const Offset(0, 2)),
       Paint()..color = _tint(const Color(0xFFDCC2CC), (t) => t.light),
     );
-    _heart(c, const Offset(74, 202), 4.5, _PetHousePainter._cream);
-    _circle(c, const Offset(74, 176), 5.5, frame);
+    if (set == PetCareFurnitureSet.classic) {
+      _heart(c, const Offset(74, 202), 4.5, _PetHousePainter._cream);
+      _circle(c, const Offset(74, 176), 5.5, frame);
+    } else {
+      PetCareFurnitureArt.panel(
+        c,
+        foot.deflate(5).shift(const Offset(0, 2)),
+        set,
+        tone,
+        dark: dark,
+      );
+      PetCareFurnitureArt.boardTop(
+        c,
+        const Rect.fromLTWH(62, 178, 24, 84),
+        set,
+        tone,
+        size: 28,
+        dark: dark,
+      );
+    }
   }
 
   /// Tắt đèn khi bé ngủ: phòng tối xanh đêm, chỉ còn ánh trăng qua cửa sổ

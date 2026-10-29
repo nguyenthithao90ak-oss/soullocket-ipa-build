@@ -356,97 +356,54 @@ extension _StickerStudioWorkspace on _DrawingStudioScreenState {
         );
         final height = width / _selectedRatio.ratio;
         return Center(
-          child: SizedBox(
-            width: width + 22,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CustomPaint(
-                  painter: const _StudioPaperShadow(),
-                  child: ClipPath(
-                    clipper: const _StudioPaperClipper(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(11),
-                      child: Stack(
-                        children: [
-                          RepaintBoundary(
-                            key: _canvasKey,
-                            child: Semantics(
-                              label: context.tr('p8_drawing_canvas_label'),
-                              hint: context.tr('p8_drawing_canvas_hint'),
-                              child: RawGestureDetector(
-                                key: const Key('drawing-canvas'),
-                                behavior: HitTestBehavior.opaque,
-                                gestures: _isScrollMode || _isExporting
-                                    ? const <Type, GestureRecognizerFactory>{}
-                                    : <Type, GestureRecognizerFactory>{
-                                        EagerGestureRecognizer:
-                                            GestureRecognizerFactoryWithHandlers<
-                                              EagerGestureRecognizer
-                                            >(
-                                              () => EagerGestureRecognizer(),
-                                              (_) {},
-                                            ),
-                                      },
-                                child: Listener(
-                                  onPointerDown: _canvasPointerDown,
-                                  onPointerMove: _canvasPointerMove,
-                                  onPointerUp: _canvasPointerUp,
-                                  onPointerCancel: _canvasPointerUp,
-                                  child: SizedBox(
-                                    width: width,
-                                    height: height,
-                                    child: CustomPaint(
-                                      painter: _DrawingCanvasPainter(
-                                        backgroundId: _backgroundId,
-                                        strokes: _allVisibleStrokes,
-                                        atlas: _studioAtlas,
-                                        repaint: _canvasRepaintNotifier,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (!_hasAnyStroke)
-                            Positioned.fill(
-                              child: IgnorePointer(
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                    ),
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: SizedBox(
-                                        width: width - 48,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            _StudioSprite(
-                                              atlas: _studioAtlas,
-                                              index: 1,
-                                              size: math.min(
-                                                width * 0.42,
-                                                math.min(height * 0.4, 134),
+          child: _StudioArtworkBoundary(
+            key: _artworkKey,
+            child: SizedBox(
+              width: width + 22,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CustomPaint(
+                    painter: const _StudioPaperShadow(),
+                    child: ClipPath(
+                      clipper: const _StudioPaperClipper(),
+                      child: Padding(
+                        padding: const EdgeInsets.all(11),
+                        child: Stack(
+                          children: [
+                            RepaintBoundary(
+                              key: _canvasKey,
+                              child: Semantics(
+                                label: context.tr('p8_drawing_canvas_label'),
+                                hint: context.tr('p8_drawing_canvas_hint'),
+                                child: RawGestureDetector(
+                                  key: const Key('drawing-canvas'),
+                                  behavior: HitTestBehavior.opaque,
+                                  gestures: _isScrollMode || _isExporting
+                                      ? const <Type, GestureRecognizerFactory>{}
+                                      : <Type, GestureRecognizerFactory>{
+                                          EagerGestureRecognizer:
+                                              GestureRecognizerFactoryWithHandlers<
+                                                EagerGestureRecognizer
+                                              >(
+                                                () => EagerGestureRecognizer(),
+                                                (_) {},
                                               ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              context.tr(
-                                                'drawing_studio_empty_hint',
-                                              ),
-                                              key: const Key(
-                                                'drawing-empty-hint',
-                                              ),
-                                              textAlign: TextAlign.center,
-                                              style: _StudioStyle.text(
-                                                21,
-                                                color: const Color(0xFF975651),
-                                              ),
-                                            ),
-                                          ],
+                                        },
+                                  child: Listener(
+                                    onPointerDown: _canvasPointerDown,
+                                    onPointerMove: _canvasPointerMove,
+                                    onPointerUp: _canvasPointerUp,
+                                    onPointerCancel: _canvasPointerUp,
+                                    child: SizedBox(
+                                      width: width,
+                                      height: height,
+                                      child: CustomPaint(
+                                        painter: _DrawingCanvasPainter(
+                                          backgroundId: _backgroundId,
+                                          strokes: _allVisibleStrokes,
+                                          atlas: _studioAtlas,
+                                          repaint: _canvasRepaintNotifier,
                                         ),
                                       ),
                                     ),
@@ -454,23 +411,75 @@ extension _StickerStudioWorkspace on _DrawingStudioScreenState {
                                 ),
                               ),
                             ),
-                        ],
+                            if (!_hasAnyStroke)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                      ),
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: SizedBox(
+                                          width: width - 48,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              _StudioSprite(
+                                                atlas: _studioAtlas,
+                                                index: 1,
+                                                size: math.min(
+                                                  width * 0.42,
+                                                  math.min(height * 0.4, 134),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                context.tr(
+                                                  'drawing_studio_empty_hint',
+                                                ),
+                                                key: const Key(
+                                                  'drawing-empty-hint',
+                                                ),
+                                                textAlign: TextAlign.center,
+                                                style: _StudioStyle.text(
+                                                  21,
+                                                  color: const Color(
+                                                    0xFF975651,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const Positioned.fill(
-                  child: IgnorePointer(
-                    child: CustomPaint(painter: _StudioPaperTrim()),
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(painter: _StudioPaperTrim()),
+                    ),
                   ),
-                ),
-                const Positioned(top: -3, left: -5, child: _StudioWashiTape()),
-                const Positioned(
-                  bottom: -2,
-                  right: -4,
-                  child: _StudioWashiTape(blue: true),
-                ),
-              ],
+                  const Positioned(
+                    top: -3,
+                    left: -5,
+                    child: _StudioWashiTape(),
+                  ),
+                  const Positioned(
+                    bottom: -2,
+                    right: -4,
+                    child: _StudioWashiTape(blue: true),
+                  ),
+                ],
+              ),
             ),
           ),
         );

@@ -4,6 +4,8 @@ enum GpsTrackingIssue {
   stopped,
   checking,
   permissionRequired,
+  permissionBlocked,
+  permissionRestricted,
   backgroundPermissionRequired,
   serviceDisabled,
   unavailable,
@@ -38,6 +40,8 @@ class GpsTrackingState {
     GpsTrackingIssue.stopped => 'map_refresh_not_shared',
     GpsTrackingIssue.checking => 'map_refresh_checking',
     GpsTrackingIssue.permissionRequired => 'map_refresh_permission_title',
+    GpsTrackingIssue.permissionBlocked => 'map_refresh_permission_blocked',
+    GpsTrackingIssue.permissionRestricted => 'map_refresh_permission_blocked',
     GpsTrackingIssue.backgroundPermissionRequired =>
       'settings_gps_mode_always_warning',
     GpsTrackingIssue.serviceDisabled => 'map_refresh_service_off',

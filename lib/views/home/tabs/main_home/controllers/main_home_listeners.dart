@@ -235,9 +235,8 @@ extension _MainHomeListeners on _MainHomeTabState {
     final uid = _auth.currentUser?.uid;
     bool current() => mounted && _houseId == houseId &&
         uid != null && _auth.currentUser?.uid == uid;
-    final healthRef = _dbRef.child('houses/$houseId/health_cycle');
-    _healthCycleSyncSubscription = healthRef.onValue.listen(
-      (event) {
+    _healthCycleSyncSubscription = HealthCycleRepository().watch(houseId).listen(
+      (access) {
         if (!current()) return;
         // Debounce 500ms trước khi sync cycle widget
         _healthCycleWidgetSyncDebounce?.cancel();
@@ -248,13 +247,13 @@ extension _MainHomeListeners on _MainHomeTabState {
             unawaited(
               WidgetService.updateCycleWidgetData(
                 houseId: houseId,
-                cycleData: event.snapshot.value,
+                cycleData: access.data,
               ),
             );
           },
         );
       },
-      onError: (Object error) {
+      onError: (Object error, StackTrace stack) {
         if (!current()) return;
         _healthCycleWidgetSyncDebounce?.cancel();
         unawaited(WidgetService.updateCycleWidgetData(houseId: houseId, cycleData: null));
@@ -325,8 +324,9 @@ extension _MainHomeListeners on _MainHomeTabState {
         .onChildAdded
         .listen(
           (event) {
-            if (!mounted || !_isTabActive || event.snapshot.value == null)
+            if (!mounted || !_isTabActive || event.snapshot.value == null) {
               return;
+            }
 
             final data = _toStringDynamicMap(event.snapshot.value);
             final sentAtMs = _readEpochMs(data['sentAt']) ?? 0;

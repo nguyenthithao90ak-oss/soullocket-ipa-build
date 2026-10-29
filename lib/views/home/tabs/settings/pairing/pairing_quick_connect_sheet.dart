@@ -231,9 +231,8 @@ class _PairingQuickConnectSheetState extends State<PairingQuickConnectSheet>
     }
   }
 
-  Duration _timeLeft(PairingInviteCode code) => Duration(
-    milliseconds: code.expiresAt - _now().millisecondsSinceEpoch,
-  );
+  Duration _timeLeft(PairingInviteCode code) =>
+      Duration(milliseconds: code.expiresAt - _now().millisecondsSinceEpoch);
 
   void _tick() {
     final code = _myCode;
@@ -355,9 +354,9 @@ class _PairingQuickConnectSheetState extends State<PairingQuickConnectSheet>
       _entryError = null;
     });
     try {
-      final status = await widget.gateway
-          .submitCode(code)
-          .timeout(_requestTimeout);
+      // Service quản lý deadline 75 giây và chuẩn bị Auth/App Check.
+      // Không báo timeout sớm trong khi server vẫn đang xử lý mã.
+      final status = await widget.gateway.submitCode(code);
       if (!mounted || _isDone) return;
       if (status == 'pending') {
         setState(() => _waitingApproval = true);
@@ -402,7 +401,7 @@ class _PairingQuickConnectSheetState extends State<PairingQuickConnectSheet>
       _entryError = null;
     });
     try {
-      await widget.gateway.finalizeJoin().timeout(_requestTimeout);
+      await widget.gateway.finalizeJoin();
       if (!mounted) return;
       _celebrate(PairingQuickConnectResult.joinedPartnerHouse);
     } catch (error) {
@@ -879,7 +878,9 @@ class _PairingQuickConnectSheetState extends State<PairingQuickConnectSheet>
         PairingCutePillButton(
           key: const ValueKey<String>('pairing-quick-connect-button'),
           label: _t(
-            _entryBusy ? 'pairing_quick_connecting' : 'pairing_quick_connect_action',
+            _entryBusy
+                ? 'pairing_quick_connecting'
+                : 'pairing_quick_connect_action',
           ),
           icon: Icons.favorite_rounded,
           height: 54,
@@ -888,10 +889,7 @@ class _PairingQuickConnectSheetState extends State<PairingQuickConnectSheet>
         ),
         if (_entryError != null) ...[
           const SizedBox(height: 10),
-          SLSettingsNotice(
-            tone: SLSettingsTone.danger,
-            message: _entryError!,
-          ),
+          SLSettingsNotice(tone: SLSettingsTone.danger, message: _entryError!),
         ],
       ],
     );

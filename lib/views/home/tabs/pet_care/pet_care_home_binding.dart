@@ -48,6 +48,11 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
     const {},
   );
 
+  /// Trang phục dùng chung với Trạm Mây, riêng từng bé trong đúng UID/House.
+  final ValueNotifier<Map<PetCarePet, PetCareOutfit>> outfits = ValueNotifier(
+    const {},
+  );
+
   SharedPreferences? _prefs;
   PetCareStore? _store;
   StreamSubscription<User?>? _authSubscription;
@@ -83,19 +88,13 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     if (serial != _serial || !_started) return;
-    final uid = _auth.currentUser?.uid;
-    final cachedUid = prefs.getString('il_auth_uid')?.trim();
-    final houseId = prefs.getString('il_house_id')?.trim();
-    if (uid == null ||
-        uid.isEmpty ||
-        uid != cachedUid ||
-        houseId == null ||
-        houseId.isEmpty ||
-        (expectedUid != null && uid != expectedUid) ||
-        (expectedHouseId != null && houseId != expectedHouseId)) {
+    final scope = _resolveScope(prefs);
+    if (scope == null) {
       _clearScope();
       return;
     }
+    final uid = scope.uid;
+    final houseId = scope.houseId;
     final nextKey = PetCareStore.storageKey(uid, houseId);
     if (_store?.key != nextKey) {
       _clearScope();
@@ -136,11 +135,42 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  bool _isCurrent(String uid, String houseId) =>
-      _started &&
-      _auth.currentUser?.uid == uid &&
-      _prefs?.getString('il_auth_uid')?.trim() == uid &&
-      _prefs?.getString('il_house_id')?.trim() == houseId;
+  static String? _nonEmpty(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
+  /// Scope Home đã xác thực được dùng khi cache đang khôi phục. Cache có giá
+  /// trị khác rõ ràng vẫn bị từ chối để không vẽ dữ liệu của UID/House cũ.
+  ({String uid, String houseId})? _resolveScope(SharedPreferences prefs) {
+    final uid = _nonEmpty(_auth.currentUser?.uid);
+    final wantedUid = _nonEmpty(expectedUid);
+    final wantedHouseId = _nonEmpty(expectedHouseId);
+    final cachedUid = _nonEmpty(prefs.getString('il_auth_uid'));
+    final cachedHouseId = _nonEmpty(prefs.getString('il_house_id'));
+    if (uid == null || (wantedUid != null && uid != wantedUid)) {
+      return null;
+    }
+    if (wantedUid != null && wantedHouseId != null) {
+      if ((cachedUid != null && cachedUid != uid) ||
+          (cachedHouseId != null && cachedHouseId != wantedHouseId)) {
+        return null;
+      }
+      return (uid: uid, houseId: wantedHouseId);
+    }
+    if (cachedUid != uid ||
+        cachedHouseId == null ||
+        (wantedHouseId != null && cachedHouseId != wantedHouseId)) {
+      return null;
+    }
+    return (uid: uid, houseId: cachedHouseId);
+  }
+
+  bool _isCurrent(String uid, String houseId) {
+    if (!_started || _prefs == null) return false;
+    final scope = _resolveScope(_prefs!);
+    return scope?.uid == uid && scope?.houseId == houseId;
+  }
 
   Future<void> refresh() async {
     final store = _store;
@@ -170,14 +200,29 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
       if (_started && eventKey == _store?.key) _clearScope();
       return;
     }
+    outfits.value = Map.unmodifiable({
+      for (final pet in PetCarePet.values) pet: progress.outfitFor(pet),
+    });
     care.value = Map.unmodifiable(progress.petVitals);
     notifyListeners();
   }
 
   void _storeChanged() {
     final event = PetCareStore.changes.value;
-    if (event == null || event.key != _store?.key) return;
-    _publish(event.key, event.progress);
+    if (!_started || event == null) return;
+    if (event.key == _store?.key) {
+      _publish(event.key, event.progress);
+      return;
+    }
+    final prefs = _prefs;
+    final scope = prefs == null ? null : _resolveScope(prefs);
+    if (scope != null &&
+        event.key == PetCareStore.storageKey(scope.uid, scope.houseId)) {
+      // Trạm Mây vừa khôi phục cache: nhận lại scope ngay, không chờ timer.
+      _scopeChanged();
+    } else if (_store != null && !_isCurrentKey(_store!.key)) {
+      _clearScope();
+    }
   }
 
   void _scopeChanged() {
@@ -191,6 +236,7 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
     _store = null;
     _boundUid = null;
     _boundHouseId = null;
+    outfits.value = const {};
     care.value = const {};
     notifyListeners();
   }
@@ -211,6 +257,7 @@ class PetCareHomeBinding extends ChangeNotifier with WidgetsBindingObserver {
     _refreshTimer?.cancel();
     _authSubscription?.cancel();
     PetCareStore.changes.removeListener(_storeChanged);
+    outfits.dispose();
     care.dispose();
     super.dispose();
   }
@@ -222,16 +269,25 @@ class PetCareHomeScope extends StatefulWidget {
     super.key,
     required this.uid,
     required this.houseId,
-    required this.builder,
-  });
+    this.builder,
+    this.appearanceBuilder,
+  }) : assert(builder != null || appearanceBuilder != null);
 
   final String? uid;
   final String? houseId;
   final Widget Function(
     BuildContext context,
     ValueListenable<Map<PetCarePet, PetCareVitals>> care,
-  )
+  )?
   builder;
+
+  /// Dựng Home với nhu cầu và trang phục từ cùng một scope.
+  final Widget Function(
+    BuildContext context,
+    ValueListenable<Map<PetCarePet, PetCareVitals>> care,
+    ValueListenable<Map<PetCarePet, PetCareOutfit>> outfits,
+  )?
+  appearanceBuilder;
 
   @override
   State<PetCareHomeScope> createState() => _PetCareHomeScopeState();
@@ -248,13 +304,12 @@ class _PetCareHomeScopeState extends State<PetCareHomeScope> {
 
   void _createBinding() {
     _binding = PetCareHomeBinding(
-      expectedUid: widget.uid ?? '',
-      expectedHouseId: widget.houseId?.trim() ?? '',
+      expectedUid: PetCareHomeBinding._nonEmpty(widget.uid),
+      expectedHouseId: PetCareHomeBinding._nonEmpty(widget.houseId),
     );
-    if ((widget.uid?.isNotEmpty ?? false) &&
-        (widget.houseId?.trim().isNotEmpty ?? false)) {
-      unawaited(_binding.start());
-    }
+    // Home có thể dựng trước khi Auth/House khôi phục; binding vẫn cần nghe
+    // Auth và sự kiện lưu local để nhận snapshot ngay khi scope sẵn sàng.
+    unawaited(_binding.start());
   }
 
   @override
@@ -267,7 +322,9 @@ class _PetCareHomeScopeState extends State<PetCareHomeScope> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.builder(context, _binding.care);
+  Widget build(BuildContext context) => widget.appearanceBuilder != null
+      ? widget.appearanceBuilder!(context, _binding.care, _binding.outfits)
+      : widget.builder!(context, _binding.care);
 
   @override
   void dispose() {

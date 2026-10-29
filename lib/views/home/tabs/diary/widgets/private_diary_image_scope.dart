@@ -133,6 +133,18 @@ class PrivateDiaryImageScope extends StatefulWidget {
     return scope?.houseId == houseId ? scope?.cache : null;
   }
 
+  /// Cho route xem ảnh dùng lại cache của album, không tạo chủ sở hữu mới.
+  static Widget Function(Widget) capture(BuildContext context) {
+    final scope = context
+        .getInheritedWidgetOfExactType<_PrivateDiaryImageScopeData>();
+    if (scope == null) return (child) => child;
+    return (child) => _PrivateDiaryImageScopeData(
+      houseId: scope.houseId,
+      cache: scope.cache,
+      child: child,
+    );
+  }
+
   @override
   State<PrivateDiaryImageScope> createState() => _PrivateDiaryImageScopeState();
 }

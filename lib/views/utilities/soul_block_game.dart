@@ -21,6 +21,7 @@ import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../core/sl_route.dart';
 import '../../utils/services/admob_service.dart';
+import '../../utils/services/infrastructure/ad_retry_scheduler.dart';
 import 'package:soullocket_app/widgets/consent_ad_view.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -132,6 +133,17 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _SoulBlockPerformanceProfile.mid;
   BannerAd? _bannerAd;
   bool _loadingBanner = false;
+  late final _bannerRetry = AdRetryScheduler(
+    canRetry: () =>
+        mounted &&
+        isScreenActive &&
+        _appActive &&
+        !_isPremiumUser &&
+        _adMob.canRequestAds &&
+        _bannerAd == null &&
+        !_loadingBanner,
+    retry: () => unawaited(_prepareBannerAd()),
+  );
 
   String? _houseId;
   String? _loadError;
@@ -309,6 +321,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   @override
   void dispose() {
+    _bannerRetry.cancel();
     _adMob.adRevision.removeListener(_onBannerPrivacyChanged);
     _adMob.resumeAutoInterstitial();
     WidgetsBinding.instance.removeObserver(this);
@@ -339,6 +352,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         state == AppLifecycleState.detached) {
       _cancelDrag();
       _appActive = false;
+      _bannerRetry.cancel();
       _pausedAtMs = DateTime.now().millisecondsSinceEpoch;
       _autoTrayShuffleTimer?.cancel();
       unawaited(_syncBgmWithSound());
@@ -365,6 +379,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   @override
   void onScreenActivityChanged(bool active) {
+    if (active) {
+      unawaited(_prepareBannerAd());
+    } else {
+      _bannerRetry.cancel();
+    }
     if (active && _view != _SoulGameView.gameplay) {
       _resumeMenuPulse();
     } else {
@@ -392,7 +411,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _isShowingFullscreenAd = true;
     await Future.wait([_stopSfx(), _syncBgmWithSound()]);
     try {
-      await _adMob.showInterstitialAd();
+      await _adMob.showInterstitialAd(
+        isCurrent: () =>
+            mounted &&
+            _view == _SoulGameView.gameplay &&
+            !_isGameOver &&
+            (ModalRoute.of(context)?.isCurrent ?? true),
+      );
     } finally {
       _isShowingFullscreenAd = false;
       unawaited(_syncBgmWithSound());
@@ -1596,7 +1621,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
     try {
       await Future.wait([_stopSfx(), _syncBgmWithSound()]);
-      await _adMob.showInterstitialAd();
+      await _adMob.showInterstitialAd(
+        isCurrent: () =>
+            mounted &&
+            _currentSessionId == sessionId &&
+            _view == _SoulGameView.gameplay &&
+            (ModalRoute.of(context)?.isCurrent ?? true),
+      );
     } catch (error) {
       debugPrint(
         'Soul Block restart ad failed: ${AppErrorMapper.resolve(error).message}',
@@ -1637,7 +1668,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         SoulGameRewardedAdResult.unavailable;
     try {
       await Future.wait([_stopSfx(), _syncBgmWithSound()]);
-      rewardResult = await _adMob.showSoulGameRewardedAdResult();
+      rewardResult = await _adMob.showSoulGameRewardedAdResult(
+        isCurrent: () =>
+            mounted &&
+            _currentSessionId == reviveSessionId &&
+            _view == _SoulGameView.gameplay &&
+            (ModalRoute.of(context)?.isCurrent ?? true),
+      );
     } catch (error) {
       debugPrint(
         'Soul Block rewarded revive failed: '

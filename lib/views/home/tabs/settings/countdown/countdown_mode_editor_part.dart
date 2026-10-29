@@ -217,6 +217,7 @@ class _CountdownModeEditorScreenState
   @override
   void initState() {
     super.initState();
+    if (!widget.isVipActive) AdMobService().preloadRewardedAd();
     _topCtrl = TextEditingController(text: widget.topLabel);
     _bottomCtrl = TextEditingController(text: widget.bottomLabel);
     _leftCtrl = TextEditingController(text: widget.nameU1);
@@ -326,10 +327,27 @@ class _CountdownModeEditorScreenState
     return '$_pendingBackgroundUploadKeyPrefix${houseId}_${widget.spaceScope ?? houseId}';
   }
 
+  String? _currentAuthUidOrNull() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } on FirebaseException catch (error) {
+      // Firebase có thể chưa được khởi tạo khi widget test hoặc cold start
+      // dựng màn editor. Upload đang chờ là dữ liệu phụ, không được làm màn
+      // đếm ngày bị crash.
+      debugPrint('[CountdownEditor] Auth chưa sẵn sàng: ${error.code}');
+      return null;
+    } catch (error) {
+      debugPrint('[CountdownEditor] Không đọc được Auth: $error');
+      return null;
+    }
+  }
+
   Future<void> _promptPendingUploadRetryIfNeeded() async {
     if (_didPromptPendingUploadRetry || !mounted) {
       return;
     }
+    final ownerUid = _currentAuthUidOrNull();
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final avatarPendingKey = _pendingAvatarUploadKey;
     final backgroundPendingKey = _pendingBackgroundUploadKey;
     if (avatarPendingKey == null || backgroundPendingKey == null) {
@@ -337,9 +355,11 @@ class _CountdownModeEditorScreenState
     }
     final avatarPending = await PendingUploadService.instance.load(
       avatarPendingKey,
+      expectedUid: ownerUid,
     );
     final backgroundPending = await PendingUploadService.instance.load(
       backgroundPendingKey,
+      expectedUid: ownerUid,
     );
     if (avatarPending == null && backgroundPending == null) {
       return;
@@ -364,10 +384,13 @@ class _CountdownModeEditorScreenState
   }
 
   Future<void> _retryPendingUpload() async {
+    final ownerUid = _currentAuthUidOrNull();
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final avatarPendingKey = _pendingAvatarUploadKey;
     if (avatarPendingKey != null) {
       final avatarPending = await PendingUploadService.instance.load(
         avatarPendingKey,
+        expectedUid: ownerUid,
       );
       if (avatarPending != null) {
         final filePath = avatarPending['filePath']?.toString().trim() ?? '';
@@ -387,7 +410,10 @@ class _CountdownModeEditorScreenState
             );
           }
         }
-        await PendingUploadService.instance.clear(avatarPendingKey);
+        await PendingUploadService.instance.clear(
+          avatarPendingKey,
+          expectedUid: ownerUid,
+        );
       }
     }
 
@@ -397,23 +423,33 @@ class _CountdownModeEditorScreenState
     }
     final backgroundPending = await PendingUploadService.instance.load(
       backgroundPendingKey,
+      expectedUid: ownerUid,
     );
     if (backgroundPending == null) {
       return;
     }
     final filePath = backgroundPending['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(backgroundPendingKey);
+      await PendingUploadService.instance.clear(
+        backgroundPendingKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     final file = XFile(filePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(backgroundPendingKey);
+        await PendingUploadService.instance.clear(
+          backgroundPendingKey,
+          expectedUid: ownerUid,
+        );
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance.clear(backgroundPendingKey);
+      await PendingUploadService.instance.clear(
+        backgroundPendingKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     await _pickBackgroundImage(presetFile: file);
@@ -464,6 +500,7 @@ class _CountdownModeEditorScreenState
     try {
       final expiry = await AdMobService().unlockCountdownStyleWithAd(
         normalized,
+        isCurrent: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
       );
       if (!mounted) {
         return;
@@ -501,7 +538,9 @@ class _CountdownModeEditorScreenState
     if (widget.isVipActive) {
       return true;
     }
-    await AdMobService().showInterstitialAd();
+    await AdMobService().showInterstitialAd(
+      isCurrent: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
+    );
     return true;
   }
 
@@ -510,14 +549,14 @@ class _CountdownModeEditorScreenState
     XFile? presetFile,
   }) async {
     final houseId = _uploadHouseId;
-    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final ownerUid = _currentAuthUidOrNull();
     final spaceScope = widget.spaceScope;
     bool isCurrent() =>
         mounted &&
         ownerUid != null &&
         _uploadHouseId == houseId &&
         widget.spaceScope == spaceScope &&
-        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+        _currentAuthUidOrNull() == ownerUid;
     if (houseId == null) {
       _showMessage(context.tr('home_khngtmthym_b7eeff'));
       return;
@@ -558,7 +597,7 @@ class _CountdownModeEditorScreenState
         await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
           'role': role,
           'filePath': file.path,
-        });
+        }, expectedUid: ownerUid);
       }
       if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
@@ -587,7 +626,10 @@ class _CountdownModeEditorScreenState
         controller.text = url.trim();
       });
       if (pendingKey != null) {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: ownerUid,
+        );
       }
       await discardConfirmedCropImage(file);
       if (!mounted) return;
@@ -611,14 +653,14 @@ class _CountdownModeEditorScreenState
 
   Future<void> _pickBackgroundImage({XFile? presetFile}) async {
     final houseId = _uploadHouseId;
-    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    final ownerUid = _currentAuthUidOrNull();
     final spaceScope = widget.spaceScope;
     bool isCurrent() =>
         mounted &&
         ownerUid != null &&
         _uploadHouseId == houseId &&
         widget.spaceScope == spaceScope &&
-        FirebaseAuth.instance.currentUser?.uid == ownerUid;
+        _currentAuthUidOrNull() == ownerUid;
     if (houseId == null) {
       _showMessage(context.tr('home_khngtmthym_6caf0b'));
       return;
@@ -661,7 +703,7 @@ class _CountdownModeEditorScreenState
       if (pendingKey != null) {
         await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
           'filePath': file.path,
-        });
+        }, expectedUid: ownerUid);
       }
       if (!isCurrent()) return;
       final url = await _storageService.uploadImage(
@@ -689,7 +731,10 @@ class _CountdownModeEditorScreenState
         _customBackgroundUrl = url.trim();
       });
       if (pendingKey != null) {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: ownerUid,
+        );
       }
       await discardConfirmedCropImage(file);
       if (!mounted) return;

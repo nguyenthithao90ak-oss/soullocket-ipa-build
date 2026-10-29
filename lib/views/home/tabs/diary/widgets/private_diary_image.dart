@@ -14,7 +14,7 @@ import 'private_diary_image_scope.dart';
 import 'diary_image_loading.dart';
 
 /// Ảnh House dùng cache đĩa riêng theo tài khoản/nhà/kỷ niệm.
-/// Không dùng URL ký làm khóa nên có thể mở lại khi mất mạng trong 14 ngày.
+/// Không dùng URL ký làm khóa nên có thể mở lại khi mất mạng trong 60 ngày.
 class PrivateDiaryImage extends StatefulWidget {
   const PrivateDiaryImage({
     super.key,
@@ -25,6 +25,7 @@ class PrivateDiaryImage extends StatefulWidget {
     this.retainCacheWidth,
     this.placeholderCacheWidth,
     this.highPriority = false,
+    this.reuseAnyCachedSize = false,
     this.resolve,
     this.authChanges,
     this.currentUid,
@@ -54,6 +55,10 @@ class PrivateDiaryImage extends StatefulWidget {
 
   /// Ảnh đang xem toàn màn hình: xin link và tải chen lên đầu hàng đợi chung với lưới album.
   final bool highPriority;
+
+  /// Thẻ nhỏ có thể dùng ngay biến thể cache còn hạn, không tải lại chỉ để đổi cỡ.
+  /// Viewer/lưới giữ mặc định false để tiếp tục lấy đúng độ phân giải yêu cầu.
+  final bool reuseAnyCachedSize;
   final Future<PrivateMediaUrlResult> Function()? resolve;
   final Stream<String?>? authChanges;
   final String? Function()? currentUid;
@@ -317,7 +322,20 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
               ? PrivateImageDiskCache.instance
               : null);
       if (widget.imageProviderFactory == null) {
-        final bytes = await diskCache?.read(uid, diskKey);
+        final bytes =
+            await diskCache?.read(uid, diskKey) ??
+            (widget.cacheWidth != null && widget.cacheWidth! <= 768
+                ? await diskCache?.read(
+                    uid,
+                    PrivateImageDiskCache.key(
+                      uid,
+                      widget.houseId,
+                      widget.memoryId,
+                      widget.cacheWidth,
+                      variant: 'thumbnail',
+                    ),
+                  )
+                : null);
         if (!current()) return;
         if (bytes != null) {
           final entry = PrivateDiaryImageCacheEntry(
@@ -361,6 +379,24 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
             return;
           }
         }
+        if (widget.reuseAnyCachedSize) {
+          final preview = await diskCache?.readPreview(
+            uid,
+            widget.houseId,
+            widget.memoryId,
+          );
+          if (!current()) return;
+          if (preview != null) {
+            final entry = PrivateDiaryImageCacheEntry(
+              _providerFromBytes(preview),
+              DateTime.now().millisecondsSinceEpoch +
+                  PrivateImageDiskCache.ttl.inMilliseconds,
+            );
+            _cache?.put(key, entry);
+            _show(entry);
+            return;
+          }
+        }
       }
       // Bản lớn chưa có: hiện tạm ảnh nhỏ đã lưu (RAM hoặc cache đĩa mã hóa)
       // trong lúc xin quyền và tải, để mở ảnh không phải nhìn màn chờ.
@@ -374,15 +410,26 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         ));
         Uint8List? bytes;
         if (ramHit == null && widget.imageProviderFactory == null) {
-          bytes = await diskCache?.read(
-            uid,
-            PrivateImageDiskCache.key(
-              uid,
-              widget.houseId,
-              widget.memoryId,
-              placeholderWidth,
-            ),
-          );
+          bytes =
+              await diskCache?.read(
+                uid,
+                PrivateImageDiskCache.key(
+                  uid,
+                  widget.houseId,
+                  widget.memoryId,
+                  placeholderWidth,
+                ),
+              ) ??
+              await diskCache?.read(
+                uid,
+                PrivateImageDiskCache.key(
+                  uid,
+                  widget.houseId,
+                  widget.memoryId,
+                  placeholderWidth,
+                  variant: 'thumbnail',
+                ),
+              );
           if (!current()) return;
         }
         final placeholder =
@@ -439,6 +486,11 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
                         houseId: widget.houseId,
                         mediaId: widget.memoryId,
                         kind: 'memory_image',
+                        variant:
+                            widget.cacheWidth != null &&
+                                widget.cacheWidth! <= 768
+                            ? 'thumbnail'
+                            : null,
                         forceRefresh: refresh,
                       ))
                   .timeout(const Duration(seconds: 25));
@@ -464,43 +516,52 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
         final bytes = await _downloadQueue.run<Uint8List>(
           priority: widget.highPriority,
           isCurrent: current,
-            action: () => downloadPrivateImage(
-              result.url,
-              width: widget.cacheWidth,
-              isCurrent: current,
-              onDownloadedOriginalBytes: (originalBytes) {
-                final retainedWidth = widget.retainCacheWidth;
-                if (diskCache == null ||
-                    retainedWidth == null ||
-                    retainedWidth == widget.cacheWidth ||
-                    !current()) {
-                  return;
-                }
-                unawaited(
-                  diskCache.write(
+          action: () => downloadPrivateImage(
+            result.url,
+            width: widget.cacheWidth,
+            isCurrent: current,
+            onDownloadedOriginalBytes: (originalBytes) {
+              final retainedWidth = widget.retainCacheWidth;
+              if (diskCache == null ||
+                  result.variant != 'original' ||
+                  retainedWidth == null ||
+                  retainedWidth == widget.cacheWidth ||
+                  !current()) {
+                return;
+              }
+              unawaited(
+                diskCache.write(
+                  uid,
+                  PrivateImageDiskCache.key(
                     uid,
-                    PrivateImageDiskCache.key(
-                      uid,
-                      widget.houseId,
-                      widget.memoryId,
-                      retainedWidth,
-                    ),
-                    originalBytes,
-                    current,
-                    memoryTag: PrivateImageDiskCache.memoryTag(
-                      uid,
-                      widget.houseId,
-                      widget.memoryId,
-                    ),
+                    widget.houseId,
+                    widget.memoryId,
+                    retainedWidth,
                   ),
-                );
-              },
-            ),
+                  originalBytes,
+                  current,
+                  memoryTag: PrivateImageDiskCache.memoryTag(
+                    uid,
+                    widget.houseId,
+                    widget.memoryId,
+                  ),
+                ),
+              );
+            },
+          ),
         );
         if (!current() || bytes == null) return;
         final cacheWrite = diskCache?.write(
           uid,
-          diskKey,
+          result.variant == 'thumbnail'
+              ? PrivateImageDiskCache.key(
+                  uid,
+                  widget.houseId,
+                  widget.memoryId,
+                  widget.cacheWidth,
+                  variant: 'thumbnail',
+                )
+              : diskKey,
           bytes,
           current,
           memoryTag: PrivateImageDiskCache.memoryTag(
@@ -550,7 +611,6 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
   void _show(PrivateDiaryImageCacheEntry entry) {
     _entry = entry;
     setState(() => _provider = entry.provider);
-    _releaseRetainedAfterFrame();
     _expiry = Timer(entry.remaining, () => unawaited(_load(refresh: true)));
   }
 
@@ -593,9 +653,8 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
     super.dispose();
   }
 
-  Widget _loading() => DiaryImageLoading(
-    backgroundColor: widget.loadingBackgroundColor,
-  );
+  Widget _loading() =>
+      DiaryImageLoading(backgroundColor: widget.loadingBackgroundColor);
 
   Widget _placeholderImage() => Image(
     image: _placeholder!,
@@ -620,6 +679,16 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
               widget.houseId,
               widget.memoryId,
               widget.cacheWidth,
+            ),
+          );
+          await PrivateImageDiskCache.instance.remove(
+            uid,
+            PrivateImageDiskCache.key(
+              uid,
+              widget.houseId,
+              widget.memoryId,
+              widget.cacheWidth,
+              variant: 'thumbnail',
             ),
           );
         }
@@ -660,9 +729,7 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
           gaplessPlayback: true,
         );
       }
-      return placeholder == null
-          ? _loading()
-          : _placeholderImage();
+      return placeholder == null ? _loading() : _placeholderImage();
     }
     return Image(
       image: provider,
@@ -671,12 +738,26 @@ class _PrivateDiaryImageState extends State<PrivateDiaryImage>
       height: double.infinity,
       filterQuality: FilterQuality.high,
       gaplessPlayback: true,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) =>
-          wasSynchronouslyLoaded || frame != null
-          ? child
-          : placeholder == null
-          ? _loading()
-          : _placeholderImage(),
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) {
+          _releaseRetainedAfterFrame();
+          return child;
+        }
+        // Có provider chưa có nghĩa decoder đã trả pixels. Giữ frame trước
+        // trong suốt bước giải mã, chỉ nhường chỗ khi ảnh mới vẽ được.
+        final retainedProvider = _retainedProvider ?? _retainedPlaceholder;
+        if (retainedProvider != null) {
+          return Image(
+            image: retainedProvider,
+            fit: widget.fit,
+            width: double.infinity,
+            height: double.infinity,
+            filterQuality: FilterQuality.high,
+            gaplessPlayback: true,
+          );
+        }
+        return placeholder == null ? _loading() : _placeholderImage();
+      },
       errorBuilder: (_, error, stack) {
         if (kDebugMode) {
           final code = error is NetworkImageLoadException

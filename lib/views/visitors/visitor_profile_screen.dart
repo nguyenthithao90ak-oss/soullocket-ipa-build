@@ -100,15 +100,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   bool _isLoadingRepost = false;
   bool _isLoadingPrivate = false;
   bool _isLoadingLocket = false;
-  VisitorProfileTabLoadStatus _likedStatus =
-      VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _likedStatus = VisitorProfileTabLoadStatus.idle;
   VisitorProfileTabLoadStatus _postsStatus = VisitorProfileTabLoadStatus.idle;
-  VisitorProfileTabLoadStatus _repostStatus =
-      VisitorProfileTabLoadStatus.idle;
-  VisitorProfileTabLoadStatus _privateStatus =
-      VisitorProfileTabLoadStatus.idle;
-  VisitorProfileTabLoadStatus _locketStatus =
-      VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _repostStatus = VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _privateStatus = VisitorProfileTabLoadStatus.idle;
+  VisitorProfileTabLoadStatus _locketStatus = VisitorProfileTabLoadStatus.idle;
   Future<List<SocialPost>>? _likedRequest;
   Future<List<SocialPost>>? _repostRequest;
   Future<List<SocialPost>>? _privateRequest;
@@ -284,10 +280,13 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     return cropAndConfirmImage(
       context: context,
       image: file,
-      aspectRatio: MediaQuery.sizeOf(context).width / _kProfileHeaderExpandedHeight,
+      aspectRatio:
+          MediaQuery.sizeOf(context).width / _kProfileHeaderExpandedHeight,
       maxOutputSize: const Size(1080, 1080),
       titleKey: 'p5_profile_crop_header',
-      isScopeCurrent: () => mounted && ownerUid != null &&
+      isScopeCurrent: () =>
+          mounted &&
+          ownerUid != null &&
           _editableProfileHouseId == houseId &&
           FirebaseAuth.instance.currentUser?.uid == ownerUid,
     );
@@ -303,19 +302,23 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       circular: true,
       maxOutputSize: const Size(800, 800),
       titleKey: 'p5_profile_crop_avatar',
-      isScopeCurrent: () => mounted && ownerUid != null &&
+      isScopeCurrent: () =>
+          mounted &&
+          ownerUid != null &&
           _editableProfileHouseId == houseId &&
           FirebaseAuth.instance.currentUser?.uid == ownerUid,
     );
   }
 
   Future<void> _promptPendingProfileUploadRetryIfNeeded() async {
-    if (!_canEditProfile || !mounted) {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (!_canEditProfile || !mounted || ownerUid == null || ownerUid.isEmpty) {
       return;
     }
     if (!_didPromptPendingProfileHeaderRetry) {
       final pendingHeader = await PendingUploadService.instance.load(
         _pendingProfileHeaderUploadKey,
+        expectedUid: ownerUid,
       );
       if (pendingHeader != null && mounted) {
         _didPromptPendingProfileHeaderRetry = true;
@@ -340,6 +343,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     if (!_didPromptPendingHouseAvatarRetry) {
       final pendingAvatar = await PendingUploadService.instance.load(
         _pendingHouseAvatarUploadKey,
+        expectedUid: ownerUid,
       );
       if (pendingAvatar != null && mounted) {
         _didPromptPendingHouseAvatarRetry = true;
@@ -364,15 +368,21 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   Future<void> _retryPendingProfileHeaderUpload() async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final pending = await PendingUploadService.instance.load(
       _pendingProfileHeaderUploadKey,
+      expectedUid: ownerUid,
     );
     if (pending == null || !mounted) {
       return;
     }
     final filePath = pending['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingProfileHeaderUploadKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     final file = XFile(filePath);
@@ -380,36 +390,52 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       if (await file.length() <= 0) {
         await PendingUploadService.instance.clear(
           _pendingProfileHeaderUploadKey,
+          expectedUid: ownerUid,
         );
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingProfileHeaderUploadKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     await _pickAndUploadProfileHeaderImage(presetFile: file);
   }
 
   Future<void> _retryPendingHouseAvatarUpload() async {
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) return;
     final pending = await PendingUploadService.instance.load(
       _pendingHouseAvatarUploadKey,
+      expectedUid: ownerUid,
     );
     if (pending == null || !mounted) {
       return;
     }
     final filePath = pending['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingHouseAvatarUploadKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     final file = XFile(filePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
+        await PendingUploadService.instance.clear(
+          _pendingHouseAvatarUploadKey,
+          expectedUid: ownerUid,
+        );
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
+      await PendingUploadService.instance.clear(
+        _pendingHouseAvatarUploadKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     await _pickAndUploadHouseAvatar(presetFile: file);
@@ -419,26 +445,30 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     final houseId = _editableProfileHouseId;
     final ownerUid = FirebaseAuth.instance.currentUser?.uid;
     final pendingKey = _pendingProfileHeaderUploadKey;
-    bool isCurrent() => mounted && ownerUid != null &&
+    bool isCurrent() =>
+        mounted &&
+        ownerUid != null &&
         _editableProfileHouseId == houseId &&
         FirebaseAuth.instance.currentUser?.uid == ownerUid;
-    if (houseId == null || !isCurrent() || _isUpdatingProfileAppearance || _isUploadingProfileImage) {
+    if (houseId == null ||
+        !isCurrent() ||
+        _isUpdatingProfileAppearance ||
+        _isUploadingProfileImage) {
       return;
     }
 
     _isUploadingProfileImage = true;
     try {
-      XFile? file = presetFile ??
-          await _storageService.pickImage(preserveOriginal: true);
+      XFile? file =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
       if (file == null || !isCurrent()) return;
       if (presetFile == null) {
         file = await _cropProfileHeaderImage(file);
       }
       if (file == null || !isCurrent()) return;
-      await PendingUploadService.instance.save(
-        pendingKey,
-        <String, dynamic>{'filePath': file.path},
-      );
+      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+        'filePath': file.path,
+      }, expectedUid: ownerUid);
 
       if (!mounted || !isCurrent()) return;
       final freshHouseId = await _houseService.getCurrentHouseId();
@@ -464,8 +494,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           headerImageUrl: refreshedUrl,
           propagateFailure: true,
         ),
-        clearPending: () =>
-            PendingUploadService.instance.clear(pendingKey),
+        clearPending: () => PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: ownerUid,
+        ),
       );
       if (!mounted || !isCurrent()) return;
       await discardConfirmedCropImage(file);
@@ -483,26 +515,30 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     final houseId = _editableProfileHouseId;
     final ownerUid = FirebaseAuth.instance.currentUser?.uid;
     final pendingKey = _pendingHouseAvatarUploadKey;
-    bool isCurrent() => mounted && ownerUid != null &&
+    bool isCurrent() =>
+        mounted &&
+        ownerUid != null &&
         _editableProfileHouseId == houseId &&
         FirebaseAuth.instance.currentUser?.uid == ownerUid;
-    if (houseId == null || !isCurrent() || _isUpdatingProfileAppearance || _isUploadingProfileImage) {
+    if (houseId == null ||
+        !isCurrent() ||
+        _isUpdatingProfileAppearance ||
+        _isUploadingProfileImage) {
       return;
     }
 
     _isUploadingProfileImage = true;
     try {
-      XFile? file = presetFile ??
-          await _storageService.pickImage(preserveOriginal: true);
+      XFile? file =
+          presetFile ?? await _storageService.pickImage(preserveOriginal: true);
       if (file == null || !isCurrent()) return;
       if (presetFile == null) {
         file = await _cropHouseAvatarImage(file);
       }
       if (file == null || !isCurrent()) return;
-      await PendingUploadService.instance.save(
-        pendingKey,
-        <String, dynamic>{'filePath': file.path},
-      );
+      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
+        'filePath': file.path,
+      }, expectedUid: ownerUid);
 
       if (!mounted || !isCurrent()) return;
       final freshHouseId = await _houseService.getCurrentHouseId();
@@ -532,8 +568,10 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             houseId: houseId,
             avatarUrl: refreshedUrl,
           ),
-          clearPending: () =>
-              PendingUploadService.instance.clear(pendingKey),
+          clearPending: () => PendingUploadService.instance.clear(
+            pendingKey,
+            expectedUid: ownerUid,
+          ),
         );
         if (!mounted || !isCurrent()) return;
         await discardConfirmedCropImage(file);
@@ -589,9 +627,9 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
   Future<void> _load() async {
     try {
-      _myHouseId = await _houseService
-          .getCurrentHouseId()
-          .timeout(const Duration(seconds: 12));
+      _myHouseId = await _houseService.getCurrentHouseId().timeout(
+        const Duration(seconds: 12),
+      );
       if (_myHouseId == null) {
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -601,196 +639,203 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
       await Future.wait<void>([
         () async {
-      try {
-        final mySnap = await _db
-            .ref('houses/$_myHouseId/settings/houseName')
-            .get()
-            .timeout(const Duration(seconds: 12));
-        _myHouseName = mySnap.value?.toString() ?? _myHouseId;
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
-        );
-      }
-        }(),
-        () async {
-      try {
-        final targetSnap = await _db
-            .ref('house_profiles/${widget.targetHouseId}')
-            .get()
-            .timeout(const Duration(seconds: 12));
-        if (targetSnap.exists && targetSnap.value is Map) {
-          _targetData = Map<String, dynamic>.from(
-            Map<dynamic, dynamic>.from(targetSnap.value as Map),
-          );
-          _targetSettings = _targetData['settings'] is Map
-              ? Map<String, dynamic>.from(
-                  Map<dynamic, dynamic>.from(_targetData['settings'] as Map),
-                )
-              : {};
-        }
-      } catch (e) {
-        debugPrint(
-          'Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}',
-        );
-      }
-
-      if (_targetData.isEmpty) {
-        try {
-          // Chỉ fetch field cần, không load toàn bộ settings node (~10KB)
-          const kSettingsFields = [
-            'bio',
-            'privacy',
-            'proUntil',
-            'relationshipMode',
-            'avtUser1',
-            'avtUser2',
-            'hideLikeCount',
-            'likedVisibility',
-            'locketVisibility',
-            'profileHeaderImageUrl',
-            'profileHeaderThemeKey',
-            'profileAvatarSizePx',
-          ];
-          final base = 'houses/${widget.targetHouseId}';
-          final allSnaps = await Future.wait([
-            _db.ref('$base/houseName').get(),
-            _db.ref('$base/houseAvatar').get(),
-            _db.ref('$base/avatar').get(),
-            ...kSettingsFields.map((f) => _db.ref('$base/settings/$f').get()),
-          ]).timeout(const Duration(seconds: 12));
-
-          final houseNameSnap = allSnaps[0];
-          final houseAvatarSnap = allSnaps[1];
-          final avatarSnap = allSnaps[2];
-          final settingsSnaps = allSnaps.skip(3).toList();
-
-          final settingsMap = <String, dynamic>{};
-          for (var i = 0; i < kSettingsFields.length; i++) {
-            final s = settingsSnaps[i];
-            if (s.exists && s.value != null) {
-              settingsMap[kSettingsFields[i]] = s.value;
-            }
-          }
-
-          if (allSnaps.any((s) => s.exists)) {
-            _targetData = {
-              if (settingsMap.isNotEmpty) 'settings': settingsMap,
-              if (houseNameSnap.exists) 'houseName': houseNameSnap.value,
-              if (houseAvatarSnap.exists) 'houseAvatar': houseAvatarSnap.value,
-              if (avatarSnap.exists) 'avatar': avatarSnap.value,
-            };
-            _targetSettings = settingsMap;
-          }
-        } catch (error) {
-          debugPrint(
-            '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
-          );
-        }
-      }
-        }(),
-        () async {
-      try {
-        final fireSnap = await _db
-            .ref('uploads/fire_totals/${widget.targetHouseId}')
-            .get()
-            .timeout(const Duration(seconds: 12));
-        _heartCount = (fireSnap.value as num?)?.toInt() ?? 0;
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
-        );
-      }
-        }(),
-        () async {
-      try {
-        final today = DateTime.now().toLocal();
-        final todayKey = '${today.year}-${today.month}-${today.day}';
-        final storeKey = 'fire_log_${_myHouseId}_${widget.targetHouseId}';
-        final cachedHeartState = _HeartDropCache.hasDroppedToday(
-          storeKey,
-          todayKey,
-        );
-        final heartStateSnap = await _db
-            .ref(
-              'houses/$_myHouseId/settings/visitorHeartStates/${widget.targetHouseId}',
-            )
-            .get()
-            .timeout(const Duration(seconds: 12));
-        if (heartStateSnap.exists && heartStateSnap.value is Map) {
-          final heartState = Map<String, dynamic>.from(
-            Map<dynamic, dynamic>.from(heartStateSnap.value as Map),
-          );
-          _heartDroppedToday = heartState['active'] == true;
-          _heartHasContributed = heartState['hasContributed'] == true;
-        } else {
-          _heartDroppedToday = cachedHeartState;
-          _heartHasContributed = cachedHeartState;
-        }
-
-        final friendSnap = await _db
-            .ref('friends/$_myHouseId/${widget.targetHouseId}')
-            .get()
-            .timeout(const Duration(seconds: 12));
-        _isFriend =
-            friendSnap.exists &&
-            (friendSnap.value == true || friendSnap.value != null);
-
-        if (!_isFriend) {
-          // Check for pending request sent to them
-          final reqSnap = await _db
-              .ref('friend_requests')
-              .orderByChild('from')
-              .equalTo(_myHouseId)
-              .once()
-              .timeout(const Duration(seconds: 12));
-          if (reqSnap.snapshot.exists && reqSnap.snapshot.value is Map) {
-            final reqMap = Map<dynamic, dynamic>.from(
-              reqSnap.snapshot.value as Map,
-            );
-            for (final entry in reqMap.entries) {
-              if (entry.value is! Map) continue;
-              final req = Map<String, dynamic>.from(entry.value);
-              if (req['to'] == widget.targetHouseId) {
-                if (req['status'] == 'pending') {
-                  _isPendingSent = true;
-                  break;
-                } else if (req['status'] == 'accepted') {
-                  _isFriend = true;
-                  break;
-                }
-              }
-            }
-          }
-
-          // Check if they sent us a pending request
-          if (!_isFriend && !_isPendingSent) {
-            final incomingSnap = await _db
-                .ref('friend_requests')
-                .orderByChild('to')
-                .equalTo(_myHouseId)
-                .once()
+          try {
+            final mySnap = await _db
+                .ref('houses/$_myHouseId/settings/houseName')
+                .get()
                 .timeout(const Duration(seconds: 12));
-            if (incomingSnap.snapshot.exists &&
-                incomingSnap.snapshot.value is Map) {
-              final incomingMap = Map<dynamic, dynamic>.from(
-                incomingSnap.snapshot.value as Map,
+            _myHouseName = mySnap.value?.toString() ?? _myHouseId;
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+            );
+          }
+        }(),
+        () async {
+          try {
+            final targetSnap = await _db
+                .ref('house_profiles/${widget.targetHouseId}')
+                .get()
+                .timeout(const Duration(seconds: 12));
+            if (targetSnap.exists && targetSnap.value is Map) {
+              _targetData = Map<String, dynamic>.from(
+                Map<dynamic, dynamic>.from(targetSnap.value as Map),
               );
-              for (final v in incomingMap.values) {
-                if (v is! Map) continue;
-                final req = Map<String, dynamic>.from(v);
-                if (req['from'] == widget.targetHouseId &&
-                    req['status'] == 'pending') {
-                  _isIncomingPending = true;
-                  break;
+              _targetSettings = _targetData['settings'] is Map
+                  ? Map<String, dynamic>.from(
+                      Map<dynamic, dynamic>.from(
+                        _targetData['settings'] as Map,
+                      ),
+                    )
+                  : {};
+            }
+          } catch (e) {
+            debugPrint(
+              'Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}',
+            );
+          }
+
+          if (_targetData.isEmpty) {
+            try {
+              // Chỉ fetch field cần, không load toàn bộ settings node (~10KB)
+              const kSettingsFields = [
+                'bio',
+                'privacy',
+                'proUntil',
+                'relationshipMode',
+                'avtUser1',
+                'avtUser2',
+                'hideLikeCount',
+                'likedVisibility',
+                'locketVisibility',
+                'profileHeaderImageUrl',
+                'profileHeaderThemeKey',
+                'profileAvatarSizePx',
+              ];
+              final base = 'houses/${widget.targetHouseId}';
+              final allSnaps = await Future.wait([
+                _db.ref('$base/houseName').get(),
+                _db.ref('$base/houseAvatar').get(),
+                _db.ref('$base/avatar').get(),
+                ...kSettingsFields.map(
+                  (f) => _db.ref('$base/settings/$f').get(),
+                ),
+              ]).timeout(const Duration(seconds: 12));
+
+              final houseNameSnap = allSnaps[0];
+              final houseAvatarSnap = allSnaps[1];
+              final avatarSnap = allSnaps[2];
+              final settingsSnaps = allSnaps.skip(3).toList();
+
+              final settingsMap = <String, dynamic>{};
+              for (var i = 0; i < kSettingsFields.length; i++) {
+                final s = settingsSnaps[i];
+                if (s.exists && s.value != null) {
+                  settingsMap[kSettingsFields[i]] = s.value;
+                }
+              }
+
+              if (allSnaps.any((s) => s.exists)) {
+                _targetData = {
+                  if (settingsMap.isNotEmpty) 'settings': settingsMap,
+                  if (houseNameSnap.exists) 'houseName': houseNameSnap.value,
+                  if (houseAvatarSnap.exists)
+                    'houseAvatar': houseAvatarSnap.value,
+                  if (avatarSnap.exists) 'avatar': avatarSnap.value,
+                };
+                _targetSettings = settingsMap;
+              }
+            } catch (error) {
+              debugPrint(
+                '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+              );
+            }
+          }
+        }(),
+        () async {
+          try {
+            final fireSnap = await _db
+                .ref('uploads/fire_totals/${widget.targetHouseId}')
+                .get()
+                .timeout(const Duration(seconds: 12));
+            _heartCount = (fireSnap.value as num?)?.toInt() ?? 0;
+          } catch (error) {
+            debugPrint(
+              '[SuppressedError] lib/views/visitors/visitor_profile_screen.dart: $error',
+            );
+          }
+        }(),
+        () async {
+          try {
+            final today = DateTime.now().toLocal();
+            final todayKey = '${today.year}-${today.month}-${today.day}';
+            final storeKey = 'fire_log_${_myHouseId}_${widget.targetHouseId}';
+            final cachedHeartState = _HeartDropCache.hasDroppedToday(
+              storeKey,
+              todayKey,
+            );
+            final heartStateSnap = await _db
+                .ref(
+                  'houses/$_myHouseId/settings/visitorHeartStates/${widget.targetHouseId}',
+                )
+                .get()
+                .timeout(const Duration(seconds: 12));
+            if (heartStateSnap.exists && heartStateSnap.value is Map) {
+              final heartState = Map<String, dynamic>.from(
+                Map<dynamic, dynamic>.from(heartStateSnap.value as Map),
+              );
+              _heartDroppedToday = heartState['active'] == true;
+              _heartHasContributed = heartState['hasContributed'] == true;
+            } else {
+              _heartDroppedToday = cachedHeartState;
+              _heartHasContributed = cachedHeartState;
+            }
+
+            final friendSnap = await _db
+                .ref('friends/$_myHouseId/${widget.targetHouseId}')
+                .get()
+                .timeout(const Duration(seconds: 12));
+            _isFriend =
+                friendSnap.exists &&
+                (friendSnap.value == true || friendSnap.value != null);
+
+            if (!_isFriend) {
+              // Check for pending request sent to them
+              final reqSnap = await _db
+                  .ref('friend_requests')
+                  .orderByChild('from')
+                  .equalTo(_myHouseId)
+                  .once()
+                  .timeout(const Duration(seconds: 12));
+              if (reqSnap.snapshot.exists && reqSnap.snapshot.value is Map) {
+                final reqMap = Map<dynamic, dynamic>.from(
+                  reqSnap.snapshot.value as Map,
+                );
+                for (final entry in reqMap.entries) {
+                  if (entry.value is! Map) continue;
+                  final req = Map<String, dynamic>.from(entry.value);
+                  if (req['to'] == widget.targetHouseId) {
+                    if (req['status'] == 'pending') {
+                      _isPendingSent = true;
+                      break;
+                    } else if (req['status'] == 'accepted') {
+                      _isFriend = true;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              // Check if they sent us a pending request
+              if (!_isFriend && !_isPendingSent) {
+                final incomingSnap = await _db
+                    .ref('friend_requests')
+                    .orderByChild('to')
+                    .equalTo(_myHouseId)
+                    .once()
+                    .timeout(const Duration(seconds: 12));
+                if (incomingSnap.snapshot.exists &&
+                    incomingSnap.snapshot.value is Map) {
+                  final incomingMap = Map<dynamic, dynamic>.from(
+                    incomingSnap.snapshot.value as Map,
+                  );
+                  for (final v in incomingMap.values) {
+                    if (v is! Map) continue;
+                    final req = Map<String, dynamic>.from(v);
+                    if (req['from'] == widget.targetHouseId &&
+                        req['status'] == 'pending') {
+                      _isIncomingPending = true;
+                      break;
+                    }
+                  }
                 }
               }
             }
+          } catch (e) {
+            debugPrint(
+              'Lỗi check bạn bè: ${AppErrorMapper.resolve(e).message}',
+            );
           }
-        }
-      } catch (e) {
-        debugPrint('Lỗi check bạn bè: ${AppErrorMapper.resolve(e).message}');
-      }
         }(),
         _loadPosts(),
       ]);

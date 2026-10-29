@@ -1,110 +1,87 @@
-part of '../soul_merge_screen.dart';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
 
-class Particle {
-  final Offset velocity;
-  final Color color;
-  double scale;
-
-  Particle({
-    required this.velocity,
-    required this.color,
-    this.scale = 1.0,
+/// Một burst cố định, vẽ cùng nhịp với thẻ ảnh nên không cần thêm ticker/timer.
+class SoulMergeMemoryBurstPainter extends CustomPainter {
+  const SoulMergeMemoryBurstPainter({
+    required this.progress,
+    required this.dark,
   });
-}
-
-class ParticleExplosionWidget extends StatefulWidget {
-  final Offset position;
-  const ParticleExplosionWidget({super.key, required this.position});
-
-  @override
-  State<ParticleExplosionWidget> createState() =>
-      _ParticleExplosionWidgetState();
-}
-
-class _ParticleExplosionWidgetState extends State<ParticleExplosionWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  final List<Particle> _particles = [];
-  final math.Random _random = math.Random();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    // Create 16 particles spreading outwards
-    final colors = [
-      const Color(0xFFFF4F93),
-      const Color(0xFFFF8E53),
-      const Color(0xFFFFEA79),
-      const Color(0xFF84FF84),
-      const Color(0xFF84D7FF),
-    ];
-    for (int i = 0; i < 16; i++) {
-      final angle = _random.nextDouble() * math.pi * 2;
-      final speed = 2.0 + _random.nextDouble() * 4.0;
-      _particles.add(
-        Particle(
-          velocity: Offset(math.cos(angle) * speed, math.sin(angle) * speed),
-          color: colors[_random.nextInt(colors.length)],
-          scale: 3.0 + _random.nextDouble() * 4.0,
-        ),
-      );
-    }
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: widget.position.dx + 70, // Center of the 140 width polaroid
-      top: widget.position.dy + 85, // Center of the 170 height polaroid
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final progress = _controller.value;
-          return CustomPaint(
-            painter: _ParticlePainter(
-              particles: _particles,
-              progress: progress,
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ParticlePainter extends CustomPainter {
-  final List<Particle> particles;
   final double progress;
+  final bool dark;
 
-  _ParticlePainter({required this.particles, required this.progress});
+  Path _heart(Offset center, double radius) {
+    final path = Path()..moveTo(0, -radius * .35);
+    path.cubicTo(radius, -radius * 1.5, radius * 1.65, 0, 0, radius);
+    path.cubicTo(-radius * 1.65, 0, -radius, -radius * 1.5, 0, -radius * .35);
+    return path.shift(center);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    for (final particle in particles) {
-      final offset = particle.velocity * (progress * 40.0);
-      final opacity = 1.0 - progress;
-      paint.color = particle.color.withValues(alpha: opacity);
-
-      final radius = particle.scale * (1.0 - progress * 0.5);
-      canvas.drawCircle(offset, radius, paint);
+    if (progress <= 0 || progress >= 1) return;
+    final travel = Curves.easeOutCubic.transform(progress);
+    final opacity = math.sin(math.pi * progress);
+    final center = size.center(Offset.zero);
+    final radius = size.width * (.28 + travel * .58);
+    const colors = [Color(0xFFF28BB4), Color(0xFFFFD58C), Color(0xFFCCAFF7)];
+    for (var ring = 0; ring < 2; ring++) {
+      canvas.drawCircle(
+        center,
+        radius * (1 + ring * .19),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6
+          ..color = colors[ring].withValues(alpha: opacity * .45),
+      );
+    }
+    for (var i = 0; i < 12; i++) {
+      final angle = -math.pi / 2 + i * math.pi * 2 / 12;
+      final point =
+          center +
+          Offset(math.cos(angle), math.sin(angle)) *
+              radius *
+              (i.isEven ? 1.05 : .86);
+      final paint = Paint()
+        ..color = colors[i % colors.length].withValues(
+          alpha: opacity * (dark ? .95 : .85),
+        );
+      final dot = (i.isEven ? 7.0 : 4.0) * (1 - progress * .4);
+      if (i % 3 == 0) {
+        canvas.drawPath(_heart(point, dot), paint);
+      } else {
+        final star = Path()
+          ..moveTo(point.dx, point.dy - dot)
+          ..quadraticBezierTo(
+            point.dx + dot * .2,
+            point.dy - dot * .2,
+            point.dx + dot,
+            point.dy,
+          )
+          ..quadraticBezierTo(
+            point.dx + dot * .2,
+            point.dy + dot * .2,
+            point.dx,
+            point.dy + dot,
+          )
+          ..quadraticBezierTo(
+            point.dx - dot * .2,
+            point.dy + dot * .2,
+            point.dx - dot,
+            point.dy,
+          )
+          ..quadraticBezierTo(
+            point.dx - dot * .2,
+            point.dy - dot * .2,
+            point.dx,
+            point.dy - dot,
+          );
+        canvas.drawPath(star, paint);
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(SoulMergeMemoryBurstPainter oldDelegate) =>
+      progress != oldDelegate.progress || dark != oldDelegate.dark;
 }

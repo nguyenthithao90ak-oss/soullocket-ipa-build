@@ -28,12 +28,21 @@ class LivingStickerPack {
     'novelty': 'p4_soul_sticker_style_novelty',
     'hearts': 'p4_soul_sticker_style_hearts',
     'couple': 'p4_soul_sticker_style_couple',
+    'emotions': 'p4_soul_sticker_style_emotions',
     'diary': 'p4_soul_sticker_style_diary',
   };
 }
 
 /// Cùng bộ và cùng thứ tự trong chat, Soul Merge, Home và thư viện.
 const livingStickerPacks = [
+  LivingStickerPack(
+    'emotions',
+    'p4_soul_sticker_pack_emotions',
+    Icons.emoji_emotions_rounded,
+    Color(0xFF9B631A),
+    Color(0xFFFFF4DD),
+    SoulLocketStickerCatalog.soulMergeCuteEmotionStickers,
+  ),
   LivingStickerPack(
     'joy',
     'p4_soul_sticker_pack_joy',
@@ -50,6 +59,7 @@ const livingStickerPacks = [
     Color(0xFFFFEAF0),
     SoulLocketStickerCatalog.soulMergeLoveStickers,
   ),
+  // Giữ trong catalog để URI cũ vẫn đọc được, nhưng không đưa vào picker.
   LivingStickerPack(
     'sulking',
     'p4_soul_sticker_pack_sulking',
@@ -107,3 +117,13 @@ const livingStickerPacks = [
     SoulLocketStickerCatalog.diaryMoodStickers,
   ),
 ];
+
+/// Bộ Dỗi cũ: chỉ giữ dự phòng cho dữ liệu đã lưu, không hiển thị trong UI.
+final livingStickerPacksBackup = List.unmodifiable(
+  livingStickerPacks.where((pack) => pack.id == 'sulking'),
+);
+
+/// Các bộ được phép chọn trong Soul Merge và thư viện sticker hiện tại.
+final livingStickerPickerPacks = List.unmodifiable(
+  livingStickerPacks.where((pack) => pack.id != 'sulking'),
+);

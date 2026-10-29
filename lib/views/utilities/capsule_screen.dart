@@ -117,7 +117,12 @@ class _CapsuleScreenState extends State<CapsuleScreen>
     if (_didPromptPendingUploadRetry || !mounted) {
       return;
     }
-    final pending = await PendingUploadService.instance.load(_pendingUploadKey);
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) return;
+    final pending = await PendingUploadService.instance.load(
+      _pendingUploadKey,
+      expectedUid: ownerUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -141,7 +146,12 @@ class _CapsuleScreenState extends State<CapsuleScreen>
   }
 
   Future<void> _retryPendingUpload() async {
-    final pending = await PendingUploadService.instance.load(_pendingUploadKey);
+    final ownerUid = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerUid == null || ownerUid.isEmpty) return;
+    final pending = await PendingUploadService.instance.load(
+      _pendingUploadKey,
+      expectedUid: ownerUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -317,7 +327,11 @@ class _CapsuleScreenState extends State<CapsuleScreen>
             '${DateTime.now().microsecondsSinceEpoch}_${random.nextInt(1 << 30)}_${random.nextInt(1 << 30)}';
         draft['capsuleId'] = capsuleId;
       }
-      await PendingUploadService.instance.save(pendingKey, draft);
+      await PendingUploadService.instance.save(
+        pendingKey,
+        draft,
+        expectedUid: uid,
+      );
       String? imageStoragePath;
       String? imageUploadSessionId = draft['imageUploadSessionId']?.toString();
       if (selectedImage != null &&
@@ -338,7 +352,11 @@ class _CapsuleScreenState extends State<CapsuleScreen>
         draft['capsuleId'] = capsuleId;
         draft['imageUploadSessionId'] = imageUploadSessionId;
         draft['imageStoragePath'] = imageStoragePath;
-        await PendingUploadService.instance.save(pendingKey, draft);
+        await PendingUploadService.instance.save(
+          pendingKey,
+          draft,
+          expectedUid: uid,
+        );
       }
 
       requireCurrentScope();
@@ -352,7 +370,7 @@ class _CapsuleScreenState extends State<CapsuleScreen>
       );
       requireCurrentScope();
       try {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(pendingKey, expectedUid: uid);
       } catch (_) {}
       if (!mounted) return;
       await _capsulesSubscription?.cancel();
@@ -1331,11 +1349,7 @@ class _CapsuleScreenState extends State<CapsuleScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SLSnackBar(
-            content: Text(
-              L10nService().format('p3_capsule_delete_failed', {
-                'error': AppErrorMapper.resolve(e).message,
-              }),
-            ),
+            content: Text(L10nService().format('p3_capsule_delete_failed')),
           ),
         );
       }

@@ -127,8 +127,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     final missingDataErr = context.tr('home_thiudliuth_a60168');
     final confirmSingleTitle = context.tr('home_xadliunh_bbb016');
     final confirmCoupleTitle = context.tr('home_chiatayxad_3b2b07');
-    final confirmSingleMsg = context.tr('home_bnsplnlchx_e075e4');
-    final confirmCoupleMsg = context.tr('home_bnsptoyucu_809644');
+    final confirmSingleMsg = BreakupNoticeCopy.requestConfirmation(isSingle: true);
+    final confirmCoupleMsg = BreakupNoticeCopy.requestConfirmation(isSingle: false);
     final confirmSingleLabel = context.tr('home_tiptcxa_82cf87');
     final confirmCoupleLabel = context.tr('home_giyucu_576885');
     final fallbackErrMsg = context.tr('home_chathkhito_f4bc81');

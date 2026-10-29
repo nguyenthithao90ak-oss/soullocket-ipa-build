@@ -36,7 +36,8 @@ class PairingRequest {
     }
     return PairingRequest(
       requestId: id,
-      guestName: map['guestName']?.toString() ?? UiCopy.text('copy_8c19417f7b96'),
+      guestName:
+          map['guestName']?.toString() ?? UiCopy.text('copy_8c19417f7b96'),
       guestAvatar: map['guestAvatar']?.toString() ?? '',
       timestamp: timestampVal,
       status: map['status']?.toString() ?? 'pending',
@@ -116,9 +117,13 @@ class PairingService {
     final response = await CloudFunctionsHelper.callSecure<dynamic>(
       'requestPairingInvite',
       requireAppCheck: true,
-      payload: <String, dynamic>{'code': code},
+      timeout: const Duration(seconds: 75),
+      payload: <String, dynamic>{'code': code, 'expectedUid': user.uid},
       fallbackErrorMessage: UiCopy.text('copy_8a5f1d79a6fd'),
     );
+    if (_auth.currentUser?.uid != user.uid) {
+      throw FirebaseAuthException(code: 'user-token-expired');
+    }
     final status = _asMap(response.data)['status']?.toString().trim() ?? '';
     return status.isEmpty ? 'pending' : status;
   }
@@ -128,13 +133,12 @@ class PairingService {
   Stream<Map<String, dynamic>?> watchMyInvite() {
     final user = _auth.currentUser;
     if (user == null) return const Stream.empty();
-    return _dbRef
-        .child('pairing_secure/creator_views/${user.uid}')
-        .onValue
-        .map((event) {
-          final value = event.snapshot.value;
-          return value is Map ? _asMap(value) : null;
-        });
+    return _dbRef.child('pairing_secure/creator_views/${user.uid}').onValue.map(
+      (event) {
+        final value = event.snapshot.value;
+        return value is Map ? _asMap(value) : null;
+      },
+    );
   }
 
   /// Listens to the status of a request sent by the current user.
@@ -180,6 +184,9 @@ class PairingService {
     await HouseService().joinHouseByAcceptedInvite();
 
     // Refresh token để các rules nhận house mới ngay sau khi server hoàn tất.
+    if (_auth.currentUser?.uid != user.uid) {
+      throw FirebaseAuthException(code: 'user-token-expired');
+    }
     await user.getIdToken(true);
   }
 

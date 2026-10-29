@@ -34,8 +34,11 @@ class UpdateCheckerService {
       final currentVersion = packageInfo.version;
 
       // 2. Lấy cấu hình phiên bản (Ưu tiên R2 CDN HTTP GET -> Fallback RTDB)
+      // Kiểm tra phiên bản là lớp bảo vệ bổ sung, không được giữ người dùng
+      // ở màn khởi động khi CDN/RTDB đang chậm. Home vẫn có lần kiểm tra nền
+      // sau đó và bản cập nhật bắt buộc vẫn được hiện ngay khi nhận được.
       final data = await _fetchAppConfigData().timeout(
-        const Duration(seconds: 8),
+        const Duration(seconds: 3),
       );
 
       if (data != null) {

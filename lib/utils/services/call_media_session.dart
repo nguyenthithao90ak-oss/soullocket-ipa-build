@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'call_camera_effects.dart';
+import 'call_connection_quality.dart';
 
 /// Dành sẵn đường video trong SDP nhưng chỉ xin camera khi chính người dùng bật.
 /// Hai đầu dùng data channel để báo trạng thái; không đổi loại lời mời/phòng.
@@ -27,6 +28,10 @@ class CallMediaSession {
   bool Function()? _isCurrent;
   bool _closed = false;
   Future<bool>? _cameraChange;
+  Future<MediaStream>? _capturePending;
+  Future<void>? _qualityChange;
+  CallVideoQuality _desiredQuality = CallVideoQuality.medium;
+  CallVideoQuality? _appliedQuality;
   double skinBrightening = 0;
 
   bool get supportsBeauty => _effects.isSupported;
@@ -75,6 +80,7 @@ class CallMediaSession {
       _checkCurrent();
     }
     _bindChannel(channel);
+    unawaited(setVideoQuality(_desiredQuality));
   }
 
   Future<void> prepareAnswer() async {
@@ -88,6 +94,7 @@ class CallMediaSession {
         await transceiver.sender.setStreams([_local!]);
         _checkCurrent();
         _videoSender = transceiver.sender;
+        unawaited(setVideoQuality(_desiredQuality));
         break;
       }
     }
@@ -190,15 +197,43 @@ class CallMediaSession {
       return false;
     }
 
-    final captured = await _capture({
-      'audio': false,
-      'video': {
-        'facingMode': 'user',
-        'width': 640,
-        'height': 480,
-        'frameRate': 24,
-      },
-    });
+    if (_capturePending != null) throw StateError('call_camera_pending');
+    var abandoned = false;
+    final capture =
+        _capture({
+          'audio': false,
+          'video': {
+            'facingMode': 'user',
+            'width': 640,
+            'height': 480,
+            'frameRate': 24,
+          },
+        }).then((stream) async {
+          if (abandoned || !_alive) {
+            await _releaseCapture(stream);
+            throw StateError('call_media_cancelled');
+          }
+          return stream;
+        });
+    _capturePending = capture;
+    unawaited(
+      capture.then(
+        (_) {
+          if (identical(_capturePending, capture)) _capturePending = null;
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (identical(_capturePending, capture)) _capturePending = null;
+        },
+      ),
+    );
+    late final MediaStream captured;
+    try {
+      captured = await capture.timeout(const Duration(seconds: 15));
+    } catch (_) {
+      // Future native không hủy được; nếu trả về muộn vẫn phải nhả camera.
+      abandoned = true;
+      rethrow;
+    }
     final tracks = captured.getVideoTracks();
     try {
       _checkCurrent();
@@ -212,6 +247,8 @@ class CallMediaSession {
       }
       await sender.replaceTrack(track);
       _checkCurrent();
+      _appliedQuality = null;
+      unawaited(setVideoQuality(_desiredQuality));
       _cameraStream = captured;
       cameraEnabled.value = true;
       await _sendState();
@@ -245,6 +282,70 @@ class CallMediaSession {
     await _effects.setSkinBrightening(tracks.first.id!, value);
     _checkCurrent();
     skinBrightening = value;
+  }
+
+  /// Chỉ giới hạn video, giữ micro và trạng thái bật/tắt camera của người dùng.
+  Future<void> setVideoQuality(CallVideoQuality quality) {
+    _desiredQuality = quality;
+    final pending = _qualityChange;
+    if (pending != null) return pending;
+    final operation = _applyVideoQuality();
+    _qualityChange = operation;
+    return operation.whenComplete(() {
+      if (identical(_qualityChange, operation)) _qualityChange = null;
+    });
+  }
+
+  Future<void> _applyVideoQuality() async {
+    while (_alive && _desiredQuality != _appliedQuality) {
+      final boundSender = _videoSender;
+      if (boundSender == null || boundSender.track?.kind != 'video') return;
+      final quality = _desiredQuality;
+      try {
+        // Native sender giữ snapshot parameters từ trước khi có SDP. Đọc lại
+        // đúng sender để lấy encoding/transaction hiện tại sau thương lượng.
+        final senders = await _peer!.getSenders();
+        if (!_alive) return;
+        RTCRtpSender? sender;
+        for (final item in senders) {
+          if (item.senderId == boundSender.senderId) sender = item;
+        }
+        if (sender == null || sender.track?.kind != 'video') return;
+        final base = sender.parameters;
+        final encodings = base.encodings;
+        // Không tự tạo encoding/SSRC nếu nền tảng chưa thương lượng xong.
+        if (encodings == null || encodings.isEmpty) return;
+        final (bitrate, fps, scale) = switch (quality) {
+          CallVideoQuality.low => (180000, 12, 2.0),
+          CallVideoQuality.medium => (500000, 20, 1.0),
+          CallVideoQuality.high => (1000000, 24, 1.0),
+        };
+        final updated = RTCRtpParameters(
+          transactionId: base.transactionId,
+          rtcp: base.rtcp,
+          headerExtensions: base.headerExtensions,
+          codecs: base.codecs,
+          degradationPreference: base.degradationPreference,
+          encodings: encodings.map((encoding) {
+            final copy = RTCRtpEncoding.fromMap(encoding.toMap());
+            copy.maxBitrate = bitrate;
+            copy.maxFramerate = fps;
+            copy.scaleResolutionDownBy = scale;
+            if (copy.minBitrate != null && copy.minBitrate! > bitrate) {
+              copy.minBitrate = bitrate;
+            }
+            return copy;
+          }).toList(),
+        );
+        if (!_alive) return;
+        final applied = await sender.setParameters(updated);
+        if (!_alive || !applied) return;
+        _appliedQuality = quality;
+      } catch (_) {
+        // Thiết bị không hỗ trợ giới hạn sender vẫn dùng congestion control gốc.
+        return;
+      }
+    }
   }
 
   void _checkCurrent() {
@@ -293,5 +394,22 @@ class CallMediaSession {
     if (camera != null) await _releaseCapture(camera);
     cameraEnabled.value = false;
     remoteCameraEnabled.value = false;
+  }
+
+  /// Service giữ reservation tới khi native cũ kết thúc; tách khỏi close để
+  /// close vẫn an toàn khi được gọi ngay trong callback của replaceTrack.
+  Future<void> waitUntilIdle() async {
+    try {
+      await _capturePending;
+    } catch (_) {
+      // Lượt xin camera đã bị hủy vẫn phải đợi phần nhả capture tới muộn.
+    }
+    try {
+      await _cameraChange;
+    } catch (_) {
+      // Chờ replaceTrack/tắt camera thật sự kết thúc trước khi nhả reservation.
+    }
+    await _qualityChange;
+    await _effects.waitUntilIdle();
   }
 }

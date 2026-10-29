@@ -13,6 +13,7 @@ enum WidgetLaunchAction {
   cycle,
   soul_events,
   sleep,
+  widgetSettings,
 }
 
 class WidgetActionService {
@@ -40,14 +41,14 @@ class WidgetActionService {
 
     try {
       final initialUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
-      _handleUri(initialUri);
+      handleLaunchUri(initialUri);
     } catch (e) {
       debugPrint(
           'WidgetActionService initial launch error: ${AppErrorMapper.resolve(e).message}');
     }
 
     _widgetClickSub = HomeWidget.widgetClicked.listen(
-      _handleUri,
+      handleLaunchUri,
       onError: (Object error) {
         debugPrint(
             'WidgetActionService stream error: ${AppErrorMapper.resolve(error).message}');
@@ -69,7 +70,8 @@ class WidgetActionService {
     _pendingAction = action;
   }
 
-  void _handleUri(Uri? uri) {
+  /// Dùng chung cho plugin widget và router khi hệ điều hành chuyển deep link.
+  void handleLaunchUri(Uri? uri) {
     final action = _parseAction(uri);
     if (action == null) return;
     if (_shouldSkipUri(uri)) return;
@@ -116,6 +118,8 @@ class WidgetActionService {
           return WidgetLaunchAction.cycle;
         case 'sleep':
           return WidgetLaunchAction.sleep;
+        case 'widget_settings':
+          return WidgetLaunchAction.widgetSettings;
         case 'soul_events':
           return WidgetLaunchAction.soul_events;
       }

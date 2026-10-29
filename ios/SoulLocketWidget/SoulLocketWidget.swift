@@ -17,6 +17,7 @@ struct CoupleWidgetData {
     var stars2: String
     var bgTheme: String
     var heartAnimated: Bool
+    var heartMotionIntervalMinutes: Int
     var heartStyleKey: String
     var heartColorKey: String
     var avatar1Path: String?
@@ -87,7 +88,8 @@ struct CoupleWidgetData {
             daysText: "259 " + widgetText("comm_ngy_41ec10"),
             status1: "", status2: "", isOnline1: false, isOnline2: false,
             weather1: "", weather2: "", stars1: "", stars2: "", bgTheme: "pink",
-            heartAnimated: false, heartStyleKey: "❤️", heartColorKey: "rose",
+            heartAnimated: false, heartMotionIntervalMinutes: WidgetAppearanceDesign.defaultMotionIntervalMinutes,
+            heartStyleKey: "❤️", heartColorKey: "rose",
             avatar1Path: nil, avatar2Path: nil, diaryImagePaths: [],
             showDiaryOnWidget: false, startDateRaw: "",
             dayUnitText: widgetText("comm_ngy_41ec10"), battery1: -1, battery2: -1,
@@ -123,6 +125,9 @@ struct CoupleWidgetData {
             stars2: defaults?.string(forKey: "stars2") ?? "--",
             bgTheme: defaults?.string(forKey: "bgTheme") ?? "pink",
             heartAnimated: defaults?.bool(forKey: "heartAnimated") ?? false,
+            heartMotionIntervalMinutes: WidgetAppearanceDesign.normalizeMotionInterval(
+                defaults?.integer(forKey: "heartMotionIntervalMinutes") ?? WidgetAppearanceDesign.defaultMotionIntervalMinutes
+            ),
             heartStyleKey: defaults?.string(forKey: "heartStyleKey") ?? "❤️",
             heartColorKey: defaults?.string(forKey: "heartColorKey") ?? "rose",
             avatar1Path: defaults?.string(forKey: "avatar1Path"),
@@ -165,11 +170,22 @@ struct CoupleWidgetProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<CoupleEntry>) -> Void) {
         let now = Date()
         let data = CoupleWidgetData.load()
-        // Mốc 30 phút: WidgetKit quản lý lịch render, không chạy timer liên tục.
-        let start = floor(now.timeIntervalSince1970 / 1800) * 1800
+        // WidgetKit quản lý lịch render; mốc đổi mẫu lấy từ cấu hình phút và
+        // không dùng timer chạy liên tục trong extension.
+        let hasPhotos = data.showDiaryOnWidget && data.diaryImagePaths.contains {
+            FileManager.default.fileExists(atPath: $0)
+        }
+        let rotatesArtwork = data.heartAnimated && (data.widgetStyleKey == "countdown" ||
+            !hasPhotos || data.widgetStickerKey != "none")
+        // Có sẵn khoảng 6 giờ, tránh xin timeline mới mỗi vài phút.
+        // WidgetKit khuyến nghị mốc cách nhau ít nhất khoảng 5 phút.
+        let minutes = rotatesArtwork
+            ? WidgetAppearanceDesign.normalizeMotionInterval(data.heartMotionIntervalMinutes) : 30
+        let interval = Double(minutes * 60)
+        let start = floor(now.timeIntervalSince1970 / interval) * interval
         var dates = [now]
-        for index in 1...12 {
-            dates.append(Date(timeIntervalSince1970: start + Double(index) * 1800))
+        for index in 1...(360 / minutes) {
+            dates.append(Date(timeIntervalSince1970: start + Double(index) * interval))
         }
         // Múi giờ lệch 45 phút có nửa đêm nằm giữa hai mốc 30 phút UTC.
         let calendar = data.relationshipCalendar

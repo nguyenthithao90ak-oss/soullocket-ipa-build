@@ -26,6 +26,10 @@ import '../calendar/calendar_widget_payload.dart';
 import '../calendar/calendar_civil_date.dart';
 import '../sleep_tracking_math.dart';
 import '../health_data_privacy.dart';
+import '../widget_diary_images.dart';
+import 'private_media_url_service.dart';
+import 'storage/private_image_disk_cache.dart';
+import 'storage/private_image_download.dart';
 import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -157,8 +161,10 @@ class WidgetService {
   static int _sleepSyncRevision = 0;
   static int _calendarSyncRevision = 0;
   static int _cycleSyncRevision = 0;
+  static int _diarySyncRevision = 0;
   static final _calendarWrites = CalendarWidgetWriteQueue();
   static final _cycleWrites = CalendarWidgetWriteQueue();
+  static final _diaryWrites = CalendarWidgetWriteQueue();
   static final Map<String, Object?> _runtimeWidgetData = <String, Object?>{};
   static final StorageService _storageService = StorageService();
   static Future<void> ensureInitialized({bool forceUpdate = false}) async {
@@ -316,7 +322,9 @@ class WidgetService {
     _sleepSyncRevision++;
     _calendarSyncRevision++;
     _cycleSyncRevision++;
+    _diarySyncRevision++;
     await ensureInitialized();
+    await _saveDiaryImages(const [], enabled: false);
     await _cycleWrites.enqueue(() async {
       await _clearPrivateCycleWidgetData();
       await _refreshCycleWidget();
@@ -509,6 +517,10 @@ class WidgetService {
     await _saveIfMissing<bool>('showDiaryOnWidget', false);
     // Keep widget heart fixed (no random animation) by default.
     await _saveIfMissing<bool>('heartAnimated', false);
+    await _saveIfMissing<int>(
+      'heartMotionIntervalMinutes',
+      WidgetAppearance.defaultMotionIntervalMinutes,
+    );
     await _saveIfMissing<String>('heartStyleKey', defaultHeartStyleKey);
     await _saveIfMissing<String>('widgetStickerKey', 'none');
     await _saveIfMissing<String>('photoFrameKey', 'rounded');
@@ -634,44 +646,103 @@ class WidgetService {
   }
 
   static Future<void> _saveDiaryImages(
-    List<String> diaryImageUrls, {
+    List<String>? diaryImageUrls, {
     required bool enabled,
+    bool forceRetry = false,
+  }) {
+    final revision = ++_diarySyncRevision;
+    return _diaryWrites.enqueue(
+      () => _saveDiaryImagesImpl(
+        diaryImageUrls,
+        enabled: enabled,
+        forceRetry: forceRetry,
+        revision: revision,
+      ),
+    );
+  }
+
+  static Future<void> _saveDiaryImagesImpl(
+    List<String>? diaryImageUrls, {
+    required bool enabled,
+    required bool forceRetry,
+    required int revision,
   }) async {
-    final urls = diaryImageUrls
+    if (revision != _diarySyncRevision) return;
+    final urls = (diaryImageUrls ?? const <String>[])
         .map((url) => url.trim())
         .where((url) => url.isNotEmpty)
         .toSet()
         .toList(growable: false);
 
-    if (!enabled || urls.isEmpty) {
-      await _saveWidgetDataIfChanged<String>('diaryImagePaths', '[]');
-      await _saveWidgetDataIfChanged<String>('diaryImageUrlSignature', '');
-      await _saveWidgetDataIfChanged<int>('diaryImageCount', 0);
-      await _cleanupOldFiles(prefix: 'diary_', suffix: '.jpg', keepPaths: []);
+    if (!enabled || (diaryImageUrls != null && urls.isEmpty)) {
+      await _clearDiaryImages();
       return;
     }
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final prefs = await SharedPreferences.getInstance();
+    final houseId = prefs.getString('il_house_id')?.trim() ?? '';
+    bool current() =>
+        revision == _diarySyncRevision &&
+        uid != null &&
+        uid == FirebaseAuth.instance.currentUser?.uid &&
+        prefs.getString('il_auth_uid') == uid &&
+        houseId.isNotEmpty &&
+        prefs.getString('il_house_id')?.trim() == houseId;
+    if (!current()) {
+      if (revision == _diarySyncRevision) await _clearDiaryImages();
+      return;
+    }
+    final scope = '$uid|$houseId';
+    final savedScope = await _readWidgetData<String>('diaryImageScope');
+    if (!current()) return;
+    if (savedScope != scope) await _clearDiaryImages();
+    // null là đọc lỗi tạm thời: chỉ giữ ảnh của đúng UID/House đang dùng.
+    // [] từ một lượt đọc thành công mới có nghĩa album thực sự không còn ảnh.
+    if (diaryImageUrls == null || !current()) return;
 
     final limitedUrls = urls
         .take(maxDiaryImagesForWidget)
         .toList(growable: false);
-    final nextSignature = _stableFileToken(limitedUrls.join('|'));
+    final nextSignature = _stableFileToken('$scope|${limitedUrls.join('|')}');
     final savedSignature =
         (await _readWidgetData<String>('diaryImageUrlSignature'))?.trim() ?? '';
     final savedPathsRaw =
         (await _readWidgetData<String>('diaryImagePaths'))?.trim() ?? '[]';
-    if (savedSignature == nextSignature && savedPathsRaw != '[]') {
-      return;
+    if (savedSignature == nextSignature) {
+      try {
+        final paths = (jsonDecode(savedPathsRaw) as List)
+            .whereType<String>()
+            .toList();
+        var complete = paths.length == limitedUrls.length;
+        for (final path in paths) {
+          if (!await File(path).exists() || await File(path).length() <= 100) {
+            complete = false;
+            break;
+          }
+        }
+        if (complete) return;
+      } catch (_) {
+        // Cache native bị dọn/hỏng: dựng lại từ cache Nhật ký hoặc thumbnail.
+      }
     }
-    if (await _diaryImageSetRecentlyFailed(nextSignature)) return;
+    if (!forceRetry && await _diaryImageSetRecentlyFailed(nextSignature)) return;
 
     final savedPaths = <String>[];
     final localPaths = <String>[];
     for (final url in limitedUrls) {
+      if (!current()) return;
+      final privateImage = parseWidgetPrivateDiaryImage(url);
+      if (privateImage != null && privateImage.houseId != houseId) continue;
+      final filename = 'diary_${_stableFileToken('$scope|$url')}.jpg';
       final localPath = await _downloadAndCompressImage(
         url,
-        'diary_${_stableFileToken(url)}.jpg',
+        filename,
         useExisting: true,
+        uid: uid,
+        isCurrent: current,
       );
+      if (!current()) return;
       if (localPath == null) continue;
       if (!localPaths.contains(localPath)) {
         localPaths.add(localPath);
@@ -679,13 +750,16 @@ class WidgetService {
 
       final widgetPath = await _widgetReadablePath(
         localPath,
-        sharedFileName: 'diary_${_stableFileToken(url)}.jpg',
+        sharedFileName: filename,
       );
+      if (!current()) return;
       if (!savedPaths.contains(widgetPath)) {
         savedPaths.add(widgetPath);
       }
     }
 
+    if (!current()) return;
+    await _saveWidgetDataIfChanged<String>('diaryImageScope', scope);
     await _saveWidgetDataIfChanged<String>(
       'diaryImagePaths',
       jsonEncode(savedPaths),
@@ -696,7 +770,7 @@ class WidgetService {
     );
     await _saveWidgetDataIfChanged<String>(
       'diaryImageFailure',
-      savedPaths.isEmpty
+      savedPaths.length < limitedUrls.length
           ? '$nextSignature|${DateTime.now().millisecondsSinceEpoch}'
           : '',
     );
@@ -707,6 +781,15 @@ class WidgetService {
       suffix: '.jpg',
       keepPaths: localPaths,
     );
+  }
+
+  static Future<void> _clearDiaryImages() async {
+    await _saveWidgetDataIfChanged<String>('diaryImagePaths', '[]');
+    await _saveWidgetDataIfChanged<String>('diaryImageUrlSignature', '');
+    await _saveWidgetDataIfChanged<int>('diaryImageCount', 0);
+    await _saveWidgetDataIfChanged<String>('diaryImageScope', '');
+    await _saveWidgetDataIfChanged<String>('diaryImageFailure', '');
+    await _cleanupOldFiles(prefix: 'diary_', suffix: '.jpg', keepPaths: []);
   }
 
   static Future<bool> _diaryImageSetRecentlyFailed(String signature) async {
@@ -740,6 +823,8 @@ class WidgetService {
     String widgetStyleKey = defaultWidgetStyleKey,
     bool showDiaryOnWidget = false,
     bool heartAnimated = true,
+    int heartMotionIntervalMinutes =
+        WidgetAppearance.defaultMotionIntervalMinutes,
     String heartStyleKey = defaultHeartStyleKey,
     String heartColorKey = 'rose',
     String diaryLayoutKey = 'single',
@@ -749,7 +834,7 @@ class WidgetService {
     String loveDate = '',
     String birthday1 = '',
     String birthday2 = '',
-    List<String> diaryImageUrls = const [],
+    List<String>? diaryImageUrls,
     int battery1 = -1,
     int battery2 = -1,
     bool isCharging1 = false,
@@ -771,6 +856,14 @@ class WidgetService {
       final motionChanged = await _saveWidgetDataIfChanged<bool>(
         'heartAnimated',
         displayMode.heartAnimated,
+      );
+      final normalizedMotionInterval = WidgetAppearance.normalizeMotionInterval(
+        heartMotionIntervalMinutes,
+        isIos: Platform.isIOS,
+      );
+      final motionIntervalChanged = await _saveWidgetDataIfChanged<int>(
+        'heartMotionIntervalMinutes',
+        normalizedMotionInterval,
       );
       await _saveWidgetDataIfChanged<String>('name1', name1);
       await _saveWidgetDataIfChanged<String>('name2', name2);
@@ -927,6 +1020,7 @@ class WidgetService {
         includeUtilities:
             themeChanged ||
             motionChanged ||
+            motionIntervalChanged ||
             (allowedTheme == WeatherBackgroundAccess.themeKey &&
                 (weatherLeftChanged || weatherRightChanged)),
       );
@@ -955,6 +1049,8 @@ class WidgetService {
     String widgetStyleKey = defaultWidgetStyleKey,
     required bool showDiaryOnWidget,
     required bool heartAnimated,
+    int heartMotionIntervalMinutes =
+        WidgetAppearance.defaultMotionIntervalMinutes,
     required String heartStyleKey,
     required String heartColorKey,
     String diaryLayoutKey = 'single',
@@ -964,7 +1060,7 @@ class WidgetService {
     String loveDate = '',
     String birthday1 = '',
     String birthday2 = '',
-    List<String> diaryImageUrls = const [],
+    List<String>? diaryImageUrls,
   }) async {
     try {
       await ensureInitialized();
@@ -987,6 +1083,13 @@ class WidgetService {
       await _saveWidgetDataIfChanged<bool>(
         'heartAnimated',
         displayMode.heartAnimated,
+      );
+      await _saveWidgetDataIfChanged<int>(
+        'heartMotionIntervalMinutes',
+        WidgetAppearance.normalizeMotionInterval(
+          heartMotionIntervalMinutes,
+          isIos: Platform.isIOS,
+        ),
       );
       await _saveWidgetDataIfChanged<String>(
         'heartStyleKey',
@@ -1019,6 +1122,7 @@ class WidgetService {
       await _saveDiaryImages(
         diaryImageUrls,
         enabled: displayMode.showDiaryOnWidget,
+        forceRetry: true,
       );
       await _dispatchWidgetUpdate(includeUtilities: true);
     } catch (e) {
@@ -1068,10 +1172,12 @@ class WidgetService {
     String url,
     String filename, {
     bool useExisting = false,
+    String? uid,
+    required bool Function() isCurrent,
   }) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/$filename');
+      final file = File('${dir.path}${Platform.pathSeparator}$filename');
 
       // 🔄 Nếu file đã tồn tại, sử dụng nó (tiết kiệm băng thông)
       if (useExisting && await file.exists()) {
@@ -1083,13 +1189,42 @@ class WidgetService {
       }
 
       // ⬇️ Tải ảnh từ URL
-      final bytes = await _storageService.downloadBytesWithCache(
-        url,
-        namespace: 'widget_diary',
-        cacheKey: filename,
-      );
+      if (!isCurrent()) return null;
+      final privateImage = parseWidgetPrivateDiaryImage(url);
+      Uint8List? bytes;
+      if (privateImage != null && uid != null) {
+        final urls = PrivateMediaUrlService(cacheCompletedUrls: true);
+        try {
+          bytes = await loadWidgetPrivateDiaryImage(
+            image: privateImage,
+            isCurrent: isCurrent,
+            readCache: (image) => PrivateImageDiskCache.instance.readPreview(
+              uid,
+              image.houseId,
+              image.mediaId,
+            ),
+            resolveThumbnail: (image) async => (await urls.resolve(
+              houseId: image.houseId,
+              mediaId: image.mediaId,
+              kind: 'memory_image',
+              variant: 'thumbnail',
+            )).url,
+            download: (resolved) =>
+                downloadPrivateImage(resolved, isCurrent: isCurrent),
+          );
+        } finally {
+          urls.dispose();
+        }
+      } else if (url.startsWith('https://') || url.startsWith('http://')) {
+        bytes = await _storageService.downloadBytesWithCache(
+          url,
+          namespace: 'widget_diary',
+          cacheKey: filename,
+        );
+      }
+      if (!isCurrent()) return null;
       if (bytes == null || bytes.isEmpty) {
-        debugPrint('Failed to resolve widget diary image: $url');
+        debugPrint('Không tải được ảnh Nhật ký cho widget.');
         return null;
       }
 
@@ -1102,6 +1237,7 @@ class WidgetService {
       );
 
       // 💾 Lưu ảnh đã compress
+      if (!isCurrent()) return null;
       await file.writeAsBytes(compressedBytes, flush: true);
       debugPrint(
         '✅ Widget image saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB',

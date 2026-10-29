@@ -22,6 +22,7 @@ class CollageLimitService {
         onAskUserToWatchAd,
     required void Function(String message, {bool isError}) onShowMessage,
     Future<bool> Function()? isVip,
+    bool Function()? isCurrent,
   }) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
@@ -36,6 +37,7 @@ class CollageLimitService {
     if (currentCount >= currentLimit) {
       // Chỉ hỏi quyền VIP khi đã hết lượt thường, tránh gọi mạng mỗi lần ghép.
       if (await _checkVip(isVip)) return true;
+      if (isCurrent?.call() == false) return false;
       final lastAdTime = prefs.getInt('collage_last_ad_time_$today') ?? 0;
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       const int cooldownMs = 15 * 60 * 1000;
@@ -49,13 +51,14 @@ class CollageLimitService {
         return true;
       }
 
+      AdMobService().preloadRewardedAd();
       bool wantToWatchAd = await onAskUserToWatchAd(currentLimit, dailyLimit);
-      if (!wantToWatchAd) {
+      if (!wantToWatchAd || isCurrent?.call() == false) {
         return false;
       }
 
       // Show rewarded ad
-      bool watched = await AdMobService().showRewardedAd();
+      bool watched = await AdMobService().showRewardedAd(isCurrent: isCurrent);
       if (watched) {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
         await prefs.setInt('collage_last_ad_time_$today',

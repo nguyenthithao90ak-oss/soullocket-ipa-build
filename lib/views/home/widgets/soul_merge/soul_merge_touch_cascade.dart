@@ -21,6 +21,7 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
   late final AnimationController _shimmer;
+  late final AnimationController _burst;
   Timer? _hideTimer;
   bool _visible = false;
   bool _connected = false;
@@ -44,6 +45,10 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     _shimmer = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
+    );
+    _burst = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
     );
     WidgetsBinding.instance.addObserver(this);
     UiPrefs.notifier.addListener(_onPrefsChanged);
@@ -73,6 +78,7 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     if (!_animate) {
       _controller.stop();
       _shimmer.stop();
+      _burst.stop();
     } else if (_visible && (_holding || _celebrating)) {
       final target = _connected ? 1.0 : .72;
       if (_controller.value < target && !_controller.isAnimating) {
@@ -87,6 +93,12 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
         );
       }
       if (!_shimmer.isAnimating) _shimmer.repeat();
+      if (_connected &&
+          _celebrating &&
+          !_burst.isAnimating &&
+          !_burst.isCompleted) {
+        _burst.forward();
+      }
     }
   }
 
@@ -112,11 +124,34 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     _scheduleHide(const Duration(milliseconds: 900));
   }
 
+  /// Một phía đã thả/hết phiên: bỏ trạng thái ghép ngay, kể cả burst đang chạy.
+  /// Nếu mình còn giữ, tim quay về mức chờ để lần ghép mới không dùng màu cũ.
+  void resetConnection({required bool holding}) {
+    if (!mounted) return;
+    _hideTimer?.cancel();
+    _controller.stop();
+    _shimmer.stop();
+    _burst.stop();
+    _burst.value = 0;
+    _connected = false;
+    _celebrating = false;
+    _holding = holding;
+    if (_controller.value > .72) _controller.value = .72;
+    if (holding) {
+      _visible = true;
+      _syncMotion();
+    } else if (_visible) {
+      _scheduleHide(const Duration(milliseconds: 900));
+    }
+    setState(() {});
+  }
+
   /// Chỉ mốc kết nối đôi mới cho tim đầy, đổi màu và nổ sáng.
   void completeConnection() {
     if (!mounted) return;
     _hideTimer?.cancel();
     _controller.stop();
+    _burst.value = 0;
     _connected = true;
     _celebrating = true;
     _visible = true;
@@ -130,6 +165,7 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     _hideTimer = Timer(delay, () {
       if (!mounted) return;
       _celebrating = false;
+      _burst.stop();
       if (_holding) return;
       _controller.stop();
       _shimmer.stop();
@@ -152,6 +188,7 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     _shimmer.dispose();
+    _burst.dispose();
     super.dispose();
   }
 
@@ -161,12 +198,13 @@ class SoulMergeTouchCascadeState extends State<SoulMergeTouchCascade>
     return IgnorePointer(
       child: RepaintBoundary(
         child: AnimatedBuilder(
-          animation: Listenable.merge([_controller, _shimmer]),
+          animation: Listenable.merge([_controller, _shimmer, _burst]),
           builder: (context, _) => CustomPaint(
             key: const ValueKey('soul-merge-touch-cascade-painter'),
             painter: SoulMergeTouchCascadePainter(
               progress: _animate ? _controller.value : (_connected ? 1 : .72),
               shimmer: _animate ? _shimmer.value : 0,
+              celebration: _animate ? _burst.value : 1,
               connected: _connected,
               style: widget.style,
               dark: Theme.of(context).brightness == Brightness.dark,
@@ -186,6 +224,7 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
     required this.style,
     required this.dark,
     this.shimmer = 0,
+    this.celebration = 1,
   });
 
   final double progress;
@@ -193,6 +232,10 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
   final String style;
   final bool dark;
   final double shimmer;
+  final double celebration;
+
+  static double heartSizeFor(Size size) =>
+      (math.min(size.width, 430.0) * .62).clamp(198.0, 272.0);
 
   Path _heart(Rect rect) {
     Offset p(double x, double y) =>
@@ -241,14 +284,13 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
     if (size.isEmpty) return;
     final t = progress.clamp(0.0, 1.0);
     final width = math.min(size.width, 430.0);
-    // Tim nhỏ hơn vùng chạm để không che phần nhật ký và tin nhắn phía dưới.
-    final double heartSize = (width * .45).clamp(154.0, 208.0).toDouble();
+    // Tim lớn theo bề ngang màn hình, vẫn chừa viền cho ánh sáng lan.
+    final double heartSize = heartSizeFor(size);
     final centerX = size.width / 2;
     final top = -heartSize * .76;
-    final double destination = (size.height * .44).clamp(
-      250.0,
-      math.max(250.0, size.height - 220.0),
-    ).toDouble();
+    final double destination = (size.height * .44)
+        .clamp(250.0, math.max(250.0, size.height - 220.0))
+        .toDouble();
     final fall = Curves.easeOutBack.transform((t / .72).clamp(0.0, 1.0));
     // Sau khi kết nối, tim được neo ngay tại điểm đích. Chỉ lớp sáng và burst
     // thay đổi; thân tim không rơi, nảy hoặc phóng to thêm.
@@ -464,18 +506,22 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
     // shimmer chỉ dùng cho ánh sáng nền nên không tạo nổ lặp vô hạn.
     if (endGlow > 0) {
       final celebrationProgress = connected
-          ? Curves.easeOutCubic.transform(((t - .08) / .92).clamp(0.0, 1.0))
+          ? Curves.easeOutCubic.transform(celebration.clamp(0.0, 1.0))
           : 0.0;
       final celebrationPulse = connected
           ? math.sin(celebrationProgress * math.pi)
           : 0.0;
       for (var i = 0; i < 2; i++) {
-        final double ringProgress = (connected
-                ? (celebrationProgress + i * .34)
-                : ((t - .62) / .38 + i * .22))
-            .clamp(0.0, 1.0)
-            .toDouble();
-        final double ringRadius = heartSize * (.56 + ringProgress * .72);
+        final double ringProgress =
+            (connected
+                    ? (celebrationProgress + i * .34)
+                    : ((t - .62) / .38 + i * .22))
+                .clamp(0.0, 1.0)
+                .toDouble();
+        final double ringRadius = math.min(
+          width * .47,
+          heartSize * (.50 + ringProgress * .31),
+        );
         canvas.drawCircle(
           Offset(centerX, y),
           ringRadius,
@@ -509,10 +555,13 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
                 Rect.fromCircle(center: Offset(centerX, y), radius: heartSize),
               );
         final burstCenter = Offset(centerX, y);
-        for (var i = 0; i < 10; i++) {
-          final angle = -math.pi / 2 + i * math.pi * 2 / 10;
-          final startRadius = heartSize * (.58 + burst * .08);
-          final endRadius = heartSize * (.82 + burst * .56);
+        for (var i = 0; i < 12; i++) {
+          final angle = -math.pi / 2 + i * math.pi * 2 / 12;
+          final startRadius = heartSize * (.46 + burst * .06);
+          final endRadius = math.min(
+            width * .47,
+            heartSize * (.65 + burst * .18),
+          );
           final start =
               burstCenter +
               Offset(math.cos(angle), math.sin(angle)) * startRadius;
@@ -575,6 +624,7 @@ class SoulMergeTouchCascadePainter extends CustomPainter {
   bool shouldRepaint(covariant SoulMergeTouchCascadePainter oldDelegate) =>
       progress != oldDelegate.progress ||
       shimmer != oldDelegate.shimmer ||
+      celebration != oldDelegate.celebration ||
       connected != oldDelegate.connected ||
       style != oldDelegate.style ||
       dark != oldDelegate.dark;

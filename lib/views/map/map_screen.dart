@@ -19,11 +19,13 @@ import 'mapbox_sdk_stub.dart' as mbx;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:soullocket_app/utils/gps_freshness.dart';
 import 'map_location_access.dart';
 import 'map_pro_access.dart';
 import 'widgets/map_pro_layers_sheet.dart';
 import 'widgets/map_pro_search_screen.dart';
 import 'widgets/map_refresh_widgets.dart';
+import 'map_tile_health.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:permission_handler/permission_handler.dart' as app_permission;
@@ -246,9 +248,13 @@ class _MapScreenState extends State<MapScreen>
 
   Timer? _routeDebounce;
   Timer? _liveRefreshDebounce;
+  final _gpsFreshnessDeadline = GpsFreshnessDeadline();
+  int _gpsListenerGeneration = 0;
   Timer? _memoryReloadDebounce;
   Timer? _checkinsDebounce;
   Timer? _mapReadyTimeout;
+  final _tileHealth = MapTileHealth();
+  int _tileLayerGeneration = 0;
   Timer? _fitDebounce;
   bool _realtimePipelinesActive = false;
   bool _isFitting = false;
@@ -583,6 +589,7 @@ class _MapScreenState extends State<MapScreen>
     _liveMarkersVN.dispose();
     _livePolylinesVN.dispose();
     _liveUiVN.dispose();
+    _tileHealth.dispose();
     super.dispose();
   }
 
@@ -597,7 +604,7 @@ class _MapScreenState extends State<MapScreen>
     }
 
     _setRealtimePipelinesActive(true);
-    if (!_isMapReady && _isLoading) {
+    if (!_isMapReady || (!_useMapboxSdk && !_tileHealth.loadedOnce)) {
       _scheduleMapReadyWatchdog();
     }
     _scheduleLiveRefresh();
@@ -612,7 +619,7 @@ class _MapScreenState extends State<MapScreen>
       _setPartnerListenerActive(true);
       if (!isScreenActive) return;
       _setRealtimePipelinesActive(true);
-      if (!_isMapReady && _isLoading) {
+      if (!_isMapReady || (!_useMapboxSdk && !_tileHealth.loadedOnce)) {
         _scheduleMapReadyWatchdog();
       }
       _scheduleLiveRefresh();
@@ -650,6 +657,7 @@ class _MapScreenState extends State<MapScreen>
     if (active) {
       if (_realtimePipelinesActive) return;
       _realtimePipelinesActive = true;
+      _armGpsFreshnessDeadline();
       _listenLiveGps();
       _listenMemoryNodes();
       _listenCheckins();
@@ -657,6 +665,8 @@ class _MapScreenState extends State<MapScreen>
     }
 
     _realtimePipelinesActive = false;
+    _gpsFreshnessDeadline.cancel();
+    _gpsListenerGeneration++;
 
     final myLocSub = _myLocSub;
     _myLocSub = null;
@@ -712,20 +722,29 @@ class _MapScreenState extends State<MapScreen>
   }
 
   bool _isGpsFresh(int? ts) {
-    if (ts == null) return false;
-    final ageMs = DateTime.now().millisecondsSinceEpoch - ts;
-    return ageMs >= 0 && ageMs <= 3 * 60 * 1000;
+    return GpsFreshness.isFresh(ts);
+  }
+
+  void _armGpsFreshnessDeadline() {
+    if (!_realtimePipelinesActive) return;
+    _gpsFreshnessDeadline.schedule([
+      if (_myIsLive) _myCurrentGps?.ts,
+      if (_partnerIsLive) _partnerCurrentGps?.ts,
+    ], () {
+      if (!mounted || !_realtimePipelinesActive) return;
+      _refreshLiveDataSmart();
+    });
   }
 
   _GpsPoint? _effectiveGpsForRole(String role) {
     if (role == widget.myRole) {
-      if (_myIsLive && _isGpsPointAccurateEnough(_myCurrentGps)) {
+      if (_isRoleLive(role) && _isGpsPointAccurateEnough(_myCurrentGps)) {
         return _myCurrentGps;
       }
       if (_myHasLocationHistory) return _myLastKnownGps ?? _myCurrentGps;
       return null;
     }
-    if (_partnerIsLive && _isGpsPointAccurateEnough(_partnerCurrentGps)) {
+    if (_isRoleLive(role) && _isGpsPointAccurateEnough(_partnerCurrentGps)) {
       return _partnerCurrentGps;
     }
     if (_partnerHasLocationHistory) {
@@ -736,13 +755,18 @@ class _MapScreenState extends State<MapScreen>
 
   _GpsPoint? _effectiveLiveGpsForRole(String role) {
     if (role == widget.myRole) {
-      return _myIsLive ? _myCurrentGps : null;
+      return _isRoleLive(role) ? _myCurrentGps : null;
     }
-    return _partnerIsLive ? _partnerCurrentGps : null;
+    return _isRoleLive(role) ? _partnerCurrentGps : null;
   }
 
+  bool _isPreciseLivePoint(_GpsPoint? point) =>
+      GpsFreshness.canUseProximity(point?.ts, point?.accuracy);
+
   bool _isRoleLive(String role) {
-    return role == widget.myRole ? _myIsLive : _partnerIsLive;
+    return role == widget.myRole
+        ? _myIsLive && _isGpsFresh(_myCurrentGps?.ts)
+        : _partnerIsLive && _isGpsFresh(_partnerCurrentGps?.ts);
   }
 
   bool _hasRoleLocationHistory(String role) {
@@ -965,7 +989,8 @@ class _MapScreenState extends State<MapScreen>
 
   Future<void> _handleLocationAction() async {
     if (_isBootstrappingLocation) return;
-    if (_locationAccess.status == MapLocationAccessStatus.deniedForever &&
+    if ((_locationAccess.status == MapLocationAccessStatus.deniedForever ||
+        _locationAccess.status == MapLocationAccessStatus.restricted) &&
         !kIsWeb) {
       await _openLocationAppSettings();
       return;
@@ -1098,8 +1123,13 @@ class _MapScreenState extends State<MapScreen>
 
   void _scheduleMapReadyWatchdog() {
     _mapReadyTimeout?.cancel();
+    if (!isScreenActive || !_realtimePipelinesActive) return;
     _mapReadyTimeout = Timer(const Duration(seconds: 15), () {
-      if (!mounted || _isMapReady) return;
+      if (!isScreenActive || !_realtimePipelinesActive) return;
+      if (_isMapReady) {
+        if (!_useMapboxSdk) _tileHealth.timeout();
+        return;
+      }
       setState(() {
         _mapInitError = context.tr('map_bnopenstre_1e6bc7');
       });
@@ -2123,6 +2153,8 @@ class _MapScreenState extends State<MapScreen>
                 'map_refresh_permission_title',
               MapLocationAccessStatus.deniedForever =>
                 'map_refresh_permission_blocked',
+              MapLocationAccessStatus.restricted =>
+                'map_refresh_permission_blocked',
               MapLocationAccessStatus.serviceDisabled =>
                 'map_refresh_service_off',
               MapLocationAccessStatus.unavailable => 'map_refresh_unavailable',
@@ -2552,11 +2584,29 @@ class _MapScreenState extends State<MapScreen>
 
   void _retryMapSurface() {
     _disposeMapboxSurface();
+    _tileHealth.reset();
+    _tileLayerGeneration++;
     setState(() {
       _mapInitError = null;
       _isMapReady = false;
       _mapSurfaceGeneration++;
     });
+    _scheduleMapReadyWatchdog();
+  }
+
+  void _recordTileResult(Object key, bool failed, int generation) {
+    // TileBuilder có thể chạy trong build; chỉ báo UI sau khi frame hoàn tất.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _tileLayerGeneration) return;
+      _tileHealth.record(key, failed: failed);
+      if (_tileHealth.loadedOnce) _mapReadyTimeout?.cancel();
+    });
+  }
+
+  void _retryMapTiles() {
+    if (!mounted) return;
+    _tileHealth.reset();
+    setState(() => _tileLayerGeneration++);
     _scheduleMapReadyWatchdog();
   }
 

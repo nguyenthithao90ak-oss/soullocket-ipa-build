@@ -89,10 +89,23 @@ class PrivateImageDiskCache {
   Future<void> _work = Future<void>.value();
   int _generation = 0;
 
-  static String key(String uid, String houseId, String memoryId, int? width) =>
-      sha256
-          .convert(utf8.encode(jsonEncode([uid, houseId, memoryId, width])))
-          .toString();
+  static String key(
+    String uid,
+    String houseId,
+    String memoryId,
+    int? width, {
+    String variant = 'original',
+  }) => sha256
+      .convert(
+        utf8.encode(
+          jsonEncode([
+            uid, houseId, memoryId, width,
+            // Giữ khóa original cũ; thumbnail có khóa riêng, cùng memoryTag.
+            if (variant != 'original') variant,
+          ]),
+        ),
+      )
+      .toString();
 
   /// Nhãn chung cho mọi kích thước của một ảnh, để dọn khi ảnh bị xóa
   /// mà không lưu memoryId dạng đọc được trong chỉ mục.
@@ -193,9 +206,7 @@ class PrivateImageDiskCache {
         return null;
       }
     });
-    if (cacheKey == null ||
-        uid != currentUid() ||
-        generation != _generation) {
+    if (cacheKey == null || uid != currentUid() || generation != _generation) {
       return null;
     }
     return read(uid, cacheKey);
@@ -207,8 +218,9 @@ class PrivateImageDiskCache {
     String uid,
     String houseId,
     Iterable<String> memoryIds,
-    Iterable<int?> widths,
-  ) {
+    Iterable<int?> widths, {
+    bool anySize = false,
+  }) {
     final generation = _generation;
     return _serial(() async {
       if (kIsWeb || uid != currentUid() || generation != _generation) {
@@ -224,14 +236,30 @@ class PrivateImageDiskCache {
         }
         final now = _now().millisecondsSinceEpoch;
         final variants = widths.toSet();
+        final cachedTags = <String>{
+          if (anySize)
+            for (final metadata in index.values)
+              if (metadata is Map &&
+                  metadata['mid'] is String &&
+                  metadata['savedAt'] is int &&
+                  now - (metadata['savedAt'] as int) >= 0 &&
+                  now - (metadata['savedAt'] as int) < ttl.inMilliseconds)
+                metadata['mid'] as String,
+        };
         return {
           for (final id in memoryIds.take(80))
-            if (variants.any((width) {
-              final metadata = index[key(uid, houseId, id, width)];
-              if (metadata is! Map || metadata['savedAt'] is! int) return false;
-              final age = now - (metadata['savedAt'] as int);
-              return age >= 0 && age < ttl.inMilliseconds;
-            }))
+            if ((anySize && cachedTags.contains(memoryTag(uid, houseId, id))) ||
+                variants.any((width) {
+                  return const ['original', 'thumbnail'].any((variant) {
+                    final metadata =
+                        index[key(uid, houseId, id, width, variant: variant)];
+                    if (metadata is! Map || metadata['savedAt'] is! int) {
+                      return false;
+                    }
+                    final age = now - (metadata['savedAt'] as int);
+                    return age >= 0 && age < ttl.inMilliseconds;
+                  });
+                }))
               id,
         };
       } catch (_) {
@@ -348,6 +376,7 @@ class PrivateImageDiskCache {
     try {
       final box = await _box(uid);
       final index = await box.get('_index');
+      if (uid != currentUid()) return 0;
       if (index is! Map) return 0;
       var total = 0;
       for (final value in index.values) {
@@ -358,6 +387,20 @@ class PrivateImageDiskCache {
       return 0;
     }
   });
+
+  /// Dọn cache theo tài khoản mở màn Cài đặt; không xóa nhầm phiên vừa đăng nhập.
+  Future<void> clearForUser(String uid) {
+    if (uid != currentUid()) return Future<void>.value();
+    _generation++;
+    return _serial(() async {
+      if (kIsWeb || uid != currentUid()) return;
+      final box = await openBox();
+      final owner = await box.get('_owner');
+      if (uid != currentUid() || owner != uid) return;
+      await box.clear();
+      await box.compact();
+    });
+  }
 
   Future<void> clear() {
     _generation++;

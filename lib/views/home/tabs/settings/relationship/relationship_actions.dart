@@ -1,5 +1,5 @@
-import 'package:soullocket_app/utils/ui_copy.dart';
 import 'dart:async';
+import 'package:soullocket_app/utils/breakup_notice_copy.dart';
 
 import '../../../../../utils/services/breakup_service.dart';
 import '../../../../../utils/services/notification_service.dart';
@@ -64,12 +64,29 @@ class SettingsRelationshipPanelState {
 }
 
 class SettingsRelationshipWatcher {
-  SettingsRelationshipWatcher({BreakupService? breakupService})
-      : _breakupService = breakupService ?? BreakupService();
+  SettingsRelationshipWatcher({
+    BreakupService? breakupService,
+    Stream<BreakupRequestData?> Function(String houseId)? streamBreakupRequest,
+    Future<BreakupRequestData?> Function(String houseId)? evaluateBreakupRequest,
+    Future<BreakupRequestData?> Function(String houseId)? getBreakupRequest,
+  }) : _breakupService = breakupService,
+       _streamBreakupRequest = streamBreakupRequest,
+       _evaluateBreakupRequest = evaluateBreakupRequest,
+       _getBreakupRequest = getBreakupRequest;
 
-  final BreakupService _breakupService;
+  final BreakupService? _breakupService;
+  BreakupService get _service => _breakupService ?? BreakupService();
+  final Stream<BreakupRequestData?> Function(String houseId)?
+  _streamBreakupRequest;
+  final Future<BreakupRequestData?> Function(String houseId)?
+  _evaluateBreakupRequest;
+  final Future<BreakupRequestData?> Function(String houseId)? _getBreakupRequest;
   StreamSubscription<BreakupRequestData?>? _subscription;
   Timer? _deadlineTimer;
+  int _generation = 0;
+  int _retryAttempt = 0;
+  int? _retryTargetAt;
+  String? _retryHouseId;
 
   void bind({
     required String? houseId,
@@ -77,6 +94,7 @@ class SettingsRelationshipWatcher {
     BreakupRequestData? Function()? getFallbackRequest,
   }) {
     clear(onChanged: onChanged);
+    final generation = _generation;
 
     final normalizedHouseId = (houseId ?? '').trim();
     if (normalizedHouseId.isEmpty) {
@@ -84,20 +102,26 @@ class SettingsRelationshipWatcher {
     }
 
     _subscription =
-        _breakupService.streamBreakupRequest(normalizedHouseId).listen(
+        (_streamBreakupRequest?.call(normalizedHouseId) ??
+                _service.streamBreakupRequest(normalizedHouseId))
+            .listen(
       (request) async {
         final nextRequest = request == null
             ? null
-            : await _breakupService.evaluateBreakupRequest(normalizedHouseId);
+            : await (_evaluateBreakupRequest?.call(normalizedHouseId) ??
+                _service.evaluateBreakupRequest(normalizedHouseId));
+        if (generation != _generation) return;
         final effectiveRequest = nextRequest ?? request;
         _scheduleEvaluation(
           houseId: normalizedHouseId,
           request: effectiveRequest,
           onChanged: onChanged,
+          generation: generation,
         );
         onChanged(effectiveRequest);
       },
       onError: (_) {
+        if (generation != _generation) return;
         onChanged(getFallbackRequest?.call());
       },
     );
@@ -108,6 +132,7 @@ class SettingsRelationshipWatcher {
     required void Function(BreakupRequestData? request) onChanged,
     bool evaluate = true,
   }) async {
+    final generation = _generation;
     final normalizedHouseId = (houseId ?? '').trim();
     if (normalizedHouseId.isEmpty) {
       clear(onChanged: onChanged);
@@ -115,12 +140,16 @@ class SettingsRelationshipWatcher {
     }
 
     final request = evaluate
-        ? await _breakupService.evaluateBreakupRequest(normalizedHouseId)
-        : await _breakupService.getBreakupRequest(normalizedHouseId);
+        ? await (_evaluateBreakupRequest?.call(normalizedHouseId) ??
+            _service.evaluateBreakupRequest(normalizedHouseId))
+        : await (_getBreakupRequest?.call(normalizedHouseId) ??
+            _service.getBreakupRequest(normalizedHouseId));
+    if (generation != _generation) return;
     _scheduleEvaluation(
       houseId: normalizedHouseId,
       request: request,
       onChanged: onChanged,
+      generation: generation,
     );
     onChanged(request);
   }
@@ -133,21 +162,29 @@ class SettingsRelationshipWatcher {
   }
 
   void dispose() {
+    _generation++;
     _deadlineTimer?.cancel();
     _deadlineTimer = null;
     _subscription?.cancel();
     _subscription = null;
+    _retryAttempt = 0;
+    _retryTargetAt = null;
+    _retryHouseId = null;
   }
 
   void _scheduleEvaluation({
     required String houseId,
     required BreakupRequestData? request,
     required void Function(BreakupRequestData? request) onChanged,
+    required int generation,
   }) {
     _deadlineTimer?.cancel();
     _deadlineTimer = null;
 
     if (request == null) {
+      _retryAttempt = 0;
+      _retryTargetAt = null;
+      _retryHouseId = null;
       return;
     }
 
@@ -158,31 +195,59 @@ class SettingsRelationshipWatcher {
       targetAt = request.deleteAt;
     }
     if (targetAt <= 0) {
+      _retryAttempt = 0;
+      _retryTargetAt = null;
+      _retryHouseId = null;
       return;
+    }
+
+    if (_retryTargetAt != targetAt || _retryHouseId != houseId) {
+      _retryAttempt = 0;
+      _retryTargetAt = targetAt;
+      _retryHouseId = houseId;
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final delayMs = (targetAt - now).clamp(0, 2147483647);
     if (delayMs == 0) {
-      unawaited(
-        refresh(
-          houseId: houseId,
-          onChanged: onChanged,
-        ),
-      );
+      // Không gọi refresh đệ quy ngay khi server vẫn trả request cũ (ví dụ
+      // mạng/App Check lỗi). Backoff có trần để tránh vòng gọi nóng.
+      final retrySeconds = breakupRetryDelay(_retryAttempt).inSeconds;
+      _retryAttempt = (_retryAttempt + 1).clamp(0, 6);
+      _deadlineTimer = Timer(Duration(seconds: retrySeconds), () {
+        if (generation != _generation) return;
+        unawaited(
+          refresh(
+            houseId: houseId,
+            onChanged: onChanged,
+          ),
+        );
+      });
       return;
     }
 
+    _retryAttempt = 0;
+
     _deadlineTimer = Timer(
       Duration(milliseconds: delayMs),
-      () => unawaited(
-        refresh(
-          houseId: houseId,
-          onChanged: onChanged,
-        ),
-      ),
+      () {
+        if (generation != _generation) return;
+        unawaited(
+          refresh(
+            houseId: houseId,
+            onChanged: onChanged,
+          ),
+        );
+      },
     );
   }
+}
+
+/// Backoff dùng cho request đã quá hạn nhưng server chưa đổi trạng thái.
+/// Tách thành hàm thuần để regression test không cần khởi tạo Firebase.
+Duration breakupRetryDelay(int attempt) {
+  final exponent = attempt.clamp(0, 6);
+  return Duration(seconds: 1 << exponent);
 }
 
 class SettingsRelationshipActionRunner {
@@ -322,6 +387,9 @@ class SettingsRelationshipActions {
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
+    if (request.isPending && request.expireAt > 0 && request.expireAt <= now) {
+      return false;
+    }
     if (request.isScheduled &&
         request.deleteAt > 0 &&
         request.deleteAt <= now) {
@@ -355,23 +423,7 @@ class SettingsRelationshipActions {
     if (request == null || !request.isActive) {
       return '';
     }
-    if (request.isProcessing) {
-      return L10nService().translate('home_hthngangdn_fae73f');
-    }
-    if (request.isScheduled) {
-      if (request.deleteAt > 0 &&
-          request.deleteAt <= DateTime.now().millisecondsSinceEpoch) {
-        return L10nService().translate('breakup_processing');
-      }
-      return L10nService().format('ui_home_the_data_will_be_deleted_on_value1_29eed8', {'value1': _formatDateTime(request.deleteAt)});
-    }
-    if (isSingle) {
-      return L10nService().translate('home_tikhoncthn_7650c0');
-    }
-    final expireLabel = request.expireAt > 0
-        ? _formatDateTime(request.expireAt)
-        : L10nService().translate('home_khicthayim_65b886');
-    return L10nService().format('ui_home_the_request_is_waiting_for_the_other_3a588c', {'value1': expireLabel});
+    return BreakupNoticeCopy.details(request);
   }
 
   static String statusLabel({
@@ -382,15 +434,4 @@ class SettingsRelationshipActions {
         : L10nService().translate('home_angyu_cea065');
   }
 
-  static String _formatDateTime(int value) {
-    if (value <= 0) {
-      return L10nService().translate('home_khngxcnh_fb806e');
-    }
-    final dt = DateTime.fromMillisecondsSinceEpoch(value);
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final minute = dt.minute.toString().padLeft(2, '0');
-    return UiCopy.text('copy_03dc788a1b2c', {'value1': day, 'value2': month, 'value3': dt.year, 'value4': hour, 'value5': minute});
-  }
 }

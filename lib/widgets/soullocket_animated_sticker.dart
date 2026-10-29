@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../views/ui_prefs.dart';
 import 'living_sticker.dart';
 import 'living_sticker_scene.dart';
 import 'original_sticker.dart';
@@ -27,6 +29,11 @@ class SoulLocketStickerSpec {
   final int rows;
   final SoulLocketStickerMotion motion;
   final Duration duration;
+  final String? labelKey;
+
+  /// Hiển thị ảnh đóng gói (ảnh riêng hoặc atlas) thay vì nét vẽ nội bộ.
+  /// Sticker cũ giữ mặc định `false` để URI đã lưu không đổi cách render.
+  final bool useAtlas;
 
   const SoulLocketStickerSpec({
     required this.id,
@@ -37,6 +44,8 @@ class SoulLocketStickerSpec {
     required this.rows,
     required this.motion,
     this.duration = const Duration(milliseconds: 2600),
+    this.useAtlas = false,
+    this.labelKey,
   });
 
   const SoulLocketStickerSpec.living(this.id)
@@ -46,7 +55,9 @@ class SoulLocketStickerSpec {
       columns = 1,
       rows = 1,
       motion = SoulLocketStickerMotion.breathe,
-      duration = const Duration(milliseconds: 4800);
+      duration = const Duration(milliseconds: 4800),
+      useAtlas = false,
+      labelKey = null;
 }
 
 /// Kho sticker nội bộ có URI ổn định để thay asset mà không đổi dữ liệu đã lưu.
@@ -71,6 +82,8 @@ abstract final class SoulLocketStickerCatalog {
       'assets/images/transparent_stickers/soul_merge_love_atlas_v2_transparent.webp';
   static const String soulMergePlayfulAtlas =
       'assets/images/transparent_stickers/soul_merge_playful_atlas_v2_transparent.webp';
+  static const String cuteEmotionDirectory =
+      'assets/images/soul_merge_emotions_v1_clean';
 
   /// Bộ sticker đồ vật và nhân vật tưởng tượng, tránh lặp lại gấu/thỏ.
   static const List<SoulLocketStickerSpec> noveltyStickers = [
@@ -817,6 +830,187 @@ abstract final class SoulLocketStickerCatalog {
     ),
   ];
 
+  /// Emoji mới theo các cảm xúc quen thuộc, mỗi ảnh có nền trong suốt riêng.
+  static const List<SoulLocketStickerSpec> soulMergeCuteEmotionStickers = [
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_smile',
+      assetPath: '$cuteEmotionDirectory/smile.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.bounce,
+      labelKey: 'p4_soul_emotion_smile',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_joy_tears',
+      assetPath: '$cuteEmotionDirectory/joy_tears.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.wobble,
+      labelKey: 'p4_soul_emotion_joy_tears',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_loved',
+      assetPath: '$cuteEmotionDirectory/loved.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.heartbeat,
+      labelKey: 'p4_soul_emotion_loved',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_heart_eyes',
+      assetPath: '$cuteEmotionDirectory/heart_eyes.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.pulse,
+      labelKey: 'p4_soul_emotion_heart_eyes',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_kiss',
+      assetPath: '$cuteEmotionDirectory/kiss.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.pulse,
+      labelKey: 'p4_soul_emotion_kiss',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_cool',
+      assetPath: '$cuteEmotionDirectory/cool.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.sway,
+      labelKey: 'p4_soul_emotion_cool',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_sad',
+      assetPath: '$cuteEmotionDirectory/sad.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.gentleFloat,
+      labelKey: 'p4_soul_emotion_sad',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_cry',
+      assetPath: '$cuteEmotionDirectory/cry.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.gentleFloat,
+      labelKey: 'p4_soul_emotion_cry',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_huff',
+      assetPath: '$cuteEmotionDirectory/huff.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.wobble,
+      labelKey: 'p4_soul_emotion_huff',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_angry',
+      assetPath: '$cuteEmotionDirectory/angry.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.wobble,
+      labelKey: 'p4_soul_emotion_angry',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_shy',
+      assetPath: '$cuteEmotionDirectory/shy.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.sway,
+      labelKey: 'p4_soul_emotion_shy',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_pleading',
+      assetPath: '$cuteEmotionDirectory/pleading.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.breathe,
+      labelKey: 'p4_soul_emotion_pleading',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_sleepy',
+      assetPath: '$cuteEmotionDirectory/sleepy.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.breathe,
+      duration: Duration(milliseconds: 3600),
+      labelKey: 'p4_soul_emotion_sleepy',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_hug',
+      assetPath: '$cuteEmotionDirectory/hug.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.breathe,
+      labelKey: 'p4_soul_emotion_hug',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_thinking',
+      assetPath: '$cuteEmotionDirectory/thinking.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.sway,
+      labelKey: 'p4_soul_emotion_thinking',
+      useAtlas: true,
+    ),
+    SoulLocketStickerSpec(
+      id: 'emoji_cute_surprised',
+      assetPath: '$cuteEmotionDirectory/surprised.webp',
+      column: 0,
+      row: 0,
+      columns: 1,
+      rows: 1,
+      motion: SoulLocketStickerMotion.pulse,
+      labelKey: 'p4_soul_emotion_surprised',
+      useAtlas: true,
+    ),
+  ];
+
   static const List<SoulLocketStickerSpec> sulkingStickers = [
     SoulLocketStickerSpec.living('mood_pout'),
     SoulLocketStickerSpec.living('mood_crossed_arms'),
@@ -829,7 +1023,9 @@ abstract final class SoulLocketStickerCatalog {
     SoulLocketStickerSpec.living('mood_peace'),
   ];
 
-  static const List<SoulLocketStickerSpec> all = [
+  /// Các sticker đang được phép chọn trong UI mới.
+  /// Bộ Dỗi chỉ nằm trong `all` để URI cũ vẫn khôi phục được.
+  static const List<SoulLocketStickerSpec> active = [
     ...noveltyStickers,
     ...motionStickers,
     ...heartStickers,
@@ -838,6 +1034,12 @@ abstract final class SoulLocketStickerCatalog {
     ...soulMergeComfortStickers,
     ...soulMergeLoveStickers,
     ...soulMergePlayfulStickers,
+    ...soulMergeCuteEmotionStickers,
+  ];
+
+  /// Catalog đầy đủ để dữ liệu/URI cũ không bị hỏng.
+  static const List<SoulLocketStickerSpec> all = [
+    ...active,
     ...sulkingStickers,
   ];
 
@@ -849,7 +1051,7 @@ abstract final class SoulLocketStickerCatalog {
       '$originalAssetPrefix$path';
 
   static Iterable<SoulLocketStickerSpec> get originals =>
-      all.where((sticker) => sticker.assetPath.isNotEmpty);
+      all.where((sticker) => sticker.assetPath.isNotEmpty && !sticker.useAtlas);
 
   static SoulLocketStickerSpec? find(String idOrReference) {
     final original = idOrReference.startsWith(originalPrefix);
@@ -887,7 +1089,7 @@ class SoulLocketAnimatedSticker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scene = originalArtwork
+    final scene = originalArtwork || sticker.useAtlas
         ? null
         : LivingStickerCatalog.find(sticker.id);
     final visual = scene != null
@@ -909,11 +1111,19 @@ class SoulLocketAnimatedSticker extends StatelessWidget {
             animate: animate,
             filterQuality: filterQuality,
           );
-    if (semanticLabel == null) return visual;
+    final animatedVisual = sticker.useAtlas && !originalArtwork
+        ? SoulLocketStickerMotionView(
+            motion: sticker.motion,
+            duration: sticker.duration,
+            animate: animate,
+            child: visual,
+          )
+        : visual;
+    if (semanticLabel == null) return animatedVisual;
     return Semantics(
       image: true,
       label: semanticLabel,
-      child: ExcludeSemantics(child: visual),
+      child: ExcludeSemantics(child: animatedVisual),
     );
   }
 }
@@ -955,6 +1165,7 @@ class _SoulLocketStickerMotionViewState
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
+    UiPrefs.notifier.addListener(_onEffectsChanged);
   }
 
   @override
@@ -984,9 +1195,15 @@ class _SoulLocketStickerMotionViewState
   }
 
   void _syncMotion() {
+    final effects = UiPrefs.resolveEffectProfile(
+      state: UiPrefs.notifier.value,
+      isWeb: kIsWeb,
+    );
     final enabled =
         widget.animate &&
+        effects.animationEnabled &&
         _foreground &&
+        StickerAnimationScope.enabledOf(context) &&
         TickerMode.valuesOf(context).enabled &&
         !MediaQuery.disableAnimationsOf(context);
     if (_motionEnabled == enabled) return;
@@ -1000,8 +1217,11 @@ class _SoulLocketStickerMotionViewState
     }
   }
 
+  void _onEffectsChanged() => setState(_syncMotion);
+
   @override
   void dispose() {
+    UiPrefs.notifier.removeListener(_onEffectsChanged);
     WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();

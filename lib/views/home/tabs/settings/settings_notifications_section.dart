@@ -34,11 +34,16 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       goodMorningTime: _goodMorningTime,
       goodNightTime: _goodNightTime,
     );
-    await _settingsNotificationsController.persistNotificationPrefs(
+    try {
+      await _settingsNotificationsController.persistNotificationPrefs(
       prefs: prefs,
       dbRef: _dbRef,
       draft: draft,
-    );
+      );
+    } finally {
+      await NotificationService().syncSystemCallSettings();
+      unawaited(NotificationService().refreshNotificationInstallation());
+    }
   }
 
   Future<void> _syncNotificationTopics(bool enabled) async {
@@ -75,11 +80,13 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         if (mounted) {
           setState(() => _priorityNotificationAccessGranted = granted);
         }
-        if (!granted &&
-            mounted &&
-            defaultTargetPlatform == TargetPlatform.android) {
+        if (!granted && mounted && !kIsWeb &&
+            (defaultTargetPlatform == TargetPlatform.android ||
+             defaultTargetPlatform == TargetPlatform.iOS)) {
           _showToast(
-            context.tr('priority_notifications_access_pending'),
+            context.tr(defaultTargetPlatform == TargetPlatform.iOS
+              ? 'priority_notifications_ios_requires_access'
+              : 'priority_notifications_access_pending'),
             success: false,
           );
         }
@@ -276,6 +283,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       'il_widget_style',
       'il_widget_show_diary',
       'il_widget_heart_animated',
+      'il_widget_motion_interval_minutes',
       'il_widget_heart_style',
       'il_widget_heart_color',
       'il_widget_preview_size',
@@ -457,6 +465,21 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             ),
           ),
           SLSpacing.h12,
+          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
+            SLDetailCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.phone_in_talk_outlined),
+                title: Text(context.tr('call_fullscreen_settings_title')),
+                subtitle: Text(context.tr('call_fullscreen_settings_body')),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => unawaited(AppLifecyclePresenceGuard.guard(
+                  NotificationService().openIncomingCallSettings,
+                )),
+              ),
+            ),
+            SLSpacing.h12,
+          ],
           SLDetailCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,15 +498,19 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   _priorityNotificationsEnabled,
                   _handlePriorityNotificationsChanged,
                   icon: Icons.notifications_active_outlined,
-                  helperText: _priorityNotificationAccessGranted
-                      ? context.tr('priority_notifications_enabled_description')
-                      : context.tr(
-                          'priority_notifications_requires_access_description',
-                        ),
+                  helperText: defaultTargetPlatform == TargetPlatform.iOS
+                      ? context.tr(_priorityNotificationAccessGranted
+                          ? 'priority_notifications_ios_description'
+                          : 'priority_notifications_ios_requires_access')
+                      : _priorityNotificationAccessGranted
+                          ? context.tr('priority_notifications_enabled_description')
+                          : context.tr('priority_notifications_requires_access_description'),
                 ),
                 if (_priorityNotificationsEnabled &&
                     !_priorityNotificationAccessGranted &&
-                    defaultTargetPlatform == TargetPlatform.android) ...[
+                    !kIsWeb &&
+                    (defaultTargetPlatform == TargetPlatform.android ||
+                     defaultTargetPlatform == TargetPlatform.iOS)) ...[
                   const SizedBox(height: 8),
                   SLDetailButton(
                     icon: Icons.settings_outlined,

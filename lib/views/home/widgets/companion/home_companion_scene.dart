@@ -56,8 +56,10 @@ class HomeCompanionScene extends StatefulWidget {
     this.partnerIsBunny = true,
     this.partnerHasLetter = false,
     this.onOpenPartnerLetter,
+    this.onOpenPetCare,
     this.guestVisits = false,
     this.petCare,
+    this.petOutfits,
   });
 
   /// Nhịp khách ghé chơi (giây thời gian Home đang hiển thị).
@@ -115,6 +117,9 @@ class HomeCompanionScene extends StatefulWidget {
   /// Chạm vào bé đại diện người ấy đang cầm thư để mở đọc.
   final VoidCallback? onOpenPartnerLetter;
 
+  /// Home mở Trạm Mây ngay khi nhấn giữ; không kéo bé khỏi vị trí.
+  final VoidCallback? onOpenPetCare;
+
   /// Home: Kuromi/Melody (đã mở khóa) thỉnh thoảng ghé chơi rồi về, không
   /// chiếm chỗ của hai bé chính.
   final bool guestVisits;
@@ -123,6 +128,10 @@ class HomeCompanionScene extends StatefulWidget {
   /// đổi biểu cảm; nội dung Home không bị dựng lại theo từng animation.
   final ValueListenable<Map<pet_care.PetCarePet, pet_care.PetCareVitals>>?
   petCare;
+
+  /// Trang phục chung của Trạm Mây; khách vẫn dùng tủ đồ riêng trên máy.
+  final ValueListenable<Map<pet_care.PetCarePet, pet_care.PetCareOutfit>>?
+  petOutfits;
 
   @override
   State<HomeCompanionScene> createState() => _HomeCompanionSceneState();
@@ -265,6 +274,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   bool _spriteHandledThisTap = false;
   bool _spriteGestureRejected = false;
   HomeCompanionCharacter? _heldCharacter;
+
+  /// Bé đang được vuốt ngang để xoay bằng tay.
+  HomeCompanionCharacter? _spinCharacter;
   HomeCompanionCharacter? _pressedCharacter;
   Offset? _petHoldOrigin;
   Offset _petDragOffset = Offset.zero;
@@ -305,6 +317,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _audio = widget.audio ?? HomeCompanionAudio();
     _applyCalm();
     widget.partnerStatusListenable?.addListener(_partnerStatusChanged);
+    widget.petCare?.addListener(_petCareChanged);
     _refreshPartner(announce: false);
     _ticker = createTicker(_tick);
     final lifecycle = WidgetsBinding.instance.lifecycleState;
@@ -384,13 +397,26 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     if (mounted) _refreshPartner();
   }
 
-  /// Bé của người ấy ngủ khi offline lâu, chào mình khi online và cầm thư.
+  pet_care.PetCareVitals? _careFor(HomeCompanionCharacter character) =>
+      widget.petCare?.value[switch (character) {
+        HomeCompanionCharacter.bunny => pet_care.PetCarePet.rabbit,
+        HomeCompanionCharacter.bear => pet_care.PetCarePet.bear,
+        _ => null,
+      }];
+
+  void _petCareChanged() {
+    if (!mounted) return;
+    _refreshPartner(announce: false);
+  }
+
+  /// Trạng thái ngủ của Trạm Mây được ưu tiên; presence chỉ là dự phòng.
   void _refreshPartner({bool announce = true}) {
     final partner = _partnerCharacter;
     final self = _selfCharacter;
-    _motionFor(self).dozing = false;
+    final selfSleeping = _careFor(self)?.sleeping ?? false;
+    _motionFor(self).dozing = selfSleeping;
     _moods[self]!
-      ..dozing = false
+      ..dozing = selfSleeping
       ..carryingLetter = false;
     final active = _hasPartner;
     final status = active
@@ -401,13 +427,33 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     final previousLetter = _letterNow;
     _partnerStatusNow = status;
     _letterNow = letter;
-    final dozing = !letter && status == HomeCompanionPartnerStatus.away;
+    final dozing =
+        _careFor(partner)?.sleeping ??
+        (!letter && status == HomeCompanionPartnerStatus.away);
     final pet = _motionFor(partner);
     if (pet.dozing != dozing) pet.clearSeekCount = 0;
     pet.dozing = dozing;
     _moods[partner]!
       ..dozing = dozing
       ..carryingLetter = letter;
+    for (final character in [self, partner]) {
+      if (_careFor(character)?.sleeping ?? false) {
+        _motionFor(character).settle();
+        if (_play.contains(character)) {
+          _play.cancel();
+          _pendingPlay = null;
+        }
+        if (_guestPlay.contains(character)) {
+          _guestPlay.cancel();
+          _pendingGuestPlay = null;
+        }
+        if (_socialPlay.contains(character)) {
+          _socialPlay.cancel();
+          _meeting = null;
+          _chase = null;
+        }
+      }
+    }
     if (!active || !announce) return;
     if (letter && !previousLetter) {
       _nextLetterCueAt = _socialClock;
@@ -420,7 +466,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   void _visitSelf() {
     final self = _selfCharacter;
-    if (!_characters.contains(self) ||
+    if ((_careFor(_partnerCharacter)?.sleeping ?? false) ||
+        (_careFor(self)?.sleeping ?? false) ||
+        !_characters.contains(self) ||
         !_characters.contains(_partnerCharacter) ||
         !widget.animate ||
         _reduced ||
@@ -508,6 +556,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       // Buồn ngủ trên chữ: nhờ bé đi tìm chỗ trống (tối đa 4 lần) rồi mới ngủ.
       motion.seekClearSpot =
           motion.dozing &&
+          !(_careFor(character)?.sleeping ?? false) &&
           covered &&
           motion.phase == HomeCompanionPhase.idle &&
           motion.clearSeekCount < 4;
@@ -753,6 +802,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       _dropGuest();
       _setActiveCharacters(Set.of(_characters)..remove(guest));
     }
+    if (oldWidget.petCare != widget.petCare) {
+      oldWidget.petCare?.removeListener(_petCareChanged);
+      widget.petCare?.addListener(_petCareChanged);
+    }
     if (oldWidget.partnerStatusListenable != widget.partnerStatusListenable) {
       oldWidget.partnerStatusListenable?.removeListener(_partnerStatusChanged);
       widget.partnerStatusListenable?.addListener(_partnerStatusChanged);
@@ -835,6 +888,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     final becameHidden = _visible.value && !show;
     if (!show) {
       _cancelPetHold();
+      _endSpin(0);
       _clearPointers();
     }
     if (!show || !widget.animate || _reduced) {
@@ -992,6 +1046,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   ) {
     if (_anyPlay ||
         _traffic.passing ||
+        (_careFor(play.firstCharacter)?.sleeping ?? false) ||
+        (_careFor(play.secondCharacter)?.sleeping ?? false) ||
         !first.hasSurfaces ||
         !second.hasSurfaces) {
       return false;
@@ -1165,6 +1221,13 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   void _playWith(HomeCompanionCharacter character) {
+    // Chạm bé thức cũng không được rủ bé kia đang ngủ trong Trạm Mây.
+    if ((_careFor(character)?.sleeping ?? false) ||
+        (!_isGuest(character) &&
+            ((_careFor(HomeCompanionCharacter.bunny)?.sleeping ?? false) ||
+                (_careFor(HomeCompanionCharacter.bear)?.sleeping ?? false)))) {
+      return;
+    }
     _audio.voice = character;
     _chase = null;
     _meeting = null;
@@ -1181,7 +1244,10 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       final candidates =
           HomeCompanionCharacter.values
               .where(
-                (other) => other != character && _characters.contains(other),
+                (other) =>
+                    other != character &&
+                    _characters.contains(other) &&
+                    !(_careFor(other)?.sleeping ?? false),
               )
               .toList()
             ..sort(
@@ -1236,6 +1302,46 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
         (widget.followScroll ? _paintOffset.value : Offset.zero);
   }
 
+  /// Vuốt ngang ngay trên bé để xoay bé; tắt chuyển động hoặc bé đang ngủ
+  /// trong Trạm Mây thì không xoay, vuốt chỗ khác vẫn chuyển tab như cũ.
+  bool _canSpinAt(Offset global) {
+    if (!widget.animate || _reduced) return false;
+    final character = _spriteAt(global);
+    return character != null && !(_careFor(character)?.sleeping ?? false);
+  }
+
+  void _startSpin(Offset global) {
+    final character = _spriteAt(global);
+    if (character == null || !widget.animate || _reduced) return;
+    _cancelPetHold();
+    _spinCharacter = character;
+    _spriteHandledThisTap = true;
+    _pendingApproach = null;
+    _pendingSprite = null;
+    if (_play.contains(character)) {
+      _play.cancel();
+      _pendingPlay = null;
+    }
+    if (_guestPlay.contains(character)) {
+      _guestPlay.cancel();
+      _pendingGuestPlay = null;
+    }
+    if (_socialPlay.contains(character)) _socialPlay.cancel();
+    _chase = null;
+    _meeting = null;
+    _motionFor(character).grabSpin();
+    if (widget.soundEnabled) _audio.unlock();
+    _sync();
+  }
+
+  void _endSpin(double velocity) {
+    final character = _spinCharacter;
+    if (character == null) return;
+    _spinCharacter = null;
+    _motionFor(character).releaseSpin(velocity);
+    _sync();
+  }
+
   void _startPetHold(LongPressStartDetails details) {
     final character = _pressedCharacter;
     final point = _contentPoint(details.globalPosition);
@@ -1260,9 +1366,11 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _pendingApproach = null;
     _pendingSprite = null;
     _sync();
+    widget.onOpenPetCare?.call();
   }
 
   void _movePetHold(LongPressMoveUpdateDetails details) {
+    if (widget.onOpenPetCare != null) return;
     final character = _heldCharacter;
     final origin = _petHoldOrigin;
     if (character == null || origin == null || !_canShow) return;
@@ -1325,7 +1433,9 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _petMoved = false;
     _sync();
     _scheduleMeasure();
-    if (!moved) unawaited(_openWardrobe(character));
+    if (!moved && widget.onOpenPetCare == null) {
+      unawaited(_openWardrobe(character));
+    }
   }
 
   void _cancelPetHold() {
@@ -1599,6 +1709,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
 
   void _onPointerDown(PointerDownEvent event) {
     if (!_canShow) return;
+    _lookAtPointer(event.position);
     _pendingApproach = null;
     _spriteHandledThisTap = false;
     _downPointers.add(event.pointer);
@@ -1625,6 +1736,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
   }
 
   void _onPointerMove(PointerMoveEvent event) {
+    if (_canShow) _lookAtPointer(event.position);
     if (_heldCharacter != null) return;
     if (_pointer == event.pointer &&
         _pointerOrigin != null &&
@@ -1728,7 +1840,16 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     });
   }
 
+  void _lookAtPointer(Offset global) {
+    if (!widget.animate || _reduced) return;
+    final point = _contentPoint(global);
+    _motion.lookAt(point);
+    _buddy.lookAt(point);
+  }
+
   void _clearPointers() {
+    _motion.lookAt(null);
+    _buddy.lookAt(null);
     _pendingApproach = null;
     _pendingSprite = null;
     _holdTimer?.cancel();
@@ -1764,6 +1885,7 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
     _guestPlay.dispose();
     _play.dispose();
     widget.partnerStatusListenable?.removeListener(_partnerStatusChanged);
+    widget.petCare?.removeListener(_petCareChanged);
     for (final mood in _moods.values) {
       mood.dispose();
     }
@@ -1833,6 +1955,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                               play: _play,
                                               socialPlay: _socialPlay,
                                               careListenable: widget.petCare,
+                                              petOutfitsListenable:
+                                                  widget.petOutfits,
                                               paintOffset: widget.followScroll
                                                   ? _paintOffset
                                                   : null,
@@ -1861,6 +1985,8 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                                   socialPlay: _socialPlay,
                                                   careListenable:
                                                       widget.petCare,
+                                                  petOutfitsListenable:
+                                                      widget.petOutfits,
                                                   paintOffset:
                                                       widget.followScroll
                                                       ? _paintOffset
@@ -1875,66 +2001,71 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                                                       Brightness.dark,
                                                 ),
                                           ),
-                                          if (_characters.contains(HomeCompanionCharacter.kuromi) ||
-                                              _characters.contains(HomeCompanionCharacter.melody))
-                                          CustomPaint(
-                                            key: const ValueKey(
-                                              'home-companion-guests-paint',
-                                            ),
-                                            painter: HomeCompanionPainter(
-                                              motion: _kuromi,
-                                              mood:
-                                                  _moods[HomeCompanionCharacter
-                                                      .kuromi],
-                                              character:
-                                                  HomeCompanionCharacter.kuromi,
-                                              outfit: _outfitFor(
+                                          if (_characters.contains(
                                                 HomeCompanionCharacter.kuromi,
-                                                outfits,
+                                              ) ||
+                                              _characters.contains(
+                                                HomeCompanionCharacter.melody,
+                                              ))
+                                            CustomPaint(
+                                              key: const ValueKey(
+                                                'home-companion-guests-paint',
                                               ),
-                                              play: _guestPlay,
-                                              socialPlay: _socialPlay,
-                                              paintOffset: widget.followScroll
-                                                  ? _paintOffset
-                                                  : null,
-                                              showEffects:
-                                                  widget.animate && !_reduced,
-                                              darkMode:
-                                                  Theme.of(
-                                                    context,
-                                                  ).brightness ==
-                                                  Brightness.dark,
-                                            ),
-                                            foregroundPainter:
-                                                HomeCompanionPainter(
-                                                  motion: _melody,
-                                                  mood:
-                                                      _moods[HomeCompanionCharacter
-                                                          .melody],
-                                                  character:
+                                              painter: HomeCompanionPainter(
+                                                motion: _kuromi,
+                                                mood:
+                                                    _moods[HomeCompanionCharacter
+                                                        .kuromi],
+                                                character:
+                                                    HomeCompanionCharacter
+                                                        .kuromi,
+                                                outfit: _outfitFor(
+                                                  HomeCompanionCharacter.kuromi,
+                                                  outfits,
+                                                ),
+                                                play: _guestPlay,
+                                                socialPlay: _socialPlay,
+                                                paintOffset: widget.followScroll
+                                                    ? _paintOffset
+                                                    : null,
+                                                showEffects:
+                                                    widget.animate && !_reduced,
+                                                darkMode:
+                                                    Theme.of(
+                                                      context,
+                                                    ).brightness ==
+                                                    Brightness.dark,
+                                              ),
+                                              foregroundPainter:
+                                                  HomeCompanionPainter(
+                                                    motion: _melody,
+                                                    mood:
+                                                        _moods[HomeCompanionCharacter
+                                                            .melody],
+                                                    character:
+                                                        HomeCompanionCharacter
+                                                            .melody,
+                                                    outfit: _outfitFor(
                                                       HomeCompanionCharacter
                                                           .melody,
-                                                  outfit: _outfitFor(
-                                                    HomeCompanionCharacter
-                                                        .melody,
-                                                    outfits,
+                                                      outfits,
+                                                    ),
+                                                    play: _guestPlay,
+                                                    socialPlay: _socialPlay,
+                                                    paintOffset:
+                                                        widget.followScroll
+                                                        ? _paintOffset
+                                                        : null,
+                                                    showEffects:
+                                                        widget.animate &&
+                                                        !_reduced,
+                                                    darkMode:
+                                                        Theme.of(
+                                                          context,
+                                                        ).brightness ==
+                                                        Brightness.dark,
                                                   ),
-                                                  play: _guestPlay,
-                                                  socialPlay: _socialPlay,
-                                                  paintOffset:
-                                                      widget.followScroll
-                                                      ? _paintOffset
-                                                      : null,
-                                                  showEffects:
-                                                      widget.animate &&
-                                                      !_reduced,
-                                                  darkMode:
-                                                      Theme.of(
-                                                        context,
-                                                      ).brightness ==
-                                                      Brightness.dark,
-                                                ),
-                                          ),
+                                            ),
                                         ],
                                       ),
                                     ),
@@ -1950,6 +2081,23 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
                     // Chỉ nhận tap/giữ đúng hình bé; kéo vẫn nhường cuộn gốc.
                     behavior: HitTestBehavior.translucent,
                     gestures: {
+                      _CompanionSpinRecognizer:
+                          GestureRecognizerFactoryWithHandlers<
+                            _CompanionSpinRecognizer
+                          >(() => _CompanionSpinRecognizer(), (recognizer) {
+                            recognizer.allowed = _canSpinAt;
+                            recognizer.onStart = (details) =>
+                                _startSpin(details.globalPosition);
+                            recognizer.onUpdate = (details) {
+                              final character = _spinCharacter;
+                              if (character != null) {
+                                _motionFor(character).spinBy(details.delta.dx);
+                              }
+                            };
+                            recognizer.onEnd = (details) =>
+                                _endSpin(details.velocity.pixelsPerSecond.dx);
+                            recognizer.onCancel = () => _endSpin(0);
+                          }),
                       _CompanionTapRecognizer:
                           GestureRecognizerFactoryWithHandlers<
                             _CompanionTapRecognizer
@@ -1984,6 +2132,15 @@ class _HomeCompanionSceneState extends State<HomeCompanionScene>
       ),
     );
   }
+}
+
+/// Vuốt ngang bắt đầu trên bé thì xoay bé, thắng cả vuốt chuyển tab của Home
+/// (giống thanh trượt nằm trong trang vuốt); vuốt dọc vẫn cuộn trang.
+class _CompanionSpinRecognizer extends HorizontalDragGestureRecognizer {
+  bool Function(Offset)? allowed;
+  @override
+  bool isPointerAllowed(PointerEvent event) =>
+      (allowed?.call(event.position) ?? false) && super.isPointerAllowed(event);
 }
 
 class _CompanionTapRecognizer extends TapGestureRecognizer {

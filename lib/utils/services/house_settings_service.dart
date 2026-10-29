@@ -1,4 +1,5 @@
 import 'package:soullocket_app/utils/ui_copy.dart';
+import 'package:soullocket_app/utils/house_identity_projection.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -227,7 +228,11 @@ class HouseSettingsService {
       'houses/$houseId/houseName': safeHouseName,
       'houses/$houseId/settings/houseName': safeHouseName,
       'houses_public/$houseId/houseName': safeHouseName,
-      'house_profiles/$houseId/houseName': safeHouseName,
+      ...houseIdentityProjectionUpdates(houseId, 'houseName', safeHouseName),
+      ...houseIdentityProjectionUpdates(houseId, 'nameU1', safeNameU1),
+      ...houseIdentityProjectionUpdates(houseId, 'nameU2', safeNameU2),
+      ...houseIdentityProjectionUpdates(houseId, 'startDate', safeStartDate),
+      ...houseIdentityProjectionUpdates(houseId, 'dayUnit', safeDayUnit),
       'houses/$houseId/settings/nameU1': safeNameU1,
       'houses/$houseId/settings/nameU2': safeNameU2,
       'houses/$houseId/settings/startDate': safeStartDate,
@@ -253,7 +258,11 @@ class HouseSettingsService {
 
   Future<void> updateField(String houseId, String field, dynamic value) async {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
-    await _dbRef.child('houses/$houseId/settings/$field').set(value);
+    await _dbRef.update({
+      'houses/$houseId/settings/$field': value,
+      if (field == 'houseName') 'houses/$houseId/houseName': value,
+      ...houseIdentityProjectionUpdates(houseId, field, value),
+    });
     _invalidateCache(houseId);
   }
 
@@ -384,7 +393,7 @@ class HouseSettingsService {
       'houses/$houseId/houseName': trimmed,
       'houses/$houseId/settings/houseName': trimmed,
       'houses_public/$houseId/houseName': trimmed,
-      'house_profiles/$houseId/houseName': trimmed,
+      ...houseIdentityProjectionUpdates(houseId, 'houseName', trimmed),
       'houses/$houseId/updatedAt': ServerValue.timestamp,
       ...SingleMatchService.profileIndexUpdates(
         houseId: houseId,
@@ -417,10 +426,11 @@ class HouseSettingsService {
       throw UiCopy.text('copy_c5a64fec2ba5');
     }
     try {
-      // Ghi đúng ô mà màn hình cần. Các trường audit là phần tùy chọn; nếu
-      // rules live của một phiên bản cũ chưa có chúng thì không được làm hỏng
-      // thao tác đổi ngày yêu.
-      await _dbRef.child('houses/$houseId/settings/startDate').set(safeDate);
+      // Cùng một lần ghi để Home và hồ sơ khách nhận cùng ngày kỷ niệm.
+      await _dbRef.update({
+        'houses/$houseId/settings/startDate': safeDate,
+        ...houseIdentityProjectionUpdates(houseId, 'startDate', safeDate),
+      });
 
       // Timestamp chỉ để các listener sắp xếp lại dữ liệu; không được biến nó
       // thành lý do báo lỗi sau khi startDate đã lưu thành công.

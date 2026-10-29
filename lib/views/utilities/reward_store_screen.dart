@@ -100,6 +100,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     _loadCheckinData();
     _listenAdRewardData();
     _scheduleRewardDayRefresh();
+    _adMob.preloadRewardedAd();
     unawaited(_recoverAdReward());
     _authSubscription = _auth.authStateChanges().listen(_bindUser);
   }
@@ -184,6 +185,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
     _cooldownTimer?.cancel();
     _cooldownTimer = null;
     if (!active) return;
+    if (!_isWatchingAd) _adMob.preloadRewardedAd();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (isScreenActive) _syncAdCooldownTicker();
     });
@@ -808,7 +810,12 @@ class _RewardStoreScreenState extends State<RewardStoreScreen>
         return;
       }
       if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
-      final worked = await _adMob.showRewardedAd(verifiedPurpose: 'points');
+      final worked = await _adMob.showRewardedAd(
+        verifiedPurpose: 'points',
+        isCurrent: () =>
+            _isCurrentAction(uid, actionGeneration) &&
+            (ModalRoute.of(context)?.isCurrent ?? true),
+      );
       if (!mounted || !_isCurrentAction(uid, actionGeneration)) return;
       if (!worked) {
         final failure = _adMob.lastRewardedAdFailure;

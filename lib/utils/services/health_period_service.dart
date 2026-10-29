@@ -10,7 +10,8 @@ import '../health_data_privacy.dart';
 ///
 ///  Chức năng:
 ///  1. Ghi nhận ngày bắt đầu/kết thúc chu kỳ.
-///  2. Toán học cơ bản tính toán Ngày rụng dâu tiếp theo (Trung bình 28 ngày).
+///  2. Tính ngày dự báo tiếp theo theo độ dài chu kỳ người dùng chọn
+///     (mặc định 28 ngày khi dữ liệu cũ chưa có thiết lập).
 ///  3. Lõi kích hoạt Push Notification báo cho Chàng Trai chuẩn bị tâm lý.
 /// ============================================================
 class HealthPeriodService {
@@ -29,6 +30,7 @@ class HealthPeriodService {
     String houseId,
     DateTime startDate, {
     bool shareWithPartner = false,
+    int? cycleLength,
     Map<String, dynamic>? cycleData,
   }) async {
     final ref = _db.ref('houses/$houseId/health_period');
@@ -45,9 +47,14 @@ class HealthPeriodService {
       throw StateError('Không tạo được mốc chu kỳ.');
     }
 
-    // Tính toán trạm dừng chân tiếp theo
+    // Tính toán trạm dừng chân tiếp theo. Hồ sơ mới luôn lưu độ dài chu kỳ
+    // người dùng chọn; chỉ dùng 28 ngày khi dữ liệu cũ không có giá trị hợp lệ.
+    final resolvedCycleLength = _resolveCycleLength(
+      cycleLength: cycleLength,
+      cycleData: cycleData,
+    );
     final nextPredictedDate =
-        CalendarCivilDate.addDays(startDate, defaultCycleLength);
+        CalendarCivilDate.addDays(startDate, resolvedCycleLength);
 
     // Cập nhật lên Cổng Chính (Home) để Trae bắt vẽ Giọt Nước
     final periodUpdate = <String, dynamic>{
@@ -75,6 +82,23 @@ class HealthPeriodService {
     if (shareWithPartner) {
       _scheduleNotificationsForBoyfriend(nextPredictedDate);
     }
+  }
+
+  int _resolveCycleLength({
+    int? cycleLength,
+    Map<String, dynamic>? cycleData,
+  }) {
+    final fromCycleData = cycleData?['length'];
+    final candidate = cycleLength ??
+        (fromCycleData is num
+            ? fromCycleData.toInt()
+            : int.tryParse(fromCycleData?.toString() ?? ''));
+    // UI hiện giới hạn 20–45 ngày. Giữ cùng giới hạn ở tầng service để
+    // dữ liệu từ client cũ/khác không tạo lịch dự báo bất thường.
+    if (candidate != null && candidate >= 20 && candidate <= 45) {
+      return candidate;
+    }
+    return defaultCycleLength;
   }
 
   /// Hàm lắng nghe chu kỳ (Để Trae vẽ Widgets Nhắc Nhở)

@@ -36,9 +36,14 @@ const _memoryActions = [
 ];
 
 class MemoryViewerActionsButton extends StatelessWidget {
-  const MemoryViewerActionsButton({super.key, required this.onSelected});
+  const MemoryViewerActionsButton({
+    super.key,
+    required this.onSelected,
+    this.isVideo = false,
+  });
 
   final ValueChanged<String> onSelected;
+  final bool isVideo;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +51,7 @@ class MemoryViewerActionsButton extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     return PopupMenuButton<String>(
       key: const ValueKey('memory-viewer-actions'),
-      tooltip: context.tr('home_tychnnh_5e18e0'),
+      tooltip: context.tr(isVideo ? 'memory_video_options' : 'home_tychnnh_5e18e0'),
       constraints: BoxConstraints(
         minWidth: (width - 40).clamp(0, 244),
         maxWidth: (width - 40).clamp(0, 300),
@@ -64,10 +69,10 @@ class MemoryViewerActionsButton extends StatelessWidget {
       ),
       icon: const Icon(Icons.more_horiz_rounded, color: Colors.white, size: 24),
       itemBuilder: (context) => [
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           enabled: false,
           height: 38,
-          child: _MemoryActionsHeading(),
+          child: _MemoryActionsHeading(isVideo: isVideo),
         ),
         for (final action in _memoryActions) ...[
           if (action.value == 'delete') const PopupMenuDivider(height: 12),
@@ -76,7 +81,7 @@ class MemoryViewerActionsButton extends StatelessWidget {
             value: action.value,
             height: 60,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: _MemoryActionContent(action: action.value),
+            child: _MemoryActionContent(action: action.value, isVideo: isVideo),
           ),
         ],
       ],
@@ -86,7 +91,9 @@ class MemoryViewerActionsButton extends StatelessWidget {
 }
 
 class MemoryViewerActionSheet extends StatelessWidget {
-  const MemoryViewerActionSheet({super.key});
+  const MemoryViewerActionSheet({super.key, this.isVideo = false});
+
+  final bool isVideo;
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +113,9 @@ class MemoryViewerActionSheet extends StatelessWidget {
               Center(
                 child: Container(width: 36, height: 3, color: colors.line),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(10, 16, 10, 10),
-                child: _MemoryActionsHeading(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
+                child: _MemoryActionsHeading(isVideo: isVideo),
               ),
               for (final action in _memoryActions) ...[
                 if (action.value == 'delete')
@@ -124,7 +131,7 @@ class MemoryViewerActionSheet extends StatelessWidget {
                         horizontal: 10,
                         vertical: 10,
                       ),
-                      child: _MemoryActionContent(action: action.value),
+                      child: _MemoryActionContent(action: action.value, isVideo: isVideo),
                     ),
                   ),
                 ),
@@ -138,11 +145,13 @@ class MemoryViewerActionSheet extends StatelessWidget {
 }
 
 class _MemoryActionsHeading extends StatelessWidget {
-  const _MemoryActionsHeading();
+  const _MemoryActionsHeading({required this.isVideo});
+
+  final bool isVideo;
 
   @override
   Widget build(BuildContext context) => Text(
-    context.tr('home_tychnnh_5e18e0'),
+    context.tr(isVideo ? 'memory_video_options' : 'home_tychnnh_5e18e0'),
     style: SLTheme.quicksand(
       color: DiaryAlbumPalette.of(context).muted,
       fontSize: 12,
@@ -152,14 +161,23 @@ class _MemoryActionsHeading extends StatelessWidget {
 }
 
 class _MemoryActionContent extends StatelessWidget {
-  const _MemoryActionContent({required this.action});
+  const _MemoryActionContent({required this.action, required this.isVideo});
 
   final String action;
+  final bool isVideo;
 
   @override
   Widget build(BuildContext context) {
     final colors = DiaryAlbumPalette.of(context);
     final item = _memoryActions.firstWhere((item) => item.value == action);
+    final label = isVideo
+        ? switch (action) {
+            'save' => 'memory_video_save',
+            'share' => 'memory_video_share',
+            'info' => 'memory_video_details',
+            _ => 'memory_video_delete',
+          }
+        : item.label;
     return Row(
       children: [
         Container(
@@ -176,7 +194,7 @@ class _MemoryActionContent extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            context.tr(item.label),
+            context.tr(label),
             style: SLTheme.quicksand(
               color: item.value == 'delete'
                   ? colors.tint(item.color)

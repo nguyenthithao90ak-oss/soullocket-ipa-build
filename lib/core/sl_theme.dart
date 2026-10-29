@@ -503,6 +503,10 @@ class SLShadow {
 /// ─── Main Theme Class ─────────────────────────────────────────
 class SLTheme {
   static final ValueNotifier<bool> isTabSwiping = ValueNotifier<bool>(false);
+  // Khi sheet tùy chỉnh vòng đếm mở, khóa vuốt ngang của Home để thao tác
+  // trong sheet không vô tình chuyển sang Nhật ký hoặc tab tiện ích.
+  static final ValueNotifier<bool> isCountdownCustomizeOpen =
+      ValueNotifier<bool>(false);
   static final ValueNotifier<int?> globalTabRequest = ValueNotifier<int?>(null);
   static const String defaultFontKey = 'quicksand';
   static List<SLFontOption> get fontOptions => [

@@ -153,8 +153,6 @@ class UtilityService {
   static bool isUtilityVisibleInCurrentBuild(String id) {
     // Giftcode đã chuyển vào Cài đặt Android, không còn là một tiện ích.
     if (id == 'giftcode') return false;
-    // Tạm thời ẩn "Hiểu tui hông?" vì tính năng chưa hoàn thiện
-    if (id == 'understand_me') return false;
     if (!kIsWeb &&
         defaultTargetPlatform == TargetPlatform.iOS &&
         id == 'soul_events') {

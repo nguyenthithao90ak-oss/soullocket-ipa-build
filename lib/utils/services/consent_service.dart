@@ -177,6 +177,12 @@ class ConsentService {
     final prefs =
         OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
+    // Một gate mới có thể dựng đúng lúc lựa chọn trước đang được lưu.
+    // Kiểm tra sau await tải prefs vì người dùng có thể bấm đồng ý trong
+    // chính khoảng chờ đó. Chỉ đọc receipt sau khi lần ghi đã hoàn tất.
+    while (_pendingChoiceWrite != null) {
+      await _pendingChoiceWrite;
+    }
     return _hasValidConsent(prefs);
   }
 

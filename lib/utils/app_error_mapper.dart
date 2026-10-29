@@ -40,7 +40,9 @@ class AppErrorMapper {
             : _looksLikeUser(original)
             ? AppErrorKind.user
             : AppErrorKind.server,
-        message: error.message,
+        message: error.message == error.key
+            ? fallbackMessage ?? defaultServerMessage
+            : error.message,
       );
     }
     if (error is AppErrorInfo) {
@@ -434,7 +436,7 @@ class AppErrorMapper {
     if (message.isEmpty) {
       return L10nService().translate('err_invalid_input');
     }
-    return message;
+    return L10nService().translate('err_invalid_input');
   }
 
   static String _normalizeNetworkMessage(String message) {
@@ -450,7 +452,7 @@ class AppErrorMapper {
     if (message.isEmpty) {
       return defaultNetworkMessage;
     }
-    return message;
+    return defaultNetworkMessage;
   }
 
   static String _normalizeServerMessage(
@@ -482,16 +484,9 @@ class AppErrorMapper {
         normalized.contains('gmail_app_password')) {
       return L10nService().translate('err_otp_service_not_ready');
     }
-    if (message.isEmpty) {
-      return fallbackMessage ?? defaultServerMessage;
-    }
-    // Backend cũ vẫn có thể trả câu tiếng Việt trực tiếp. Không để câu đó
-    // lọt lên UI của người dùng quốc tế; caller thường đã truyền fallback
-    // theo locale hiện tại nên thông báo vẫn giữ đúng ngôn ngữ.
-    if (_containsVietnameseText(message)) {
-      return fallbackMessage ?? defaultServerMessage;
-    }
-    return message;
+    // Chỉ hiển thị câu đã dịch do app kiểm soát. Chi tiết SDK/backend
+    // có thể chứa mã nội bộ hoặc địa chỉ kết nối, không dùng làm thông báo UI.
+    return fallbackMessage ?? defaultServerMessage;
   }
 
   static bool _containsVietnameseText(String message) {

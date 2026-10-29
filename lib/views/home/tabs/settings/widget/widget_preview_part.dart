@@ -59,15 +59,20 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   }
 
   Widget _buildWidgetCenterVisual(Color textColor) {
-    if (_widgetStickerKey == 'none') {
+    final motionEnabled =
+        _widgetHeartAnimated && !MediaQuery.disableAnimationsOf(context);
+    final previewTick = _widgetPreviewTickNotifier.value;
+    final stickerKey = _widgetStickerKey == 'none'
+        ? 'none'
+        : motionEnabled
+        ? WidgetAppearance.animatedStickerForTick(previewTick)
+        : _widgetStickerKey;
+    if (stickerKey == 'none') {
       return _buildWidgetHeartPreview(textColor, size: 120);
     }
-    final twinkle =
-        _widgetHeartAnimated &&
-        !MediaQuery.disableAnimationsOf(context) &&
-        _widgetPreviewTickNotifier.value.isOdd;
+    final twinkle = motionEnabled && previewTick.isOdd;
     return WidgetStickerArtwork(
-      stickerKey: _widgetStickerKey,
+      stickerKey: stickerKey,
       twinkle: twinkle,
     );
   }
@@ -114,7 +119,12 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         width: size,
         height: size,
         child: WidgetHeartArtwork(
-          styleKey: _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey),
+          styleKey: _widgetHeartAnimated &&
+                  !MediaQuery.disableAnimationsOf(context)
+              ? WidgetAppearance.animatedHeartForTick(
+                  _widgetPreviewTickNotifier.value,
+                )
+              : _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey),
           animated: _widgetHeartAnimated,
           phase: _widgetPreviewTickNotifier.value,
         ),
@@ -669,7 +679,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
           .where((path) => File(path).existsSync())
           .toList(growable: false);
     }
-    return widget.state._loadWidgetDiaryUrls(limit: 12);
+    return await widget.state._loadWidgetDiaryUrls(limit: 12) ?? const [];
   }
 
   Widget _buildEmptyPreview() =>
@@ -681,17 +691,29 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
     builder: (context, snapshot) {
       final paths = snapshot.data ?? const <String>[];
       if (paths.isEmpty) return _buildEmptyPreview();
-      Widget image(String path) => WidgetService.supportsMobileWidgets
-          ? Image.file(
-              File(path),
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _buildEmptyPreview(),
-            )
-          : CachedNetworkImage(
-              imageUrl: path,
-              fit: BoxFit.cover,
-              errorWidget: (_, _, _) => _buildEmptyPreview(),
-            );
+      Widget image(String path) {
+        if (WidgetService.supportsMobileWidgets) {
+          return Image.file(
+            File(path),
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => _buildEmptyPreview(),
+          );
+        }
+        final privateImage = parseWidgetPrivateDiaryImage(path);
+        if (privateImage != null) {
+          return PrivateDiaryImage(
+            houseId: privateImage.houseId,
+            memoryId: privateImage.mediaId,
+            cacheWidth: 320,
+            fit: BoxFit.cover,
+          );
+        }
+        return CachedNetworkImage(
+          imageUrl: path,
+          fit: BoxFit.cover,
+          errorWidget: (_, _, _) => _buildEmptyPreview(),
+        );
+      }
       return WidgetPhotoCollage(
         images: paths.take(4).map(image).toList(),
         layoutKey: widget.layoutKey,
@@ -699,7 +721,14 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
         frameColor: widget.state._widgetHeartPalette(
           widget.state._widgetHeartColorKey,
         )[1],
-        stickerKey: widget.state._widgetStickerKey,
+        stickerKey: widget.state._widgetStickerKey == 'none'
+            ? 'none'
+            : widget.state._widgetHeartAnimated &&
+                    !MediaQuery.disableAnimationsOf(context)
+                ? WidgetAppearance.animatedStickerForTick(
+                    widget.state._widgetPreviewTickNotifier.value,
+                  )
+                : widget.state._widgetStickerKey,
       );
     },
   );

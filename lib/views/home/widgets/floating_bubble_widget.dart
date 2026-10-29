@@ -1,303 +1,309 @@
-import 'package:soullocket_app/utils/ui_copy.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/soul_message_content.dart';
+import 'package:soullocket_app/utils/soul_bubble_overlay.dart';
+import 'package:soullocket_app/utils/ui_copy.dart';
+import 'package:soullocket_app/widgets/soul_merge_mark.dart';
+import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
+
+import 'soul_merge/bubble_chat_controller.dart';
+import 'soul_merge/bubble_window_controller.dart';
+import 'soul_merge/soul_merge_design.dart';
+import 'soul_merge/sticker_bottom_sheet.dart';
 
 class FloatingBubbleWidget extends StatefulWidget {
   const FloatingBubbleWidget({
     super.key,
-    this.initialHouseId,
-    this.initialRole,
-    this.initialPartnerName,
+    required this.chatController,
+    this.windowController,
+    this.onOpenApp,
+    this.onCloseOverlay,
   });
 
-  final String? initialHouseId;
-  final String? initialRole;
-  final String? initialPartnerName;
+  final SoulBubbleChatController chatController;
+  final SoulBubbleWindowController? windowController;
+  final Future<void> Function()? onOpenApp;
+  final Future<void> Function()? onCloseOverlay;
 
   @override
   State<FloatingBubbleWidget> createState() => _FloatingBubbleWidgetState();
 }
 
 class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
-    with TickerProviderStateMixin {
-  late AnimationController _animController;
-  late Animation<double> _scaleAnimation;
-  late AnimationController _breatheController;
-  late Animation<double> _breatheAnimation;
-  double _touchScale = 1.0;
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  late final SoulBubbleChatController _chat;
+  late final SoulBubbleWindowController _window;
+  late final AnimationController _animController;
+  late final Animation<double> _scaleAnimation;
+  late final AnimationController _breatheController;
+  late final Animation<double> _breatheAnimation;
+  final _textController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _composerFocus = FocusNode();
 
+  double _touchScale = 1;
   String _messagePreview = '';
   bool _showPreview = false;
   bool _isExpanded = false;
+  bool _opening = false;
+  bool _closing = false;
+  bool _sendingTap = false;
+  bool _resumeMotion = true;
+  bool _stickerPickerOpen = false;
+  bool _scrollingMessages = false;
+  int _previewGeneration = 0;
+  int _incomingRevision = 0;
+  String? _lastScope;
+  String? _localError;
+  String? _failedSticker;
+  List<Map<String, dynamic>>? _lastMessages;
+  Timer? _previewTimer;
 
-  List<dynamic> _chatHistory = [];
-  String _myRole = 'user1';
-  String _partnerName = UiCopy.text('copy_145933221191');
-
-  final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  StreamSubscription<dynamic>? _overlayListenerSub;
-  String? _houseId;
-  StreamSubscription<DatabaseEvent>? _soulMessagesSub;
-  DateTime? _lastChatPermissionErrorAt;
-
-  // Anti-spam state variables
   final List<int> _msgTimestamps = [];
   final List<int> _warningTimestamps = [];
   int _tempBlockSecondsLeft = 0;
   Timer? _tempBlockTimer;
   String? _spamWarning;
-  Timer? _syncCheckTimer;
 
   @override
   void initState() {
     super.initState();
-    _myRole = widget.initialRole ?? 'user1';
-    _partnerName =
-        widget.initialPartnerName ?? UiCopy.text('copy_145933221191');
-    _houseId = widget.initialHouseId;
-
+    WidgetsBinding.instance.addObserver(this);
+    _chat = widget.chatController;
+    _window =
+        widget.windowController ??
+        SoulBubbleWindowController(AndroidSoulBubbleWindow());
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 220),
     );
     _scaleAnimation = CurvedAnimation(
       parent: _animController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutCubic,
     );
-    _animController.forward();
-
     _breatheController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 650),
     );
-    _breatheAnimation = Tween<double>(begin: 1.0, end: 1.06).animate(
+    _breatheAnimation = Tween<double>(begin: 1, end: 1.06).animate(
       CurvedAnimation(parent: _breatheController, curve: Curves.easeInOutSine),
     );
-    _breatheController.repeat(reverse: true);
-
-    _startListeningFirebaseChat();
-    _startSyncCheckLoop();
-
-    // Listen to data from the main app
-    _overlayListenerSub = FlutterOverlayWindow.overlayListener.listen((event) {
-      if (event is String && event.isNotEmpty) {
-        if (event == 'launch_app') return;
-
-        try {
-          if (event.startsWith('{')) {
-            final data = jsonDecode(event);
-            final type = data['type'];
-            if (type == 'sync_credentials') {
-              final hId = data['houseId']?.toString() ?? '';
-              final r = data['role']?.toString() ?? 'user1';
-              final pName =
-                  data['partnerName']?.toString() ??
-                  UiCopy.text('copy_145933221191');
-              if (hId.isNotEmpty) {
-                if (mounted) {
-                  setState(() {
-                    _houseId = hId;
-                    _myRole = r;
-                    _partnerName = pName;
-                  });
-                }
-                SharedPreferences.getInstance().then((prefs) {
-                  prefs.setString('overlay_house_id', hId);
-                  prefs.setString('overlay_role', r);
-                  prefs.setString('overlay_partner_name', pName);
-                });
-                _startListeningFirebaseChat();
-              }
-            } else if (type == 'update_chat') {
-              if (mounted) {
-                setState(() {
-                  _myRole = data['myRole'] ?? 'user1';
-                  _partnerName =
-                      data['partnerName'] ?? UiCopy.text('copy_145933221191');
-                });
-              }
-            } else if (type == 'new_msg_preview') {
-              final text = data['text']?.toString() ?? '';
-              if (text.isNotEmpty && !_isExpanded) {
-                setState(() {
-                  _messagePreview = text;
-                  _showPreview = true;
-                });
-                // Resize for preview
-                FlutterOverlayWindow.resizeOverlay(240, 80, true);
-
-                // Shrink back after 4 seconds
-                Future.delayed(const Duration(seconds: 4), () {
-                  if (mounted && !_isExpanded) {
-                    setState(() {
-                      _showPreview = false;
-                    });
-                    FlutterOverlayWindow.resizeOverlay(80, 80, true);
-                  }
-                });
-              }
-            }
-          }
-        } catch (e) {
-          debugPrint('[Overlay] error parsing event: $e');
-        }
-      }
-    });
-    FlutterOverlayWindow.shareData('request_sync');
+    _animController.forward();
+    _lastScope = _chat.scope?.key;
+    _incomingRevision = _chat.incomingRevision;
+    _chat.addListener(_onChatChanged);
+    _chat.start();
   }
 
-  void _startListeningFirebaseChat() {
-    _soulMessagesSub?.cancel();
-    final hId = _houseId;
-    if (hId == null || hId.isEmpty) {
-      debugPrint(
-        '[Overlay] _houseId is null or empty, cannot start listening chat',
-      );
+  Size get _displaySize {
+    final display = View.of(context).display;
+    final ratio = display.devicePixelRatio;
+    return ratio > 0 && !display.size.isEmpty
+        ? display.size / ratio
+        : MediaQuery.sizeOf(context);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _animController.value = 1;
+      _breatheController.stop();
+      _breatheController.value = 0;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final resumed = state == AppLifecycleState.resumed;
+    if (_resumeMotion != resumed) setState(() => _resumeMotion = resumed);
+    if (!_resumeMotion) {
+      _breatheController.stop();
+      _previewTimer?.cancel();
+      if (!_isExpanded && _showPreview) unawaited(_hidePreview());
+    }
+  }
+
+  void _onChatChanged() {
+    if (!mounted || _closing) return;
+    if (_chat.shouldClose) {
+      unawaited(_close());
       return;
     }
-    _soulMessagesSub = FirebaseDatabase.instance
-        .ref('houses/$hId/soul_merge/chat')
-        .orderByChild('timestamp')
-        .limitToLast(20)
-        .onValue
-        .listen(
-          (event) {
-            final data = event.snapshot.value;
-            final list = <Map<String, dynamic>>[];
-            if (data is Map) {
-              data.forEach((key, val) {
-                if (val is Map) {
-                  final msg = Map<String, dynamic>.from(val);
-                  msg['id'] = key.toString();
-                  list.add(msg);
-                }
-              });
-              list.sort((a, b) {
-                final t1 = a['timestamp'] as int? ?? 0;
-                final t2 = b['timestamp'] as int? ?? 0;
-                return t1.compareTo(t2);
-              });
-            }
-            if (mounted) {
-              // Khi đang thu gọn, dữ liệu vẫn được giữ trong bộ nhớ nhưng
-              // không dựng lại toàn bộ overlay theo từng thay đổi chat.
-              // Việc này tránh giật bong bóng khi tin nhắn đến liên tục.
-              if (_isExpanded) {
-                setState(() {
-                  _chatHistory = list;
-                });
-                _scrollToBottom();
-              } else {
-                _chatHistory = list;
-              }
-            }
-          },
-          onError: (e) {
-            final now = DateTime.now();
-            final isPermissionError = e.toString().contains(
-              'permission-denied',
-            );
-            final shouldLog =
-                _lastChatPermissionErrorAt == null ||
-                now.difference(_lastChatPermissionErrorAt!) >
-                    const Duration(seconds: 30);
-            if (isPermissionError) {
-              _lastChatPermissionErrorAt = now;
-              // Khi tài khoản vừa đăng xuất/đổi House, listener cũ không còn
-              // hợp lệ. Dừng nó để tránh retry ngầm và giảm giật overlay;
-              // sync_credentials sẽ gắn lại listener với House mới.
-              unawaited(_soulMessagesSub?.cancel());
-              _soulMessagesSub = null;
-            }
-            if (shouldLog) {
-              debugPrint('[Overlay] watch messages error: $e');
-            }
-          },
+    if (_lastScope != _chat.scope?.key) {
+      _lastScope = _chat.scope?.key;
+      _textController.clear();
+      _spamWarning = null;
+      _tempBlockTimer?.cancel();
+      _tempBlockSecondsLeft = 0;
+      _msgTimestamps.clear();
+      _warningTimestamps.clear();
+      _previewTimer?.cancel();
+      _previewGeneration++;
+      _showPreview = false;
+      _localError = null;
+      _failedSticker = null;
+      // Xóa nội dung ngay khi mất/đổi scope, trước khi listener mới trả về.
+      setState(() {});
+    }
+    if (_chat.incomingRevision != _incomingRevision) {
+      _incomingRevision = _chat.incomingRevision;
+      final message = _chat.incomingMessage;
+      if (message != null && !_isExpanded && !_opening) {
+        unawaited(
+          _showIncomingPreview(
+            SoulMessageContent.preview(
+              text: message['text']?.toString() ?? '',
+              imageUrl: message['imageUrl']?.toString(),
+            ),
+          ),
         );
+      }
+    }
+    final messagesChanged = !identical(_lastMessages, _chat.messages);
+    _lastMessages = _chat.messages;
+    if (_isExpanded) {
+      final nearBottom =
+          !_scrollController.hasClients ||
+          _scrollController.position.extentAfter < 72;
+      setState(() {});
+      if (messagesChanged && nearBottom) _scrollToBottom();
+    }
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+      if (mounted && _isExpanded && _scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
   }
 
-  void _startSyncCheckLoop() {
-    _syncCheckTimer = Timer.periodic(const Duration(seconds: 2), (t) async {
-      if (_houseId != null && _houseId!.isNotEmpty) {
-        t.cancel();
+  Future<void> _showIncomingPreview(String text) async {
+    final generation = ++_previewGeneration;
+    _previewTimer?.cancel();
+    if (!_resumeMotion || text.isEmpty || _closing) return;
+    try {
+      final applied = await _window.show(
+        SoulBubbleWindowMode.preview,
+        _displaySize,
+      );
+      if (!applied ||
+          !mounted ||
+          generation != _previewGeneration ||
+          _isExpanded ||
+          _opening) {
         return;
       }
-      try {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/overlay_sync.json');
-        if (await file.exists()) {
-          final data = jsonDecode(await file.readAsString());
-          final hId = data['houseId']?.toString();
-          if (hId != null && hId.isNotEmpty) {
-            if (mounted) {
-              setState(() {
-                _houseId = hId;
-                _myRole = data['role']?.toString() ?? 'user1';
-                _partnerName =
-                    data['partnerName']?.toString() ??
-                    UiCopy.text('copy_145933221191');
-              });
-            }
-            _startListeningFirebaseChat();
-            t.cancel();
-          }
-        }
-      } catch (error) {
-        debugPrint(
-          '[SuppressedError] lib/views/home/widgets/floating_bubble_widget.dart: $error',
-        );
+      setState(() {
+        _messagePreview = text;
+        _showPreview = true;
+      });
+      if (!MediaQuery.disableAnimationsOf(context)) {
+        // Chỉ nảy nhẹ một lần khi có tin, không có ticker lặp cả ngày.
+        _breatheController.forward(from: 0).then((_) {
+          if (mounted) _breatheController.reverse();
+        });
       }
-    });
+      _previewTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted && generation == _previewGeneration) {
+          unawaited(_hidePreview());
+        }
+      });
+    } catch (error) {
+      debugPrint('[Overlay] Preview resize failed:  ${error.runtimeType}');
+    }
   }
 
-  @override
-  void dispose() {
-    _animController.dispose();
-    _breatheController.dispose();
-    _textController.dispose();
-    _scrollController.dispose();
-    _syncCheckTimer?.cancel();
-    _tempBlockTimer?.cancel();
-    _overlayListenerSub?.cancel();
-    _soulMessagesSub?.cancel();
-    super.dispose();
+  Future<void> _hidePreview() async {
+    _previewTimer?.cancel();
+    _previewGeneration++;
+    if (!mounted || _isExpanded || _opening) return;
+    setState(() => _showPreview = false);
+    try {
+      await _window.show(SoulBubbleWindowMode.bubble, _displaySize);
+    } catch (error) {
+      debugPrint('[Overlay] Bubble resize failed:  ${error.runtimeType}');
+    }
   }
 
-  void _onTapBubble() {
-    // Không để animation thở chạy ngầm trong lúc panel chat đang mở.
+  Future<void> _onTapBubble() async {
+    if (_opening || _closing || _isExpanded) return;
+    _opening = true;
+    _previewGeneration++;
+    _previewTimer?.cancel();
     _breatheController.stop();
-    setState(() {
-      _touchScale = 1.0; // Reset scale to prevent getting stuck
-      _isExpanded = true;
-      _showPreview = false;
-    });
-    // Expand overlay to fit the chat box panel and enable keyboard focus
-    FlutterOverlayWindow.resizeOverlay(WindowSize.matchParent, 560, true);
-    FlutterOverlayWindow.updateFlag(OverlayFlag.focusPointer);
-    _scrollToBottom();
+    try {
+      final applied = await _window.show(
+        SoulBubbleWindowMode.chat,
+        _displaySize,
+      );
+      if (!applied || !mounted || _closing) return;
+      setState(() {
+        _touchScale = 1;
+        _isExpanded = true;
+        _showPreview = false;
+      });
+      _scrollToBottom();
+    } catch (error) {
+      debugPrint('[Overlay] Chat resize failed:  ${error.runtimeType}');
+      if (mounted) setState(() => _localError = context.tr('core_retry'));
+    } finally {
+      _opening = false;
+    }
   }
 
-  Future<bool> _checkSpamAndMaybeBlock() async {
+  Future<void> _shrinkOverlay() async {
+    if (_closing) return;
+    _previewGeneration++;
+    _previewTimer?.cancel();
+    _composerFocus.unfocus();
+    setState(() {
+      _isExpanded = false;
+      _showPreview = false;
+      _scrollingMessages = false;
+    });
+    try {
+      await _window.show(SoulBubbleWindowMode.bubble, _displaySize);
+    } catch (error) {
+      debugPrint('[Overlay] Minimize failed:  ${error.runtimeType}');
+    }
+  }
+
+  Future<void> _openApp() async {
+    try {
+      await (widget.onOpenApp ?? SoulBubbleOverlay.openApp)();
+      if (mounted) await _close();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _localError = context.tr('soul_bubble_open_failed'));
+      }
+    }
+  }
+
+  Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
+    _previewTimer?.cancel();
+    _composerFocus.unfocus();
+    try {
+      await (widget.onCloseOverlay ?? SoulBubbleOverlay.close)();
+      _window.dispose();
+    } catch (error) {
+      _closing = false;
+      debugPrint('[Overlay] Close failed:  ${error.runtimeType}');
+    }
+  }
+
+  Future<bool> _checkSpamAndMaybeBlock(String? scope) async {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     // 1. Check 1-hour block in SharedPreferences
@@ -308,10 +314,12 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     } catch (e) {
       debugPrint('[SpamCheck] Error reading prefs: $e');
     }
+    if (!mounted || _closing || scope != _chat.scope?.key) return true;
 
     if (now < blockUntil) {
       final remainingMs = blockUntil - now;
       final remainingMin = (remainingMs / 60000).ceil();
+      if (!mounted) return true;
       setState(() {
         _spamWarning = L10nService().format(
           'ui_home_action_too_fast_blocked_in_value1_minutes_900f32',
@@ -378,6 +386,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
         } catch (e) {
           debugPrint('[SpamCheck] Error writing prefs: $e');
         }
+        if (!mounted) return true;
         setState(() {
           _spamWarning = L10nService().translate(
             'ui_home_action_too_fast_blocked_texting_for_1_351b49',
@@ -394,77 +403,141 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     return false;
   }
 
-  void _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
-
-    final hId = _houseId;
-    if (hId == null || hId.isEmpty) {
-      debugPrint('[Overlay] houseId is empty, cannot send message');
+  Future<void> _sendMessage() async {
+    final text = _textController.text;
+    if (_sendingTap || !_chat.canSend || text.trim().isEmpty) return;
+    if (text.trim().length > 2000) {
+      setState(() => _localError = context.tr('copy_44fdfcf1695b'));
       return;
     }
-
-    if (await _checkSpamAndMaybeBlock()) return;
-
-    _textController.clear();
-
+    setState(() {
+      _localError = null;
+      _failedSticker = null;
+    });
+    _sendingTap = true;
+    final scope = _chat.scope?.key;
     try {
-      final ref = FirebaseDatabase.instance.ref('houses/$hId/soul_merge/chat');
-      await ref.push().set({
-        'text': text,
-        'sender': _myRole,
-        'timestamp': ServerValue.timestamp,
-      });
+      if (await _checkSpamAndMaybeBlock(scope) ||
+          !mounted ||
+          _closing ||
+          scope != _chat.scope?.key) {
+        return;
+      }
+      final confirmed = await _chat.send(text);
+      if (!mounted || scope != _chat.scope?.key) return;
+      if (confirmed) {
+        if (_textController.text == text) _textController.clear();
+        _scrollToBottom();
+      }
+    } finally {
+      _sendingTap = false;
+    }
+  }
 
-      final payload = jsonEncode({'action': 'overlay_sent_msg', 'text': text});
-      FlutterOverlayWindow.shareData(payload);
-    } catch (e) {
-      debugPrint('[Overlay] send message error: $e');
+  Future<void> _showStickerPicker() async {
+    if (!_chat.canSend || _closing || _stickerPickerOpen) return;
+    final scope = _chat.scope?.key;
+    _composerFocus.unfocus();
+    setState(() => _stickerPickerOpen = true);
+    try {
+      await StickerBottomSheet.show(
+        context: context,
+        onStickerSelected: (reference) {
+          if (mounted && !_closing && scope == _chat.scope?.key) {
+            unawaited(_sendSticker(reference));
+          }
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _stickerPickerOpen = false);
+    }
+  }
+
+  Future<void> _sendSticker(String reference) async {
+    if (_sendingTap || !_chat.canSend || reference.trim().isEmpty) return;
+    _sendingTap = true;
+    final scope = _chat.scope?.key;
+    try {
+      if (await _checkSpamAndMaybeBlock(scope) ||
+          !mounted ||
+          _closing ||
+          scope != _chat.scope?.key) {
+        return;
+      }
+      setState(() {
+        _localError = null;
+        _failedSticker = null;
+      });
+      final confirmed = await _chat.sendSticker(reference);
+      if (!mounted || scope != _chat.scope?.key) return;
+      setState(() => _failedSticker = confirmed ? null : reference);
+      if (confirmed) _scrollToBottom();
+    } finally {
+      _sendingTap = false;
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: _isExpanded ? _buildExpandedChat() : _buildCollapsedBubble(),
-      ),
-    );
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _previewGeneration++;
+    _previewTimer?.cancel();
+    _tempBlockTimer?.cancel();
+    _chat.removeListener(_onChatChanged);
+    _window.dispose();
+    _animController.dispose();
+    _breatheController.dispose();
+    _textController.dispose();
+    _scrollController.dispose();
+    _composerFocus.dispose();
+    super.dispose();
   }
 
-  Widget _buildCollapsedBubble() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const NeverScrollableScrollPhysics(),
-      reverse: true, // Stick icon to the right side
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        // WindowManager và Flutter có thể nhận kích thước ở hai frame khác nhau.
+        // Không dựng panel lớn vào frame 80dp khi đang thu/phóng cửa sổ.
+        if (_isExpanded &&
+            constraints.maxWidth >= 200 &&
+            constraints.maxHeight >= 120) {
+          return _buildExpandedChat();
+        }
+        return ScaleTransition(
+          scale: _scaleAnimation,
+          child: _buildCollapsedBubble(),
+        );
+      },
+    ),
+  );
+
+  Widget _buildCollapsedBubble() => Align(
+    alignment: Alignment.centerRight,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: _showPreview ? MainAxisSize.max : MainAxisSize.min,
+        textDirection: _window.bubbleOnLeft
+            ? TextDirection.rtl
+            : TextDirection.ltr,
         children: [
-          // Preview message tooltip (if active)
           if (_showPreview && _messagePreview.isNotEmpty)
-            Flexible(
+            Expanded(
               child: Container(
-                margin: const EdgeInsets.only(right: 8),
+                margin: EdgeInsets.only(
+                  left: _window.bubbleOnLeft ? 8 : 0,
+                  right: _window.bubbleOnLeft ? 0 : 8,
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.85),
+                  color: const Color(0xF1251D2C),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFFF4F93).withValues(alpha: 0.3),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  border: Border.all(color: const Color(0x55FF4F93)),
                 ),
                 child: Text(
                   _messagePreview,
@@ -473,43 +546,30 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                   style: GoogleFonts.quicksand(
                     color: Colors.white,
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
-
-          // Heart bubble icon
-          GestureDetector(
-            onTapDown: (_) => setState(() => _touchScale = 0.85),
-            onTapUp: (_) => setState(() => _touchScale = 1.0),
-            onTapCancel: () => setState(() => _touchScale = 1.0),
-            onTap: _onTapBubble,
-            onDoubleTap: () {
-              FlutterOverlayWindow.shareData('launch_app');
-              FlutterOverlayWindow.closeOverlay();
-            },
-            child: AnimatedScale(
-              scale: _touchScale,
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeOutBack,
-              child: RepaintBoundary(
-                child: CustomPaint(
-                  size: const Size(58, 58),
-                  painter: _FloatingBubblePainter(_breatheAnimation),
-                  child: const SizedBox(
-                    width: 58,
-                    height: 58,
-                    child: Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(25)),
-                        child: R2StickerImage(
-                          'assets/images/anhtomau_stickers/sticker_33.gif',
-                          width: 38,
-                          height: 38,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+          Semantics(
+            button: true,
+            label: context.tr('p4_soul_title'),
+            child: GestureDetector(
+              key: const ValueKey('soul-bubble-open'),
+              onTapDown: (_) => setState(() => _touchScale = .92),
+              onTapUp: (_) => setState(() => _touchScale = 1),
+              onTapCancel: () => setState(() => _touchScale = 1),
+              onTap: _onTapBubble,
+              onLongPress: _close,
+              child: AnimatedScale(
+                scale: _touchScale,
+                duration: const Duration(milliseconds: 100),
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _FloatingBubblePainter(_breatheAnimation),
+                    child: const SizedBox.square(
+                      dimension: 58,
+                      child: Center(child: SoulMergeMark(size: 48)),
                     ),
                   ),
                 ),
@@ -518,365 +578,478 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
           ),
         ],
       ),
+    ),
+  );
+
+  Widget _buildExpandedChat() => PopScope(
+    canPop: false,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop) unawaited(_shrinkOverlay());
+    },
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        GestureDetector(
+          key: const ValueKey('soul-bubble-scrim'),
+          behavior: HitTestBehavior.opaque,
+          onTap: _shrinkOverlay,
+          child: const ColoredBox(color: Color(0x44000000)),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 8,
+              top: 8,
+              right: 8,
+              bottom: 8 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Cửa sổ native đã match-parent. Dùng toàn bộ phần còn lại để
+                // bong bóng có trải nghiệm gần Zalo thay vì hộp 540dp cố định.
+                final height = constraints.maxHeight;
+                final compact = height < 320;
+                final colors = SoulMergeColors(context);
+                return RepaintBoundary(
+                  child: DecoratedBox(
+                    key: const ValueKey('soul-bubble-chat'),
+                    decoration: BoxDecoration(
+                      color: colors.background,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: colors.line),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x44000000), blurRadius: 24),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (_chat.backgroundUrl.isNotEmpty)
+                            RepaintBoundary(
+                              child: CachedNetworkImage(
+                                key: ValueKey(_chat.backgroundUrl),
+                                imageUrl: _chat.backgroundUrl,
+                                fit: BoxFit.cover,
+                                fadeInDuration: Duration.zero,
+                                fadeOutDuration: Duration.zero,
+                                memCacheWidth:
+                                    (_displaySize.width *
+                                            MediaQuery.devicePixelRatioOf(
+                                              context,
+                                            ))
+                                        .ceil()
+                                        .clamp(1, 1440)
+                                        .toInt(),
+                                errorWidget: (_, _, _) =>
+                                    const SizedBox.shrink(),
+                              ),
+                            ),
+                          const SoulMergeBackgroundScrim(),
+                          if (compact)
+                            SingleChildScrollView(
+                              reverse: true,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildHeader(),
+                                  SizedBox(
+                                    height: math
+                                        .max(120.0, height - 150)
+                                        .toDouble(),
+                                    child: _buildMessages(),
+                                  ),
+                                  _buildFeedback(),
+                                  _buildComposer(compact: true),
+                                ],
+                              ),
+                            )
+                          else
+                            Column(
+                              children: [
+                                _buildHeader(),
+                                Expanded(child: _buildMessages()),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 100,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: _buildFeedback(),
+                                  ),
+                                ),
+                                _buildComposer(compact: height < 420),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildFeedback() {
+    final colors = SoulMergeColors(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_spamWarning != null ||
+            _chat.sendUnconfirmed ||
+            _localError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Text(
+              _spamWarning ??
+                  _localError ??
+                  context.tr('support_ui_send_failed'),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.rose, fontSize: 12),
+            ),
+          ),
+        if (_failedSticker != null && _chat.sendUnconfirmed)
+          TextButton.icon(
+            key: const ValueKey('soul-bubble-retry-sticker'),
+            onPressed: _chat.canSend
+                ? () => _sendSticker(_failedSticker!)
+                : null,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: Text(context.tr('core_retry')),
+            style: TextButton.styleFrom(foregroundColor: colors.rose),
+          ),
+        if (_chat.loadFailed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Text(
+              context.tr('p6_server_connection_error'),
+              maxLines: 2,
+              style: TextStyle(color: colors.muted, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 
-  void _shrinkOverlay() {
-    setState(() {
-      _isExpanded = false;
-      _showPreview = false;
-    });
-    _breatheController.repeat(reverse: true);
-    FlutterOverlayWindow.resizeOverlay(80, 80, true);
-    FlutterOverlayWindow.updateFlag(OverlayFlag.defaultFlag);
+  Widget _buildHeader() {
+    final colors = SoulMergeColors(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: .96),
+        border: Border(bottom: BorderSide(color: colors.line)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 4, 4),
+        child: Row(
+          children: [
+            const SoulMergeMark(size: 30),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _chat.partnerName.isEmpty
+                        ? UiCopy.text('copy_145933221191')
+                        : _chat.partnerName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.quicksand(
+                      color: colors.ink,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    context.tr('p4_soul_title'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.quicksand(
+                      color: colors.rose,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('soul-bubble-open-app'),
+              tooltip: context.tr('soul_bubble_open_app'),
+              onPressed: _openApp,
+              icon: Icon(
+                Icons.open_in_new_rounded,
+                color: colors.muted,
+                size: 20,
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('soul-bubble-minimize'),
+              tooltip: context.tr('soul_bubble_minimize'),
+              onPressed: _shrinkOverlay,
+              icon: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: colors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Widget _buildExpandedChat() {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: _shrinkOverlay,
-      onVerticalDragUpdate: (details) {
-        if (details.primaryDelta != null && details.primaryDelta! > 8) {
-          _shrinkOverlay();
+  Widget _buildMessages() {
+    final colors = SoulMergeColors(context);
+    if (_chat.scope == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            context.tr('ui_home_syncing_data_please_reopen_the_app_if_6ba23c'),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.muted),
+          ),
+        ),
+      );
+    }
+    if (_chat.messages.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            context.tr('soul_merge_message_hint'),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.muted),
+          ),
+        ),
+      );
+    }
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.depth != 0) return false;
+        if (notification is ScrollStartNotification && !_scrollingMessages) {
+          setState(() => _scrollingMessages = true);
+        } else if (notification is ScrollEndNotification &&
+            _scrollingMessages) {
+          setState(() => _scrollingMessages = false);
         }
+        return false;
       },
-      child: Center(
-        child: GestureDetector(
-          onTap: () {},
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.92,
-            height: 520,
-            decoration: BoxDecoration(
-              color: const Color(0xEE160B1F),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0x33FF4F93), width: 1.0),
-            ),
-            child: Column(
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.06),
-                        width: 1.0,
+      child: RepaintBoundary(
+        child: TickerMode(
+          enabled: _resumeMotion && !_stickerPickerOpen && !_scrollingMessages,
+          child: ListView.builder(
+            key: const ValueKey('soul-bubble-messages'),
+            controller: _scrollController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+            itemCount: _chat.messages.length,
+            itemBuilder: (context, index) {
+              final message = _chat.messages[index];
+              final isSelf = message['sender'] == _chat.scope?.role;
+              final text = message['text']?.toString() ?? '';
+              final image = message['imageUrl']?.toString() ?? '';
+              final sticker = SoulMessageContent.isSticker(image);
+              return RepaintBoundary(
+                child: Align(
+                  alignment: isSelf
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Container(
+                    key: ValueKey("soul-bubble-message-${message['id']}"),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: sticker
+                        ? EdgeInsets.zero
+                        : const EdgeInsets.all(10),
+                    constraints: BoxConstraints(
+                      maxWidth: math.min(
+                        340,
+                        MediaQuery.sizeOf(context).width * .78,
                       ),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.favorite_rounded,
-                            color: Color(0xFFFF4F93),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              L10nScope.of(context).format(
-                                'ui_home_whisper_to_value1_36ba60',
-                                {'value1': _partnerName},
-                              ),
-                              style: GoogleFonts.quicksand(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          // Maximize / Open Main App
-                          IconButton(
-                            icon: const Icon(
-                              Icons.open_in_new_rounded,
-                              color: Colors.white70,
-                              size: 18,
-                            ),
-                            onPressed: () {
-                              FlutterOverlayWindow.shareData('launch_app');
-                              FlutterOverlayWindow.closeOverlay();
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close_rounded,
-                              color: Colors.white70,
-                              size: 18,
-                            ),
-                            onPressed: _shrinkOverlay,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Messages list
-                Expanded(
-                  child: (_houseId == null || _houseId!.isEmpty)
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Text(
-                              context.tr(
-                                'ui_home_syncing_data_please_reopen_the_app_if_6ba23c',
-                              ),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                fontSize: 13,
-                                height: 1.5,
-                              ),
-                            ),
-                          ),
-                        )
-                      : _chatHistory.isEmpty
-                      ? Center(
-                          child: Text(
-                            context.tr('soul_merge_message_hint'),
-                            style: GoogleFonts.quicksand(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          itemCount: _chatHistory.length,
-                          itemBuilder: (context, index) {
-                            final msg = _chatHistory[index];
-                            final text = msg['text']?.toString() ?? '';
-                            final sender = msg['sender']?.toString() ?? '';
-                            final isSelf = (sender == _myRole);
-                            final imageUrl = msg['imageUrl']?.toString() ?? '';
-
-                            return Align(
-                              alignment: isSelf
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: EdgeInsets.all(
-                                  imageUrl.isNotEmpty ? 4 : 12,
-                                ),
-                                constraints: const BoxConstraints(
-                                  maxWidth: 270,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelf
-                                      ? const Color(0xFFFF4F93)
-                                      : Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(18),
-                                    topRight: const Radius.circular(18),
-                                    bottomLeft: Radius.circular(
-                                      isSelf ? 18 : 4,
-                                    ),
-                                    bottomRight: Radius.circular(
-                                      isSelf ? 4 : 18,
-                                    ),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: isSelf
-                                      ? CrossAxisAlignment.end
-                                      : CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (imageUrl.isNotEmpty)
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(14),
-                                        child: CachedNetworkImage(
-                                          imageUrl: imageUrl,
-                                          fit: BoxFit.cover,
-                                          width: 200,
-                                          memCacheWidth:
-                                              200, // RAM optimization
-                                          errorWidget: (context, url, error) =>
-                                              Container(
-                                                width: 200,
-                                                height: 150,
-                                                color: Colors.white12,
-                                                child: const Icon(
-                                                  Icons.broken_image,
-                                                  color: Colors.white54,
-                                                ),
-                                              ),
-                                        ),
-                                      ),
-                                    if (text.isNotEmpty)
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                          top: imageUrl.isNotEmpty ? 6 : 0,
-                                          left: imageUrl.isNotEmpty ? 4 : 0,
-                                          right: imageUrl.isNotEmpty ? 4 : 0,
-                                        ),
-                                        child: Text(
-                                          text,
-                                          style: GoogleFonts.quicksand(
-                                            color: Colors.white,
-                                            fontSize: 14.5,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-
-                if (_spamWarning != null)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 4,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFFFF4F4F).withValues(alpha: 0.3),
-                        width: 1.0,
-                      ),
+                      color: sticker
+                          ? Colors.transparent
+                          : isSelf
+                          ? colors.sent
+                          : colors.surface,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.warning_amber_rounded,
-                          color: Color(0xFFFF4F4F),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _spamWarning!,
-                            style: GoogleFonts.quicksand(
-                              color: const Color(0xFFFFD1D1),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                        if (image.isNotEmpty)
+                          _buildMessageMedia(
+                            image,
+                            allowMotion: index >= _chat.messages.length - 3,
+                          ),
+                        if (text.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: image.isEmpty ? 0 : 6,
+                            ),
+                            child: Text(
+                              text,
+                              style: GoogleFonts.quicksand(
+                                color: isSelf && !sticker
+                                    ? Colors.white
+                                    : colors.ink,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
-                // Footer Text Input
-                Container(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        width: 1.0,
-                      ),
-                    ),
-                    color: Colors.white.withValues(alpha: 0.02),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(32),
-                      bottomRight: Radius.circular(32),
-                    ),
+  Widget _buildMessageMedia(String reference, {required bool allowMotion}) {
+    final sticker = SoulLocketStickerCatalog.find(reference);
+    if (sticker != null) {
+      return SoulLocketAnimatedSticker(
+        sticker: sticker,
+        size: 116,
+        originalArtwork: reference.startsWith(
+          SoulLocketStickerCatalog.originalPrefix,
+        ),
+        animate:
+            _resumeMotion &&
+            allowMotion &&
+            !_scrollingMessages &&
+            !_stickerPickerOpen &&
+            !MediaQuery.disableAnimationsOf(context),
+      );
+    }
+    if (reference.startsWith('assets/images/anhtomau_stickers/')) {
+      return Image.asset(
+        reference,
+        width: 116,
+        height: 116,
+        fit: BoxFit.contain,
+      );
+    }
+    final uri = Uri.tryParse(reference);
+    if (uri?.scheme != 'https' && uri?.scheme != 'http') {
+      return const SizedBox.square(
+        dimension: 116,
+        child: Icon(Icons.image_not_supported_outlined),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: CachedNetworkImage(
+        imageUrl: reference,
+        width: 220,
+        height: 165,
+        fit: BoxFit.cover,
+        memCacheWidth: (220 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+        placeholder: (context, url) =>
+            ColoredBox(color: SoulMergeColors(context).blush),
+        errorWidget: (context, url, error) =>
+            const Icon(Icons.broken_image_outlined),
+      ),
+    );
+  }
+
+  Widget _buildComposer({required bool compact}) {
+    final colors = SoulMergeColors(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: .96),
+        border: Border(top: BorderSide(color: colors.line)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, compact ? 2 : 8, 8, compact ? 2 : 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            IconButton(
+              key: const ValueKey('soul-bubble-sticker'),
+              tooltip: context.tr('sticker'),
+              onPressed: _chat.canSend ? _showStickerPicker : null,
+              style: IconButton.styleFrom(
+                backgroundColor: colors.blush,
+                foregroundColor: colors.rose,
+                minimumSize: const Size(48, 48),
+              ),
+              icon: const Icon(Icons.emoji_emotions_rounded, size: 20),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: TextField(
+                key: const ValueKey('soul-bubble-composer'),
+                controller: _textController,
+                focusNode: _composerFocus,
+                enabled: _chat.scope != null,
+                minLines: 1,
+                maxLines: compact ? 1 : 3,
+                maxLength: 2000,
+                maxLengthEnforcement:
+                    MaxLengthEnforcement.truncateAfterCompositionEnds,
+                textInputAction: TextInputAction.newline,
+                keyboardType: TextInputType.multiline,
+                style: GoogleFonts.quicksand(
+                  color: colors.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  hintText: context.tr('home_nhntin_3e833a'),
+                  hintStyle: TextStyle(color: colors.muted),
+                  filled: true,
+                  fillColor: colors.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    borderSide: BorderSide.none,
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.add_circle_outline_rounded,
-                        color: Colors.white.withValues(alpha: 0.5),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 10),
-                      Icon(
-                        Icons.camera_alt_outlined,
-                        color: Colors.white.withValues(alpha: 0.5),
-                        size: 24,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              width: 1.0,
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          child: TextField(
-                            controller: _textController,
-                            style: GoogleFonts.quicksand(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: context.tr('home_nhntin_3e833a'),
-                              hintStyle: GoogleFonts.quicksand(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                fontSize: 14,
-                              ),
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        onTap: _sendMessage,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
+                  isDense: true,
+                  counterText: '',
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 6),
+            IconButton.filled(
+              key: const ValueKey('soul-bubble-send'),
+              tooltip: context.tr('send'),
+              style: IconButton.styleFrom(
+                backgroundColor: colors.sent,
+                minimumSize: const Size(48, 48),
+              ),
+              onPressed: _chat.canSend ? _sendMessage : null,
+              icon: _chat.sending
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+            ),
+          ],
         ),
       ),
     );
@@ -899,9 +1072,9 @@ class _FloatingBubblePainter extends CustomPainter {
     final ringPaint = ui.Paint()
       ..style = ui.PaintingStyle.stroke
       ..strokeWidth = 1.2
-      ..color = const Color(0xFFFF4F93).withValues(
-        alpha: 0.6 * (1.0 - normalized),
-      );
+      ..color = const Color(
+        0xFFFF4F93,
+      ).withValues(alpha: 0.6 * (1.0 - normalized));
     canvas.drawCircle(center, 29 * scale, ringPaint);
 
     final shadowPaint = ui.Paint()
@@ -909,8 +1082,7 @@ class _FloatingBubblePainter extends CustomPainter {
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 12);
     canvas.drawCircle(center, 25, shadowPaint);
 
-    final corePaint = ui.Paint()
-      ..color = Colors.white.withValues(alpha: 0.12);
+    final corePaint = ui.Paint()..color = Colors.white.withValues(alpha: 0.12);
     canvas.drawCircle(center, 25, corePaint);
 
     final borderPaint = ui.Paint()

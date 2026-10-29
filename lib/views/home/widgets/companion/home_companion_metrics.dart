@@ -7,6 +7,12 @@ abstract final class HomeCompanionMetrics {
   /// Thu nhỏ toàn bộ hình vẽ quanh chân để bé gọn, ít che nội dung Home.
   /// Vùng chạm và khoảng cách giữa các bé giữ nguyên cỡ cũ (dễ chạm hơn).
   static const displayScale = 0.82;
+
+  /// Mốc hình học GLB, sau chuẩn hóa model về cùng cỡ/vùng chạm của Home.
+  static const modelScale = 1.5;
+  static const modelMouthX = 4.9;
+  static const modelMouthY = -46.6;
+  static const modelHeadY = -55.8;
   static const restingHeight = 67.0;
   static const bearScale = referenceScale * 1.15 * restingHeight / 54;
   // Chiều cao nét vẽ trước khi cân: thỏ 60, gấu 54, Chuột Phô Mai 46, Mèo Mây 48.

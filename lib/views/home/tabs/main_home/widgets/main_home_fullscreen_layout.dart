@@ -31,6 +31,25 @@ class _FullscreenHomeBody extends StatelessWidget {
     this.onOpenSettings,
   });
 
+  void _openPetCare(BuildContext context) {
+    if (!state.mounted || !context.mounted) return;
+    slPushRoute<void>(
+      context,
+      SLRoute<void>(
+        builder: (_) => PetCareGameScreen(
+          houseId: state._houseId,
+          ownedPet: petCareOwnedPetForRole(
+            state._currentRole,
+            genderSwapped: RoleUtils.readGenderSwapped(state._houseSettings),
+          ),
+        ),
+        settings: const RouteSettings(name: 'pet_care_game'),
+      ),
+      identity: const ValueKey('pet_care_game'),
+      rootNavigator: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final uiState = UiPrefs.notifier.value;
@@ -64,11 +83,13 @@ class _FullscreenHomeBody extends StatelessWidget {
       body: PetCareHomeScope(
         uid: petUid,
         houseId: petHouseId,
-        builder: (context, care) => HomeCompanionScene(
+        appearanceBuilder: (context, care, outfits) => HomeCompanionScene(
         followScroll: true,
         calm: true,
         guestVisits: true,
         petCare: care,
+        petOutfits: outfits,
+        onOpenPetCare: () => _openPetCare(context),
         partnerIsBunny: RoleUtils.isFemaleRole(
           state._partnerRole,
           genderSwapped: RoleUtils.readGenderSwapped(state._houseSettings),

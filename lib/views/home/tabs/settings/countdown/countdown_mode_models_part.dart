@@ -88,6 +88,28 @@ class _CountdownSpaceSnapshot {
   final String customBackgroundUrl;
   final String centerIconType;
   final int updatedAtMs;
+
+  _CountdownSpaceSnapshot copyWith({int? updatedAtMs}) {
+    return _CountdownSpaceSnapshot(
+      singleMode: singleMode,
+      anchorDate: anchorDate,
+      themeKey: themeKey,
+      styleKey: styleKey,
+      frameKey: frameKey,
+      fontKey: fontKey,
+      transparentMode: transparentMode,
+      sizePx: sizePx,
+      topLabel: topLabel,
+      bottomLabel: bottomLabel,
+      nameU1: nameU1,
+      nameU2: nameU2,
+      avatarUrl1: avatarUrl1,
+      avatarUrl2: avatarUrl2,
+      customBackgroundUrl: customBackgroundUrl,
+      centerIconType: centerIconType,
+      updatedAtMs: updatedAtMs ?? this.updatedAtMs,
+    );
+  }
 }
 
 class _CountdownSpaceAddResult {

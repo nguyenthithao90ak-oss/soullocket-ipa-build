@@ -3,11 +3,18 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../../widgets/pet_care_outfit_art.dart';
+import 'companion_hand_spin.dart';
+import 'companion_sprite_art.dart';
+import 'companion_toon_art.dart';
 import 'home_companion_motion.dart';
 import 'home_companion_outfit.dart';
 import 'home_companion_play.dart';
 import 'home_companion_metrics.dart';
 import 'home_companion_mood.dart';
+import 'three_d/companion_3d_asset.dart';
+import 'three_d/companion_3d_pose.dart';
+import 'three_d/companion_3d_renderer.dart';
 import '../../tabs/pet_care/pet_care_progress.dart' as pet_care;
 
 export 'home_companion_outfit.dart';
@@ -18,6 +25,7 @@ class HomeCompanionPainter extends CustomPainter {
     required this.motion,
     required this.darkMode,
     this.showEffects = true,
+    this.naturalAnimation = true,
     this.paintOffset,
     this.character = HomeCompanionCharacter.bunny,
     this.outfit,
@@ -26,6 +34,15 @@ class HomeCompanionPainter extends CustomPainter {
     this.mood,
     this.care,
     this.careListenable,
+    this.petOutfit,
+    this.petOutfitsListenable,
+    this.mouthOpen = 0,
+    this.eating = 0,
+    this.hugging = 0,
+    this.baby = false,
+    this.lookAt,
+    this.bodyYaw,
+    this.sitting = 0,
   }) : super(
          repaint: Listenable.merge([
            motion,
@@ -34,12 +51,45 @@ class HomeCompanionPainter extends CustomPainter {
            socialPlay,
            mood,
            careListenable,
+           petOutfitsListenable,
+           if (character == HomeCompanionCharacter.bunny ||
+               character == HomeCompanionCharacter.bear) ...[
+             Companion3DAssets.instance,
+             CompanionSpriteAssets.instance,
+           ],
          ]),
-       );
+       ) {
+    if (_carePet != null && modelArt) {
+      Companion3DAssets.instance.load();
+      CompanionSpriteAssets.instance.load();
+    }
+  }
+
+  /// Thỏ/Gấu ở Home và các phòng Trạm Mây dùng hình 3D (GLB) và ảnh mới hay
+  /// bản vẽ hoạt hình cũ. Ngày 28/10/2026 chủ dự án chọn quay lại bản hoạt
+  /// hình, nên mặc định tắt; cảnh vườn 3D của Trạm Mây không đọc cờ này.
+  static bool modelArt = false;
+
+  /// Bé [bear] đang vẽ bằng hình 3D/ảnh mới: dùng chung cho mốc miệng/đầu
+  /// của Trạm Mây để đồ ăn và hiệu ứng khớp với hình đang hiện.
+  static bool usesModel(bool bear) =>
+      modelArt && Companion3DAssets.instance.model(bear) != null;
 
   final HomeCompanionMotion motion;
   final bool darkMode;
   final bool showEffects;
+
+  /// Hoạt ảnh mới dùng nhịp thở, độ trễ đầu/tai và mắt có tiêu điểm.
+  /// Giữ cờ riêng để có thể tắt khi đo đối chiếu artwork cũ.
+  final bool naturalAnimation;
+  final double mouthOpen, eating, hugging;
+  final bool baby;
+  final Offset? lookAt;
+  final double? bodyYaw;
+  /// 0 đứng, 1 ngồi; chỉ áp cho tư thế 3D trong Trạm Mây.
+  final double sitting;
+
+  bool get uses3D => _carePet != null && usesModel(_isBear);
   final ValueListenable<Offset>? paintOffset;
   final HomeCompanionCharacter character;
   final HomeCompanionOutfit? outfit;
@@ -50,9 +100,21 @@ class HomeCompanionPainter extends CustomPainter {
   /// Chỉ dùng cho hai bé chính trên Home. Khách Mèo Mây/Chuột Phô Mai luôn bỏ qua.
   /// Trạng thái null giữ nguyên artwork Home cũ.
   final pet_care.PetCareVitals? care;
-  final ValueListenable<
-    Map<pet_care.PetCarePet, pet_care.PetCareVitals>
-  >? careListenable;
+  final ValueListenable<Map<pet_care.PetCarePet, pet_care.PetCareVitals>>?
+  careListenable;
+  final pet_care.PetCareOutfit? petOutfit;
+  final ValueListenable<Map<pet_care.PetCarePet, pet_care.PetCareOutfit>>?
+  petOutfitsListenable;
+
+  /// Hai bé chính giữ cùng ID ở Home và Trạm Mây, không phụ thuộc vai hiện tại.
+  pet_care.PetCareOutfit? get resolvedPetOutfit => _carePet == null
+      ? null
+      : petOutfit ?? petOutfitsListenable?.value[_carePet];
+
+  bool get _sharedClothes =>
+      resolvedPetOutfit != null &&
+      resolvedPetOutfit != pet_care.PetCareOutfit.bare;
+
   HomeCompanionPlay? get _activePlay =>
       (socialPlay?.active ?? false) && socialPlay!.contains(character)
       ? socialPlay
@@ -60,8 +122,11 @@ class HomeCompanionPainter extends CustomPainter {
   bool get _facingRight => showEffects && (_activePlay?.active ?? false)
       ? _activePlay!.facesRight(character)
       : motion.facingRight;
-  HomeCompanionOutfit get _outfit =>
-      outfit ?? HomeCompanionOutfit.defaults(character);
+  HomeCompanionOutfit get _outfit => resolvedPetOutfit != null
+      ? (_sharedClothes
+            ? const HomeCompanionOutfit()
+            : HomeCompanionOutfit.defaults(character))
+      : outfit ?? HomeCompanionOutfit.defaults(character);
   bool get _isBear => character == HomeCompanionCharacter.bear;
   pet_care.PetCarePet? get _carePet => switch (character) {
     HomeCompanionCharacter.bunny => pet_care.PetCarePet.rabbit,
@@ -69,7 +134,8 @@ class HomeCompanionPainter extends CustomPainter {
     _ => null,
   };
   pet_care.PetCareVitals? get _care =>
-      care ?? (careListenable == null || _carePet == null
+      care ??
+      (careListenable == null || _carePet == null
           ? null
           : careListenable!.value[_carePet]);
   bool get _hasCare => _care != null && _carePet != null;
@@ -84,12 +150,15 @@ class HomeCompanionPainter extends CustomPainter {
           _care!.mood == pet_care.PetCareMood.sleeping);
   bool get _careHappy =>
       _hasCare &&
+      !_careSleepy &&
+      !_careHungry &&
+      !_careCrying &&
       (_care!.mood == pet_care.PetCareMood.happy || _care!.joy >= 82);
 
   /// Ngủ gật chỉ khi đang đứng yên, không giữa cú nhảy hoặc trò chơi.
   bool get _dozing =>
       showEffects &&
-      (mood?.dozing ?? false) &&
+      (_hasCare ? _care!.sleeping : (mood?.dozing ?? false)) &&
       motion.phase == HomeCompanionPhase.idle &&
       !(_activePlay?.active ?? false);
   // Hai bé riêng của SoulLocket dùng lại ô ID cũ (xem HomeCompanionCharacter):
@@ -205,7 +274,12 @@ class HomeCompanionPainter extends CustomPainter {
     final moving = walking || approaching || hopping;
     final celebrating = phase == HomeCompanionPhase.celebrating;
     final stride = motion.stride * math.pi * 2;
+    final seconds = showEffects
+        ? motion.elapsedSeconds + (_activePlay?.time ?? 0)
+        : 0.0;
+    final natural = naturalAnimation && showEffects;
     final step = moving ? math.sin(stride) : 0.0;
+    final stepFollow = moving ? math.sin(stride + 0.42) : 0.0;
     // Chân neo theo đường đi, còn thân bay lên: không kéo bóng/chổi khỏi mặt khối.
     final hopLift =
         (motion.isPassing
@@ -220,21 +294,25 @@ class HomeCompanionPainter extends CustomPainter {
     final squash = moving && !airborne ? bounce * 0.025 : 0.0;
     final scaleX = 1 + squash - liftRatio * 0.055;
     final scaleY = 1 - squash + liftRatio * 0.065;
-    final seconds = showEffects
-        ? motion.elapsedSeconds + (_activePlay?.time ?? 0)
-        : 0.0;
     final affection = showEffects ? motion.affection.clamp(0.0, 1.0) : 0.0;
     final greeting = math.sin((1 - affection) * math.pi * 5) * affection;
     final sweep = sweeping ? math.sin(seconds * 10) : 0.0;
     final dozing = _dozing;
     final breathe = dozing
         ? math.sin(seconds * 1.3) * 1.6
+        : natural
+        ? math.sin(seconds * 1.7 + character.index * 0.7) * 0.85 +
+              math.sin(seconds * 3.2 + character.index) * 0.18
         : math.sin(seconds * 2.4);
+    final settleSway = natural && !moving
+        ? math.sin(seconds * 0.92 + character.index * 0.8) * 0.28
+        : 0.0;
     final bodyBob = moving
-        ? -(1 - math.cos(stride * 2)) * (approaching ? 2.0 : 1.4)
+        ? -(1 - math.cos(stride * 2)) * (approaching ? 2.2 : 1.6) +
+              stepFollow * 0.35
         : sweeping
         ? sweep.abs() * 0.65
-        : breathe * 0.55;
+        : breathe * 0.55 + settleSway;
 
     // Bóng neo vào mặt khối; nhân vật luôn đứng thẳng dù đường đi là vòng tròn.
     canvas.drawOval(
@@ -250,90 +328,253 @@ class HomeCompanionPainter extends CustomPainter {
 
     canvas.save();
     canvas.translate(motion.position.dx, motion.position.dy - hopLift);
-    canvas.rotate(playPose.tilt + (moving ? step * 0.018 : 0));
+    canvas.rotate(
+      playPose.tilt +
+          (moving ? step * 0.018 : 0) +
+          (natural ? math.sin(seconds * 1.15 + character.index) * 0.012 : 0),
+    );
     final scale = HomeCompanionMetrics.scale(character);
-    canvas.scale((_facingRight ? scale : -scale) * scaleX, scale * scaleY);
-
-    _paintTail(canvas, bodyBob, step);
-    _paintFoot(canvas, -7, step * 5.5, hopping: airborne, front: false);
-    _paintArm(
-      canvas,
-      const Offset(-12, -29) + Offset(0, bodyBob),
-      airborne
-          ? -0.5 - step * 0.22
-          : moving
-          ? step * 0.52
-          : -0.15 - breathe * 0.04,
-      behind: true,
+    // Thỏ/Gấu hoạt hình xoay theo góc riêng nên không lật cả hình.
+    final toon = uses3D || sweeping ? null : _toonLook;
+    final facesRight = uses3D || toon != null
+        ? true
+        : _cartoonTurn(
+            seconds: seconds,
+            natural: natural,
+            moving: moving,
+            celebrating: celebrating,
+          );
+    canvas.scale(
+      (facesRight ? scale : -scale) * scaleX,
+      scale * scaleY,
     );
 
-    canvas.save();
-    canvas.translate(0, bodyBob);
-    _shape(
-      canvas,
-      Path()
-        ..moveTo(-12, -34)
-        ..cubicTo(-19, -24, -18, -10, -13, -6)
-        ..cubicTo(-7, -1, 11, -2, 15, -7)
-        ..cubicTo(20, -15, 17, -26, 11, -34)
-        ..close(),
-      _cream,
-      shade: _creamShade,
-    );
-    canvas.drawOval(
-      const Rect.fromLTWH(-7, -23, 18, 16),
-      Paint()..color = _belly,
-    );
-    if (_outfit.clothes == CompanionClothes.overalls) {
-      _paintBearOveralls(canvas);
-    } else if (_outfit.clothes != CompanionClothes.classic) {
-      _paintCoat(canvas);
-    }
-    _paintCareBody(canvas);
-    _paintScarfTail(canvas, moving: moving, step: step, breathe: breathe);
-    _paintHead(
-      canvas,
-      earSway:
-          (moving ? step * 0.11 + liftRatio * 0.08 : breathe * 0.035) +
-          greeting * 0.07,
-      happy: celebrating || _careHappy,
-      sweeping: sweeping,
-      affection: affection,
-      tilt: greeting * 0.035 + (moving ? -step * 0.028 : 0),
-    );
-    _paintScarfCollar(canvas);
-    canvas.restore();
-
-    _paintFoot(
-      canvas,
-      8 + playPose.kick * 9,
-      -step * 5.5,
-      hopping: airborne || playPose.kick > 0,
-      front: true,
-    );
-
-    if (sweeping) {
-      _paintBroom(canvas, sweep: sweep, bodyBob: bodyBob);
-    } else {
-      _paintArm(
-        canvas,
-        Offset(13, -29 + bodyBob),
-        celebrating
-            ? -2.45 + math.sin(motion.elapsedSeconds * 12) * 0.18
-            : affection > 0.05
-            ? -2.05 + greeting * 0.3
-            : airborne
-            ? -0.9 + step * 0.24
-            : moving
-            ? -step * 0.62
-            : 0.1 + breathe * 0.045,
+    if (uses3D) {
+      final target = lookAt ?? motion.gazeTarget;
+      final gaze = target == null
+          ? null
+          : Offset(
+              ((target.dx - motion.position.dx) / 90).clamp(-1.0, 1.0),
+              ((motion.position.dy - 38 - target.dy) / 80).clamp(-1.0, 1.0),
+            );
+      final pose = motion.visual3D.sample(
+        bear: _isBear,
+        seconds: seconds,
+        facingRight: _facingRight,
+        moving: moving,
+        stride: motion.visualStride,
+        animate: natural,
+        sleeping: _dozing || _careSleepy,
+        happy: celebrating || _careHappy,
+        affection: affection,
+        hug: hugging,
+        mouth: mouthOpen,
+        eat: eating,
+        hold:
+            sweeping ||
+                (mood?.carryingLetter ?? false) ||
+                _outfit.prop != CompanionProp.none
+            ? 1
+            : 0,
+        gaze: gaze,
+        yaw: bodyYaw,
+        bodyBob: -bodyBob,
+        sit: sitting,
       );
-    }
-    if (!sweeping) {
+      final clothes =
+          resolvedPetOutfit?.name ??
+          switch (_outfit.clothes) {
+            CompanionClothes.hoodie => 'cloud',
+            CompanionClothes.night => 'pajamas',
+            CompanionClothes.raincoat => 'raincoat',
+            CompanionClothes.sailor => 'sailor',
+            _ => 'bare',
+          };
+      final sprite = _spriteFor(pose);
+      if (sprite != null) {
+        _paintSprite(
+          canvas,
+          sprite,
+          pose,
+          seconds: seconds,
+          step: step,
+          bodyBob: bodyBob,
+          breathe: breathe,
+        );
+      } else {
+        canvas.save();
+        canvas.scale(HomeCompanionMetrics.modelScale);
+        Companion3DRenderer.paint(
+          canvas,
+          Companion3DAssets.instance.model(_isBear)!,
+          pose,
+          dark: darkMode,
+          variants: {
+            'outfit': clothes,
+            'hat': _sharedClothes ? 'none' : _outfit.hat.name,
+            'glasses': _sharedClothes ? 'none' : _outfit.glasses.name,
+            'baby': baby ? 'yes' : 'no',
+            'dirty': _careDirty ? 'yes' : 'no',
+            'cry': _careCrying ? 'yes' : 'no',
+            'hungry': _careHungry ? 'yes' : 'no',
+            'angry': _careAngry ? 'yes' : 'no',
+            'sleep': _careSleepy ? 'yes' : 'no',
+          },
+        );
+        canvas.restore();
+      }
+      // Chổi/thư/đạo cụ Home tiếp tục dùng vị trí bàn tay hiện có.
+      canvas.save();
+      if (!_facingRight) canvas.scale(-1, 1);
+      if (sweeping) {
+        _paintBroom(canvas, sweep: sweep, bodyBob: bodyBob, drawHand: false);
+      } else if (mood?.carryingLetter ?? false) {
+        _paintLetter(canvas, bodyBob, seconds);
+      } else {
+        _paintProp(canvas, bodyBob, seconds, drawHand: false);
+      }
+      canvas.restore();
+    } else if (toon != null) {
+      final yaw = _paintToon(
+        canvas,
+        toon,
+        seconds: seconds,
+        natural: natural,
+        moving: moving,
+        airborne: airborne,
+        celebrating: celebrating,
+        step: step,
+        bodyBob: bodyBob,
+        breathe: breathe,
+        affection: affection,
+        greeting: greeting,
+        liftRatio: liftRatio,
+        playPose: playPose,
+      );
+      canvas.save();
+      if (math.sin(yaw) < 0) canvas.scale(-1, 1);
       if (mood?.carryingLetter ?? false) {
         _paintLetter(canvas, bodyBob, seconds);
       } else {
         _paintProp(canvas, bodyBob, seconds);
+      }
+      canvas.restore();
+    } else {
+      canvas.save();
+      canvas.translate(_tx(10, 0, -3), 0);
+      _paintTail(canvas, bodyBob, step);
+      canvas.restore();
+      _paintFoot(
+        canvas,
+        _tx(-6.5, -7, -2),
+        step * 5.5,
+        hopping: airborne,
+        front: false,
+      );
+      final frontArm = celebrating
+          ? -2.45 + math.sin(motion.elapsedSeconds * 12) * 0.18
+          : affection > 0.05
+          ? -2.05 + greeting * 0.3
+          : airborne
+          ? -0.9 + step * 0.24
+          : moving
+          ? -stepFollow * 0.62
+          : 0.1 + breathe * 0.045;
+      final backArm = airborne
+          ? -0.5 - step * 0.22
+          : moving
+          ? step * 0.52
+          : -0.15 - breathe * 0.04;
+      // Nhìn thẳng thì tay sau ra trước, đối xứng với tay trước (vui thì giơ
+      // cả hai tay); xoay dần về 3/4 thì tay đó lùi ra sau thân.
+      final armsInFront = _turn < .55 && !sweeping;
+      final backAngle = _turn >= 1
+          ? backArm
+          : -frontArm + (backArm + frontArm) * _turn;
+      final backPivot = Offset(_tx(-13.5, -12, -7), -29 + bodyBob);
+      if (!armsInFront) {
+        _paintArm(canvas, backPivot, backAngle, behind: true);
+      }
+
+      canvas.save();
+      canvas.translate(0, bodyBob);
+      _shape(
+        canvas,
+        Path()
+          ..moveTo(-12, -34)
+          ..cubicTo(-19, -24, -18, -10, -13, -6)
+          ..cubicTo(-7, -1, 11, -2, 15, -7)
+          ..cubicTo(20, -15, 17, -26, 11, -34)
+          ..close(),
+        _cream,
+        shade: _creamShade,
+      );
+      canvas.drawOval(
+        Rect.fromLTWH(_tx(-9, -7, -4), -23, 18, 16),
+        Paint()..color = _belly,
+      );
+      _paintSoftLight(canvas, const Offset(-6, -26), 11, .28);
+      if (_sharedClothes) {
+        PetCareOutfitArt.paintBody(canvas, resolvedPetOutfit!, isBear: _isBear);
+      } else if (_outfit.clothes == CompanionClothes.overalls) {
+        _paintBearOveralls(canvas);
+      } else if (_outfit.clothes != CompanionClothes.classic) {
+        _paintCoat(canvas);
+      }
+      _paintCareBody(canvas);
+      if (!_sharedClothes) {
+        _paintScarfTail(canvas, moving: moving, step: step, breathe: breathe);
+      }
+      _paintHead(
+        canvas,
+        earSway:
+            (moving ? step * 0.11 + liftRatio * 0.08 : breathe * 0.035) +
+            greeting * 0.07,
+        happy: celebrating || _careHappy,
+        sweeping: sweeping,
+        affection: affection,
+        tilt:
+            greeting * 0.035 +
+            (moving ? -step * 0.028 : 0) +
+            (natural ? stepFollow * 0.018 : 0),
+        gazeX: natural
+            ? 0.65 + math.sin(seconds * 0.66 + character.index * 0.9) * 0.34
+            : 0,
+        gazeY: natural
+            ? math.sin(seconds * 0.83 + character.index * 0.4) * 0.28
+            : 0,
+        blinkAmount: natural ? _blinkAmount(seconds) : 0,
+      );
+      if (!_sharedClothes) _paintScarfCollar(canvas);
+      canvas.restore();
+
+      _paintFoot(
+        canvas,
+        _tx(6.5, 8, 7) + playPose.kick * 9,
+        -step * 5.5,
+        hopping: airborne || playPose.kick > 0,
+        front: true,
+      );
+
+      if (sweeping) {
+        _paintBroom(canvas, sweep: sweep, bodyBob: bodyBob);
+      } else {
+        _paintArm(canvas, Offset(_tx(13, 13, 10), -29 + bodyBob), frontArm);
+        if (armsInFront) {
+          canvas.save();
+          // Tay vẽ theo tay phải; lật quanh khớp vai để thành tay trái.
+          canvas.translate(backPivot.dx, backPivot.dy);
+          canvas.scale(-1, 1);
+          _paintArm(canvas, Offset.zero, -backAngle);
+          canvas.restore();
+        }
+      }
+      if (!sweeping) {
+        if (mood?.carryingLetter ?? false) {
+          _paintLetter(canvas, bodyBob, seconds);
+        } else {
+          _paintProp(canvas, bodyBob, seconds);
+        }
       }
     }
     canvas.restore();
@@ -346,6 +587,219 @@ class HomeCompanionPainter extends CustomPainter {
     if (faded) canvas.restore();
     _paintBubble(canvas, size, playPose.offset + offset, hopLift);
     canvas.restore();
+  }
+
+  bool get _spriteLook {
+    if (_sharedClothes) return false;
+    final look = _outfit;
+    return look.hat == CompanionHat.none &&
+        look.glasses == CompanionGlasses.none &&
+        (look.clothes == CompanionClothes.classic ||
+            look.clothes == CompanionClothes.overalls);
+  }
+
+  /// Ảnh mới chỉ thay dáng mặc định, kể cả lúc ngủ (nhắm mắt, thở chậm).
+  /// Trang phục, nón/kính và ngồi vẫn dùng hình 3D cho tới khi có ảnh.
+  CompanionSprite? _spriteFor(Companion3DPose pose) {
+    if (pose.sit > .4 || !_spriteLook) return null;
+    return CompanionSpriteAssets.instance.sprite(
+      bear: _isBear,
+      side: pose.yaw.abs() > .7,
+    );
+  }
+
+  /// Ảnh cử động theo khung xương: tai phất và giật nhẹ, đầu nghiêng/lún,
+  /// tay đánh theo bước hoặc vẫy chào, chân nhấc từng bên, miệng há/nhai.
+  /// Cả thân vẫn thở phồng xẹp, nhún theo bước, nghiêng về phía món ăn/bạn ôm.
+  void _paintSprite(
+    Canvas canvas,
+    CompanionSprite sprite,
+    Companion3DPose pose, {
+    required double seconds,
+    required double step,
+    required double bodyBob,
+    required double breathe,
+  }) {
+    var dir = pose.yaw >= 0 ? 1.0 : -1.0;
+    final lag = _isBear ? 2.3 : 0.0; // lệch nhịp để hai bé không nhún cùng lúc
+    final walk = pose.walk;
+    final idle = naturalAnimation && showEffects
+        ? (1 - walk) *
+              (1 - pose.eat) *
+              (1 - pose.hug) *
+              (1 - pose.wave) *
+              (1 - pose.sleep)
+        : 0.0;
+    // Đi kiểu nảy: mỗi bước bật lên, chạm đất thì phồng ngang.
+    final contact = walk * (1 - step.abs());
+    // Đứng yên thì thỉnh thoảng nhún tưng tại chỗ và ngó sang một bên.
+    final hopT = (seconds + lag) % 7.3;
+    final idleHop = hopT < .55 ? math.sin(hopT / .55 * math.pi) * idle : 0.0;
+    final lift =
+        walk * step.abs() * 4.5 +
+        idleHop * 5 +
+        pose.happy * math.sin(seconds * 7).abs() * 4;
+    final lookT = (seconds + lag * 1.6) % 9.4;
+    final look = lookT > 6.4 && lookT < 8.0
+        ? math.sin((lookT - 6.4) / 1.6 * math.pi) * idle
+        : 0.0;
+    final lookSide = ((seconds + lag * 1.6) / 9.4).floor().isEven ? 1.0 : -1.0;
+    var art = sprite;
+    if (look > .5 && !sprite.spec.side) {
+      final side = CompanionSpriteAssets.instance.sprite(
+        bear: _isBear,
+        side: true,
+      );
+      if (side != null && side.spec.side) {
+        art = side;
+        dir = lookSide;
+      }
+    }
+    final chew = pose.eat * (.5 + .5 * math.sin(seconds * 16));
+    final stretch = idleHop * .06 + pose.mouth * .03;
+    final lean =
+        (pose.hug * .10 + pose.mouth * .05) * dir +
+        step * .06 * walk +
+        look * .08 * lookSide +
+        math.sin(seconds * 12) * .05 * pose.wave;
+    final flip = art.spec.side && dir < 0;
+    // Góc tính theo màn hình; ảnh lật gương thì đổi chiều trong ảnh.
+    final mirror = flip ? -1.0 : 1.0;
+    final t = seconds + lag;
+    final happy = pose.happy;
+    final swing = walk * step;
+    // Mỗi 5,1 giây một tai giật nhẹ, luân phiên hai tai.
+    final twitchT = t % 5.1;
+    final twitch = twitchT < .5
+        ? math.sin(twitchT / .5 * math.pi * 3) * (1 - twitchT / .5) * .22 * idle
+        : 0.0;
+    final twitchLeft = (t / 5.1).floor().isEven;
+    final head =
+        idle * (math.sin(t * .9) * .045 + look * .10 * lookSide) +
+        swing * .05 +
+        happy * math.sin(seconds * 7) * .07 +
+        pose.hug * .09 * dir +
+        pose.wave * math.sin(seconds * 6) * .06 +
+        pose.sleep * (.07 + math.sin(seconds * .8) * .025) * dir;
+    final ears =
+        idle * (math.sin(t * 1.6) * .035 + idleHop * .14) +
+        walk * (contact * .16 - step.abs() * .05) +
+        happy * (.10 + math.sin(seconds * 9) * .10) +
+        pose.mouth * .05 +
+        pose.sleep * .12; // ngủ thì tai rũ ra hai bên
+    // Tai mềm trễ sau đầu: đầu nghiêng bên nào, chóp tai ngả ngược lại.
+    final earLag = (head + lean) * .6 * mirror;
+    final armIdle = idle * math.sin(t * 1.7 + .6) * .04;
+    final hello = pose.wave * (.34 + math.sin(seconds * 13) * .16);
+    final hug = pose.hug * .3;
+    final double armLeft, armRight;
+    if (art.spec.side) {
+      // Ảnh nhìn ngang chỉ thấy một tay: đánh tay ngược chân trước.
+      armLeft =
+          armIdle -
+          swing * .32 +
+          happy * (.32 + math.sin(seconds * 9) * .14) +
+          hello +
+          hug;
+      armRight = 0;
+    } else {
+      final reach = armIdle + walk * .06 + hug + pose.eat * .08;
+      armLeft =
+          reach +
+          swing * .2 +
+          happy * (.32 + math.sin(seconds * 9) * .14) +
+          (dir < 0 ? hello : 0);
+      armRight =
+          reach -
+          swing * .2 +
+          happy * (.32 + math.sin(seconds * 9 + math.pi) * .14) +
+          (dir > 0 ? hello : 0);
+    }
+    final stepLift = art.spec.side ? 26.0 : 34.0;
+    final tuck = idleHop * 10 + happy * math.sin(seconds * 7).abs() * 8;
+    final parts = CompanionSpriteMotion(
+      head: head * mirror,
+      headDrop:
+          -breathe * 2.2 +
+          contact * 9 +
+          chew * 7 -
+          idleHop * 6 +
+          pose.sleep * 7,
+      earLeft: ears + earLag + (twitchLeft ? twitch : 0),
+      earRight: ears - earLag + (twitchLeft ? 0 : twitch),
+      armLeft: armLeft,
+      armRight: armRight,
+      liftLeft: walk * math.max(0.0, -step) * stepLift + tuck,
+      liftRight: walk * math.max(0.0, step) * stepLift + tuck,
+      strideLeft: art.spec.side ? -swing * 22 : 0,
+      strideRight: art.spec.side ? swing * 22 : 0,
+      tail:
+          idle * math.sin(t * 2.3) * .12 +
+          walk * math.sin(seconds * 10) * .2 +
+          happy * math.sin(seconds * 12) * .3,
+      mouth:
+          1 +
+          pose.mouth * .38 +
+          happy * .12 +
+          pose.wave * math.sin(seconds * 14).abs() * .25 -
+          chew * .5,
+    );
+    canvas.save();
+    canvas.translate(0, bodyBob - lift);
+    canvas.rotate(lean);
+    canvas.scale(
+      1 - breathe * .012 + contact * .045 + chew * .04 - stretch * .5,
+      1 + breathe * .025 - contact * .055 - chew * .05 + stretch,
+    );
+    art.paint(canvas, flip: flip, motion: parts);
+    if (!art.spec.side) {
+      art.paintBlink(canvas, pose.blink, parts);
+      _paintSpriteCare(canvas, art, seconds, parts);
+    }
+    canvas.restore();
+  }
+
+  /// Vệt bùn khi bẩn và giọt nước mắt khi khóc trên ảnh mặt trước.
+  void _paintSpriteCare(
+    Canvas canvas,
+    CompanionSprite sprite,
+    double seconds,
+    CompanionSpriteMotion parts,
+  ) {
+    if (!_hasCare) return;
+    if (_careDirty) {
+      final mud = Paint()
+        ..color = const Color(0xFF8A6244).withValues(alpha: .55);
+      for (final spot in const [
+        Offset(-9, -22),
+        Offset(8, -14),
+        Offset(3, -30),
+        Offset(-12, -8),
+      ]) {
+        canvas.drawOval(
+          Rect.fromCenter(center: spot, width: 6.5, height: 4.2),
+          mud,
+        );
+      }
+    }
+    if (_careCrying) {
+      final tear = Paint()
+        ..color = const Color(0xFF8FD0FF).withValues(alpha: .85);
+      final drop = (seconds * .9) % 1;
+      final eyes = _isBear
+          ? const [Offset(476, 560), Offset(787, 560)]
+          : const [Offset(469, 640), Offset(762, 640)];
+      for (final eye in eyes) {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: sprite.place(eye, parts) + Offset(0, 6 + drop * 10),
+            width: 3.2,
+            height: 4.6,
+          ),
+          tear,
+        );
+      }
+    }
   }
 
   void _paintCoat(Canvas canvas) {
@@ -544,8 +998,10 @@ class HomeCompanionPainter extends CustomPainter {
   void _paintCareBody(Canvas canvas) {
     if (!_hasCare) return;
     if (_careDirty) {
-      final mud = Paint()..color = const Color(0xFF9A765D).withValues(alpha: 0.78);
-      final mudLight = Paint()..color = const Color(0xFFC19B76).withValues(alpha: 0.68);
+      final mud = Paint()
+        ..color = const Color(0xFF9A765D).withValues(alpha: 0.78);
+      final mudLight = Paint()
+        ..color = const Color(0xFFC19B76).withValues(alpha: 0.68);
       for (final spot in const [
         Offset(-8, -21),
         Offset(6, -16),
@@ -592,7 +1048,8 @@ class HomeCompanionPainter extends CustomPainter {
   }
 
   void _paintCareSparkle(Canvas canvas, Offset center, double radius) {
-    final paint = Paint()..color = const Color(0xFFFFD978).withValues(alpha: 0.9);
+    final paint = Paint()
+      ..color = const Color(0xFFFFD978).withValues(alpha: 0.9);
     canvas.drawLine(
       center - Offset(radius, 0),
       center + Offset(radius, 0),
@@ -679,6 +1136,10 @@ class HomeCompanionPainter extends CustomPainter {
     required double breathe,
   }) {
     final flutter = moving ? step * 3 : breathe;
+    canvas.save();
+    canvas.translate(-8, 0);
+    canvas.scale(_turn.clamp(.2, 1.3).toDouble(), 1);
+    canvas.translate(8, 0);
     _shape(
       canvas,
       Path()
@@ -692,6 +1153,7 @@ class HomeCompanionPainter extends CustomPainter {
       outline: _roseShade,
       lineWidth: 1.15,
     );
+    canvas.restore();
   }
 
   void _paintScarfCollar(Canvas canvas) {
@@ -709,7 +1171,7 @@ class HomeCompanionPainter extends CustomPainter {
     );
     _shape(
       canvas,
-      Path()..addOval(const Rect.fromLTWH(6, -31, 7, 6)),
+      Path()..addOval(Rect.fromLTWH(6 + _tx(-9.5, 0, 2), -31, 7, 6)),
       _scarfDot,
       outline: _roseShade,
       lineWidth: 1,
@@ -731,6 +1193,9 @@ class HomeCompanionPainter extends CustomPainter {
     required bool sweeping,
     required double affection,
     required double tilt,
+    double gazeX = 0,
+    double gazeY = 0,
+    double blinkAmount = 0,
   }) {
     canvas.save();
     // Chỉ nghiêng đầu: chân và chổi vẫn neo đúng mặt khối.
@@ -738,8 +1203,8 @@ class HomeCompanionPainter extends CustomPainter {
     canvas.rotate(tilt);
     canvas.translate(0, 38);
     if (_isBear) {
-      _paintBearEar(canvas, Offset(-18, -63 + earSway * 3));
-      _paintBearEar(canvas, Offset(19, -63 - earSway * 3));
+      _paintBearEar(canvas, Offset(_tx(-18.5, -18, -12), -63 + earSway * 3));
+      _paintBearEar(canvas, Offset(_tx(18.5, 19, 20), -63 - earSway * 3));
     } else if (_isMouse) {
       _paintMouseEar(canvas, Offset(-20, -60 + earSway * 3));
       _paintMouseEar(canvas, Offset(21, -60 - earSway * 3));
@@ -747,9 +1212,23 @@ class HomeCompanionPainter extends CustomPainter {
       _paintCatEar(canvas, -1, earSway);
       _paintCatEar(canvas, 1, earSway);
     } else {
-      _paintEar(canvas, const Offset(-10, -64), -0.16 - earSway, 28);
-      _paintEar(canvas, const Offset(11, -64), 0.12 + earSway * 0.75, 30);
+      _paintEar(
+        canvas,
+        Offset(_tx(-10.5, -10, -5), -64),
+        _tx(-0.14, -0.16, -0.3) - earSway,
+        28,
+      );
+      _paintEar(
+        canvas,
+        Offset(_tx(10.5, 11, 9), -64),
+        _tx(0.14, 0.12, 0.02) + earSway * 0.75,
+        30,
+      );
     }
+    final headDx = _tx(-0.5, 0, 1.5);
+    final faceDx = _tx(-1.5, 0, 4);
+    canvas.save();
+    canvas.translate(headDx, 0);
     _shape(
       canvas,
       Path()
@@ -762,9 +1241,11 @@ class HomeCompanionPainter extends CustomPainter {
       _cream,
       shade: _creamShade,
     );
+    _paintSoftLight(canvas, const Offset(-10, -58), 15, _isBear ? .2 : .38);
+    canvas.restore();
     if (_isBear) {
       canvas.drawOval(
-        const Rect.fromLTWH(-9, -47, 22, 15),
+        Rect.fromLTWH(-9 + _tx(-2, 0, 3), -47, 22, 15),
         Paint()..color = const Color(0xFFF5DEBD),
       );
       _stroke(
@@ -788,11 +1269,27 @@ class HomeCompanionPainter extends CustomPainter {
         outlineOnly: true,
       );
     }
-    final cheekPaint = Paint()
-      ..color = _pink.withValues(alpha: 0.74 + affection * 0.16);
-    canvas.drawOval(const Rect.fromLTWH(-22, -44.5, 12, 7), cheekPaint);
-    canvas.drawOval(const Rect.fromLTWH(13, -44.5, 12, 7), cheekPaint);
-    for (final x in const [-18.5, 16.5]) {
+    // Má hồng mờ dần ra mép như phấn má, má xa thu hẹp khi bé xoay người.
+    final cheekAlpha = 0.74 + affection * 0.16;
+    for (final (center, width) in [
+      (Offset(_tx(-17.5, -16, -10), -41), 12 * _tx(1, 1, .7)),
+      (Offset(_tx(17.5, 19, 20), -41), 12.0),
+    ]) {
+      final rect = Rect.fromCenter(center: center, width: width, height: 7.4);
+      canvas.drawOval(
+        rect.inflate(1.2),
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              _pink.withValues(alpha: cheekAlpha),
+              _pink.withValues(alpha: cheekAlpha * .7),
+              _pink.withValues(alpha: 0),
+            ],
+            stops: const [0, .55, 1],
+          ).createShader(rect.inflate(1.2)),
+      );
+    }
+    for (final x in [_tx(-21, -18.5, -12.5), _tx(15, 16.5, 17.5)]) {
       _stroke(
         canvas,
         Path()
@@ -807,21 +1304,17 @@ class HomeCompanionPainter extends CustomPainter {
     if (_isCat) _paintWhiskers(canvas, const [-2.0, 0.6, 3.2]);
     if (_isMouse) _paintWhiskers(canvas, const [-1.2, 1.8]);
 
-    final blinkPhase = showEffects
-        ? (motion.elapsedSeconds +
-                  (_isBear
-                      ? 1.3
-                      : _isMouse
-                      ? 2.2
-                      : _isCat
-                      ? 3.7
-                      : 0)) %
-              5.4
-        : 0.0;
-    final blink = blinkPhase > 4.97 && blinkPhase < 5.11;
+    final blink = blinkAmount.clamp(0.0, 1.0).toDouble();
+    final eyeGazeX = gazeX.clamp(-1.25, 1.25).toDouble();
+    final eyeGazeY = gazeY.clamp(-0.75, 0.75).toDouble();
     final eyeY = sweeping ? -48.0 : -49.0;
-    for (final eyeX in const [-7.5, 10.5]) {
-      if (blink || happy || _dozing || _careSleepy) {
+    for (final (index, eyeX) in [
+      _tx(-9, -7.5, -2.5),
+      _tx(9, 10.5, 13.5),
+    ].indexed) {
+      // Mắt phía xa hẹp lại khi bé quay gần nhìn ngang.
+      final squeeze = index == 0 ? _tx(1, 1, .72) : 1.0;
+      if (happy || _dozing || _careSleepy || blink > 0.78) {
         _stroke(
           canvas,
           Path()
@@ -836,22 +1329,66 @@ class HomeCompanionPainter extends CustomPainter {
           width: 1.55,
         );
       } else {
+        final eyeHeight = (7.0 * (1 - blink)).clamp(1.35, 7.0).toDouble();
+        final pupil = Offset(eyeX + eyeGazeX * squeeze, eyeY + eyeGazeY);
         canvas.drawOval(
-          Rect.fromCenter(center: Offset(eyeX, eyeY), width: 4.8, height: 6.4),
-          Paint()..color = _eye,
+          Rect.fromCenter(
+            center: Offset(eyeX, eyeY),
+            width: 6.0 * squeeze,
+            height: eyeHeight + 0.9,
+          ),
+          Paint()..color = const Color(0xFFFFFCF3),
         );
-        canvas.drawCircle(
-          Offset(eyeX - 0.65, eyeY - 1.3),
-          1.0,
-          Paint()..color = Colors.white,
+        // Tròng mắt sẫm ở trên, nâu ấm dưới đáy: mắt long lanh hơn.
+        final iris = Rect.fromCenter(
+          center: pupil,
+          width: 4.7 * squeeze,
+          height: eyeHeight,
         );
-        canvas.drawCircle(
-          Offset(eyeX + 0.75, eyeY + 1.3),
-          0.5,
-          Paint()..color = const Color(0xFFFFE3DC),
+        canvas.drawOval(
+          iris,
+          Paint()
+            ..shader = const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF3F2E2E), _eye, Color(0xFF9A6E5E)],
+              stops: [0, .55, 1],
+            ).createShader(iris),
         );
+        if (eyeHeight > 2.4) {
+          canvas.drawCircle(
+            pupil + Offset(-0.8 * squeeze, -1.55),
+            1.25,
+            Paint()..color = Colors.white,
+          );
+          canvas.drawCircle(
+            pupil + Offset(0.9 * squeeze, 1.45),
+            0.62,
+            Paint()..color = const Color(0xFFFFE6DF),
+          );
+        }
+        if (!_isBear && !_isMouse && !_isCat) {
+          // Hai sợi mi nhỏ ở đuôi mắt cho Thỏ.
+          final side = index == 0 ? -1.0 : 1.0;
+          final corner = Offset(
+            eyeX + side * 2.6 * squeeze,
+            eyeY - eyeHeight * .32,
+          );
+          _stroke(
+            canvas,
+            Path()
+              ..moveTo(corner.dx, corner.dy)
+              ..lineTo(corner.dx + side * 1.5, corner.dy - 1.1)
+              ..moveTo(corner.dx - side * .3, corner.dy - .9)
+              ..lineTo(corner.dx + side * .8, corner.dy - 2.4),
+            color: _eye,
+            width: .8,
+          );
+        }
       }
     }
+    canvas.save();
+    canvas.translate(_tx(-1.7, 0, 4.5), 0);
     _shape(
       canvas,
       Path()
@@ -863,27 +1400,483 @@ class HomeCompanionPainter extends CustomPainter {
       outline: _noseColor,
       lineWidth: 0.75,
     );
-    _stroke(
-      canvas,
-      Path()
-        ..moveTo(1.7, -41)
-        ..quadraticBezierTo(1.5, -36.7, -2.4, -38.5)
-        ..moveTo(1.7, -41)
-        ..quadraticBezierTo(2.5, -36.7, 5.6, -38.5),
-      width: 1.05,
-      color: _eye,
-    );
+    if (happy || affection > .3) {
+      // Cười tươi: miệng há tròn có lưỡi hồng.
+      final mouth = Path()
+        ..moveTo(-1.9, -39.4)
+        ..quadraticBezierTo(1.7, -38.2, 5.3, -39.4)
+        ..quadraticBezierTo(5.0, -34.6, 1.7, -34.4)
+        ..quadraticBezierTo(-1.6, -34.6, -1.9, -39.4)
+        ..close();
+      canvas.drawPath(mouth, Paint()..color = const Color(0xFFA9475A));
+      canvas.save();
+      canvas.clipPath(mouth);
+      canvas.drawOval(
+        const Rect.fromLTWH(-0.6, -37.0, 4.6, 3.4),
+        Paint()..color = const Color(0xFFF29AAB),
+      );
+      canvas.restore();
+      _stroke(canvas, mouth, color: _eye, width: .9);
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(1.7, -41)
+          ..lineTo(1.7, -39),
+        width: 1.0,
+        color: _eye,
+      );
+    } else {
+      _stroke(
+        canvas,
+        Path()
+          ..moveTo(1.7, -41)
+          ..quadraticBezierTo(1.5, -36.7, -2.4, -38.5)
+          ..moveTo(1.7, -41)
+          ..quadraticBezierTo(2.5, -36.7, 5.6, -38.5),
+        width: 1.05,
+        color: _eye,
+      );
+    }
     if (_isMouse) _paintMouseTeeth(canvas);
+    canvas.restore();
+    canvas.save();
+    canvas.translate(faceDx, 0);
     _paintGlasses(canvas);
+    canvas.restore();
+    canvas.save();
+    canvas.translate(headDx, 0);
     _paintHat(canvas);
+    if (!_isBear &&
+        !_isMouse &&
+        !_isCat &&
+        !_sharedClothes &&
+        _outfit.hat == CompanionHat.none) {
+      _paintFlower(canvas, Offset(_tx(12.5, 13.5, 10.5), -60.5));
+    }
+    canvas.restore();
+    if (_sharedClothes) {
+      PetCareOutfitArt.paintAccessory(
+        canvas,
+        resolvedPetOutfit!,
+        isBear: _isBear,
+      );
+    }
+    canvas.save();
+    canvas.translate(faceDx, 0);
     _paintCareFace(canvas);
     canvas.restore();
+    canvas.restore();
+  }
+
+  /// Bốn bé ở dáng mặc định (khăn; Gấu mặc yếm) vẽ bằng bản hoạt hình xoay
+  /// mọi góc. Nón/kính, trang phục khác và bộ đồ Trạm Mây giữ bản vẽ cũ.
+  ToonLook? get _toonLook {
+    if (_sharedClothes) return null;
+    final look = _outfit;
+    if (look.hat != CompanionHat.none ||
+        look.glasses != CompanionGlasses.none) {
+      return null;
+    }
+    final classic = look.clothes == CompanionClothes.classic;
+    return switch (character) {
+      HomeCompanionCharacter.bear =>
+        look.clothes == CompanionClothes.overalls ? ToonLook.bear : null,
+      HomeCompanionCharacter.bunny => classic ? ToonLook.bunny : null,
+      HomeCompanionCharacter.kuromi => classic ? ToonLook.cat : null,
+      HomeCompanionCharacter.melody => classic ? ToonLook.mouse : null,
+    };
+  }
+
+  /// Lệch nhịp hành động/nhìn quanh giữa các bé (giây).
+  double get _toonLag => switch (character) {
+    HomeCompanionCharacter.bunny => 0,
+    HomeCompanionCharacter.bear => 17,
+    HomeCompanionCharacter.kuromi => 31,
+    HomeCompanionCharacter.melody => 8,
+  };
+
+  /// Trạng thái xoay bằng tay; tắt hiệu ứng thì không xoay.
+  CompanionSpinFrame get _handSpin =>
+      showEffects ? motion.handSpinFrame : CompanionSpinFrame.none;
+
+  static const _toonSchedule = [
+    (4.0, 2.6, _ToonAct.wave),
+    (10.0, 1.7, _ToonAct.spin),
+    (15.0, 2.8, _ToonAct.stretch),
+    (21.0, 4.4, _ToonAct.dance),
+    (29.5, 2.6, _ToonAct.peek),
+    (35.0, 1.6, _ToonAct.hop),
+    (39.0, 3.4, _ToonAct.look),
+  ];
+
+  /// Hành động ngẫu hứng lúc đứng chơi, lệch nhịp giữa hai bé.
+  (_ToonAct, double) _toonAct(double seconds) {
+    final t = (seconds + _toonLag) % 46;
+    for (final (start, length, act) in _toonSchedule) {
+      if (t >= start && t < start + length) return (act, (t - start) / length);
+    }
+    return (_ToonAct.none, 0);
+  }
+
+  /// Vẽ Thỏ/Gấu hoạt hình và trả về góc quay để đạo cụ đi theo hướng bé.
+  double _paintToon(
+    Canvas canvas,
+    ToonLook look, {
+    required double seconds,
+    required bool natural,
+    required bool moving,
+    required bool airborne,
+    required bool celebrating,
+    required double step,
+    required double bodyBob,
+    required double breathe,
+    required double affection,
+    required double greeting,
+    required double liftRatio,
+    required CompanionPlayPose playPose,
+  }) {
+    final dir = _facingRight ? 1.0 : -1.0;
+    final sleepy = _dozing || _careSleepy;
+    final feeding = mouthOpen > .05 || eating > .05;
+    final hand = _handSpin;
+    final busy =
+        hand.active ||
+        moving ||
+        sleepy ||
+        feeding ||
+        celebrating ||
+        hugging > .05 ||
+        affection > .05 ||
+        sitting > .1 ||
+        lookAt != null ||
+        bodyYaw != null ||
+        (_activePlay?.active ?? false) ||
+        _careCrying ||
+        _careAngry;
+    final (act, p) = natural && !busy ? _toonAct(seconds) : (_ToonAct.none, 0.0);
+    final env = math.sin(p * math.pi); // vào → đỉnh → ra
+    final lookT = (seconds + _toonLag * .24) % 8.6;
+    final idleFront = !busy && lookT > 5.6 && lookT < 8.0;
+
+    final target =
+        bodyYaw ??
+        (moving
+            ? dir * 1.2
+            : feeding
+            ? dir * .12
+            : hugging > .05
+            ? dir * .5
+            // Được cưng thì giữ nguyên góc để chân không dời chỗ.
+            : celebrating || sleepy
+            ? 0.0
+            : affection > .05
+            ? dir * .55
+            : switch (act) {
+                _ToonAct.wave => 0.0,
+                _ToonAct.dance => dir * .5 + math.sin(seconds * 5) * .7,
+                _ToonAct.peek => dir * (.55 + 2.25 * env),
+                _ToonAct.look => dir * .55 + math.sin(p * math.pi * 2) * .95,
+                _ => idleFront ? 0.0 : dir * .55,
+              });
+    var yaw = natural
+        ? motion.visual3D
+              .sample(
+                bear: _isBear,
+                seconds: seconds,
+                facingRight: _facingRight,
+                moving: moving,
+                stride: motion.visualStride,
+                yaw: target,
+              )
+              .yaw
+        : target;
+    if (act == _ToonAct.spin) {
+      // Xoay một vòng tròn, chậm ở đầu và cuối.
+      yaw += dir * math.pi * 2 * (p * p * (3 - 2 * p));
+    }
+    // Người dùng vuốt ngang để xoay bé: cộng thẳng, không làm mượt thêm.
+    yaw += hand.yaw;
+
+    // Tay, chân, tai theo trạng thái.
+    var armL = ToonArm(raise: .22 + breathe * .03);
+    var armR = ToonArm(raise: .22 - breathe * .03);
+    var footL = const ToonFoot(), footR = const ToonFoot();
+    var earL = breathe * .03, earR = -breathe * .03;
+    var lift = bodyBob;
+    var tilt = 0.0;
+    var face = ToonFace.normal;
+    var mouth = 0.0, blush = 0.0, sparkle = 0.0;
+    if (moving) {
+      footL = ToonFoot(lift: math.max(0.0, -step) * 2.6, stride: -step * 3.4);
+      footR = ToonFoot(lift: math.max(0.0, step) * 2.6, stride: step * 3.4);
+      armL = ToonArm(raise: .25, swing: step * .75);
+      armR = ToonArm(raise: .25, swing: -step * .75);
+      earL = step * .1 + liftRatio * .18;
+      earR = -step * .1 + liftRatio * .18;
+      tilt = -step * .03 * dir;
+      if (airborne) {
+        armL = const ToonArm(raise: 1.0, swing: .3);
+        armR = const ToonArm(raise: 1.0, swing: .3);
+        footL = const ToonFoot(lift: 2.6, stride: -1);
+        footR = const ToonFoot(lift: 2.6, stride: 1);
+      }
+    }
+    switch (act) {
+      case _ToonAct.wave:
+        armR = ToonArm(raise: 2.0 + .45 * env + math.sin(seconds * 13) * .28 * env, swing: .25);
+        face = ToonFace.wink;
+        blush = .5 * env;
+        tilt = math.sin(seconds * 6) * .05 * env;
+      case _ToonAct.spin:
+        armL = ToonArm(raise: .22 + .9 * env);
+        armR = ToonArm(raise: .22 + .9 * env);
+        face = ToonFace.happy;
+        lift -= env * 3;
+      case _ToonAct.stretch:
+        armL = ToonArm(raise: .22 + 2.6 * env);
+        armR = ToonArm(raise: .22 + 2.6 * env);
+        face = env > .35 ? ToonFace.yawn : ToonFace.normal;
+        mouth = env;
+        lift -= env * 1.5;
+        earL = earR = -.1 * env;
+      case _ToonAct.dance:
+        final beat = math.sin(seconds * 7);
+        armL = ToonArm(raise: 1.25 + beat * 1.0, swing: .2);
+        armR = ToonArm(raise: 1.25 - beat * 1.0, swing: .2);
+        footL = ToonFoot(lift: math.max(0.0, beat) * 2.2);
+        footR = ToonFoot(lift: math.max(0.0, -beat) * 2.2);
+        lift -= (math.sin(seconds * 14).abs()) * 2 * env;
+        tilt = math.sin(seconds * 3.5) * .12 * env;
+        earL = beat * .16;
+        earR = -beat * .16;
+        face = ToonFace.happy;
+        sparkle = env;
+      case _ToonAct.peek:
+        tilt = .06 * env * dir;
+      case _ToonAct.hop:
+        final hop = math.sin(p * math.pi * 2).abs();
+        lift -= hop * 5;
+        footL = footR = ToonFoot(lift: hop * 2.4);
+        armL = armR = ToonArm(raise: .3 + hop * .9);
+        earL = earR = hop * .22;
+        face = ToonFace.happy;
+      case _ToonAct.look:
+        tilt = math.sin(p * math.pi * 2) * .07;
+      case _ToonAct.none:
+        break;
+    }
+    if (celebrating) {
+      armL = ToonArm(raise: 2.3 + math.sin(seconds * 12) * .2);
+      armR = ToonArm(raise: 2.3 - math.sin(seconds * 12) * .2);
+      face = ToonFace.happy;
+      sparkle = 1;
+      earL = earR = math.sin(seconds * 9) * .14;
+    }
+    if (affection > .05) {
+      armR = ToonArm(raise: 2.1 + greeting * .35, swing: .2);
+      face = affection > .45 ? ToonFace.love : ToonFace.happy;
+      blush = 1;
+      tilt = greeting * .06;
+    }
+    if (hugging > .05) {
+      armL = ToonArm(raise: 1.25, swing: 1.0 * hugging);
+      armR = ToonArm(raise: 1.25, swing: 1.0 * hugging);
+      face = ToonFace.happy;
+      blush = .7;
+    }
+    if (eating > .05) {
+      face = ToonFace.chew;
+      mouth = .5 + .5 * math.sin(seconds * 14);
+      tilt = math.sin(seconds * 7) * .03;
+    } else if (mouthOpen > .05) {
+      mouth = mouthOpen;
+    }
+    if (playPose.kick > 0) {
+      footR = ToonFoot(lift: playPose.kick * 3, stride: playPose.kick * 7);
+    }
+    if (playPose.dizzy > 0) {
+      tilt += math.sin(seconds * 9) * .14 * playPose.dizzy;
+    }
+    if (_careHappy && face == ToonFace.normal) {
+      face = ToonFace.happy;
+      sparkle = math.max(sparkle, .6);
+    }
+    if (_careHungry && face == ToonFace.normal) face = ToonFace.hungry;
+    if (_careCrying) face = ToonFace.sad;
+    if (_careAngry) face = ToonFace.angry;
+    if (sleepy) {
+      face = ToonFace.sleep;
+      earL = earR = .24;
+      tilt = .1 * dir + math.sin(seconds * 1.3) * .02;
+      armL = armR = const ToonArm(raise: .12);
+    }
+    if (hand.speed > 2.5 && !sleepy) {
+      // Quay vù vù: dang tay, tai bay ra, cười to.
+      final whirl = ((hand.speed - 2.5) / 6).clamp(0.0, 1.0);
+      armL = ToonArm(raise: .22 + 1.3 * whirl);
+      armR = ToonArm(raise: .22 + 1.3 * whirl);
+      earL = earR = .32 * whirl;
+      face = ToonFace.happy;
+      mouth = math.max(mouth, .7 * whirl);
+    }
+    if (hand.dizzy > 0 && !sleepy) {
+      face = ToonFace.dizzy;
+      tilt += math.sin(seconds * 5.5) * .12 * hand.dizzy;
+      lift -= math.sin(seconds * 11).abs() * .6 * hand.dizzy;
+      armL = ToonArm(raise: .5 + math.sin(seconds * 5.5) * .25);
+      armR = ToonArm(raise: .5 - math.sin(seconds * 5.5) * .25);
+    }
+
+    CompanionToon.paint(
+      canvas,
+      look,
+      ToonPose(
+        yaw: yaw,
+        bodyLift: lift,
+        headTilt: tilt,
+        earLeft: earL,
+        earRight: earR,
+        armLeft: armL,
+        armRight: armR,
+        footLeft: footL,
+        footRight: footR,
+        tail: seconds * (moving ? 9 : 2.4),
+        face: face,
+        blink: natural && !sleepy ? _blinkAmount(seconds) : 0,
+        mouth: mouth,
+        gaze: natural
+            ? Offset(
+                math.sin(seconds * .66 + character.index * .9) * .7,
+                math.sin(seconds * .83 + character.index * .4) * .4,
+              )
+            : Offset.zero,
+        blush: blush,
+        sit: sitting,
+        tears: _careCrying ? 1 : 0,
+        dirty: _careDirty,
+        hungry: _careHungry,
+        angry: _careAngry,
+        sparkle: sparkle,
+        dizzy: sleepy ? 0 : hand.dizzy,
+        seconds: seconds,
+      ),
+    );
+    return yaw;
+  }
+
+  /// Độ xoay người của bản hoạt hình trong lượt vẽ hiện tại: 0 nhìn thẳng,
+  /// 1 nghiêng 3/4 như hình gốc, tới 1,6 gần nhìn ngang khi đi.
+  double _turn = 1;
+
+  /// Toạ độ theo độ xoay: [front] lúc nhìn thẳng, [base] ở dáng 3/4 gốc,
+  /// [side] lúc gần nhìn ngang.
+  double _tx(double front, double base, double side) => _turn <= 1
+      ? front + (base - front) * _turn
+      : base + (side - base) * ((_turn - 1) / .6);
+
+  /// Tính độ xoay và hướng của Thỏ/Gấu hoạt hình. Hướng đi đổi thì bé xoay
+  /// qua dáng nhìn thẳng rồi mới sang phía kia (không lật tức thì); đi thì
+  /// quay hẳn theo hướng đi, đứng yên thỉnh thoảng quay ra nhìn người dùng.
+  bool _cartoonTurn({
+    required double seconds,
+    required bool natural,
+    required bool moving,
+    required bool celebrating,
+  }) {
+    _turn = 1;
+    final hand = _handSpin.yaw;
+    if (_carePet == null || !natural) {
+      // Bé khách mặc đồ: chỉ lật hướng theo tay xoay.
+      if (hand == 0) return _facingRight;
+      return math.sin((_facingRight ? .55 : -.55) + hand) >= 0;
+    }
+    final dir = _facingRight ? 1.0 : -1.0;
+    final lookT = (seconds + (_isBear ? 4.1 : 0)) % 8.6;
+    final lookAtViewer = celebrating || _dozing || (lookT > 5.6 && lookT < 8.0);
+    final pose = motion.visual3D.sample(
+      bear: _isBear,
+      seconds: seconds,
+      facingRight: _facingRight,
+      moving: moving,
+      stride: motion.visualStride,
+      yaw: bodyYaw ?? dir * (moving ? 1.0 : (lookAtViewer ? .04 : .6)),
+    );
+    final yaw = math.atan2(
+      math.sin(pose.yaw + hand),
+      math.cos(pose.yaw + hand),
+    );
+    // Quay lưng (dỗi) thì vẽ gần nhìn ngang về phía bé đang hướng.
+    _turn = math.cos(yaw) < 0
+        ? 1.6
+        : (yaw.abs() / .6).clamp(0.0, 1.6).toDouble();
+    final side = math.sin(yaw);
+    return side.abs() < 1e-3 ? _facingRight : side > 0;
+  }
+
+  /// Vệt sáng mềm trên lông để khối đầu/thân tròn và mịn hơn.
+  void _paintSoftLight(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double alpha,
+  ) {
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    canvas.drawOval(
+      rect,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Colors.white.withValues(alpha: alpha),
+            Colors.white.withValues(alpha: 0),
+          ],
+        ).createShader(rect),
+    );
+  }
+
+  /// Hoa hồng nhỏ cài cạnh tai Thỏ.
+  void _paintFlower(Canvas canvas, Offset center) {
+    const petal = Color(0xFFF7A9BD);
+    for (var i = 0; i < 5; i++) {
+      final a = -math.pi / 2 + i * math.pi * 2 / 5;
+      final at = center + Offset(math.cos(a), math.sin(a)) * 2.6;
+      _shape(
+        canvas,
+        Path()..addOval(Rect.fromCircle(center: at, radius: 2.25)),
+        petal,
+        outline: const Color(0xFFD9738F),
+        lineWidth: .75,
+      );
+    }
+    canvas.drawCircle(center, 1.55, Paint()..color = const Color(0xFFFFC56B));
+    canvas.drawCircle(
+      center + const Offset(-.45, -.45),
+      .55,
+      Paint()..color = const Color(0xFFFFF1C9),
+    );
+  }
+
+  /// Một nhịp chớp mắt gồm khép nhanh và mở chậm, tránh cảm giác bật/tắt.
+  double _blinkAmount(double seconds) {
+    final phaseShift = _isBear
+        ? 1.3
+        : _isMouse
+        ? 2.2
+        : _isCat
+        ? 3.7
+        : 0.0;
+    final phase = (seconds + phaseShift) % 5.4;
+    if (phase < 0.08) return math.sin(phase / 0.08 * math.pi / 2);
+    if (phase < 0.20) {
+      return math.cos((phase - 0.08) / 0.12 * math.pi / 2).abs();
+    }
+    return 0;
   }
 
   void _paintCareFace(Canvas canvas) {
     if (!_hasCare) return;
     if (_careDirty) {
-      final mud = Paint()..color = const Color(0xFF8E6B55).withValues(alpha: 0.78);
+      final mud = Paint()
+        ..color = const Color(0xFF8E6B55).withValues(alpha: 0.78);
       canvas.drawOval(const Rect.fromLTWH(-20, -55, 6, 4), mud);
       canvas.drawOval(const Rect.fromLTWH(15, -38, 5, 3.5), mud);
       canvas.drawCircle(const Offset(-13, -35), 1.6, mud);
@@ -911,7 +1904,8 @@ class HomeCompanionPainter extends CustomPainter {
       );
     }
     if (_careCrying) {
-      final tear = Paint()..color = const Color(0xFF73BCE5).withValues(alpha: 0.9);
+      final tear = Paint()
+        ..color = const Color(0xFF73BCE5).withValues(alpha: 0.9);
       for (final eyeX in const [-7.5, 10.5]) {
         canvas.drawOval(
           Rect.fromCenter(center: Offset(eyeX, -44), width: 2.8, height: 6.8),
@@ -1232,7 +2226,12 @@ class HomeCompanionPainter extends CustomPainter {
     }
   }
 
-  void _paintProp(Canvas canvas, double bob, double seconds) {
+  void _paintProp(
+    Canvas canvas,
+    double bob,
+    double seconds, {
+    bool drawHand = true,
+  }) {
     final prop = _outfit.prop;
     if (prop == CompanionProp.none) return;
     canvas.save();
@@ -1337,7 +2336,13 @@ class HomeCompanionPainter extends CustomPainter {
         );
         _star(canvas, const Offset(0, -11), 3.5, const Color(0xFFFFDC91));
     }
-    _shape(canvas, Path()..addOval(const Rect.fromLTWH(-5, -1, 9, 7)), _cream);
+    if (drawHand) {
+      _shape(
+        canvas,
+        Path()..addOval(const Rect.fromLTWH(-5, -1, 9, 7)),
+        _cream,
+      );
+    }
     canvas.restore();
   }
 
@@ -1559,11 +2564,19 @@ class HomeCompanionPainter extends CustomPainter {
     final opacity = math.sin(progress * math.pi).clamp(0.0, 1.0);
     if (opacity < 0.02) return;
     // Hai trái tim gọn bên má, không bay ra ngoài khoảng an toàn của thỏ.
+    // Ảnh Gấu mới có mắt to, thấp hơn: hạ tim xuống má để không đè lên mắt.
+    final bearSprite =
+        _isBear &&
+        uses3D &&
+        _spriteLook &&
+        CompanionSpriteAssets.instance.sprite(bear: true) != null;
     for (var i = 0; i < 2; i++) {
       final side = i == 0 ? -1.0 : 1.0;
       final center =
           motion.position +
-          Offset(side * 17, -45 - i * 8 - progress * 6 - hopLift);
+          (bearSprite
+              ? Offset(side * 21, -34 - i * 5 - progress * 6 - hopLift)
+              : Offset(side * 17, -45 - i * 8 - progress * 6 - hopLift));
       final radius = (i == 0 ? 2.5 : 2.9) * (0.8 + opacity * 0.2);
       canvas.save();
       canvas.translate(center.dx, center.dy);
@@ -1631,6 +2644,7 @@ class HomeCompanionPainter extends CustomPainter {
     Canvas canvas, {
     required double sweep,
     required double bodyBob,
+    bool drawHand = true,
   }) {
     // Quay cán quanh đầu chổi, không quanh tay: lông chổi luôn chạm đúng
     // motion.position, kể cả khi lật hướng bé. Không dùng lớp xóa nền Home.
@@ -1685,6 +2699,7 @@ class HomeCompanionPainter extends CustomPainter {
       width: 2.7,
     );
 
+    if (!drawHand) return;
     final grip = Offset.lerp(handleTop, brushTop, 0.39)!;
     _stroke(
       canvas,
@@ -1795,5 +2810,20 @@ class HomeCompanionPainter extends CustomPainter {
       oldDelegate.mood != mood ||
       oldDelegate.paintOffset != paintOffset ||
       oldDelegate.darkMode != darkMode ||
-      oldDelegate.showEffects != showEffects;
+      oldDelegate.showEffects != showEffects ||
+      oldDelegate.naturalAnimation != naturalAnimation ||
+      oldDelegate.care != care ||
+      oldDelegate.careListenable != careListenable ||
+      oldDelegate.petOutfit != petOutfit ||
+      oldDelegate.petOutfitsListenable != petOutfitsListenable ||
+      oldDelegate.mouthOpen != mouthOpen ||
+      oldDelegate.eating != eating ||
+      oldDelegate.hugging != hugging ||
+      oldDelegate.baby != baby ||
+      oldDelegate.lookAt != lookAt ||
+      oldDelegate.bodyYaw != bodyYaw ||
+      oldDelegate.sitting != sitting;
 }
+
+/// Hành động ngẫu hứng của Thỏ/Gấu hoạt hình khi đứng chơi.
+enum _ToonAct { none, wave, spin, stretch, dance, peek, hop, look }

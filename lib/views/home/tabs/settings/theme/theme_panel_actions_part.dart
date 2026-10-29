@@ -315,12 +315,18 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
 
   Future<void> _promptPendingThemeBackgroundRetryIfNeeded() async {
     final pendingKey = _pendingThemeBackgroundUploadKey;
+    final ownerUid = _auth.currentUser?.uid;
     if (_didPromptPendingThemeBackgroundRetry ||
         pendingKey == null ||
+        ownerUid == null ||
+        ownerUid.isEmpty ||
         !mounted) {
       return;
     }
-    final pending = await PendingUploadService.instance.load(pendingKey);
+    final pending = await PendingUploadService.instance.load(
+      pendingKey,
+      expectedUid: ownerUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
@@ -345,26 +351,39 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
 
   Future<void> _retryPendingThemeBackgroundUpload() async {
     final pendingKey = _pendingThemeBackgroundUploadKey;
-    if (pendingKey == null) {
+    final ownerUid = _auth.currentUser?.uid;
+    if (pendingKey == null || ownerUid == null || ownerUid.isEmpty) {
       return;
     }
-    final pending = await PendingUploadService.instance.load(pendingKey);
+    final pending = await PendingUploadService.instance.load(
+      pendingKey,
+      expectedUid: ownerUid,
+    );
     if (pending == null || !mounted) {
       return;
     }
     final filePath = pending['filePath']?.toString().trim() ?? '';
     if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(pendingKey);
+      await PendingUploadService.instance.clear(
+        pendingKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     final file = XFile(filePath);
     try {
       if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(pendingKey);
+        await PendingUploadService.instance.clear(
+          pendingKey,
+          expectedUid: ownerUid,
+        );
         return;
       }
     } catch (_) {
-      await PendingUploadService.instance.clear(pendingKey);
+      await PendingUploadService.instance.clear(
+        pendingKey,
+        expectedUid: ownerUid,
+      );
       return;
     }
     await _pickThemeBackgroundImage(presetFile: file);
@@ -419,6 +438,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         final adSuccess = await adMob.showRewardedAd(
           ignoreCooldown: true,
           loadTimeout: const Duration(seconds: 12),
+          isCurrent: isCurrent,
         );
         if (!isCurrent()) return;
         if (!adSuccess) {
@@ -473,7 +493,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       if (pendingKey != null) {
         await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
           'filePath': file.path,
-        });
+        }, expectedUid: ownerUid);
       }
 
       if (!isCurrent()) return;
@@ -535,7 +555,10 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       }
       if (pendingKey != null) {
         try {
-          await PendingUploadService.instance.clear(pendingKey);
+          await PendingUploadService.instance.clear(
+            pendingKey,
+            expectedUid: ownerUid,
+          );
         } catch (error) {
           debugPrint(
             '[SuppressedError] lib/views/home/tabs/settings/theme/theme_panel_actions_part.dart pending cleanup: $error',
@@ -617,7 +640,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
     setState(() => _isUnlockingStyle = true);
     try {
       final adMob = AdMobService();
-      final adSuccess = await adMob.showRewardedAd();
+      final adSuccess = await adMob.showRewardedAd(isCurrent: () => mounted);
       if (!mounted) return;
       if (adSuccess) {
         final prefs = await SharedPreferences.getInstance();

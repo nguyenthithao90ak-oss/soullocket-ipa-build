@@ -130,6 +130,13 @@ class AppRouter {
         },
       ),
       GoRoute(
+        path: '/widget_settings',
+        redirect: (context, state) {
+          WidgetActionService().handleLaunchUri(state.uri);
+          return '/';
+        },
+      ),
+      GoRoute(
         path: '/health',
         redirect: (context, state) {
           WidgetActionService().triggerAction(WidgetLaunchAction.cycle);

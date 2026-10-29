@@ -50,7 +50,7 @@ struct WidgetDiaryCollage: View {
     }
 }
 
-/// Tim/sticker/ảnh không tự thay kiểu; ảnh lỗi trở lại đúng mẫu đã chọn.
+/// Tự đổi cả bộ tim/sticker theo mốc phút; tắt chuyển đổi thì giữ mẫu đã chọn.
 struct WidgetCenterArtwork: View {
     let data: CoupleWidgetData
     let theme: WidgetTheme
@@ -69,8 +69,24 @@ struct WidgetCenterArtwork: View {
 
     var body: some View {
         let photos = images
-        let alternate = WidgetAppearanceDesign.alternate(at: date,
-            enabled: data.heartAnimated && !reduceMotion)
+        let motionEnabled = data.heartAnimated && !reduceMotion
+        let motionBucket = WidgetAppearanceDesign.motionBucket(
+            at: date,
+            minutes: data.heartMotionIntervalMinutes
+        )
+        let alternate = motionEnabled && motionBucket.isMultiple(of: 2)
+        let renderedStickerKey = motionEnabled && data.widgetStickerKey != "none"
+            ? WidgetAppearanceDesign.animatedSticker(
+                at: date,
+                minutes: data.heartMotionIntervalMinutes
+            )
+            : data.widgetStickerKey
+        let renderedHeartKey = motionEnabled
+            ? WidgetAppearanceDesign.animatedHeart(
+                at: date,
+                minutes: data.heartMotionIntervalMinutes
+            )
+            : data.heartStyleKey
         Group {
             if !photos.isEmpty {
                 ZStack(alignment: .bottomTrailing) {
@@ -78,22 +94,22 @@ struct WidgetCenterArtwork: View {
                         frameKey: data.photoFrameKey, theme: theme, themeKey: data.heartColorKey)
                         .aspectRatio(data.photoFrameKey == "heart" ? 1 : 168.0 / 244, contentMode: .fit)
                         .frame(width: size, height: size)
-                    if data.widgetStickerKey != "none" {
-                        WidgetArtwork(name: "widget_" + data.widgetStickerKey + (alternate ? "_twinkle" : ""))
+                    if renderedStickerKey != "none" {
+                        WidgetArtwork(name: "widget_" + renderedStickerKey + (alternate ? "_twinkle" : ""))
                             .frame(width: size * 0.37, height: size * 0.37)
                     }
                 }
-            } else if data.widgetStickerKey != "none" {
-                WidgetArtwork(name: "widget_" + data.widgetStickerKey + (alternate ? "_twinkle" : ""))
-                    .id(data.widgetStickerKey + (alternate ? "_twinkle" : ""))
+            } else if renderedStickerKey != "none" {
+                WidgetArtwork(name: "widget_" + renderedStickerKey + (alternate ? "_twinkle" : ""))
+                    .id(renderedStickerKey + (alternate ? "_twinkle" : ""))
             } else {
-                WidgetArtwork(name: WidgetAppearanceDesign.heart(data.heartStyleKey))
+                WidgetArtwork(name: WidgetAppearanceDesign.heart(renderedHeartKey))
                     .padding(size * 0.09)
-                    .scaleEffect(alternate ? 1.035 : 1)
+                    .id(renderedHeartKey)
             }
         }
         .frame(width: size, height: size)
-        .animation(reduceMotion || !data.heartAnimated ? nil : .easeInOut(duration: 0.4), value: alternate)
+        .animation(reduceMotion || !data.heartAnimated ? nil : .easeInOut(duration: 0.4), value: motionBucket)
     }
 }
 
@@ -115,21 +131,6 @@ struct WidgetCoupleHomeView: View {
             }
         }
         .frame(maxWidth: .infinity)
-    }
-
-    @ViewBuilder
-    private func center(size: CGFloat, small: Bool) -> some View {
-        if data.showDiaryOnWidget && data.widgetStyleKey != "countdown" {
-            Link(destination: URL(string: "soullocket://widget?action=diary")!) {
-                WidgetCenterArtwork(data: data, theme: theme, date: date, size: size)
-            }
-        } else if #available(iOSApplicationExtension 17.0, *), !small {
-            Button(intent: SendQuickActionIntent(actionType: "heart")) {
-                WidgetCenterArtwork(data: data, theme: theme, date: date, size: size)
-            }.buttonStyle(.plain)
-        } else {
-            WidgetCenterArtwork(data: data, theme: theme, date: date, size: size)
-        }
     }
 
     var body: some View {
@@ -162,7 +163,7 @@ struct WidgetCoupleHomeView: View {
                 HStack(spacing: gap) {
                     person(path: data.avatar1Path, name: data.name1,
                         size: avatarSize, warm: true, small: small, showName: !countdown)
-                    center(size: centerSize, small: small)
+                    WidgetCenterArtwork(data: data, theme: theme, date: date, size: centerSize)
                     person(path: data.avatar2Path, name: data.name2,
                         size: avatarSize, warm: false, small: small, showName: !countdown)
                 }
@@ -186,7 +187,7 @@ struct WidgetCoupleHomeView: View {
             alternate: WidgetAppearanceDesign.alternate(at: date,
                 enabled: data.heartAnimated && !reduceMotion),
             weather: data.weatherBackground, referenceDate: date))
-        .widgetURL(URL(string: "soullocket://widget?action=love"))
+        .widgetURL(URL(string: "soullocket://widget/widget_settings?homeWidget&action=widget_settings"))
         .privacySensitive()
     }
 }
