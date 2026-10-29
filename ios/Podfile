@@ -2,6 +2,12 @@ platform :ios, '15.5'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+# firebase_core 5.1.0 ghim Firebase iOS SDK 12.19.3, nhung 12.19.3 chi la ban va Firestore:
+# FirebaseAppCheck/Auth/... chi co 12.19.0 tren CocoaPods, nen firebase_app_check doi
+# 'FirebaseAppCheck ~> 12.19.3' lam pod install loi. Ghim ca bo ve 12.19.0 (cung dong 12.19).
+# Bo dong nay khi firebase_core ghim mot ban SDK co du moi pod.
+$FirebaseSDKVersion = '12.19.0'
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
