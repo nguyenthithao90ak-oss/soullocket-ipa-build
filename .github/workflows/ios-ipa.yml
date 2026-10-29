@@ -1,6 +1,9 @@
 name: Build iOS IPA
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       export_method:
@@ -566,7 +569,7 @@ jobs:
       - name: Upload IPA artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: ios-ipa-${{ inputs.export_method }}-${{ github.run_number }}
+          name: ios-ipa-${{ inputs.export_method || 'app-store' }}-${{ github.run_number }}
           path: |
             build/ios/ipa/*.ipa
             build/ios/archive/*.xcarchive
